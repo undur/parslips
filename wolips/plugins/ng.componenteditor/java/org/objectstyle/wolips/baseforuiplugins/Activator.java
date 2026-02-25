@@ -41,7 +41,10 @@ public class Activator extends AbstractBaseUIActivator {
 	 * 
 	 * @return the shared instance
 	 */
-	public static Activator getDefault() {
+	public static synchronized Activator getDefault() {
+		if (plugin == null) {
+			plugin = new Activator();
+		}
 		return plugin;
 	}
 

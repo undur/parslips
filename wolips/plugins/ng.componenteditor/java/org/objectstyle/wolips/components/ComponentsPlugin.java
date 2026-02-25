@@ -92,7 +92,10 @@ public class ComponentsPlugin extends AbstractBaseUIActivator {
 	/**
 	 * Returns the shared instance.
 	 */
-	public static ComponentsPlugin getDefault() {
+	public static synchronized ComponentsPlugin getDefault() {
+		if (plugin == null) {
+			plugin = new ComponentsPlugin();
+		}
 		return plugin;
 	}
 

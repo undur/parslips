@@ -130,7 +130,14 @@ public abstract class AbstractBaseActivator extends Plugin {
 	 * @param status
 	 */
 	public void log(IStatus status) {
-		this.getLog().log(status);
+		try {
+			this.getLog().log(status);
+		} catch (Exception e) {
+			System.err.println("[" + this.getClass().getName() + "] " + status.getMessage());
+			if (status.getException() != null) {
+				status.getException().printStackTrace(System.err);
+			}
+		}
 	}
 
 	/**

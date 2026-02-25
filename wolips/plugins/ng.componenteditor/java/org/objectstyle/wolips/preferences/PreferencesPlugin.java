@@ -74,7 +74,11 @@ public class PreferencesPlugin extends AbstractBaseUIActivator {
 	/**
 	 * @return the shared instance
 	 */
-	public static PreferencesPlugin getDefault() {
+	public static synchronized PreferencesPlugin getDefault() {
+		if (plugin == null) {
+			plugin = new PreferencesPlugin();
+			Preferences.setDefaults();
+		}
 		return plugin;
 	}
 

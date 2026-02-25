@@ -102,7 +102,10 @@ public class CorePlugin extends AbstractBaseUIActivator {
 	/**
 	 * Returns the shared instance.
 	 */
-	public static CorePlugin getDefault() {
+	public static synchronized CorePlugin getDefault() {
+		if (plugin == null) {
+			plugin = new CorePlugin();
+		}
 		return plugin;
 	}
 

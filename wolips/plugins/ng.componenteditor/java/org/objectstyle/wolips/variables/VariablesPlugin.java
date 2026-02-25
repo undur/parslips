@@ -86,7 +86,10 @@ public class VariablesPlugin extends AbstractBaseActivator {
 	/**
 	 * @return the shared instance
 	 */
-	public static VariablesPlugin getDefault() {
+	public static synchronized VariablesPlugin getDefault() {
+		if (plugin == null) {
+			plugin = new VariablesPlugin();
+		}
 		return plugin;
 	}
 

@@ -113,7 +113,10 @@ public class ComponenteditorPlugin extends AbstractBaseUIActivator {
 	/**
 	 * Returns the shared instance.
 	 */
-	public static ComponenteditorPlugin getDefault() {
+	public static synchronized ComponenteditorPlugin getDefault() {
+		if (plugin == null) {
+			plugin = new ComponenteditorPlugin();
+		}
 		return plugin;
 	}
 

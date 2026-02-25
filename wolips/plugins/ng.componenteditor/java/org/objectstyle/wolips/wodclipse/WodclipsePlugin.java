@@ -88,7 +88,10 @@ public class WodclipsePlugin extends AbstractBaseUIActivator {
 	/**
 	 * Returns the shared instance.
 	 */
-	public static WodclipsePlugin getDefault() {
+	public static synchronized WodclipsePlugin getDefault() {
+		if (plugin == null) {
+			plugin = new WodclipsePlugin();
+		}
 		return plugin;
 	}
 

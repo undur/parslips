@@ -135,33 +135,38 @@ public class ComponentEditor extends ComponentEditorPart implements IGotoMarker,
 		IFile file = fileEditorInput.getFile();
 		String extension = file.getFileExtension();
 		ComponentEditorInput input = null;
-		if (extension.equals("html")) {
+		if ("html".equals(extension)) {
 			try {
 				input = ComponentEditorInput.createWithDotHtml(file);
 			} catch (CoreException e) {
 				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
-		if (extension.equals("wod")) {
+		else if ("wod".equals(extension)) {
 			try {
 				input = ComponentEditorInput.createWithDotWod(file);
 			} catch (CoreException e) {
 				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
-		if (extension.equals("api")) {
+		else if ("api".equals(extension)) {
 			try {
 				input = ComponentEditorInput.createWithDotApi(file);
 			} catch (CoreException e) {
 				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
-		if (extension.equals("woo")) {
+		else if ("woo".equals(extension)) {
 			try {
 				input = ComponentEditorInput.createWithDotWoo(file);
 			} catch (CoreException e) {
 				ComponenteditorPlugin.getDefault().log(e);
 			}
+		}
+		// Fallback: if the locate system couldn't build a ComponentEditorInput
+		// (e.g. standalone .wo.html file not inside a .wo folder), open as standalone HTML
+		if (input == null) {
+			input = ComponentEditorInput.createStandaloneHtml(file);
 		}
 		super.init(site, input);
 	}

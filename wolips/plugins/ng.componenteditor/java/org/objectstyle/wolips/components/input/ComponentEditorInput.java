@@ -252,9 +252,24 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 		}
 		return input;
 	}
-	
+
 	/**
-	 * Returns the language name for the given component file editor input 
+	 * Creates a ComponentEditorInput for a standalone HTML file (not inside a .wo folder).
+	 * This is used as a fallback when the locate system can't find a component structure.
+	 */
+	public static ComponentEditorInput createStandaloneHtml(IFile file) {
+		String name = file.getName();
+		ComponentEditorFileEditorInput standaloneInput = new ComponentEditorFileEditorInput(file);
+		String[] allIds = new String[] { EditorsPlugin.HTMLEditorID };
+		ComponentEditorFileEditorInput[] allInput = new ComponentEditorFileEditorInput[] { standaloneInput };
+		ComponentEditorFileEditorInput[] allComponentInput = new ComponentEditorFileEditorInput[0];
+		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, null, standaloneInput);
+		standaloneInput.setComponentEditorInput(input);
+		return input;
+	}
+
+	/**
+	 * Returns the language name for the given component file editor input
 	 * or null if it's not in an lproj folder.
 	 * 
 	 * @param editorInput the editor input to lookup the language for

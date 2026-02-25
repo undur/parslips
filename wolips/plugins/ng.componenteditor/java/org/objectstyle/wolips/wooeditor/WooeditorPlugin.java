@@ -88,7 +88,11 @@ public class WooeditorPlugin extends AbstractBaseUIActivator implements IResourc
   /**
    * Returns the shared instance.
    */
-  public static WooeditorPlugin getDefault() {
+  public static synchronized WooeditorPlugin getDefault() {
+    if (plugin == null) {
+      plugin = new WooeditorPlugin();
+      plugin.workspace.addResourceChangeListener(plugin);
+    }
     return plugin;
   }
 

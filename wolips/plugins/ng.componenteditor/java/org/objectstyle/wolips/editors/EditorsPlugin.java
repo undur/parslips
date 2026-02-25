@@ -92,7 +92,10 @@ public class EditorsPlugin extends AbstractBaseUIActivator {
 	/**
 	 * Returns the shared instance.
 	 */
-	public static EditorsPlugin getDefault() {
+	public static synchronized EditorsPlugin getDefault() {
+		if (plugin == null) {
+			plugin = new EditorsPlugin();
+		}
 		return plugin;
 	}
 

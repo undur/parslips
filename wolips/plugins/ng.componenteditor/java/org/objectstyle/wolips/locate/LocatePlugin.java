@@ -102,8 +102,14 @@ public class LocatePlugin extends AbstractBaseActivator {
 
 	/**
 	 * Returns the shared instance.
+	 * Lazily initialized since this is no longer a standalone bundle activator.
 	 */
-	public static LocatePlugin getDefault() {
+	public static synchronized LocatePlugin getDefault() {
+		if (plugin == null) {
+			plugin = new LocatePlugin();
+			plugin.componentsLocateCache = new ComponentLocateCache();
+			ResourcesPlugin.getWorkspace().addResourceChangeListener(plugin.componentsLocateCache);
+		}
 		return plugin;
 	}
 

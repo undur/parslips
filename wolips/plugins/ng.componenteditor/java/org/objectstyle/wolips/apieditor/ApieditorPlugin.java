@@ -94,7 +94,10 @@ public class ApieditorPlugin extends AbstractBaseUIActivator {
 	/**
 	 * Returns the shared instance.
 	 */
-	public static ApieditorPlugin getDefault() {
+	public static synchronized ApieditorPlugin getDefault() {
+		if (plugin == null) {
+			plugin = new ApieditorPlugin();
+		}
 		return plugin;
 	}
 

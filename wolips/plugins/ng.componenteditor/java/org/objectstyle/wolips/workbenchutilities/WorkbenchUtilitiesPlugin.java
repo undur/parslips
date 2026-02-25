@@ -77,7 +77,10 @@ public class WorkbenchUtilitiesPlugin extends AbstractBaseUIActivator {
 	/**
 	 * @return Returns the shared instance.
 	 */
-	public static WorkbenchUtilitiesPlugin getDefault() {
+	public static synchronized WorkbenchUtilitiesPlugin getDefault() {
+		if (plugin == null) {
+			plugin = new WorkbenchUtilitiesPlugin();
+		}
 		return plugin;
 	}
 }
