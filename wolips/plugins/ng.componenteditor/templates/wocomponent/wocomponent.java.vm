@@ -2,7 +2,7 @@
 package ${WOLipsContext.packageName};
 #end
 
-import ng.appserver.templating.NGContext;
+import ng.appserver.NGContext;
 #if (${WOLipsContext.superclassImportRequired})
 import ${WOLipsContext.superclassName};
 #end
