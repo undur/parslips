@@ -498,6 +498,15 @@
    </extension>
 
 <!-- =================================================================================== -->
+<!-- Element Factories (for editor state persistence)                                    -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.elementFactories">
+      <factory
+            class="org.objectstyle.wolips.components.input.ComponentEditorInputFactory"
+            id="org.objectstyle.wolips.components.input.ComponentEditorInputFactory"/>
+   </extension>
+
+<!-- =================================================================================== -->
 <!-- Document Providers (from wooeditor)                                                 -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.ui.editors.documentProviders">
