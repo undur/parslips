@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+<!-- =================================================================================== -->
+<!-- Extension Points (from tkhtmleditor)                                                -->
+<!-- =================================================================================== -->
+   <extension-point id="customTagConverter" name="customTagConverter"/>
+   <extension-point id="customTagAttributeAssist" name="customTagAttributeAssist"/>
+   <extension-point id="paletteItem" name="paletteItem"/>
+   <extension-point id="noValidationNatures" name="noValidationNatures"/>
+   <extension-point id="fileAssistProcessor" name="fileAssistProcessor"/>
+   <extension-point id="hyperlinkProvider" name="hyperlinkProvider"/>
+   <extension-point id="tldLocator" name="tldLocator"/>
+   <extension-point id="customTagValidator" name="customTagValidator"/>
+   <extension-point id="preferenceContributer" name="preferenceContributer"/>
+   <extension-point id="pagefilter" name="pagefilter"/>
+
+<!-- Extension point from core plugin -->
+   <extension-point id="builders" name="Builder"/>
+
+<!-- =================================================================================== -->
+<!-- Content Types (from editors plugin, with ng.componenteditor IDs)                    -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.core.runtime.contentTypes">
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            default-charset="UTF-8"
+            file-extensions="wod"
+            id="ng.componenteditor.wod"
+            name="NG WOComponent wod part"
+            priority="normal">
+               <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
+      </content-type>
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            default-charset="UTF-8"
+            file-extensions="api"
+            id="ng.componenteditor.api"
+            name="NG WOComponent api part"
+            priority="normal">
+               <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
+      </content-type>
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            default-charset="UTF-8"
+            file-extensions="woo"
+            id="ng.componenteditor.woo"
+            name="NG WOComponent woo part"
+            priority="normal">
+               <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
+      </content-type>
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            describer="org.objectstyle.wolips.editors.contentdescriber.ContentDescriberWO"
+            file-extensions="html"
+            id="ng.componenteditor.html"
+            name="NG Html with WO tags"
+            priority="high"/>
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            file-extensions="patternset"
+            id="ng.componenteditor.patternset"
+            name="Ant Patternset file"
+            priority="normal"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Main Component Editor                                                               -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.editors">
+      <editor
+            class="org.objectstyle.wolips.componenteditor.part.ComponentEditor"
+            contributorClass="org.objectstyle.wolips.componenteditor.contributor.ComponentEditorContributor"
+            default="true"
+            extensions="wod,html,api,woo"
+            icon="icons/ComponentEditor.png"
+            id="ng.componenteditor.ComponentEditor"
+            matchingStrategy="org.objectstyle.wolips.componenteditor.launcher.ComponentEditorMatchingStrategy"
+            name="NG Component Editor">
+         <contentTypeBinding contentTypeId="ng.componenteditor.html"/>
+         <contentTypeBinding contentTypeId="ng.componenteditor.api"/>
+         <contentTypeBinding contentTypeId="ng.componenteditor.wod"/>
+         <contentTypeBinding contentTypeId="ng.componenteditor.woo"/>
+      </editor>
+
+<!-- Template Editor (standalone) -->
+      <editor
+            class="org.objectstyle.wolips.templateeditor.TemplateEditor"
+            contributorClass="org.objectstyle.wolips.templateeditor.TemplateEditorContributor"
+            default="false"
+            extensions="html,xhtml"
+            icon="icons/ComponentHTML.png"
+            id="ng.componenteditor.TemplateEditor"
+            name="NG Template Editor">
+         <contentTypeBinding contentTypeId="ng.componenteditor.html"/>
+      </editor>
+
+<!-- WOD Editor (standalone) -->
+      <editor
+            class="org.objectstyle.wolips.wodclipse.editor.WodEditor"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            default="false"
+            icon="icons/file-wod.png"
+            id="ng.componenteditor.WodEditor"
+            name="NG Wod Editor">
+         <contentTypeBinding contentTypeId="ng.componenteditor.wod"/>
+      </editor>
+
+<!-- API Editor -->
+      <editor
+            class="org.objectstyle.wolips.apieditor.editor.ApiEditor"
+            default="false"
+            extensions="api"
+            icon="icons/ComponentEditor.png"
+            id="ng.componenteditor.ApiEditor"
+            name="NG Api Editor">
+         <contentTypeBinding contentTypeId="ng.componenteditor.api"/>
+      </editor>
+
+<!-- WOO Editor -->
+      <editor
+            default="false"
+            extensions="woo"
+            icon="icons/WooEditor.gif"
+            id="ng.componenteditor.WooEditor"
+            class="org.objectstyle.wolips.wooeditor.editor.WooEditor"
+            name="NG WOO Editor">
+         <contentTypeBinding contentTypeId="ng.componenteditor.woo"/>
+      </editor>
+
+<!-- Amateras sub-editors (kept as-is) -->
+      <editor
+            class="tk.eclipse.plugin.htmleditor.editors.HTMLEditor"
+            contributorClass="tk.eclipse.plugin.htmleditor.editors.HTMLEditorContributor"
+            default="false"
+            extensions="html,xhtml"
+            icon="icons/html.png"
+            id="ng.componenteditor.HTMLEditor"
+            name="NG HTML Editor"/>
+      <editor
+            class="tk.eclipse.plugin.csseditor.editors.CSSEditor"
+            contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
+            extensions="css"
+            icon="icons/css.png"
+            id="ng.componenteditor.CSSEditor"
+            name="NG CSS Editor"/>
+      <editor
+            class="tk.eclipse.plugin.jseditor.editors.JavaScriptEditor"
+            contributorClass="tk.eclipse.plugin.jseditor.editors.JavaScriptEditorContributor"
+            extensions="js"
+            icon="icons/javascript.gif"
+            id="ng.componenteditor.JavaScriptEditor"
+            name="NG JavaScript Editor"/>
+
+<!-- Pattern Set Editor -->
+      <editor
+            default="true"
+            name="NG Pattern Set Editor"
+            icon="icons/editors/ant_buildfile.gif"
+            class="org.objectstyle.wolips.editors.patterset.PatternsetEditor"
+            id="ng.componenteditor.PatternsetEditor">
+         <contentTypeBinding contentTypeId="ng.componenteditor.patternset"/>
+      </editor>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Commands and Key Bindings                                                           -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.commands">
+      <category
+            name="NG Component Editor"
+            description="NG Component Editor"
+            id="ng.componenteditor.commands"/>
+      <command name="Switch to Java Editor" description="Switch to Java Editor"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.tojava"/>
+      <command name="Switch to Html Editor" description="Switch to Html Editor"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.tohtml"/>
+      <command name="Switch to Wod Editor" description="Switch to Wod Editor"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.towod"/>
+      <command name="Switch to Preview" description="Switch to Preview"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.topreview"/>
+      <command name="Switch to Api Editor" description="Switch to Api Editor"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.toapi"/>
+      <command name="Rename..." description="Rename..."
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.command.refactorRename"/>
+      <command name="Convert Inline to WOD" description="Convert Inline to WOD"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.command.refactorConvertToWod"/>
+      <command name="Format" description="Format"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.command.format"/>
+      <command name="Insert Component" description="Insert Component"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.command.InsertAnyComponentAction"/>
+      <command name="Open Component"
+            categoryId="org.eclipse.ui.category.navigate"
+            id="ng.componenteditor.openComponent"/>
+      <command name="Open WO Declaration" description="Open WO Declaration"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.action.openDeclaration"/>
+
+<!-- Amateras HTML editor commands -->
+      <category id="ng.componenteditor.htmleditor" name="HTML Editor"/>
+      <command categoryId="ng.componenteditor.htmleditor"
+            id="ng.componenteditor.xmleditor.format"
+            name="Format XML"/>
+      <command categoryId="ng.componenteditor.htmleditor"
+            id="ng.componenteditor.htmleditor.comment"
+            name="Comment HTML"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.bindings">
+      <key commandId="ng.componenteditor.editors.tohtml"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+M3+2"/>
+      <key commandId="ng.componenteditor.editors.towod"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+M3+3"/>
+      <key commandId="ng.componenteditor.editors.command.InsertAnyComponentAction"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+6"/>
+      <key commandId="ng.componenteditor.editors.command.refactorRename"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+2 R"/>
+      <key commandId="ng.componenteditor.editors.command.refactorConvertToWod"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+2 W"/>
+      <key commandId="ng.componenteditor.editors.command.format"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+M2+F"/>
+      <key commandId="ng.componenteditor.openComponent"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+M2+X"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.contexts">
+      <context description="Editing Components Context"
+            id="ng.componenteditor.componentEditorScope"
+            name="NG Editing Components"
+            parentId="org.eclipse.ui.textEditorScope"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Editor Actions (menus, toolbars)                                                    -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.editorActions">
+      <editorContribution
+            id="ng.componenteditor.editorActionsContribution"
+            targetID="ng.componenteditor.ComponentEditor">
+         <menu id="ng.componenteditor.navigateMenuContribution"
+               label="&amp;NG Component Editor"
+               path="navigate/additions">
+            <separator name="group1"/>
+            <separator name="group2"/>
+         </menu>
+         <menu id="ng.componenteditor.refactorMenuContribution"
+               label="&amp;Refactor"
+               path="edit/additions">
+            <separator name="group1"/>
+            <separator name="group2"/>
+         </menu>
+         <menu id="ng.componenteditor.insertMenuContribution"
+               label="&amp;Insert"
+               path="edit/additions">
+            <separator name="group1"/>
+            <separator name="group2"/>
+         </menu>
+         <action class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToWodEditorActionDelegate"
+               definitionId="ng.componenteditor.editors.towod"
+               id="ng.componenteditor.editors.switchtowod"
+               label="Switch to Wod Editor"
+               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToHtmlEditorActionDelegate"
+               definitionId="ng.componenteditor.editors.tohtml"
+               id="ng.componenteditor.editors.switchtohtml"
+               label="Switch to Html Editor"
+               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToJavaEditorActionDelegate"
+               definitionId="ng.componenteditor.editors.tojava"
+               id="ng.componenteditor.editors.switchtojava"
+               label="Switch to Java Editor"
+               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.actions.FormatAction"
+               definitionId="ng.componenteditor.editors.command.format"
+               id="ng.componenteditor.editors.action.format"
+               label="Format"
+               menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.actions.QuickRenameElementAction"
+               definitionId="ng.componenteditor.editors.command.refactorRename"
+               id="ng.componenteditor.editors.action.refactorRename"
+               label="Rename..."
+               menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertInlineToWodAction"
+               definitionId="ng.componenteditor.editors.command.refactorConvertToWod"
+               id="ng.componenteditor.editors.action.refactorConvertToWod"
+               label="Convert Inline to WOD"
+               menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.actions.InsertAnyComponentAction"
+               icon="icons/anycomponent.png"
+               id="ng.componenteditor.actions.InsertAnyComponentAction"
+               definitionId="ng.componenteditor.editors.command.InsertAnyComponentAction"
+               label="Insert Component"
+               menubarPath="edit/ng.componenteditor.insertMenuContribution/group1"
+               style="push"
+               toolbarPath="/Normal/additions"
+               tooltip="Insert Component"/>
+         <action class="org.objectstyle.wolips.wodclipse.action.OpenDeclarationAction"
+               definitionId="ng.componenteditor.action.openDeclaration"
+               id="ng.componenteditor.action.openDeclaration"
+               label="Open WO Declaration"
+               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
+      </editorContribution>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Views                                                                               -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.views">
+      <category name="NG Component Editor" id="ng.componenteditor.views"/>
+      <view name="Bindings Inspector"
+            category="ng.componenteditor.views"
+            class="org.objectstyle.wolips.componenteditor.inspector.BindingsInspectorPageBookView"
+            id="ng.componenteditor.inspector.BindingsInspectorPageBookView"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Action Sets                                                                         -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.actionSets">
+      <actionSet id="ng.componenteditor.actionSet"
+            label="NG Component Action Sets"
+            visible="true">
+         <action class="org.objectstyle.wolips.componenteditor.actions.OpenComponentAction"
+               definitionId="ng.componenteditor.openComponent"
+               id="ng.componenteditor.openComponent"
+               label="Open Component..."
+               menubarPath="navigate/open.ext2"/>
+      </actionSet>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Popup Menus                                                                         -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.popupMenus">
+      <objectContribution adaptable="false"
+            id="ng.componenteditor.generateAPI.woContribution"
+            nameFilter="*.wo"
+            objectClass="org.eclipse.core.resources.IFolder">
+         <action class="org.objectstyle.wolips.wodclipse.action.GenerateAPIAction"
+               enablesFor="*"
+               icon="icons/file-api.png"
+               id="ng.componenteditor.generateAPIActionForWO"
+               label="Generate API File"
+               menubarPath="additions"/>
+      </objectContribution>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Preference Pages                                                                    -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.preferencePages">
+      <page class="tk.eclipse.plugin.htmleditor.HTMLEditorPreferencePage"
+            id="ng.componenteditor.preferences"
+            name="NG Component Editor"/>
+      <page class="org.objectstyle.wolips.wodclipse.core.preferences.WodEditorPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.WodEditor"
+            name="WOD Editor"/>
+      <page class="org.objectstyle.wolips.bindings.preferences.TagShortcutPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.TagShortcuts"
+            name="Inline Binding Shortcuts"/>
+      <page class="org.objectstyle.wolips.bindings.preferences.BindingValidationRulePreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.ValidationRules"
+            name="Validation Rules"/>
+      <page class="org.objectstyle.wolips.bindings.preferences.BindingValidationPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.Validation"
+            name="Validation"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Preference Initializers                                                             -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="tk.eclipse.plugin.htmleditor.HTMLPreferenceInitializer"/>
+      <initializer class="org.objectstyle.wolips.wodclipse.core.preferences.PreferenceInitializer"/>
+      <initializer class="org.objectstyle.wolips.bindings.preferences.PreferenceInitializer"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Markers                                                                             -->
+<!-- =================================================================================== -->
+   <extension id="problem" name="NG Template Problems"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.core.resources.textmarker"/>
+      <persistent value="true"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Annotation Types                                                                    -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.editors.annotationTypes">
+      <type name="ng.componenteditor.bindingHover"/>
+   </extension>
+   <extension point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationType="ng.componenteditor.bindingHover"
+            colorPreferenceKey="bindingHoverColor"
+            colorPreferenceValue="240,220,0"
+            highlightPreferenceKey="bindingHoverHighlight"
+            highlightPreferenceValue="true"
+            includeOnPreferencePage="true"
+            label="Binding Hover"
+            overviewRulerPreferenceKey="bindingHoverOverviewRuler"
+            overviewRulerPreferenceValue="false"
+            presentationLayer="6"
+            textPreferenceKey="bindingHoverIndication"
+            textPreferenceValue="false"
+            textStylePreferenceKey="bindingHoverTextStyle"
+            textStylePreferenceValue="BOX"
+            verticalRulerPreferenceKey="bindingHoverVerticalRuler"
+            verticalRulerPreferenceValue="false"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Templates                                                                           -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.editors.templates">
+      <contextType class="tk.eclipse.plugin.htmleditor.template.HTMLContextType"
+            name="HTML/JSP/XML"
+            id="ng.componenteditor.templateContextType.html"/>
+      <contextType class="tk.eclipse.plugin.htmleditor.template.JavaScriptContextType"
+            name="JavaScript"
+            id="ng.componenteditor.templateContextType.javascript"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- WOD Builder (registers with the ng.componenteditor.builders extension point)        -->
+<!-- =================================================================================== -->
+   <extension point="ng.componenteditor.builders">
+      <builder class="org.objectstyle.wolips.wodclipse.core.builder.WodBuilder"
+            id="ng.componenteditor.builder.WodBuilder"
+            name="Wod Builder"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Adapters (from core plugin)                                                         -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.core.runtime.adapters">
+      <factory class="org.objectstyle.wolips.core.resources.internal.types.file.FileAdapterFactory"
+            adaptableType="org.eclipse.core.resources.IFile">
+         <adapter type="org.objectstyle.wolips.core.resources.types.file.IPBDotProjectAdapter"/>
+      </factory>
+      <factory class="org.objectstyle.wolips.core.resources.internal.types.folder.FolderAdapterFactory"
+            adaptableType="org.eclipse.core.resources.IFolder">
+         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IDotApplicationAdapter"/>
+         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IDotFrameworkAdapter"/>
+         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IDotWoAdapter"/>
+         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IBuildAdapter"/>
+      </factory>
+      <factory class="org.objectstyle.wolips.core.resources.internal.types.project.ProjectAdapterFactory"
+            adaptableType="org.eclipse.core.resources.IProject">
+         <adapter type="org.objectstyle.wolips.core.resources.types.project.ProjectAdapter"/>
+      </factory>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Document Providers (from wooeditor)                                                 -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.editors.documentProviders">
+      <provider class="org.eclipse.ui.editors.text.TextFileDocumentProvider"
+            id="ng.componenteditor.NullDocumentProvider"
+            inputTypes="org.objectstyle.wolips.wooeditor.editor.NonExistingFileEditorInput"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- File assist processor (internal extension)                                          -->
+<!-- =================================================================================== -->
+   <extension point="ng.componenteditor.fileAssistProcessor">
+      <processor class="tk.eclipse.plugin.htmleditor.assist.FileAssistProcessor"/>
+   </extension>
+
+</plugin>
