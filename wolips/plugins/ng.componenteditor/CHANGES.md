@@ -82,5 +82,8 @@ Neither package was referenced by any other code in the plugin.
 - `IResourceType` — unused marker interface
 - `ProjectAdapter` — stripped down significantly (removed dead methods referencing deleted adapters)
 - `FolderAdapterFactory` — stripped down (removed registrations for deleted adapters)
-- `ProjectVariables` — stripped down drastically. Dropped `IPersistentPreferenceStore` interface, removed all path getters, listener support, numeric getters/setters, save/dirty tracking. Only `getString()`, `getString(name, default)`, and `getBoolean(name, default)` are actually used.
-- `ERXValueUtilities` — deleted entirely. Was an ERExtensions utility class (~740 lines). Boolean parsing logic inlined into `ProjectVariables.getBoolean()`. The `er.extensions.foundation` package is gone.
+- `ProjectVariables` — deleted entirely. Was a wrapper around `WOVariables`/`WOEnvironment` for reading `wolips.properties`. Not needed by ng-objects.
+- `VariablesPlugin` — deleted entirely. Was the activator/factory for `ProjectVariables`. Callers were updated:
+  - `BuildProperties.ensureDefaultsInitialized()` — now uses hardcoded defaults directly instead of reading from `wolips.properties`
+  - `WodBuilder.getBooleanProperty()` — removed the global properties middle tier; now falls through from build.properties directly to Eclipse preference store
+- `ERXValueUtilities` — deleted entirely. Was an ERExtensions utility class (~740 lines). The `er.extensions.foundation` package is gone.

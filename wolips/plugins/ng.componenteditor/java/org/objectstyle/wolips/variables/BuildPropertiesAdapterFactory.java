@@ -115,7 +115,7 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 					buildPropertiesInitializer.initialize(buildProperties);
 				}
 				catch (CoreException e) {
-					VariablesPlugin.getDefault().log(e);
+					e.printStackTrace();
 				}
 			}
 		}
@@ -136,7 +136,7 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 					buildPropertiesInitializer.initializeDefaults(buildProperties);
 				}
 				catch (CoreException e) {
-					VariablesPlugin.getDefault().log(e);
+					e.printStackTrace();
 				}
 			}
 		}

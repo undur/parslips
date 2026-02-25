@@ -75,7 +75,6 @@ import org.objectstyle.wolips.core.resources.types.WOHierarchyScope;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.BuildProperties;
-import org.objectstyle.wolips.variables.VariablesPlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodModelUtils;
 
@@ -101,24 +100,13 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 		return true;
 	}
 
-	// MS: This should probably move up to a higher level utility method
 	protected static boolean getBooleanProperty(String propertiesKey, String preferencesKey, IProject project, IPreferenceStore preferenceStore) {
-		boolean value;
 		BuildProperties buildProperties = (BuildProperties) project.getAdapter(BuildProperties.class);
 		String buildPropertiesValueStr = buildProperties.get(propertiesKey);
 		if (buildPropertiesValueStr != null) {
-			value = "true".equalsIgnoreCase(buildPropertiesValueStr);
+			return "true".equalsIgnoreCase(buildPropertiesValueStr);
 		}
-		else {
-			String globalPropertiesValueStr = VariablesPlugin.getDefault().getGlobalVariables().getString(propertiesKey + "." + project.getName());
-			if (globalPropertiesValueStr != null) {
-				value = "true".equalsIgnoreCase(globalPropertiesValueStr);
-			}
-			else {
-				value = preferenceStore.getBoolean(preferencesKey);
-			}
-		}
-		return value;
+		return preferenceStore.getBoolean(preferencesKey);
 	}
 
 	public boolean buildStarted(int kind, Map args, IProgressMonitor monitor, IProject project, Map buildCache) {
