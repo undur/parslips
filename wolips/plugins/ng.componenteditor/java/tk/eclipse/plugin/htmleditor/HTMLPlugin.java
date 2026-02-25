@@ -227,6 +227,7 @@ public class HTMLPlugin extends AbstractUIPlugin {
   public void start(BundleContext context) throws Exception {
 		super.start(context);
 		colorProvider = new ColorProvider(getPreferenceStore());
+		org.objectstyle.wolips.componenteditor.listener.JavaChangeRevalidator.install();
 	}
 	
 	@Override
@@ -295,6 +296,7 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	 */
 	@Override
   public void stop(BundleContext context) throws Exception {
+		org.objectstyle.wolips.componenteditor.listener.JavaChangeRevalidator.uninstall();
 		JavaScriptLaunchUtil.removeLibraries();
 		colorProvider.dispose();
 		super.stop(context);
