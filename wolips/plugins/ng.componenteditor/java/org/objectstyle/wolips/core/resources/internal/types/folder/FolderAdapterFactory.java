@@ -64,7 +64,6 @@ import org.objectstyle.wolips.core.resources.types.IResourceType;
 import org.objectstyle.wolips.core.resources.types.folder.IBuildAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IContentsAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotApplicationAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IDotEOModeldAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotFrameworkAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotLprojAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotWoAdapter;
@@ -102,8 +101,6 @@ public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 		} else if (adapterType == IDotLprojAdapter.class) {
 			return true;
 		} else if (adapterType == IDotWoAdapter.class) {
-			return true;
-		} else if (adapterType == IDotEOModeldAdapter.class) {
 			return true;
 		} else if (adapterType == IWoprojectAdapter.class) {
 			return true;
@@ -148,10 +145,6 @@ public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 		} else if (adapterType == IDotWoAdapter.class) {
 			if (folder.getFileExtension() != null && IDotWoAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
 				return new DotWoAdapter(folder);
-			}
-		} else if (adapterType == IDotEOModeldAdapter.class) {
-			if (folder.getFileExtension() != null && IDotEOModeldAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
-				return new DotEOModeldAdapter(folder);
 			}
 		} else if (adapterType == IWoprojectAdapter.class) {
 			if (folder.getFileExtension() == null && folder.getName() != null && folder.getParent() != null && folder.getParent().getType() == IResource.PROJECT && (IWoprojectAdapter.FOLDER_NAME.equals(folder.getName()) || (IWoprojectAdapter.FOLDER_NAME_DEPRECATED.equals(folder.getName())))) {

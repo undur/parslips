@@ -11,16 +11,12 @@
 package org.objectstyle.wolips.core.resources.types;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.ITypeHierarchyChangedListener;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.corext.util.MethodOverrideTester;
-import org.objectstyle.wolips.baseforplugins.util.LRUMap;
 
 public class SuperTypeHierarchyCache {
 
@@ -70,46 +66,11 @@ public class SuperTypeHierarchyCache {
 
 	private static ArrayList<HierarchyCacheEntry> fgHierarchyCache = new ArrayList<HierarchyCacheEntry>(CACHE_SIZE);
 
-	protected static Map<IType, MethodOverrideTester> fgMethodOverrideTesterCache = new LRUMap<IType, MethodOverrideTester>(CACHE_SIZE);
-
-	protected static int fgCacheHits = 0;
-
-	protected static int fgCacheMisses = 0;
-
 	/**
 	 * Get a hierarchy for the given type
 	 */
 	public static ITypeHierarchy getTypeHierarchy(IType type) throws JavaModelException {
 		return getTypeHierarchy(type, null);
-	}
-
-	public static MethodOverrideTester getMethodOverrideTester(IType type) throws JavaModelException {
-		MethodOverrideTester test = null;
-		synchronized (fgMethodOverrideTesterCache) {
-			test = fgMethodOverrideTesterCache.get(type);
-		}
-		if (test == null) {
-			ITypeHierarchy hierarchy = getTypeHierarchy(type); // don't nest the locks
-			synchronized (fgMethodOverrideTesterCache) {
-				test = fgMethodOverrideTesterCache.get(type); // test again after waiting a long time for 'getTypeHierarchy'
-				if (test == null) {
-					test = new MethodOverrideTester(type, hierarchy);
-					fgMethodOverrideTesterCache.put(type, test);
-				}
-			}
-		}
-		return test;
-	}
-
-	private static void removeMethodOverrideTester(ITypeHierarchy hierarchy) {
-		synchronized (fgMethodOverrideTesterCache) {
-			for (Iterator iter = fgMethodOverrideTesterCache.values().iterator(); iter.hasNext();) {
-				MethodOverrideTester curr = (MethodOverrideTester) iter.next();
-				if (curr.getTypeHierarchy().equals(hierarchy)) {
-					iter.remove();
-				}
-			}
-		}
 	}
 
 	/**
@@ -118,11 +79,8 @@ public class SuperTypeHierarchyCache {
 	public static ITypeHierarchy getTypeHierarchy(IType type, IProgressMonitor progressMonitor) throws JavaModelException {
 		ITypeHierarchy hierarchy = findTypeHierarchyInCache(type);
 		if (hierarchy == null) {
-			fgCacheMisses++;
 			hierarchy = type.newSupertypeHierarchy(progressMonitor);
 			addTypeHierarchyToCache(hierarchy);
-		} else {
-			fgCacheHits++;
 		}
 		return hierarchy;
 	}
@@ -158,15 +116,6 @@ public class SuperTypeHierarchyCache {
 		}
 	}
 
-	/**
-	 * Check if the given type is in the hierarchy
-	 * @param type
-	 * @return Return <code>true</code> if a hierarchy for the given type is cached.
-	 */
-	public static boolean hasInCache(IType type) {
-		return findTypeHierarchyInCache(type) != null;
-	}
-
 	protected static ITypeHierarchy findTypeHierarchyInCache(IType type) {
 		synchronized (fgHierarchyCache) {
 			for (int i = fgHierarchyCache.size() - 1; i >= 0; i--) {
@@ -187,25 +136,8 @@ public class SuperTypeHierarchyCache {
 
 	protected static void removeHierarchyEntryFromCache(HierarchyCacheEntry entry) {
 		synchronized (fgHierarchyCache) {
-			removeMethodOverrideTester(entry.getTypeHierarchy());
 			entry.dispose();
 			fgHierarchyCache.remove(entry);
 		}
-	}
-
-	/**
-	 * Gets the number of times the hierarchy could be taken from the hierarchy.
-	 * @return Returns a int
-	 */
-	public static int getCacheHits() {
-		return fgCacheHits;
-	}
-
-	/**
-	 * Gets the number of times the hierarchy was build. Used for testing.
-	 * @return Returns a int
-	 */
-	public static int getCacheMisses() {
-		return fgCacheMisses;
 	}
 }

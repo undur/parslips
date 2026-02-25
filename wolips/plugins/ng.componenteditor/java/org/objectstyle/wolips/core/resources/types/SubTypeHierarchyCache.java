@@ -63,8 +63,6 @@ public class SubTypeHierarchyCache {
 
   private static List<HierarchyCacheEntry> fgHierarchyCache = new ArrayList<HierarchyCacheEntry>(CACHE_SIZE);
 
-  private static int fgCacheHits = 0;
-  private static int fgCacheMisses = 0;
 
   /**
    * Get a hierarchy for the given type
@@ -79,7 +77,6 @@ public class SubTypeHierarchyCache {
   public static ITypeHierarchy getTypeHierarchyInProject(IType type, IJavaProject project, IProgressMonitor progressMonitor) throws JavaModelException {
     ITypeHierarchy hierarchy = findTypeHierarchyInProjectInCache(type, project);
     if (hierarchy == null) {
-      fgCacheMisses++;
       if (project != null) {
     	  hierarchy = type.newTypeHierarchy(project, progressMonitor);
       }
@@ -87,9 +84,6 @@ public class SubTypeHierarchyCache {
     	  hierarchy = type.newTypeHierarchy(progressMonitor);
       }
       addTypeHierarchyInProjectToCache(hierarchy, project);
-    }
-    else {
-      fgCacheHits++;
     }
     return hierarchy;
   }
@@ -127,15 +121,6 @@ public class SubTypeHierarchyCache {
     }
   }
 
-  /**
-   * Check if the given type is in the hierarchy
-   * @param type
-   * @return Return <code>true</code> if a hierarchy for the given type is cached.
-   */
-  public static boolean hasInCacheInProject(IType type, IJavaProject project) {
-    return findTypeHierarchyInProjectInCache(type, project) != null;
-  }
-
   private static ITypeHierarchy findTypeHierarchyInProjectInCache(IType type, IJavaProject project) {
     synchronized (fgHierarchyCache) {
       for (int i = fgHierarchyCache.size() - 1; i >= 0; i--) {
@@ -160,21 +145,5 @@ public class SubTypeHierarchyCache {
       entry.dispose();
       fgHierarchyCache.remove(entry);
     }
-  }
-
-  /**
-   * Gets the number of times the hierarchy could be taken from the hierarchy.
-   * @return Returns a int
-   */
-  public static int getCacheHits() {
-    return fgCacheHits;
-  }
-
-  /**
-   * Gets the number of times the hierarchy was build. Used for testing.
-   * @return Returns a int
-   */
-  public static int getCacheMisses() {
-    return fgCacheMisses;
   }
 }
