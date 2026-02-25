@@ -139,9 +139,6 @@ public class PropertyListComparator implements Comparator<Object> {
 			return 0;
 		} else if (arg0 instanceof Timestamp && arg1 instanceof Timestamp) {
 			return ((Timestamp) arg0).compareTo((Timestamp) arg1);
-		} else if (arg0 instanceof ISortableEOModelObject && arg1 instanceof ISortableEOModelObject) {
-			int comparison = compare(((ISortableEOModelObject) arg0).getName(), ((ISortableEOModelObject) arg1).getName());
-			return comparison;
 		} else if (arg0 instanceof Map && arg1 instanceof Map) {
 			Map dic0 = (Map) arg0;
 			Map dic1 = (Map) arg1;

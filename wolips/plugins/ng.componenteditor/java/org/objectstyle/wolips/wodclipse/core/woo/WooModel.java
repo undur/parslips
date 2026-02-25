@@ -2,7 +2,6 @@ package org.objectstyle.wolips.wodclipse.core.woo;
 
 import static org.objectstyle.wolips.baseforplugins.util.CharSetUtils.ENCODING_UTF8;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
@@ -15,7 +14,6 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -24,8 +22,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jface.operation.IRunnableContext;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.objectstyle.woenvironment.plist.PropertyListParserException;
@@ -37,17 +33,10 @@ import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelMap;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelParserDataStructureFactory;
-// FIXME: eomodeler removed — display group and EO model support disabled
-// import org.objectstyle.wolips.eomodeler.core.model.EOModelGroup;
-// import org.objectstyle.wolips.eomodeler.core.model.EOModelVerificationFailure;
-// import org.objectstyle.wolips.eomodeler.core.model.PropertyListMap;
-import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.EOModelGroupCache;
 
 public class WooModel {
   public static final String IS_DIRTY = "IS_DIRTY";
-
-  public static final String DISPLAY_GROUP_NAME = "DISPLAY_GROUP_NAME";
 
   public static final String ENCODING = "encoding";
 
@@ -59,33 +48,13 @@ public class WooModel {
 
   private boolean _isDirty;
 
-  // FIXME: eomodeler removed — was EOModelGroup _modelGroup for EO model lookups
-  // private EOModelGroup _modelGroup;
-
   private String _encoding;
 
   private String _woRelease = DEFAULT_WO_RELEASE;
 
   private EOModelMap _modelMap;
 
-  // FIXME: eomodeler removed — was PropertyListMap<Object, Object> for variable storage
-  private Map<Object, Object> _variables;
-
-  private List<DisplayGroup> _displayGroups;
-
-  private List<DisplayGroup> _removedDisplayGroups;
-
   private PropertyChangeSupport _changes = new PropertyChangeSupport(this);
-
-  private PropertyChangeListener _displayGroupListener = new PropertyChangeListener() {
-    public void propertyChange(PropertyChangeEvent evt) {
-      if (DisplayGroup.NAME.equals(evt.getPropertyName())) {
-        PropertyChangeEvent newEvent = new PropertyChangeEvent(evt.getSource(), DISPLAY_GROUP_NAME, evt.getOldValue(), evt.getNewValue());
-        _changes.firePropertyChange(newEvent);
-      }
-    }
-
-  };
 
   public WooModel(final IFile file) {
     _file = file;
@@ -135,7 +104,6 @@ public class WooModel {
   private void init() throws IOException, PropertyListParserException {
     if (_file == null || !_file.exists()) {
       loadModelFromStream(new ByteArrayInputStream(blankContent().getBytes()));
-
     }
     else {
       loadModelFromFile(_file.getLocation().toFile());
@@ -155,28 +123,14 @@ public class WooModel {
   private void resetModel() {
     _encoding = null;
     _woRelease = DEFAULT_WO_RELEASE;
-    _variables = null;
     _modelMap = null;
-    _displayGroups = null;
-    _removedDisplayGroups = null;
   }
 
   public String getLocation() {
-    String location;
     if (_file != null) {
-      location = _file.getFullPath().toString();
+      return _file.getFullPath().toString();
     }
-    else {
-      location = null;
-    }
-    return location;
-  }
-
-  public DisplayGroup[] getDisplayGroups() {
-    if (_displayGroups != null) {
-      return _displayGroups.toArray(new DisplayGroup[] {});
-    }
-    return new DisplayGroup[0];
+    return null;
   }
 
   public String getEncoding() {
@@ -199,14 +153,6 @@ public class WooModel {
     return _encoding;
   }
 
-  // FIXME: eomodeler removed — getModelGroup() returned EOModelGroup from WodParserCache
-  // public EOModelGroup getModelGroup() {
-  //   if (_modelGroup == null) {
-  //     _modelGroup = WodParserCache.getModelGroupCache().getModelGroup(_file.getProject());
-  //   }
-  //   return _modelGroup;
-  // }
-
   public void setEncoding(String encoding) {
     String oldEncoding = _encoding;
     _encoding = encoding;
@@ -214,14 +160,13 @@ public class WooModel {
   }
 
   private void loadModelFromFile(final File file) throws IOException, PropertyListParserException {
-    _modelMap = new EOModelMap((Map<?, ?>) WOLPropertyListSerialization.propertyListFromFile(file, new EOModelParserDataStructureFactory()));
+    _modelMap = new EOModelMap((java.util.Map<?, ?>) WOLPropertyListSerialization.propertyListFromFile(file, new EOModelParserDataStructureFactory()));
   }
 
   public void loadModelFromStream(final InputStream input) throws IOException, PropertyListParserException {
-    _modelMap = new EOModelMap((Map<?, ?>) WOLPropertyListSerialization.propertyListFromStream(input, new EOModelParserDataStructureFactory()));
+    _modelMap = new EOModelMap((java.util.Map<?, ?>) WOLPropertyListSerialization.propertyListFromStream(input, new EOModelParserDataStructureFactory()));
   }
 
-  @SuppressWarnings("unchecked")
   public void parseModel() {
     if (_modelMap == null)
       return;
@@ -233,27 +178,7 @@ public class WooModel {
       _woRelease = _modelMap.getString("WebObjects Release", true);
     }
 
-    // FIXME: eomodeler removed — display group parsing disabled.
-    // Previously parsed "variables" map to find WODisplayGroup/ERXDisplayGroup entries
-    // and created DisplayGroup instances for each. Now we just store variables as-is.
-    _displayGroups = new ArrayList<DisplayGroup>();
-
-    Map<?, ?> variables = _modelMap.getMap("variables");
-    if (variables != null) {
-      // FIXME: eomodeler removed — display group detection and loading was here.
-      // All variable entries were checked for WODisplayGroup/ERXDisplayGroup class names.
-      // Now we just ignore the variables section for display groups.
-    }
-
     _isDirty = false;
-  }
-
-  /**
-   * FIXME: eomodeler removed — refactor() previously applied display group changes
-   * (add/rename/remove fields) to the component's Java class. Disabled.
-   */
-  public void refactor(Shell shell, IRunnableContext context) {
-    // no-op — eomodeler / display group refactoring removed
   }
 
   public void doSave() throws IOException {
@@ -266,7 +191,6 @@ public class WooModel {
     try {
       doSave(writer);
       _isDirty = false;
-      _removedDisplayGroups = null;
       _file.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
     }
     catch (CoreException e) {
@@ -275,7 +199,6 @@ public class WooModel {
     finally {
       writer.close();
     }
-
   }
 
   public void doSave(final OutputStream writer) throws IOException {
@@ -298,15 +221,6 @@ public class WooModel {
     EOModelMap modelMap = _modelMap.cloneModelMap();
     modelMap.setString("WebObjects Release", _woRelease, true);
     modelMap.setString("encoding", _encoding, true);
-
-    // FIXME: eomodeler removed — display group serialization was here.
-    // Previously iterated over _displayGroups, called toMap() on each,
-    // and merged them into the variables map. Now we just preserve existing variables.
-    EOModelMap variableMap = new EOModelMap();
-    if (_variables != null) {
-      variableMap.putAll(_variables);
-    }
-    modelMap.setMap("variables", variableMap, true);
     return modelMap;
   }
 
@@ -334,16 +248,6 @@ public class WooModel {
 
   public void removePropertyChangeListener(final String name, final PropertyChangeListener listener) {
     _changes.removePropertyChangeListener(name, listener);
-  }
-
-  // FIXME: eomodeler removed — createDisplayGroup() previously created DisplayGroup with eomodeler data sources
-  public void createDisplayGroup(final String name) {
-    // no-op — display group support removed
-  }
-
-  // FIXME: eomodeler removed — removeDisplayGroup() previously tracked removed display groups for refactoring
-  public void removeDisplayGroup(final DisplayGroup selection) {
-    // no-op — display group support removed
   }
 
   @Override
@@ -399,10 +303,6 @@ public class WooModel {
 	    }
     }
 
-    // FIXME: eomodeler removed — display group validation was here.
-    // Previously validated that WODisplayGroup variables were declared in the component class
-    // and that editing contexts were valid. Disabled.
-
     return problems;
   }
 
@@ -420,13 +320,11 @@ public class WooModel {
   public static void updateEncoding(IFile file, String charset) {
     WooModel model = new WooModel(file);
     String encoding = CharSetUtils.encodingNameFromObjectiveC(model.getEncoding());
-  	System.out.println("WooModel.updateEncoding: Setting encoding of " + file + " from " + encoding + " to " + charset);
     if (!encoding.equals(charset)) {
       try {
         model._modelMap.setString("encoding", charset, true);
         File _file = file.getLocation().toFile();
         if (!_file.exists()) {
-        	System.out.println("WooModel.updateEncoding: creating file " + _file);
         	_file.createNewFile();
         }
         FileOutputStream writer = new FileOutputStream(_file);
@@ -438,7 +336,6 @@ public class WooModel {
       catch (Throwable e) {
       	e.printStackTrace();
       }
-
     }
   }
 
@@ -449,5 +346,4 @@ public class WooModel {
   public void setFile(IFile file) {
 	this._file = file;
   }
-
 }
