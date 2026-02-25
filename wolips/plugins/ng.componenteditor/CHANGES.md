@@ -108,6 +108,21 @@ To allow `ng.componenteditor` to coexist with WOLips in the same Eclipse install
 - `WOLipsNatureUtils` nature IDs — these reference WOLips project natures (cross-plugin query, not self-referencing)
 - `AbstractEngine` Velocity resource loader class name — this is an actual Java fully-qualified class name, not a plugin ID
 
+### WOLips coexistence: project-aware editor selection
+
+Added `NGEditorAssociationOverride`, an `IEditorAssociationOverride` that ensures the NG Component Editor takes precedence over WOLips (or any other editor) for component files in ng-objects projects.
+
+**How it works:** When Eclipse is about to open an editor for an `.html`, `.wod`, `.woo`, or `.api` file, the override checks whether the file's project has `base=ng` in its `build.properties`. If so, it forces the NG Component Editor. Projects without `base=ng` are left alone, so WOLips continues to work normally for WebObjects projects.
+
+**Key files:**
+- `NGEditorAssociationOverride.java` — the override implementation
+- `plugin.xml` — registers the `org.eclipse.ui.ide.editorAssociationOverride` extension
+- Uses the existing `BuildProperties` adapter to read `build.properties`
+
+### Removed: adapter factory debug logging
+
+Removed the noisy debug log message from `AbstractResourceAdapterFactory.getAdapter()` that logged "This Adapter Factory does not support adaptableObject: ..." for every non-matching adapter query. This is normal Eclipse adapter framework behavior and doesn't warrant a log entry. The unused `CorePlugin` import was also cleaned up.
+
 ### Removed: Apache Ant dependency
 
 Removed `org.apache.ant` and `org.eclipse.ant.core` from `Require-Bundle` in MANIFEST.MF. These bundles are not always present in modern Eclipse installations (e.g. Eclipse IDE for Java Developers) and were preventing the OSGi bundle from resolving.

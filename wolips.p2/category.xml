@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/org.objectstyle.wolips.feature_5.0.3.qualifier.jar" id="org.objectstyle.wolips.feature" version="5.0.3.qualifier">
-      <category name="wolips"/>
+   <feature url="features/ng.componenteditor.feature_5.0.3.qualifier.jar" id="ng.componenteditor.feature" version="5.0.3.qualifier">
+      <category name="nglips"/>
    </feature>
-   <category-def name="wolips" label="WOLips">
+   <category-def name="nglips" label="NGLips">
       <description>
-         The WebObjects development feature for Eclipse.
+         Component editor for ng-objects development.
       </description>
    </category-def>
 </site>

@@ -519,4 +519,13 @@
       </factory>
    </extension>
 
+<!-- =================================================================================== -->
+<!-- Editor Association Override (prefer NG editor for ng projects)                      -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.ide.editorAssociationOverride">
+      <editorAssociationOverride
+            id="ng.componenteditor.editorAssociationOverride"
+            class="org.objectstyle.wolips.componenteditor.launcher.NGEditorAssociationOverride"/>
+   </extension>
+
 </plugin>
