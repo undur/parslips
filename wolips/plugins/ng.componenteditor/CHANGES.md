@@ -80,7 +80,6 @@ Neither package was referenced by any other code in the plugin.
 - `SubTypeHierarchyCache`, `SuperTypeHierarchyCache` — type hierarchy caches
 - `ILaunchInfo` — launch configuration interface
 - `Preferences` — stripped down significantly (removed unused launch/build preference code)
-- `IResourceType` — unused marker interface
 - `ProjectAdapter` — stripped down significantly (removed dead methods referencing deleted adapters)
 - `FolderAdapterFactory` — stripped down (removed registrations for deleted adapters)
 - `ProjectVariables` — deleted entirely. Was a wrapper around `WOVariables`/`WOEnvironment` for reading `wolips.properties`. Not needed by ng-objects.
@@ -106,7 +105,6 @@ To allow `ng.componenteditor` to coexist with WOLips in the same Eclipse install
 - **Error status ID** in `ErrorUtils` — changed to `"ng.componenteditor"`.
 
 **Intentionally kept as `org.objectstyle.wolips.*`:**
-- `WOLipsNatureUtils` nature IDs — these reference WOLips project natures (cross-plugin query, not self-referencing)
 - `AbstractEngine` Velocity resource loader class name — this is an actual Java fully-qualified class name, not a plugin ID
 
 ### WOLips coexistence: project-aware editor selection
@@ -141,6 +139,24 @@ Gutted the WOO editor tab (the "Display Groups" tab in the component editor). Th
 - `IPropertyChangeSource.java` — interface with zero implementations
 - `DuplicateNameException.java` + `ISortableEOModelObject.java` — only referenced each other
 - `PropertyListComparator.java` — removed dead `ISortableEOModelObject` code branch
+
+### Removed: WOLips nature checks and launcher infrastructure
+
+ng-objects projects don't use WOLips project natures — they use `base=ng` in `build.properties` instead. All nature-checking code has been removed, along with unregistered JavaScript launcher infrastructure inherited from the Amateras HTML editor.
+
+**Deleted:**
+- `WOLipsNatureUtils.java` — WOLips nature IDs and add/remove/check utilities
+- `Nature.java` — `IProjectNature` implementation, orphaned after `WOLipsNatureUtils` removal
+- `jseditor/launch/` (8 files) — `JavaScriptLaunchConfigurationDelegate`, `JavaScriptLaunchConstants`, `JavaScriptLaunchShortcut`, `JavaScriptLaunchUtil`, `JavaScriptLibraryTable`, `JavaScriptMainTab`, `JavaScriptTabGroup`, `executer/JavaScriptExecutor`. None were registered in `plugin.xml` — dead code from the Amateras HTML editor
+- `SystemEditorLauncher.java` — not registered in `plugin.xml`
+- `JavaScriptPropertyPage.java` — not registered in `plugin.xml`, fully dependent on deleted `JavaScriptLibraryTable`
+
+**Simplified:**
+- `ProjectAdapterFactory` — `createAdapter()` now returns `null` directly (ng-objects projects don't have WOLips natures, so the adapter factory never produces results). Kept as a no-op stub because it's registered in `plugin.xml`.
+- `FolderAdapterFactory` — same treatment; `createAdapter()` returns `null`, `isSupported()` simplified.
+- `BuildPropertiesAdapterFactory` — removed stale `WOLipsNatureUtils` import and commented-out nature check.
+- `HTMLPlugin` — removed `JavaScriptLaunchUtil.removeLibraries()` call from `stop()`.
+- `JavaScriptAssistProcessor` and `JavaScriptHyperlinkDetector` — removed `JavaScriptLibraryTable` imports, inlined the `"entry:"` prefix constant.
 
 ### Removed: adapter factory debug logging
 
