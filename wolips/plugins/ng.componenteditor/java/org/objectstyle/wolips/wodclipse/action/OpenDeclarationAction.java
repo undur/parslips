@@ -55,7 +55,7 @@ public class OpenDeclarationAction extends Action implements IEditorActionDelega
 
 					IFile wodFile = localizedComponentsLocateResult.getFirstWodFile();
 					if (wodFile != null) {
-						WorkbenchUtilities.open(wodFile, "org.objectstyle.wolips.componenteditor.ComponentEditor");
+						WorkbenchUtilities.open(wodFile, "ng.componenteditor.ComponentEditor");
 					}
 				}
 			} catch (Throwable e) {

@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
@@ -64,6 +65,45 @@ public class ApiUtils {
     return 0;
   }
 
+  /**
+   * Look up a Wo definition by class name from the global WebObjectDefinitions.xml,
+   * without requiring the class to exist in the project classpath.
+   */
+  public static Wo findGlobalWoByClassName(String className) {
+    try {
+      ensureGlobalApiModel();
+      if (_globalApiModel != null) {
+        Wo[] wos = _globalApiModel.getWODefinitions().getWos();
+        for (Wo wo : wos) {
+          if (className.equals(wo.getClassName())) {
+            return wo;
+          }
+        }
+      }
+    }
+    catch (Throwable t) {
+      // ignore
+    }
+    return null;
+  }
+
+  private static synchronized void ensureGlobalApiModel() {
+    if (_globalApiModel == null) {
+      try {
+        Bundle bundle = HTMLPlugin.getDefault().getBundle();
+        if (bundle != null) {
+          URL woDefinitionsURL = bundle.getEntry("/WebObjectDefinitions.xml");
+          if (woDefinitionsURL != null) {
+            _globalApiModel = new ApiModel(woDefinitionsURL);
+          }
+        }
+      }
+      catch (Throwable t) {
+        // ignore
+      }
+    }
+  }
+
   public static Wo findApiModelWo(IType elementType, ApiCache cache) throws ApiModelException {
     Wo wo;
     if (elementType == null) {
@@ -86,17 +126,8 @@ public class ApiUtils {
           ApiModel apiModel = null;
           try {
             if (elementType.getFullyQualifiedName().startsWith("ng.appserver.templating._private.")) {
-              if (_globalApiModel == null) {
-                Bundle bundle = Activator.getDefault().getBundle();
-                URL woDefinitionsURL = bundle.getEntry("/WebObjectDefinitions.xml");
-                if (woDefinitionsURL != null) {
-                  apiModel = new ApiModel(woDefinitionsURL);
-                }
-                _globalApiModel = apiModel;
-              }
-              else {
-                apiModel = _globalApiModel;
-              }
+              ensureGlobalApiModel();
+              apiModel = _globalApiModel;
             }
             else {
               IOpenable typeContainer = elementType.getOpenable();

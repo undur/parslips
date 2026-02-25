@@ -84,7 +84,7 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
 
   @Override
   protected void initializeKeyBindingScopes() {
-    setKeyBindingScopes(new String[] { "org.objectstyle.wolips.componenteditor.componentEditorScope" }); //$NON-NLS-1$
+    setKeyBindingScopes(new String[] { "ng.componenteditor.componentEditorScope" }); //$NON-NLS-1$
   }
 
   @Override

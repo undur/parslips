@@ -201,7 +201,7 @@ public class WodEditor extends TextEditor implements IEmbeddedEditor, IWebobject
 	}
 
 	protected void initializeKeyBindingScopes() {
-		setKeyBindingScopes(new String[] { "org.objectstyle.wolips.componenteditor.componentEditorScope" });
+		setKeyBindingScopes(new String[] { "ng.componenteditor.componentEditorScope" });
 	}
 
 	protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler verticalRuler, int styles) {

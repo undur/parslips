@@ -7,6 +7,9 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.objectstyle.wolips.bindings.api.ApiCache;
+import org.objectstyle.wolips.bindings.api.ApiUtils;
+import org.objectstyle.wolips.bindings.api.Binding;
+import org.objectstyle.wolips.bindings.api.Wo;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -72,6 +75,18 @@ public class InlineWodTagInfo extends TagInfo {
           for (WodCompletionProposal proposal : proposals) {
             AttributeInfo attrInfo = new AttributeInfo(proposal.getProposal(), true);
             addAttributeInfo(attrInfo);
+          }
+        }
+        else {
+          // Element type not found in classpath; fall back to global WebObjectDefinitions.xml
+          String expandedName = getExpandedElementTypeName();
+          Wo wo = ApiUtils.findGlobalWoByClassName(expandedName);
+          if (wo != null) {
+            java.util.List<Binding> bindings = wo.getBindings();
+            for (Binding binding : bindings) {
+              AttributeInfo attrInfo = new AttributeInfo(binding.getName(), true);
+              addAttributeInfo(attrInfo);
+            }
           }
         }
         _attributeInfoCached = true;
