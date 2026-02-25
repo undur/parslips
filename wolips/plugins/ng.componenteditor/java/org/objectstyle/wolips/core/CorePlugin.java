@@ -55,17 +55,7 @@
  */
 package org.objectstyle.wolips.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.Platform;
 import org.objectstyle.wolips.baseforuiplugins.AbstractBaseUIActivator;
-import org.objectstyle.wolips.core.resources.builder.IBuilder;
-import org.objectstyle.wolips.core.resources.internal.build.BuilderWrapper;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -77,10 +67,6 @@ public class CorePlugin extends AbstractBaseUIActivator {
 
 	// The shared instance.
 	private static CorePlugin plugin;
-
-	private BuilderWrapper[] builderWrapper;
-
-	private static final String EXTENSION_POINT_ID = "org.objectstyle.wolips.builders";
 
 	/**
 	 * The constructor.
@@ -96,7 +82,6 @@ public class CorePlugin extends AbstractBaseUIActivator {
 	public void stop(BundleContext context) throws Exception {
 		super.stop(context);
 		plugin = null;
-		builderWrapper = null;
 	}
 
 	/**
@@ -109,43 +94,4 @@ public class CorePlugin extends AbstractBaseUIActivator {
 		return plugin;
 	}
 
-	/**
-	 * @return The builder defined in the builder extension point
-	 * @throws CoreException
-	 */
-	private void loadBuilderExtensionPoint() {
-		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(EXTENSION_POINT_ID);
-		IExtension[] extensions = extensionPoint.getExtensions();
-		List<BuilderWrapper> arrayList = new ArrayList<BuilderWrapper>();
-		for (int i = 0; i < extensions.length; i++) {
-			IConfigurationElement[] configurationElements = extensions[i].getConfigurationElements();
-			for (int j = 0; j < configurationElements.length; j++) {
-				IConfigurationElement configurationElement = configurationElements[j];
-				IBuilder currentBuilder = null;
-				try {
-					currentBuilder = (IBuilder) configurationElement.createExecutableExtension("class");
-					String name = configurationElement.getAttribute("name");
-					String context = configurationElement.getAttribute("context");
-					arrayList.add(new BuilderWrapper(currentBuilder, name, context));
-				} catch (CoreException e) {
-					this.log("Could not create executable from configuration element: " + configurationElement, e);
-				}
-			}
-		}
-		this.builderWrapper = arrayList.toArray(new BuilderWrapper[arrayList.size()]);
-	}
-
-	public BuilderWrapper[] getBuilderWrapper(String context) {
-		if (this.builderWrapper == null) {
-			loadBuilderExtensionPoint();
-		}
-		List<BuilderWrapper> builderWrapperList = new ArrayList<BuilderWrapper>();
-		for (int i = 0; i < builderWrapper.length; i++) {
-			BuilderWrapper currentBuilderWrapper = builderWrapper[i];
-			if (currentBuilderWrapper.validInContext(context)) {
-				builderWrapperList.add(currentBuilderWrapper);
-			}
-		}
-		return builderWrapperList.toArray(new BuilderWrapper[builderWrapperList.size()]);
-	}
 }

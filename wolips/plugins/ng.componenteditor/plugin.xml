@@ -57,12 +57,6 @@
             id="ng.componenteditor.html"
             name="NG Html with WO tags"
             priority="high"/>
-      <content-type
-            base-type="org.eclipse.core.runtime.text"
-            file-extensions="patternset"
-            id="ng.componenteditor.patternset"
-            name="Ant Patternset file"
-            priority="normal"/>
    </extension>
 
 <!-- =================================================================================== -->
@@ -153,15 +147,6 @@
             id="ng.componenteditor.JavaScriptEditor"
             name="NG JavaScript Editor"/>
 
-<!-- Pattern Set Editor -->
-      <editor
-            default="true"
-            name="NG Pattern Set Editor"
-            icon="icons/editors/ant_buildfile.gif"
-            class="org.objectstyle.wolips.editors.patterset.PatternsetEditor"
-            id="ng.componenteditor.PatternsetEditor">
-         <contentTypeBinding contentTypeId="ng.componenteditor.patternset"/>
-      </editor>
    </extension>
 
 <!-- =================================================================================== -->
