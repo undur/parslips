@@ -83,4 +83,4 @@ Neither package was referenced by any other code in the plugin.
 - `ProjectAdapter` — stripped down significantly (removed dead methods referencing deleted adapters)
 - `FolderAdapterFactory` — stripped down (removed registrations for deleted adapters)
 - `ProjectVariables` — stripped down drastically. Dropped `IPersistentPreferenceStore` interface, removed all path getters, listener support, numeric getters/setters, save/dirty tracking. Only `getString()`, `getString(name, default)`, and `getBoolean(name, default)` are actually used.
-- `ERXValueUtilities` — stripped down from ~740 lines to ~45. Removed int, float, double, long, BigDecimal, enum, and compare methods. Only boolean parsing retained (the sole consumer is `ProjectVariables.getBoolean()`).
+- `ERXValueUtilities` — deleted entirely. Was an ERExtensions utility class (~740 lines). Boolean parsing logic inlined into `ProjectVariables.getBoolean()`. The `er.extensions.foundation` package is gone.

@@ -2,8 +2,6 @@ package org.objectstyle.wolips.variables;
 
 import org.objectstyle.woenvironment.env.WOVariables;
 
-import er.extensions.foundation.ERXValueUtilities;
-
 public class ProjectVariables {
 	private WOVariables _variables;
 
@@ -24,6 +22,20 @@ public class ProjectVariables {
 	}
 
 	public boolean getBoolean(String name, boolean defaultValue) {
-		return ERXValueUtilities.booleanValueWithDefault(getString(name), defaultValue);
+		String value = getString(name);
+		if (value == null) {
+			return defaultValue;
+		}
+		value = value.trim();
+		if (value.isEmpty()) {
+			return defaultValue;
+		}
+		if (value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true") || value.equalsIgnoreCase("y")) {
+			return true;
+		}
+		if (value.equalsIgnoreCase("no") || value.equalsIgnoreCase("false") || value.equalsIgnoreCase("n")) {
+			return false;
+		}
+		return defaultValue;
 	}
 }
