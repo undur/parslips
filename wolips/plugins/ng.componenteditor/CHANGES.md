@@ -50,6 +50,15 @@ Cascading from patternset removal, the entire WOLips builder infrastructure was 
 - `org.objectstyle.wolips.core.resources.internal.build` — Builder, BuilderWrapper, AbstractBuildVisitor, IncrementalBuildDeltaVisitor, FullBuildDeltaVisitor
 - `CorePlugin` — removed `BuilderWrapper` field and `loadBuilderExtensionPoint()`/`getBuilderWrapper()` methods
 
+### Removed: Plist editors
+
+Two self-contained plist editor packages were removed (22 files total):
+
+- `org.objectstyle.wolips.wooeditor.plisteditor` — text-based plist source editor with syntax coloring (PlistEditor, PlistConfiguration, PlistDocumentProvider, PlistScanner, etc.)
+- `org.objectstyle.wolips.baseforuiplugins.plist` — tree-based plist editor widget (PropertyListEditor, PropertyListEditorPart, content/label providers, editing support classes, StableDataStructureFactory, etc.)
+
+Neither package was referenced by any other code in the plugin.
+
 ### Removed: PB.project / legacy project types
 
 - `PBDotProjectAdapter` — legacy PB.project file support
