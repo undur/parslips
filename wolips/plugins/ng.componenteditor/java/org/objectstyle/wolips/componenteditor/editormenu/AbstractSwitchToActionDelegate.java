@@ -101,7 +101,13 @@ public abstract class AbstractSwitchToActionDelegate implements IEditorActionDel
 			ComponenteditorPlugin.getDefault().log(e);
 			return null;
 		}
-		if (localizedComponentsLocateResult.getComponents() == null || localizedComponentsLocateResult.getComponents().length == 0) {
+		// ng-objects: Don't require .wo folders — standalone .wo.html files won't have them.
+		// Consider the result valid if we found any component folders, Java files, HTML files, or API files.
+		boolean hasContent = (localizedComponentsLocateResult.getComponents() != null && localizedComponentsLocateResult.getComponents().length > 0)
+				|| localizedComponentsLocateResult.getDotJava() != null
+				|| localizedComponentsLocateResult.getDotWoHtml() != null
+				|| localizedComponentsLocateResult.getDotApi() != null;
+		if (!hasContent) {
 			return null;
 		}
 		return localizedComponentsLocateResult;

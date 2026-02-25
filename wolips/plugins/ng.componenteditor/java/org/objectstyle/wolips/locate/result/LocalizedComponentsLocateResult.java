@@ -88,6 +88,9 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 
 	private IFile dotApi;
 
+	// ng-objects: standalone .wo.html file (not inside a .wo folder)
+	private IFile dotWoHtml;
+
 	private String[] superclasses = new String[] { "ng.appserver.templating.NGElement" };
 
 	public LocalizedComponentsLocateResult() {
@@ -184,6 +187,9 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 				} else {
 					dotApi = file;
 				}
+			} else if (extension.equals("html") && file.getName().endsWith(".wo.html")) {
+				// ng-objects: standalone .wo.html template file
+				dotWoHtml = file;
 			} else {
 				String message = "unknown extension on " + file;
 				alert(message);
@@ -209,6 +215,10 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 
 	public IFolder[] getComponents() {
 		return components.toArray(new IFolder[components.size()]);
+	}
+
+	public IFile getDotWoHtml() {
+		return dotWoHtml;
 	}
 
 	public IFile getDotApi() {
@@ -268,6 +278,10 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 			htmlFile = LocalizedComponentsLocateResult.getHtml(componentFolder);
 		} else {
 			htmlFile = null;
+		}
+		// ng-objects: fall back to standalone .wo.html file
+		if (htmlFile == null && dotWoHtml != null) {
+			htmlFile = dotWoHtml;
 		}
 		return htmlFile;
 	}

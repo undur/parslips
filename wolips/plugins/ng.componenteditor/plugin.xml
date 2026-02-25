@@ -216,7 +216,21 @@
             name="Comment HTML"/>
    </extension>
 
+<!-- Command handlers for switch-to actions (work from any editor, not just ComponentEditor) -->
+   <extension point="org.eclipse.ui.handlers">
+      <handler commandId="ng.componenteditor.editors.tojava"
+            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToJavaHandler"/>
+      <handler commandId="ng.componenteditor.editors.tohtml"
+            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToHtmlHandler"/>
+      <handler commandId="ng.componenteditor.editors.towod"
+            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToWodHandler"/>
+   </extension>
+
    <extension point="org.eclipse.ui.bindings">
+      <key commandId="ng.componenteditor.editors.tojava"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+M3+1"/>
       <key commandId="ng.componenteditor.editors.tohtml"
            contextId="org.eclipse.ui.contexts.window"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -225,6 +239,10 @@
            contextId="org.eclipse.ui.contexts.window"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
            sequence="M1+M3+3"/>
+      <key commandId="ng.componenteditor.editors.toapi"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+M3+5"/>
       <key commandId="ng.componenteditor.editors.command.InsertAnyComponentAction"
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"

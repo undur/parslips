@@ -40,7 +40,10 @@ public class ResourceUtilities {
 	
 	/**
 	 * Returns the name of the given file with its extension removed.
-	 * 
+	 * Handles compound extensions like ".wo.html", ".wo.wod", ".wo.woo", ".wo.api"
+	 * by stripping the ".wo" part as well (ng-objects uses standalone .wo.html files
+	 * instead of .wo folders).
+	 *
 	 * @param fileName the name of the file
 	 * @return the name of the resource without the extension
 	 */
@@ -50,6 +53,10 @@ public class ResourceUtilities {
 			int lastDotIndex = fileNameWithoutExtension.lastIndexOf('.');
 			if (lastDotIndex != -1) {
 				fileNameWithoutExtension = fileNameWithoutExtension.substring(0, lastDotIndex);
+			}
+			// Handle compound extensions: ComponentName.wo.html → ComponentName
+			if (fileNameWithoutExtension.endsWith(".wo")) {
+				fileNameWithoutExtension = fileNameWithoutExtension.substring(0, fileNameWithoutExtension.length() - ".wo".length());
 			}
 		}
 		return fileNameWithoutExtension;
