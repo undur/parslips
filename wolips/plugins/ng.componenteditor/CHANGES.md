@@ -81,7 +81,7 @@ Neither package was referenced by any other code in the plugin.
 - `ILaunchInfo` — launch configuration interface
 - `Preferences` — stripped down significantly (removed unused launch/build preference code)
 - `ProjectAdapter` — stripped down significantly (removed dead methods referencing deleted adapters)
-- `FolderAdapterFactory` — stripped down (removed registrations for deleted adapters)
+- `FolderAdapterFactory` — deleted entirely (see "Removed: folder adapter cascade" below)
 - `ProjectVariables` — deleted entirely. Was a wrapper around `WOVariables`/`WOEnvironment` for reading `wolips.properties`. Not needed by ng-objects.
 - `VariablesPlugin` — deleted entirely. Was the activator/factory for `ProjectVariables`. Callers were updated:
   - `BuildProperties.ensureDefaultsInitialized()` — now uses hardcoded defaults directly instead of reading from `wolips.properties`
@@ -157,6 +157,44 @@ ng-objects projects don't use WOLips project natures — they use `base=ng` in `
 - `BuildPropertiesAdapterFactory` — removed stale `WOLipsNatureUtils` import and commented-out nature check.
 - `HTMLPlugin` — removed `JavaScriptLaunchUtil.removeLibraries()` call from `stop()`.
 - `JavaScriptAssistProcessor` and `JavaScriptHyperlinkDetector` — removed `JavaScriptLibraryTable` imports, inlined the `"entry:"` prefix constant.
+
+### Wired up: insert component toolbar
+
+Registered all 15 insert actions in `plugin.xml` so the component editor toolbar matches WOLips. Previously only the generic "Insert Component" button was wired up (and its icon was missing). Now the full set appears in the toolbar: Insert Tag, Insert Component, WOForm, WOBrowser, WOPopUpButton, WOText, WOCheckBox, WORadioButton, WOSubmitButton, WOImage, WOTextField, WOHyperlink, WORepetition, WOConditional, WOString. Copied the 15 corresponding toolbar icons from WOLips.
+
+### Removed: folder adapter cascade
+
+The entire WOLips folder adapter type hierarchy has been deleted — 21 files total. These adapter types were produced by `FolderAdapterFactory`, which was already a no-op stub (always returning `null`). No instances of these classes were ever created at runtime.
+
+**Deleted (8 implementations + 8 interfaces + base classes):**
+- `DotApplicationAdapter`, `DotFrameworkAdapter`, `DotWoAdapter`, `BuildAdapter`, `ContentsAdapter`, `ResourcesAdapter`, `WebServerResourcesAdapter`, `ProductAdapter`
+- `IDotApplicationAdapter`, `IDotFrameworkAdapter`, `IDotWoAdapter`, `IBuildAdapter`, `IContentsAdapter`, `IResourcesAdapter`, `IWebServerResourcesAdapter`, `IProductAdapter`
+- `AbstractFolderAdapter`, `IFolderAdapter` — orphaned after concrete adapters removed
+- `AbstractFileAdapter`, `IFileAdapter` — no subclasses remained
+- `FolderAdapterFactory` — removed from both source and `plugin.xml`
+
+**Simplified:**
+- `ProjectAdapter` — removed `getBuildAdapter()` and `getBuildFolder()` (referenced deleted `IBuildAdapter`)
+- `ApiUtils` — removed dead "Resources" binding defaults branch that relied on the never-instantiated adapter chain
+- `WOComponentCreationPage` — fixed latent NPE: was calling `getAdapter(ProjectAdapter.class)` which always returns `null`, then dereferencing it. Inlined the `getDefaultComponentsFolder()` logic (returns project root) directly.
+
+### Removed: orphaned icons
+
+Deleted 41 orphaned icon files (30 PNGs, 11 GIFs) with zero references in source or `plugin.xml`:
+
+- 17 EOF/EOModeler icons: `eoArgument`, `eoAttribute`, `eoDatabaseConfig`, `eoEntity`, `eoEntityIndex`, `eoFetchSpecification`, `eoModel`, `eoRelationship`, `eoStoredProcedure`, `newArgument`, `newAttribute`, `newDatabaseConfig`, `newEntity`, `newEntityIndex`, `newFetchSpecification`, `newRelationship`, `newStoredProcedure`
+- 13 other orphaned PNGs: `allowsNull`, `ascending`, `check`, `classProperty`, `descending`, `flattenRelationship`, `locking`, `migration`, `primaryKey`, `reverseEngineer`, `sql`, `subclassEntity`, `verify`
+- 11 orphaned GIFs: `BindingOutline`, `ComponentEditor`, `WODEditor`, `ant_buildfile`, `delete`, `eomodeler`, `icns`, `projectbuilder`, `ruleeditor`, `sample`, `wobuilder`
+
+### Removed: orphaned lib JARs
+
+Deleted 5 JARs from `lib/` and removed them from `Bundle-ClassPath` in MANIFEST.MF. No import statements for any of these libraries exist in the codebase.
+
+- `JavaScriptExecutor.jar` — dead after JavaScript launcher removal
+- `velocity-tools-generic-1.4.jar` — Velocity tools (never imported; Velocity itself is still used)
+- `oro-2.0.8.jar` — obsolete regex library (replaced by `java.util.regex`)
+- `avalon-logkit-2.1.jar` — obsolete logging framework (replaced by SLF4J)
+- `commons-lang-2.1.jar` — Apache Commons Lang (no imports found)
 
 ### Removed: adapter factory debug logging
 

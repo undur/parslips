@@ -30,7 +30,6 @@ import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
-import org.objectstyle.wolips.core.resources.types.project.ProjectAdapter;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.osgi.framework.Bundle;
@@ -301,18 +300,6 @@ public class ApiUtils {
 	      validValues.add("\"app\"");
 	      // ProjectFrameworkAdapter from jdt plugin not available
     	}
-    }
-    else if ("Resources".equals(defaultsName)) {
-      ProjectAdapter projectAdapter = (ProjectAdapter) javaProject.getProject().getAdapter(ProjectAdapter.class);
-      if (projectAdapter != null) {
-        IFolder folder = projectAdapter.getBuildAdapter().getProductAdapter().getContentsAdapter().getWebServerResourcesAdapter().getUnderlyingFolder();
-        try {
-          ApiUtils.acceptResources(folder, "", validValues);
-        }
-        catch (CoreException e) {
-          e.printStackTrace();
-        }
-      }
     }
     else if ("Actions".equals(defaultsName)) {
       List<BindingValueKey> bindingKeysList = BindingReflectionUtils.getBindingKeys(javaProject, componentType, "", false, BindingReflectionUtils.VOID_ONLY, false, typeCache);

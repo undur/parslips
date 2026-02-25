@@ -109,7 +109,7 @@ import org.eclipse.ui.actions.WorkspaceModifyDelegatingOperation;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
-import org.objectstyle.wolips.core.resources.types.project.ProjectAdapter;
+
 import org.eclipse.jface.viewers.LabelProvider;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
@@ -245,17 +245,15 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				} 
 				else {
 					IFolder selectedFolder = (IFolder)selectedObject;
-					ProjectAdapter projectAdapter = (ProjectAdapter) selectedFolder.getProject().getAdapter(ProjectAdapter.class);
 					IPath rootFolder = selectedFolder.getProjectRelativePath().uptoSegment(1);
-					if (!rootFolder.equals(projectAdapter.getDefaultComponentsFolder().getProjectRelativePath())) {
-						setContainerFullPath(projectAdapter.getDefaultComponentsFolder().getFullPath());
+					if (!rootFolder.equals(selectedFolder.getProject().getProjectRelativePath())) {
+						setContainerFullPath(selectedFolder.getProject().getFullPath());
 					}
 				}
-			} 
+			}
 			else if (selectedObject instanceof IResource) {
 				IResource selectedResource = (IResource) selectedObject;
-				ProjectAdapter projectAdapter = (ProjectAdapter) selectedResource.getProject().getAdapter(ProjectAdapter.class);
-				setContainerFullPath(projectAdapter.getDefaultComponentsFolder().getFullPath());
+				setContainerFullPath(selectedResource.getProject().getFullPath());
 			}
 		}
 	}

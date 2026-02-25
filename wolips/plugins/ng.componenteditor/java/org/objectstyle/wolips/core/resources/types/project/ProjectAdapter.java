@@ -56,11 +56,8 @@
 package org.objectstyle.wolips.core.resources.types.project;
 
 import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.objectstyle.wolips.core.resources.internal.types.AbstractResourceAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IBuildAdapter;
 
 // TODO: getDefaultComponentsFolder() currently returns project root.
 // When namespace-based project structure is exposed, this should return the proper components folder.
@@ -86,27 +83,6 @@ public class ProjectAdapter extends AbstractResourceAdapter {
 
 	public boolean isApplication() {
 		return !this.isFramework();
-	}
-
-	private IFolder getBuildFolder() {
-		// :TODO what if we have both folder
-		IResource resource = this.getUnderlyingProject().getFolder(IBuildAdapter.FILE_NAME_DIST);
-		if (resource.exists() && resource instanceof IFolder) {
-			return (IFolder) resource;
-		}
-		resource = this.getUnderlyingProject().getFolder(IBuildAdapter.FILE_NAME_BUILD);
-		if (resource.exists() && resource instanceof IFolder) {
-			return (IFolder) resource;
-		}
-		return null;
-	}
-
-	public IBuildAdapter getBuildAdapter() {
-		IResource resource = this.getBuildFolder();
-		if (resource == null) {
-			return null;
-		}
-		return (IBuildAdapter) resource.getAdapter(IBuildAdapter.class);
 	}
 
 	/**

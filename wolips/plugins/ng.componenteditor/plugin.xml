@@ -580,13 +580,6 @@
 <!-- Adapters (from core plugin)                                                         -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.core.runtime.adapters">
-      <factory class="org.objectstyle.wolips.core.resources.internal.types.folder.FolderAdapterFactory"
-            adaptableType="org.eclipse.core.resources.IFolder">
-         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IDotApplicationAdapter"/>
-         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IDotFrameworkAdapter"/>
-         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IDotWoAdapter"/>
-         <adapter type="org.objectstyle.wolips.core.resources.types.folder.IBuildAdapter"/>
-      </factory>
       <factory class="org.objectstyle.wolips.core.resources.internal.types.project.ProjectAdapterFactory"
             adaptableType="org.eclipse.core.resources.IProject">
          <adapter type="org.objectstyle.wolips.core.resources.types.project.ProjectAdapter"/>
