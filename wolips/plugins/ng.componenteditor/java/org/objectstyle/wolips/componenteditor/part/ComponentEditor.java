@@ -82,7 +82,7 @@ import org.objectstyle.wolips.wodclipse.core.document.IWOEditor;
  * @author uli
  */
 public class ComponentEditor extends ComponentEditorPart implements IGotoMarker, ITextEditor, IWOEditor {
-	public static final String ID = "org.objectstyle.wolips.componenteditor.ComponentEditor";
+	public static final String ID = "ng.componenteditor.ComponentEditor";
 
 	private boolean _dragAndDropInitialized;
 

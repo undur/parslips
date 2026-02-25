@@ -11,6 +11,7 @@ import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.hyperlink.IHyperlink;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
+import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.locate.LocatePlugin;
@@ -54,7 +55,7 @@ public class WodElementTypeHyperlink implements IHyperlink {
           if (componentsLocateResults != null) {
             IFile wodFile = componentsLocateResults.getFirstWodFile();
             if (wodFile != null) {
-            	WorkbenchUtilities.open(wodFile, "org.objectstyle.wolips.componenteditor.ComponentEditor");
+            	WorkbenchUtilities.open(wodFile, EditorsPlugin.ComponentEditorID);
             }
           }
         }

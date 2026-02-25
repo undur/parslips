@@ -149,14 +149,17 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 	}
 
 	public IEditorInput getEditorInput() {
-		if (componentEditorTabs == null) {
-			return null;
+		if (componentEditorTabs != null) {
+			int activePage = this.getActivePage();
+			if (activePage >= 0 && activePage < componentEditorTabs.length) {
+				IEditorInput input = componentEditorTabs[activePage].getActiveEditorInput();
+				if (input != null) {
+					return input;
+				}
+			}
 		}
-		int activePage = this.getActivePage();
-		if (activePage < 0 || activePage >= componentEditorTabs.length) {
-			return super.getEditorInput();
-		}
-		return componentEditorTabs[activePage].getActiveEditorInput();
+		// Fallback: return the original editor input (never null after init)
+		return super.getEditorInput();
 	}
 
 	protected void createPages() {

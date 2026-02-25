@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.core.CorePlugin;
+import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 
@@ -58,7 +59,7 @@ public class ComponentWOLipsResource implements IWOLipsResource {
 			fileName = fileName.substring(0, fileName.length() - extension.length() - 1);
 			IFile wodFile = (IFile) ((IFolder) _resource).findMember(fileName + ".wod");
 			if (wodFile != null) {
-				WorkbenchUtilities.open(wodFile, "org.objectstyle.wolips.componenteditor.ComponentEditor");
+				WorkbenchUtilities.open(wodFile, EditorsPlugin.ComponentEditorID);
 			}
 		} else {
 			WorkbenchUtilities.open((IFile) _resource, null);
