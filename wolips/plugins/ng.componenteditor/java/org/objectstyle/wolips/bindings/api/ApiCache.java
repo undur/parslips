@@ -100,6 +100,11 @@ public class ApiCache {
 
   public static synchronized List<TagShortcut> getTagShortcuts() {
     String tagShortcutsStr = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.TAG_SHORTCUTS_KEY);
+    if (tagShortcutsStr == null || tagShortcutsStr.isEmpty()) {
+      // Preference store not initialized (activator not started by OSGi); trigger default initialization
+      new org.objectstyle.wolips.bindings.preferences.PreferenceInitializer().initializeDefaultPreferences();
+      tagShortcutsStr = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.TAG_SHORTCUTS_KEY);
+    }
     if ((tagShortcutsStr == null && _tagShortcutsStr != null) || (tagShortcutsStr != null && !tagShortcutsStr.equals(_tagShortcutsStr))) {
       _tagShortcutsStr = tagShortcutsStr;
       _tagShortcuts = TagShortcut.fromPreferenceString(tagShortcutsStr);

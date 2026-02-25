@@ -157,8 +157,8 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         String bindingValue = value;
         String prefix = "$";
         String suffix = "";
-        String inlineBindingPrefix = _buildProperties.getInlineBindingPrefix();
-        String inlineBindingSuffix = _buildProperties.getInlineBindingSuffix();
+        String inlineBindingPrefix = _buildProperties != null ? _buildProperties.getInlineBindingPrefix() : "$";
+        String inlineBindingSuffix = _buildProperties != null ? _buildProperties.getInlineBindingSuffix() : "";
         if (value.startsWith(inlineBindingPrefix)) {
           prefix = inlineBindingPrefix;
           bindingValue = value.substring(inlineBindingPrefix.length());
