@@ -66,7 +66,7 @@ import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.editor.WodEditor;
 
 public class HtmlWodTab extends ComponentEditorTab {
-	private static final String SASH_WEIGHTS_KEY = "org.objectstyle.wolips.componenteditor.sashWeights";
+	private static final String SASH_WEIGHTS_KEY = "ng.componenteditor.sashWeights";
 
 	private TemplateEditor templateEditor;
 

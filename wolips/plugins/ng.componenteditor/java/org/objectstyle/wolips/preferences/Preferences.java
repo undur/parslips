@@ -66,7 +66,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
  */
 public class Preferences {
 
-	public static final String PREF_WOLIPS_PROPERTIES_FILE = "org.objectstyle.wolips.wolipsPropertiesFile";
+	public static final String PREF_WOLIPS_PROPERTIES_FILE = "ng.componenteditor.wolipsPropertiesFile";
 
 	public static final String trueString = "true";
 

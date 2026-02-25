@@ -60,7 +60,7 @@ import org.eclipse.ui.forms.IManagedForm;
 
 public class DisplayGroupPage extends WooFormPage {
 	public static final String PAGE_ID =
-		"org.objectstyle.wolips.wodclipse.woo.DisplayGroupPage";
+		"ng.componenteditor.woo.DisplayGroupPage";
 
 	private DisplayGroupPageBlock block;
 

@@ -52,7 +52,7 @@ import tk.eclipse.plugin.htmleditor.editors.IHTMLOutlinePage;
  * This shows the outline of HTML document.
  */
 public class TemplateOutlinePage extends Page implements IContentOutlinePage, IHTMLOutlinePage, StatusTextListener, IAnnotationModelListener, IAnnotationModelListenerExtension {
-  private static final String COMPACT_VIEW_PREFERENCE_KEY = "org.objectstyle.wolips.templateEditor.compactView";
+  private static final String COMPACT_VIEW_PREFERENCE_KEY = "ng.componenteditor.templateEditor.compactView";
   private static final String COLLAPSE_STRING = "&ndash;";
   private static final String EXPAND_STRING = "+";
 

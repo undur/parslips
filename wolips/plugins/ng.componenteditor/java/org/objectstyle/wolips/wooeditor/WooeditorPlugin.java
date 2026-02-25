@@ -105,7 +105,7 @@ public class WooeditorPlugin extends AbstractBaseUIActivator implements IResourc
    * @return the image descriptor
    */
   public static ImageDescriptor getImageDescriptor(final String path) {
-    return AbstractUIPlugin.imageDescriptorFromPlugin("org.objectstyle.wolips.wooeditor", path);
+    return AbstractUIPlugin.imageDescriptorFromPlugin("ng.componenteditor", path);
   }
 
   private FormColors formColors;

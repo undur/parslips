@@ -8,7 +8,7 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator extends AbstractBaseUIActivator {
   // The plug-in ID
-  public static final String PLUGIN_ID = "org.objectstyle.wolips.wodclipse.core";
+  public static final String PLUGIN_ID = "ng.componenteditor";
 
   public static final String TEMPLATE_PROBLEM_MARKER = "ng.componenteditor.problem";
 

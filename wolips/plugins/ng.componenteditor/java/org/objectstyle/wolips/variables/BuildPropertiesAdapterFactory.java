@@ -102,7 +102,7 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 
 	public static void initializeBuildProperties(BuildProperties buildProperties) {
 		// FIXME: extension point may not exist when running without WOLips variables plugin
-		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("org.objectstyle.wolips.variables.buildPropertiesInitializer");
+		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("ng.componenteditor.buildPropertiesInitializer");
 		if (extensionPoint == null) {
 			return;
 		}
@@ -123,7 +123,7 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 
 	public static void initializeBuildPropertiesDefaults(BuildProperties buildProperties) {
 		// FIXME: extension point may not exist when running without WOLips variables plugin
-		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("org.objectstyle.wolips.variables.buildPropertiesInitializer");
+		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("ng.componenteditor.buildPropertiesInitializer");
 		if (extensionPoint == null) {
 			return;
 		}

@@ -61,7 +61,7 @@ public class BindingsPage extends ApiFormPage {
 
 	private BindingsPageBlock block;
 
-	public static String PAGE_ID = "org.objectstyle.wolips.wodclipse.api.DisplayPage";
+	public static String PAGE_ID = "ng.componenteditor.api.BindingsPage";
 
 	public BindingsPage(ApiEditor apiEditor, String title) {
 		super(apiEditor, PAGE_ID, title);

@@ -70,7 +70,7 @@ public class ComponenteditorPlugin extends AbstractBaseUIActivator {
 	
 	public static final String UNCONNECTED_PROBLEM_ICON = "unconnectedProblem";
 
-	public static final String PLUGIN_ID = "org.objectstyle.wolips.componenteditor";
+	public static final String PLUGIN_ID = "ng.componenteditor";
 	
 	// The shared instance.
 	private static ComponenteditorPlugin plugin;

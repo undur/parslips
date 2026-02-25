@@ -108,7 +108,7 @@ public class ComponentsPlugin extends AbstractBaseUIActivator {
 	 * @return the image descriptor
 	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
-		return AbstractUIPlugin.imageDescriptorFromPlugin("org.objectstyle.wolips.components", path);
+		return AbstractUIPlugin.imageDescriptorFromPlugin("ng.componenteditor", path);
 	}
 
 }

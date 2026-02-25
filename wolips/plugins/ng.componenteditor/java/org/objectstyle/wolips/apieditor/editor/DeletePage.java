@@ -73,7 +73,7 @@ import org.eclipse.ui.part.FileEditorInput;
 
 public class DeletePage extends ApiFormPage {
 
-	public static String PAGE_ID = "org.objectstyle.wolips.wodclipse.api.DeletePage";
+	public static String PAGE_ID = "ng.componenteditor.api.DeletePage";
 
 	public DeletePage(ApiEditor apiEditor, String title) {
 		super(apiEditor, PAGE_ID, title);

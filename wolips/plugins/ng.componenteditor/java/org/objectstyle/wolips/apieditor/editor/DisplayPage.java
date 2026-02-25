@@ -57,7 +57,7 @@ package org.objectstyle.wolips.apieditor.editor;
 
 public class DisplayPage extends ApiFormPage {
 
-	public static String PAGE_ID = "org.objectstyle.wolips.wodclipse.api.DisplayPage";
+	public static String PAGE_ID = "ng.componenteditor.api.DisplayPage";
 
 	public DisplayPage(ApiEditor apiEditor, String title) {
 		super(apiEditor, PAGE_ID, title);

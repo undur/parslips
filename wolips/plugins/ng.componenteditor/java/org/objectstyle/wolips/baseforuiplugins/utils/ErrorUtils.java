@@ -50,7 +50,7 @@ public class ErrorUtils {
 		}
 		_parent.getDisplay().syncExec(new Runnable() {
 			public void run() {
-				ErrorDialog.openError(_parent, title, message, new Status(IStatus.ERROR, "org.objectstyle.wolips.baseforuiplugins", -1, message, throwable));
+				ErrorDialog.openError(_parent, title, message, new Status(IStatus.ERROR, "ng.componenteditor", -1, message, throwable));
 			}
 		});
 	}

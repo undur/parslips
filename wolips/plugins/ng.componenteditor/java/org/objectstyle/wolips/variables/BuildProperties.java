@@ -403,7 +403,7 @@ public class BuildProperties {
 			_woVersionDefault = new Version("5.3.3");
 			_inlineBindingPrefixDefault = "$";
 			_inlineBindingSuffixDefault = "";
-			_wellFormedTemplateRequiredDefault = "yes".equals(Platform.getPreferencesService().getString("org.objectstyle.wolips.bindings", "WellFormedTemplate", null, null));
+			_wellFormedTemplateRequiredDefault = "yes".equals(Platform.getPreferencesService().getString("ng.componenteditor", "WellFormedTemplate", null, null));
 			BuildPropertiesAdapterFactory.initializeBuildPropertiesDefaults(this);
 		}
 	}

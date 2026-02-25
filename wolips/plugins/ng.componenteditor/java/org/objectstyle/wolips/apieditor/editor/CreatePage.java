@@ -78,7 +78,7 @@ import org.objectstyle.wolips.bindings.api.ApiModelException;
 
 public class CreatePage extends ApiFormPage {
 
-	public static String PAGE_ID = "org.objectstyle.wolips.wodclipse.api.CreatePage";
+	public static String PAGE_ID = "ng.componenteditor.api.CreatePage";
 
 	public CreatePage(ApiEditor apiEditor, String title) {
 		super(apiEditor, PAGE_ID, title);

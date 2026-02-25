@@ -61,17 +61,17 @@ public class EditorsPlugin extends AbstractBaseUIActivator {
 	// The shared instance.
 	private static EditorsPlugin plugin;
 
-	public static String ApiEditorID = "org.objectstyle.wolips.wodclipse.api.ApiEditor";
+	public static String ApiEditorID = "ng.componenteditor.ApiEditor";
 
-	public static String HTMLEditorID = "org.objectstyle.wolips.wodclipse.html.HtmlEditor";
+	public static String HTMLEditorID = "ng.componenteditor.TemplateEditor";
 
-	public static String WodEditorID = "org.objectstyle.wolips.wodclipse.WodEditor";
+	public static String WodEditorID = "ng.componenteditor.WodEditor";
 
-	public static String WooEditorID = "org.objectstyle.wolips.wooeditor.editor.WooEditor";
+	public static String WooEditorID = "ng.componenteditor.WooEditor";
 
 	public static String ComponentEditorID = "ng.componenteditor.ComponentEditor";
 
-	public static String WOBuilderID = "org.objectstyle.wolips.editors.editor.wobuilder";
+	public static String WOBuilderID = "ng.componenteditor.WOBuilder";
 
 	/**
 	 * The constructor.
@@ -108,6 +108,6 @@ public class EditorsPlugin extends AbstractBaseUIActivator {
 	 * @return the image descriptor
 	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
-		return AbstractUIPlugin.imageDescriptorFromPlugin("org.objectstyle.wolips.editors", path);
+		return AbstractUIPlugin.imageDescriptorFromPlugin("ng.componenteditor", path);
 	}
 }
