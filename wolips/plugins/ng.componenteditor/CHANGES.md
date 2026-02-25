@@ -120,6 +120,28 @@ Added `NGEditorAssociationOverride`, an `IEditorAssociationOverride` that ensure
 - `plugin.xml` — registers the `org.eclipse.ui.ide.editorAssociationOverride` extension
 - Uses the existing `BuildProperties` adapter to read `build.properties`
 
+### Removed: WODisplayGroup editor and related dead code
+
+Gutted the WOO editor tab (the "Display Groups" tab in the component editor). The WODisplayGroup/ERXDisplayGroup editing UI, data model, and supporting classes have been removed — ng-objects doesn't use EOF display groups.
+
+**Deleted:**
+- `DisplayGroup.java`, `DisplayGroupPage.java`, `DisplayGroupPageBlock.java`, `DisplayGroupDetailsPage.java` — the entire display group editor UI and data model
+- `WooFormPage.java` — base class, orphaned after display group removal
+- `wooeditor/databinding/observable/` (4 files) and `wooeditor/widgets/RadioGroup.java` — custom SWT databinding classes used exclusively by the display group detail form
+
+**Simplified:**
+- `WooEditor.java` — stripped to a minimal `FormEditor` shell with a blank placeholder page. Retains encoding change detection. Ready to host future component-level settings.
+- `WooModel.java` — removed all display group fields, constants, create/remove/refactor methods. Retained: .woo file I/O, encoding management, encoding validation.
+- Component editor tab label changed from "Display Groups" to "WOO"
+
+**Additional dead code removed (unrelated to display groups):**
+- `tobeintregrated/` package (`MethodSearch`, `ASTMethodExplorer`, `NameComparator`) — abandoned, never-integrated code with zero callers
+- `IPattern.java` + `Pattern.java` — orphaned patternset glob matcher (the Ant replacement noted below), no callers remained
+- `EOGenLocateScope.java` — EOGenerator folder locator, no callers
+- `IPropertyChangeSource.java` — interface with zero implementations
+- `DuplicateNameException.java` + `ISortableEOModelObject.java` — only referenced each other
+- `PropertyListComparator.java` — removed dead `ISortableEOModelObject` code branch
+
 ### Removed: adapter factory debug logging
 
 Removed the noisy debug log message from `AbstractResourceAdapterFactory.getAdapter()` that logged "This Adapter Factory does not support adaptableObject: ..." for every non-matching adapter query. This is normal Eclipse adapter framework behavior and doesn't warrant a log entry. The unused `CorePlugin` import was also cleaned up.

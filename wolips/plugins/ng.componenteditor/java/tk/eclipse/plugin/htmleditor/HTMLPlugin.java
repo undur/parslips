@@ -27,7 +27,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import tk.eclipse.plugin.htmleditor.views.IPaletteContributer;
-import tk.eclipse.plugin.jseditor.launch.JavaScriptLaunchUtil;
 import tk.eclipse.plugin.jspeditor.editors.IJSPFilter;
 import tk.eclipse.plugin.jspeditor.editors.ITLDLocator;
 
@@ -297,7 +296,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	@Override
   public void stop(BundleContext context) throws Exception {
 		org.objectstyle.wolips.componenteditor.listener.JavaChangeRevalidator.uninstall();
-		JavaScriptLaunchUtil.removeLibraries();
 		colorProvider.dispose();
 		super.stop(context);
 	}

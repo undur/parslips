@@ -28,7 +28,6 @@ import tk.eclipse.plugin.htmleditor.HTMLUtil;
 import tk.eclipse.plugin.htmleditor.template.HTMLTemplateAssistProcessor;
 import tk.eclipse.plugin.htmleditor.template.HTMLTemplateManager;
 import tk.eclipse.plugin.htmleditor.template.JavaScriptContextType;
-import tk.eclipse.plugin.jseditor.launch.JavaScriptLibraryTable;
 
 /**
  * IContentAssistProcessor implementation for JavaScriptEditor.
@@ -383,8 +382,8 @@ public class JavaScriptAssistProcessor extends HTMLTemplateAssistProcessor { /* 
 			
 			for(int i=0;i<javaScripts.length;i++){
 				InputStream in = null;
-				if(javaScripts[i].startsWith(JavaScriptLibraryTable.PREFIX)){
-					IResource resource = wsroot.findMember(javaScripts[i].substring(JavaScriptLibraryTable.PREFIX.length()));
+				if(javaScripts[i].startsWith("entry:")){
+					IResource resource = wsroot.findMember(javaScripts[i].substring("entry:".length()));
 					if(resource!=null && resource instanceof IFile && resource.exists()){
 						in = ((IFile)resource).getContents();
 					}

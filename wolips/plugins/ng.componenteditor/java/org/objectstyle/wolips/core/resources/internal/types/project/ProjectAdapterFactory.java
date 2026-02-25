@@ -56,8 +56,6 @@
 package org.objectstyle.wolips.core.resources.internal.types.project;
 
 import org.eclipse.core.resources.IProject;
-import org.objectstyle.wolips.baseforplugins.util.WOLipsNatureUtils;
-import org.objectstyle.wolips.core.resources.internal.build.Nature;
 import org.objectstyle.wolips.core.resources.internal.types.AbstractResourceAdapterFactory;
 import org.objectstyle.wolips.core.resources.types.IResourceType;
 import org.objectstyle.wolips.core.resources.types.project.ProjectAdapter;
@@ -85,13 +83,8 @@ public class ProjectAdapterFactory extends AbstractResourceAdapterFactory {
 	}
 
 	public IResourceType createAdapter(Object adaptableObject, Class adapterType) {
-		IProject project = (IProject) adaptableObject;
-		Nature nature = (Nature) WOLipsNatureUtils.getNature(project);
-		if (nature == null) {
-			return null;
-		} else if (adapterType == ProjectAdapter.class) {
-			return new ProjectAdapter(project, nature.isFramework());
-		}
+		// ng-objects projects don't have WOLips natures, so this adapter
+		// factory never produces results. Kept as a no-op stub.
 		return null;
 	}
 }

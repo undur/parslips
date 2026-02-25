@@ -65,17 +65,11 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
-import org.objectstyle.wolips.baseforplugins.util.WOLipsNatureUtils;
-
 public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 	private Map<IProject, BuildProperties> _cache = new HashMap<IProject, BuildProperties>();
 
 	public Object getAdapter(Object adaptableObject, Class adapterType) {
 		IProject project = (IProject) adaptableObject;
-		// FIXME: WOLips nature check removed — ng-objects projects don't have WOLips nature
-		// if (!WOLipsNatureUtils.isWOLipsNature(project)) {
-		// 	return null;
-		// }
 
 		BuildProperties properties = null;
 		if (adapterType == BuildProperties.class) {

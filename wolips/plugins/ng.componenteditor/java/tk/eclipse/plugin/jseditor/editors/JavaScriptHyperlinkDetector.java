@@ -25,7 +25,6 @@ import org.eclipse.ui.ide.IGotoMarker;
 import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.HTMLProjectParams;
 import tk.eclipse.plugin.htmleditor.HTMLUtil;
-import tk.eclipse.plugin.jseditor.launch.JavaScriptLibraryTable;
 
 /**
  * <code>IHyperlinkDetector</code> for JavaScript.
@@ -125,8 +124,8 @@ public class JavaScriptHyperlinkDetector implements IHyperlinkDetector {
 			for(int i=0;i<javaScripts.length;i++){
 				InputStream in = null;
 				Object obj = null;
-				if(javaScripts[i].startsWith(JavaScriptLibraryTable.PREFIX)){
-					IResource resource = wsroot.findMember(javaScripts[i].substring(JavaScriptLibraryTable.PREFIX.length()));
+				if(javaScripts[i].startsWith("entry:")){
+					IResource resource = wsroot.findMember(javaScripts[i].substring("entry:".length()));
 					if(resource!=null && resource instanceof IFile && resource.exists()){
 						in = ((IFile)resource).getContents();
 						obj = resource;

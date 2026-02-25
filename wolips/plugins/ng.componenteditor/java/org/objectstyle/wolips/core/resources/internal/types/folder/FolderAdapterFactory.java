@@ -56,20 +56,16 @@
 package org.objectstyle.wolips.core.resources.internal.types.folder;
 
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
-import org.objectstyle.wolips.baseforplugins.util.WOLipsNatureUtils;
 import org.objectstyle.wolips.core.resources.internal.types.AbstractResourceAdapterFactory;
 import org.objectstyle.wolips.core.resources.types.IResourceType;
-import org.objectstyle.wolips.core.resources.types.folder.IBuildAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IContentsAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotApplicationAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotFrameworkAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotWoAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IResourcesAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IWebServerResourcesAdapter;
 
 /**
- * @author ulrich
+ * Adapter factory for WOLips folder types (.woa, .framework, .wo bundles).
+ * ng-objects projects don't use these folder types, so this factory is
+ * a no-op stub. Kept because it's registered in plugin.xml.
  */
 public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 
@@ -80,62 +76,10 @@ public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 	}
 
 	public boolean isSupported(Object adaptableObject, Class adapterType) {
-		if (!(adaptableObject instanceof IFolder)) {
-			return false;
-		}
-		if (adapterType == IBuildAdapter.class) {
-			return true;
-		} else if (adapterType == IContentsAdapter.class) {
-			return true;
-		} else if (adapterType == IResourcesAdapter.class) {
-			return true;
-		} else if (adapterType == IWebServerResourcesAdapter.class) {
-			return true;
-		} else if (adapterType == IDotApplicationAdapter.class) {
-			return true;
-		} else if (adapterType == IDotFrameworkAdapter.class) {
-			return true;
-		} else if (adapterType == IDotWoAdapter.class) {
-			return true;
-		}
-		return false;
+		return adaptableObject instanceof IFolder;
 	}
 
 	public IResourceType createAdapter(Object adaptableObject, Class adapterType) {
-		IFolder folder = (IFolder) adaptableObject;
-		IProject project = folder.getProject();
-		if (!WOLipsNatureUtils.isWOLipsNature(project)) {
-			return null;
-		}
-		if (adapterType == IBuildAdapter.class) {
-			if (folder.getName() != null && (IBuildAdapter.FILE_NAME_BUILD.equals(folder.getName()) || IBuildAdapter.FILE_NAME_DIST.equals(folder.getName()))) {
-				return new BuildAdapter(folder);
-			}
-		} else if (adapterType == IContentsAdapter.class) {
-			if (folder.getName() != null && IContentsAdapter.FILE_NAME.equals(folder.getName())) {
-				return new ContentsAdapter(folder);
-			}
-		} else if (adapterType == IResourcesAdapter.class) {
-			if (folder.getName() != null && IResourcesAdapter.FILE_NAME.equals(folder.getName())) {
-				return new ResourcesAdapter(folder);
-			}
-		} else if (adapterType == IWebServerResourcesAdapter.class) {
-			if (folder.getName() != null && IWebServerResourcesAdapter.FILE_NAME.equals(folder.getName())) {
-				return new WebServerResourcesAdapter(folder);
-			}
-		} else if (adapterType == IDotApplicationAdapter.class) {
-			if (folder.getFileExtension() != null && IDotApplicationAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
-				return new DotApplicationAdapter(folder);
-			}
-		} else if (adapterType == IDotFrameworkAdapter.class) {
-			if (folder.getFileExtension() != null && IDotFrameworkAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
-				return new DotFrameworkAdapter(folder);
-			}
-		} else if (adapterType == IDotWoAdapter.class) {
-			if (folder.getFileExtension() != null && IDotWoAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
-				return new DotWoAdapter(folder);
-			}
-		}
 		return null;
 	}
 }
