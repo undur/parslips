@@ -31,18 +31,16 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyInfo;
 public class WodCompletionUtils {
   public static void openBinding(String bindingValue, IApiBinding binding, IType componentType, boolean onlyIfMissing) throws CoreException {
     BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(bindingValue, componentType, componentType.getJavaProject(), WodParserCache.getTypeCache());
-    if (bindingValueKeyPath.isValid()) {
-      if (bindingValueKeyPath.exists()) {
-        if (!onlyIfMissing) {
-          IMember member = bindingValueKeyPath.getLastBindingKey().getBindingMember();
-          if (member != null) {
-            JavaUI.openInEditor(member, true, true);
-          }
+    if (bindingValueKeyPath.isValid() && bindingValueKeyPath.exists()) {
+      if (!onlyIfMissing) {
+        IMember member = bindingValueKeyPath.getLastBindingKey().getBindingMember();
+        if (member != null) {
+          JavaUI.openInEditor(member, true, true);
         }
       }
-      else if (bindingValueKeyPath.canAddKey()) {
-        WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, binding, componentType);
-      }
+    }
+    else if (!bindingValueKeyPath.exists() && bindingValueKeyPath.isSingleKey()) {
+      WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, binding, componentType);
     }
   }
 
