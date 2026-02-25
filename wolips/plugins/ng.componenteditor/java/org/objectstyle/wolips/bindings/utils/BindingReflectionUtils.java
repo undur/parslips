@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
@@ -133,9 +134,28 @@ public class BindingReflectionUtils {
 
   public static void findMatchingElementClassNames(String elementTypeName, int matchType, TypeNameCollector typeNameCollector, IProgressMonitor progressMonitor) throws JavaModelException {
     if (elementTypeName != null) {
+      IType superclassType = typeNameCollector.getSuperclassType();
+      if (superclassType == null) {
+        // Superclass type (e.g. NGElement) not found in project classpath; fall back to workspace-wide search
+        SearchEngine searchEngine = new SearchEngine();
+        IJavaSearchScope searchScope = SearchEngine.createJavaSearchScope(new IJavaElement[] { typeNameCollector.getProject() }, true);
+        int lastDotIndex = elementTypeName.lastIndexOf('.');
+        char[] packageName;
+        char[] typeName;
+        if (lastDotIndex == -1) {
+          packageName = null;
+          typeName = elementTypeName.toCharArray();
+        }
+        else {
+          packageName = elementTypeName.substring(0, lastDotIndex).toCharArray();
+          typeName = elementTypeName.substring(lastDotIndex + 1).toCharArray();
+        }
+        searchEngine.searchAllTypeNames(packageName, SearchPattern.R_EXACT_MATCH, typeName, matchType, IJavaSearchConstants.CLASS, searchScope, typeNameCollector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, progressMonitor);
+        return;
+      }
       SearchEngine searchEngine = new SearchEngine();
       //IJavaSearchScope searchScope = new WOHierarchyScope(typeNameCollector.getSuperclassType(), typeNameCollector.getProject());
-      IJavaSearchScope searchScope = WOHierarchyScope.hierarchyScope(typeNameCollector.getSuperclassType(), typeNameCollector.getProject().getProject());
+      IJavaSearchScope searchScope = WOHierarchyScope.hierarchyScope(superclassType, typeNameCollector.getProject().getProject());
       int lastDotIndex = elementTypeName.lastIndexOf('.');
       char[] packageName;
       char[] typeName;
@@ -152,15 +172,16 @@ public class BindingReflectionUtils {
   }
 
   public static boolean isWOComponent(IType type, TypeCache cache) throws JavaModelException {
-    return BindingReflectionUtils.isType(type, new String[] { "com.webobjects.appserver.WOComponent" }, cache);
+    return BindingReflectionUtils.isType(type, new String[] { "ng.appserver.templating.NGComponent" }, cache);
   }
 
   public static boolean isNSKeyValueCoding(IType type, TypeCache cache) throws JavaModelException {
-    return BindingReflectionUtils.isType(type, new String[] { "com.webobjects.foundation.NSKeyValueCoding" }, cache);
+    // ng-objects does not use NSKeyValueCoding; always return false
+    return false;
   }
 
   public static boolean isNSCollection(IType type, TypeCache cache) throws JavaModelException {
-    return BindingReflectionUtils.isType(type, new String[] { "com.webobjects.foundation.NSDictionary", "com.webobjects.foundation.NSArray", "com.webobjects.foundation.NSSet", "er.extensions.ERXLocalizer" }, cache);
+    return BindingReflectionUtils.isType(type, new String[] { "java.util.Map", "java.util.List", "java.util.Set", "java.util.Collection" }, cache);
   }
 
   public static boolean isType(IType type, String[] possibleTypes, TypeCache cache) throws JavaModelException {
@@ -440,9 +461,9 @@ public class BindingReflectionUtils {
   static {
     _systemTypeNames = new HashSet<String>();
     _systemTypeNames.add("Object");
-    _systemTypeNames.add("WOElement");
-    _systemTypeNames.add("WOActionResults");
-    _systemTypeNames.add("WOComponent");
+    _systemTypeNames.add("NGElement");
+    _systemTypeNames.add("NGActionResults");
+    _systemTypeNames.add("NGComponent");
 
     _uselessSystemBindings = new HashSet<String>();
     _uselessSystemBindings.add("baseURL");

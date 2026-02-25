@@ -18,7 +18,6 @@ import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IOpenable;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -86,7 +85,7 @@ public class ApiUtils {
         if (apiMissing == null || !apiMissing.booleanValue()) {
           ApiModel apiModel = null;
           try {
-            if (elementType.getFullyQualifiedName().startsWith("com.webobjects.appserver._private.")) {
+            if (elementType.getFullyQualifiedName().startsWith("ng.appserver.templating._private.")) {
               if (_globalApiModel == null) {
                 Bundle bundle = Activator.getDefault().getBundle();
                 URL woDefinitionsURL = bundle.getEntry("/WebObjectDefinitions.xml");
@@ -248,32 +247,10 @@ public class ApiUtils {
       validValues.add("\"image/png\"");
     }
     else if ("Direct Actions".equals(defaultsName)) {
-    	if (partialValue != null && partialValue.startsWith("\"")) {
-	      TypeNameCollector typeNameCollector = new TypeNameCollector("com.webobjects.appserver.WODirectAction", javaProject, false);
-	      BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, typeNameCollector, new NullProgressMonitor());
-	      for (IType type : typeNameCollector.types()) {
-	        IMethod[] methods = type.getMethods();
-	        for (IMethod method : methods) {
-	          String name = method.getElementName();
-	          if (name.endsWith("Action") && method.getParameterNames().length == 0) {
-	            validValues.add("\"" + name.substring(0, name.length() - "Action".length()) + "\"");
-	          }
-	        }
-	      }
-    	}
+    	// ng-objects does not have WODirectAction; direct action completion disabled
     }
     else if ("Direct Action Classes".equals(defaultsName)) {
-    	if (partialValue != null && partialValue.startsWith("\"")) {
-	      TypeNameCollector typeNameCollector = new TypeNameCollector("com.webobjects.appserver.WODirectAction", javaProject, false);
-	      BindingReflectionUtils.findMatchingElementClassNames(partialValue.substring(1), SearchPattern.R_PREFIX_MATCH, typeNameCollector, new NullProgressMonitor());
-	      for (String typeName : typeNameCollector.getTypeNames()) {
-	        int dotIndex = typeName.lastIndexOf('.');
-	        if (dotIndex != -1) {
-	          typeName = typeName.substring(dotIndex + 1);
-	        }
-	        validValues.add("\"" + typeName + "\"");
-	      }
-    	}
+    	// ng-objects does not have WODirectAction; direct action class completion disabled
     }
     else if ("Page Names".equals(defaultsName)) {
     	if (partialValue != null && partialValue.startsWith("\"")) {

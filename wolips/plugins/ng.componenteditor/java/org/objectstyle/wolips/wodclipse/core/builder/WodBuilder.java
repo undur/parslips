@@ -157,7 +157,7 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 					if (compilationUnit != null) {
 						IType type = compilationUnit.findPrimaryType();
 						if (type != null) {
-							IType woElementType = type.getJavaProject().findType("com.webobjects.appserver.WOElement", progressMonitor);
+							IType woElementType = type.getJavaProject().findType("ng.appserver.templating.NGElement", progressMonitor);
 							if (woElementType != null) {
 								ITypeHierarchy typeHierarchy = SuperTypeHierarchyCache.getTypeHierarchy(type, progressMonitor);
 								if (typeHierarchy != null && typeHierarchy.contains(woElementType)) {

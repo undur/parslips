@@ -222,7 +222,8 @@ public class DisplayGroup implements IPropertyChangeSource {
       _classNameList = new ArrayList<String>();
       try {
         IJavaProject project = JavaCore.create(_wooModel.getProject());
-        IType displayGroupType = project.findType("com.webobjects.appserver.WODisplayGroup");
+        // ng-objects: WODisplayGroup equivalent not yet available
+        IType displayGroupType = project.findType("ng.appserver.templating.NGElement");
         List<IType> subTypes = WodParserCache.getTypeCache().getSubtypesOfInProject(displayGroupType, project);
         for (IType type : subTypes) {
           _classNameList.add(type.getElementName());

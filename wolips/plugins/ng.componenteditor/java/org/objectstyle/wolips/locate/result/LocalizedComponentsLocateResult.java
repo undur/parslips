@@ -88,7 +88,7 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 
 	private IFile dotApi;
 
-	private String[] superclasses = new String[] { "com.webobjects.appserver.WOElement" };
+	private String[] superclasses = new String[] { "ng.appserver.templating.NGElement" };
 
 	public LocalizedComponentsLocateResult() {
 		super();

@@ -299,7 +299,8 @@ public class WooModel {
 	  if (typeName != null) {
 	  	classType = javaProject.findType(typeName);
 	  } else {
-	  	TypeNameCollector typeNameCollector = new TypeNameCollector("com.webobjects.appserver.WODisplayGroup", javaProject, true);
+	  	// ng-objects: WODisplayGroup equivalent not yet available; using NGElement as fallback
+	  	TypeNameCollector typeNameCollector = new TypeNameCollector("ng.appserver.templating.NGElement", javaProject, true);
 	  	BindingReflectionUtils.findMatchingElementClassNames(className, SearchPattern.R_EXACT_MATCH, typeNameCollector, null);
 	  	if (!typeNameCollector.isEmpty()) {
 	  		String matchingElementClassName = typeNameCollector.firstTypeName();

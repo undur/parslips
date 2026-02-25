@@ -76,11 +76,11 @@ public class TypeNameCollector extends TypeNameRequestor {
 	private boolean _requireTypeInProject;
 
 	public TypeNameCollector(IJavaProject project, boolean requireTypeInProject) throws JavaModelException {
-		this("com.webobjects.appserver.WOElement", project, requireTypeInProject, new TreeSet<String>());
+		this("ng.appserver.templating.NGElement", project, requireTypeInProject, new TreeSet<String>());
 	}
 
 	public TypeNameCollector(IJavaProject project, boolean requireTypeInProject, Set<String> typeNames) throws JavaModelException {
-		this("com.webobjects.appserver.WOElement", project, requireTypeInProject, typeNames);
+		this("ng.appserver.templating.NGElement", project, requireTypeInProject, typeNames);
 	}
 	
 	public TypeNameCollector(String superclassTypeName, IJavaProject project, boolean requireTypeInProject) throws JavaModelException {

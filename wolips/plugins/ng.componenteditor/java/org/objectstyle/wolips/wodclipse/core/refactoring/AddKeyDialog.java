@@ -152,7 +152,7 @@ public class AddKeyDialog extends Dialog {
       _typeCombo.setText(_addKeyInfo.getParameterTypeName());
       if (_addKeyInfo.getTypeName() != null) {
         String typeName = _addKeyInfo.getTypeName();
-        if ("com.webobjects.foundation.NSArray".equals(typeName)) {
+        if ("java.util.List".equals(typeName)) {
           _arrayOfButton.setSelection(true);
         }
         else {
@@ -207,11 +207,11 @@ public class AddKeyDialog extends Dialog {
     }
     else if (_arrayOfButton.getSelection()) {
       _addKeyInfo.setParameterTypeName(_typeCombo.getText());
-      _addKeyInfo.setTypeName("com.webobjects.foundation.NSArray");
+      _addKeyInfo.setTypeName("java.util.List");
     }
     else if (_mutableArrayOfButton.getSelection()) {
       _addKeyInfo.setParameterTypeName(_typeCombo.getText());
-      _addKeyInfo.setTypeName("com.webobjects.foundation.NSMutableArray");
+      _addKeyInfo.setTypeName("java.util.ArrayList");
     }
     else {
       _addKeyInfo.setParameterTypeName(null);
