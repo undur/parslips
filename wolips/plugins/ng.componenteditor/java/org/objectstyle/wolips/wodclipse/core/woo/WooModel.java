@@ -14,24 +14,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
@@ -41,20 +33,15 @@ import org.objectstyle.woenvironment.plist.WOLPropertyListSerialization;
 import org.objectstyle.wolips.baseforplugins.util.CharSetUtils;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
-import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
-import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
-import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
-import org.objectstyle.wolips.eomodeler.core.model.EOModelGroup;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelMap;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelParserDataStructureFactory;
-import org.objectstyle.wolips.eomodeler.core.model.EOModelVerificationFailure;
-import org.objectstyle.wolips.eomodeler.core.model.PropertyListMap;
-import org.objectstyle.wolips.locate.LocatePlugin;
+// FIXME: eomodeler removed — display group and EO model support disabled
+// import org.objectstyle.wolips.eomodeler.core.model.EOModelGroup;
+// import org.objectstyle.wolips.eomodeler.core.model.EOModelVerificationFailure;
+// import org.objectstyle.wolips.eomodeler.core.model.PropertyListMap;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
-import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyInfo;
-import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyOperation;
 import org.objectstyle.wolips.wodclipse.core.util.EOModelGroupCache;
 
 public class WooModel {
@@ -72,7 +59,8 @@ public class WooModel {
 
   private boolean _isDirty;
 
-  private EOModelGroup _modelGroup;
+  // FIXME: eomodeler removed — was EOModelGroup _modelGroup for EO model lookups
+  // private EOModelGroup _modelGroup;
 
   private String _encoding;
 
@@ -80,7 +68,8 @@ public class WooModel {
 
   private EOModelMap _modelMap;
 
-  private PropertyListMap<Object, Object> _variables;
+  // FIXME: eomodeler removed — was PropertyListMap<Object, Object> for variable storage
+  private Map<Object, Object> _variables;
 
   private List<DisplayGroup> _displayGroups;
 
@@ -210,12 +199,13 @@ public class WooModel {
     return _encoding;
   }
 
-  public EOModelGroup getModelGroup() {
-    if (_modelGroup == null) {
-      _modelGroup = WodParserCache.getModelGroupCache().getModelGroup(_file.getProject());
-    }
-    return _modelGroup;
-  }
+  // FIXME: eomodeler removed — getModelGroup() returned EOModelGroup from WodParserCache
+  // public EOModelGroup getModelGroup() {
+  //   if (_modelGroup == null) {
+  //     _modelGroup = WodParserCache.getModelGroupCache().getModelGroup(_file.getProject());
+  //   }
+  //   return _modelGroup;
+  // }
 
   public void setEncoding(String encoding) {
     String oldEncoding = _encoding;
@@ -233,8 +223,6 @@ public class WooModel {
 
   @SuppressWarnings("unchecked")
   public void parseModel() {
-    Set<EOModelVerificationFailure> failures = new HashSet<EOModelVerificationFailure>();
-
     if (_modelMap == null)
       return;
 
@@ -245,145 +233,29 @@ public class WooModel {
       _woRelease = _modelMap.getString("WebObjects Release", true);
     }
 
-    _variables = new PropertyListMap<Object, Object>();
+    // FIXME: eomodeler removed — display group parsing disabled.
+    // Previously parsed "variables" map to find WODisplayGroup/ERXDisplayGroup entries
+    // and created DisplayGroup instances for each. Now we just store variables as-is.
     _displayGroups = new ArrayList<DisplayGroup>();
 
     Map<?, ?> variables = _modelMap.getMap("variables");
     if (variables != null) {
-      EOModelMap variableMap = new EOModelMap(variables);
-      Set<Map.Entry<String, Object>> variableEntries = variableMap.entrySet();
-      for (Map.Entry<String, Object> entry : variableEntries) {
-        if (entry.getValue() instanceof Map) {
-          EOModelMap entryMap = new EOModelMap((Map<?, ?>) entry.getValue());
-          String className = entryMap.getString("class", true);
-          //XXX This should support subclasses of WODisplayGroup
-          try {
-            IType classType = findDisplayGroupClass(className);
-            if (classType != null) {
-              DisplayGroup displayGroup = new DisplayGroup(this);
-              displayGroup.setName(entry.getKey());
-              displayGroup.setClassName(className);
-              displayGroup.loadFromMap(entryMap, failures);
-              _displayGroups.add(displayGroup);
-              displayGroup.addPropertyChangeListener(_displayGroupListener);
-              continue;              
-            }
-          } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-          /* Fall through just in case the project classpath is broken */
-          if ("WODisplayGroup".equals(className) || "ERXDisplayGroup".equals(className)) {
-            DisplayGroup displayGroup = new DisplayGroup(this);
-            displayGroup.setName(entry.getKey());
-            displayGroup.setClassName(className);
-            displayGroup.loadFromMap(entryMap, failures);
-            _displayGroups.add(displayGroup);
-            displayGroup.addPropertyChangeListener(_displayGroupListener);
-            continue;
-          }
-        }
-        _variables.put(entry.getKey(), entry.getValue());
-      }
+      // FIXME: eomodeler removed — display group detection and loading was here.
+      // All variable entries were checked for WODisplayGroup/ERXDisplayGroup class names.
+      // Now we just ignore the variables section for display groups.
     }
 
     _isDirty = false;
   }
 
-	private IType findDisplayGroupClass(String className)
-      throws JavaModelException {
-		IType classType = null;
-	  TypeCache typeCache = WodParserCache.getTypeCache();
-	  IJavaProject javaProject = JavaCore.create(_file.getProject());
-	  String typeName = typeCache.getApiCache(javaProject).getElementTypeNamed(className);
-	  if (typeName != null) {
-	  	classType = javaProject.findType(typeName);
-	  } else {
-	  	// ng-objects: WODisplayGroup equivalent not yet available; using NGElement as fallback
-	  	TypeNameCollector typeNameCollector = new TypeNameCollector("ng.appserver.templating.NGElement", javaProject, true);
-	  	BindingReflectionUtils.findMatchingElementClassNames(className, SearchPattern.R_EXACT_MATCH, typeNameCollector, null);
-	  	if (!typeNameCollector.isEmpty()) {
-	  		String matchingElementClassName = typeNameCollector.firstTypeName();
-	  		classType = typeNameCollector.getTypeForClassName(matchingElementClassName);
-	  	}
-	    if (classType != null) {
-	      typeCache.getApiCache(javaProject).setElementTypeForName(classType, className);
-	    }
-	  }
-	  return classType;
-  }
-
   /**
-   * Applies pending refactorings to the component for this WooModel.
-   * 
-   * @param shell the shell to use for errors
-   * @param context the runnable context to execute within
+   * FIXME: eomodeler removed — refactor() previously applied display group changes
+   * (add/rename/remove fields) to the component's Java class. Disabled.
    */
   public void refactor(Shell shell, IRunnableContext context) {
-    try {
-      if (_file != null) {
-        IType componentType = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(_file).getDotJavaType();
-        if (componentType != null) {
-          for (DisplayGroup displayGroup : getDisplayGroups()) {
-            String originalName = displayGroup.getOriginalName();
-            String newName = displayGroup.getName();
-            String newClassName = displayGroup.getClassName();
-            AddKeyInfo info = new AddKeyInfo(componentType);
-            info.setTypeName(displayGroup.getClassName());
-            info.setName(newName);
-            info.setCreateAccessorMethod(false);
-            info.setCreateMutatorMethod(false);
-            
-            // Populate generic types if required
-            IType classType = findDisplayGroupClass(displayGroup.getClassName());
-            String newParameterType = "";
-            if (classType !=null && classType.getTypeParameters().length > 0) {
-              newParameterType = displayGroup.getEntityName();
-              info.setParameterTypeName(newParameterType);
-            }
-            
-            IField field = componentType.getField(info.getFieldName());
-            if (originalName == null) {
-              if (!field.exists()) {
-                AddKeyOperation.addKey(info);
-              } 
-            } else {
-              info.setName(originalName);
-              field = componentType.getField(info.getFieldName());
-              if (field.exists()) {
-                String originalClassName = Signature.getSignatureSimpleName(Signature.getTypeErasure(field.getTypeSignature()));
-                String types[] = Signature.getTypeArguments(field.getTypeSignature());
-                String originalParameterType = types.length > 0 ? Signature.getSignatureSimpleName(types[0]) : "";
-
-                if (!originalName.equals(newName) || !originalClassName.equals(displayGroup.getClassName())
-                    || !originalParameterType.equals(newParameterType)) {
-                  info.setName(newName);
-                  AddKeyOperation.replaceField(info, originalName);
-                }}
-            }
-          }
-          
-          if (_removedDisplayGroups != null) {
-            for (DisplayGroup displayGroup : _removedDisplayGroups) {
-              String originalName = displayGroup.getOriginalName();
-              if (originalName != null) {
-                AddKeyInfo info = new AddKeyInfo(componentType);
-                info.setName(originalName);
-                IField field = componentType.getField(info.getFieldName());
-                if (field.exists()) {
-                  field.delete(false, null);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    catch (Throwable e) {
-      e.printStackTrace();
-    }
+    // no-op — eomodeler / display group refactoring removed
   }
-  
+
   public void doSave() throws IOException {
     if (_file == null) {
       throw new IOException("You can not save changes to a WooModel that is not backed by a file.");
@@ -407,13 +279,11 @@ public class WooModel {
   }
 
   public void doSave(final OutputStream writer) throws IOException {
-    // XXX Need to validate model before saving
     EOModelMap modelMap = toModelMap();
     try {
       WOLPropertyListSerialization.propertyListToStream(writer, modelMap);
     }
     catch (PropertyListParserException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }
@@ -428,14 +298,13 @@ public class WooModel {
     EOModelMap modelMap = _modelMap.cloneModelMap();
     modelMap.setString("WebObjects Release", _woRelease, true);
     modelMap.setString("encoding", _encoding, true);
+
+    // FIXME: eomodeler removed — display group serialization was here.
+    // Previously iterated over _displayGroups, called toMap() on each,
+    // and merged them into the variables map. Now we just preserve existing variables.
     EOModelMap variableMap = new EOModelMap();
     if (_variables != null) {
       variableMap.putAll(_variables);
-    }
-    for (DisplayGroup displayGroup : _displayGroups) {
-      String displayGroupName = displayGroup.getName();
-      EOModelMap displayGroupMap = displayGroup.toMap();
-      variableMap.setMap(displayGroupName, displayGroupMap, true);
     }
     modelMap.setMap("variables", variableMap, true);
     return modelMap;
@@ -467,22 +336,14 @@ public class WooModel {
     _changes.removePropertyChangeListener(name, listener);
   }
 
+  // FIXME: eomodeler removed — createDisplayGroup() previously created DisplayGroup with eomodeler data sources
   public void createDisplayGroup(final String name) {
-    DisplayGroup displayGroup = new DisplayGroup(this);
-    displayGroup.addPropertyChangeListener(_displayGroupListener);
-    displayGroup.setName(name);
-    _displayGroups.add(displayGroup);
-    markAsDirty();
+    // no-op — display group support removed
   }
 
+  // FIXME: eomodeler removed — removeDisplayGroup() previously tracked removed display groups for refactoring
   public void removeDisplayGroup(final DisplayGroup selection) {
-    selection.removePropertyChangeListener(_displayGroupListener);
-    _displayGroups.remove(selection);
-    if (_removedDisplayGroups == null) {
-      _removedDisplayGroups = new LinkedList<DisplayGroup>();
-    }
-    _removedDisplayGroups.add(selection);
-    markAsDirty();
+    // no-op — display group support removed
   }
 
   @Override
@@ -499,18 +360,6 @@ public class WooModel {
 
   public List<WodProblem> getProblems(IJavaProject javaProject, IType type, TypeCache typeCache, EOModelGroupCache modelCache) {
     final List<WodProblem> problems = new ArrayList<WodProblem>();
-
-    // This was causing models to load when opening any component
-    // even if your woo file is empty, and it doesn't APPEAR to actually
-    // use this during this process.
-
-//		EOModelGroupCache _modelCache = (EOModelGroupCache)modelCache;
-//		EOModelGroup modelGroup = _modelCache.getModelGroup(javaProject);
-//		if (modelGroup != null ) {
-//			this.setModelGroup(modelGroup);
-//		} else {
-//			_modelCache.setModelGroup(javaProject, getModelGroup());
-//		}
 
     try {
       this.parseModel();
@@ -531,7 +380,7 @@ public class WooModel {
 	      if (!(encoding.equals(componentCharset))) {
 	        problems.add(new WodProblem("WOO Encoding type " + encoding + " doesn't match component " + componentCharset, null, 0, true));
 	      }
-	
+
 	      if (_file.getParent().exists()) {
 	        for (IResource element : _file.getParent().members()) {
 	          if (element.getType() == IResource.FILE) {
@@ -543,47 +392,16 @@ public class WooModel {
 	          }
 	        }
 	      }
-	
+
 	    }
 	    catch (CoreException e1) {
-	      // TODO Auto-generated catch block
 	      e1.printStackTrace();
 	    }
     }
 
-    if (type == null) {
-      if (getDisplayGroups().length != 0) {
-        problems.add(new WodProblem("Display groups are defined for component " + _file.getParent().getName() + " but class was not found", null, 0, false));
-      }
-      return problems;
-    }
-
-    for (DisplayGroup displayGroup : getDisplayGroups()) {
-      try {
-        if (type != null) {
-
-          // Validate WODisplayGroup variable is declared. 
-          BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(displayGroup.getName(), type, type.getJavaProject(), WodParserCache.getTypeCache());
-          if (!(bindingValueKeyPath.isValid() && !bindingValueKeyPath.isAmbiguous())) {
-            //XXX Walk type hierarchy and check that is a WODisplayGroup
-            problems.add(new WodProblem("WODisplayGroup " + displayGroup.getName() + " is configured but not declared in class", null, 0, false));
-          }
-
-          if (!displayGroup.isHasMasterDetail()) {
-        	// Validate editing context
-        	bindingValueKeyPath = new BindingValueKeyPath(displayGroup.getEditingContext(), type, type.getJavaProject(), WodParserCache.getTypeCache());
-        	if (!(bindingValueKeyPath.isValid() && !bindingValueKeyPath.isAmbiguous())) {
-        	  problems.add(new WodProblem("Editing context for display group " + displayGroup.getName() + " not found", null, 0, false));
-        	}
-          }
-        }
-      }
-      catch (JavaModelException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-
-    }
+    // FIXME: eomodeler removed — display group validation was here.
+    // Previously validated that WODisplayGroup variables were declared in the component class
+    // and that editing contexts were valid. Disabled.
 
     return problems;
   }
@@ -594,7 +412,7 @@ public class WooModel {
     }
     return null;
   }
-  
+
   public String getName() {
     return _file.getName();
   }
@@ -615,7 +433,6 @@ public class WooModel {
         WOLPropertyListSerialization.propertyListToStream(writer, model._modelMap);
       }
       catch (PropertyListParserException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
       catch (Throwable e) {

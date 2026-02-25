@@ -6,12 +6,14 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.NamingConventions;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
-import org.objectstyle.wolips.eomodeler.core.model.EOEntity;
-import org.objectstyle.wolips.eomodeler.core.model.EOModelGroup;
+// FIXME: eomodeler removed — EOModelGroup/EOEntity support for entity-to-class mapping is disabled
+// import org.objectstyle.wolips.eomodeler.core.model.EOEntity;
+// import org.objectstyle.wolips.eomodeler.core.model.EOModelGroup;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 public class AddKeyInfo {
-  private EOModelGroup _modelGroup;
+  // FIXME: eomodeler removed — was EOModelGroup _modelGroup
+  // private EOModelGroup _modelGroup;
 
   private IType _componentType;
 
@@ -39,26 +41,27 @@ public class AddKeyInfo {
     _createMutatorMethod = true;
   }
 
-  public EOModelGroup getModelGroup() {
-    if (_modelGroup == null) {
-      _modelGroup = WodParserCache.getModelGroupCache().getModelGroup(_componentType.getJavaProject().getProject());
-    }
-    return _modelGroup;
-  }
+  // FIXME: eomodeler removed — getModelGroup() returned EOModelGroup from WodParserCache
+  // public EOModelGroup getModelGroup() {
+  //   if (_modelGroup == null) {
+  //     _modelGroup = WodParserCache.getModelGroupCache().getModelGroup(_componentType.getJavaProject().getProject());
+  //   }
+  //   return _modelGroup;
+  // }
 
+  // FIXME: eomodeler removed — getEntityNames() used EOModelGroup.getNonPrototypeEntityNames()
   public String[] getEntityNames() {
-    EOModelGroup modelGroup = getModelGroup();
-    Set<String> entityNames = modelGroup.getNonPrototypeEntityNames();
-    return entityNames.toArray(new String[entityNames.size()]);
+    return new String[0];
   }
 
   public String getJavaTypeName() throws JavaModelException {
     String javaTypeName = _typeName;
     if (javaTypeName != null) {
-      EOEntity entity = getModelGroup().getEntityNamed(_typeName);
-      if (entity != null) {
-        javaTypeName = entity.getClassName();
-      }
+      // FIXME: eomodeler removed — used to look up EOEntity to resolve entity name to Java class name
+      // EOEntity entity = getModelGroup().getEntityNamed(_typeName);
+      // if (entity != null) {
+      //   javaTypeName = entity.getClassName();
+      // }
       javaTypeName = BindingReflectionUtils.getFullClassName(_componentType.getJavaProject(), javaTypeName);
     }
     return javaTypeName;
@@ -67,10 +70,11 @@ public class AddKeyInfo {
   public String getJavaParameterTypeName() throws JavaModelException {
     String javaParameterTypeName = _parameterTypeName;
     if (javaParameterTypeName != null) {
-      EOEntity entity = getModelGroup().getEntityNamed(_parameterTypeName);
-      if (entity != null) {
-        javaParameterTypeName = entity.getClassName();
-      }
+      // FIXME: eomodeler removed — used to look up EOEntity to resolve entity name to Java class name
+      // EOEntity entity = getModelGroup().getEntityNamed(_parameterTypeName);
+      // if (entity != null) {
+      //   javaParameterTypeName = entity.getClassName();
+      // }
       javaParameterTypeName = BindingReflectionUtils.getFullClassName(_componentType.getJavaProject(), javaParameterTypeName);
     }
     return javaParameterTypeName;
