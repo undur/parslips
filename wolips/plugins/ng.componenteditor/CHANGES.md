@@ -107,3 +107,9 @@ To allow `ng.componenteditor` to coexist with WOLips in the same Eclipse install
 **Intentionally kept as `org.objectstyle.wolips.*`:**
 - `WOLipsNatureUtils` nature IDs — these reference WOLips project natures (cross-plugin query, not self-referencing)
 - `AbstractEngine` Velocity resource loader class name — this is an actual Java fully-qualified class name, not a plugin ID
+
+### Removed: Apache Ant dependency
+
+Removed `org.apache.ant` and `org.eclipse.ant.core` from `Require-Bundle` in MANIFEST.MF. These bundles are not always present in modern Eclipse installations (e.g. Eclipse IDE for Java Developers) and were preventing the OSGi bundle from resolving.
+
+The only usage was `org.apache.tools.ant.types.selectors.SelectorUtils.matchPath()` in `Pattern.java` — replaced with an equivalent pure-Java Ant-style glob matcher. The `Pattern` / `IPattern` classes themselves are currently unused by any other code in the plugin.
