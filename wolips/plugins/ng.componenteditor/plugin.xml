@@ -296,21 +296,6 @@
             <separator name="group1"/>
             <separator name="group2"/>
          </menu>
-         <action class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToWodEditorActionDelegate"
-               definitionId="ng.componenteditor.editors.towod"
-               id="ng.componenteditor.editors.switchtowod"
-               label="Switch to Wod Editor"
-               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToHtmlEditorActionDelegate"
-               definitionId="ng.componenteditor.editors.tohtml"
-               id="ng.componenteditor.editors.switchtohtml"
-               label="Switch to Html Editor"
-               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToJavaEditorActionDelegate"
-               definitionId="ng.componenteditor.editors.tojava"
-               id="ng.componenteditor.editors.switchtojava"
-               label="Switch to Java Editor"
-               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
          <action class="org.objectstyle.wolips.componenteditor.actions.FormatAction"
                definitionId="ng.componenteditor.editors.command.format"
                id="ng.componenteditor.editors.action.format"
