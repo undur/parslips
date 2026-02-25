@@ -62,9 +62,6 @@ import org.osgi.framework.BundleContext;
  * The main plugin class to be used in the desktop.
  */
 public class CorePlugin extends AbstractBaseUIActivator {
-	// The plug-in ID
-	public static final String PLUGIN_ID = "org.objectstyle.wolips.core";
-
 	// The shared instance.
 	private static CorePlugin plugin;
 
