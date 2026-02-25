@@ -57,7 +57,6 @@ package org.objectstyle.wolips.core.resources.internal.types.folder;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.objectstyle.wolips.baseforplugins.util.WOLipsNatureUtils;
 import org.objectstyle.wolips.core.resources.internal.types.AbstractResourceAdapterFactory;
 import org.objectstyle.wolips.core.resources.types.IResourceType;
@@ -65,18 +64,16 @@ import org.objectstyle.wolips.core.resources.types.folder.IBuildAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IContentsAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotApplicationAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotFrameworkAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IDotLprojAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotWoAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IResourcesAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IWebServerResourcesAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IWoprojectAdapter;
 
 /**
  * @author ulrich
  */
 public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 
-	private Class[] adapterList = new Class[] { IDotApplicationAdapter.class, IDotFrameworkAdapter.class, IDotLprojAdapter.class, IDotWoAdapter.class, IWoprojectAdapter.class };
+	private Class[] adapterList = new Class[] { IDotApplicationAdapter.class, IDotFrameworkAdapter.class, IDotWoAdapter.class };
 
 	public Class[] getAdapterList() {
 		return this.adapterList;
@@ -98,11 +95,7 @@ public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 			return true;
 		} else if (adapterType == IDotFrameworkAdapter.class) {
 			return true;
-		} else if (adapterType == IDotLprojAdapter.class) {
-			return true;
 		} else if (adapterType == IDotWoAdapter.class) {
-			return true;
-		} else if (adapterType == IWoprojectAdapter.class) {
 			return true;
 		}
 		return false;
@@ -138,17 +131,9 @@ public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 			if (folder.getFileExtension() != null && IDotFrameworkAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
 				return new DotFrameworkAdapter(folder);
 			}
-		} else if (adapterType == IDotLprojAdapter.class) {
-			if (folder.getFileExtension() != null && IDotLprojAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
-				return new DotLprojAdapter(folder);
-			}
 		} else if (adapterType == IDotWoAdapter.class) {
 			if (folder.getFileExtension() != null && IDotWoAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
 				return new DotWoAdapter(folder);
-			}
-		} else if (adapterType == IWoprojectAdapter.class) {
-			if (folder.getFileExtension() == null && folder.getName() != null && folder.getParent() != null && folder.getParent().getType() == IResource.PROJECT && (IWoprojectAdapter.FOLDER_NAME.equals(folder.getName()) || (IWoprojectAdapter.FOLDER_NAME_DEPRECATED.equals(folder.getName())))) {
-				return new WoprojectAdapter(folder);
 			}
 		}
 		return null;

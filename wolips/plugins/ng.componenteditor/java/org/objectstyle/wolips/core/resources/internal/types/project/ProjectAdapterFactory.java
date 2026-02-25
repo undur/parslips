@@ -55,15 +55,11 @@
  */
 package org.objectstyle.wolips.core.resources.internal.types.project;
 
-import java.util.Map;
-import java.util.WeakHashMap;
-
 import org.eclipse.core.resources.IProject;
 import org.objectstyle.wolips.baseforplugins.util.WOLipsNatureUtils;
 import org.objectstyle.wolips.core.resources.internal.build.Nature;
 import org.objectstyle.wolips.core.resources.internal.types.AbstractResourceAdapterFactory;
 import org.objectstyle.wolips.core.resources.types.IResourceType;
-import org.objectstyle.wolips.core.resources.types.project.IProjectPatternsets;
 import org.objectstyle.wolips.core.resources.types.project.ProjectAdapter;
 
 /**
@@ -71,11 +67,6 @@ import org.objectstyle.wolips.core.resources.types.project.ProjectAdapter;
  *         Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class ProjectAdapterFactory extends AbstractResourceAdapterFactory {
-	private static Map<Object, ProjectPatternsets> _projectPatternSets;
-
-	static {
-		_projectPatternSets = new WeakHashMap<Object, ProjectPatternsets>();
-	}
 
 	private Class[] adapterList = new Class[] { ProjectAdapter.class };
 
@@ -90,9 +81,6 @@ public class ProjectAdapterFactory extends AbstractResourceAdapterFactory {
 		if (adapterType == ProjectAdapter.class) {
 			return true;
 		}
-		if (adapterType == IProjectPatternsets.class) {
-			return true;
-		}
 		return false;
 	}
 
@@ -103,13 +91,6 @@ public class ProjectAdapterFactory extends AbstractResourceAdapterFactory {
 			return null;
 		} else if (adapterType == ProjectAdapter.class) {
 			return new ProjectAdapter(project, nature.isFramework());
-		} else if (adapterType == IProjectPatternsets.class) {
-			ProjectPatternsets projectPatternSets = _projectPatternSets.get(adaptableObject);
-			if (projectPatternSets == null) {
-				projectPatternSets = new ProjectPatternsets(project);
-				_projectPatternSets.put(adaptableObject, projectPatternSets);
-			}
-			return projectPatternSets;
 		}
 		return null;
 	}

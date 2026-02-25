@@ -75,12 +75,10 @@ import org.objectstyle.wolips.core.CorePlugin;
 import org.objectstyle.wolips.core.resources.pattern.PatternsetMatcher;
 import org.objectstyle.wolips.core.resources.pattern.PatternsetWriter;
 import org.objectstyle.wolips.core.resources.types.IResourceType;
-import org.objectstyle.wolips.core.resources.types.project.IProjectPatternsets;
-
 /**
  * @author ulrich
  */
-public class ProjectPatternsets implements IProjectPatternsets, IResourceType {
+public class ProjectPatternsets implements IResourceType {
 
 	/**
 	 * EXTENSION file extension for patternset files

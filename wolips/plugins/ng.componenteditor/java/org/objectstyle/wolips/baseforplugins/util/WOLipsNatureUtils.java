@@ -44,26 +44,6 @@ public class WOLipsNatureUtils {
 		return addNatureToProject(WOLipsNatureUtils.INCREMENTAL_APPLICATION_ID, project, monitor);
 	}
 
-	/**
-	 * @param project
-	 * @param monitor
-	 * @return true when the nature successfully added
-	 * @throws CoreException
-	 */
-	public static boolean addAntFrameworkNatureToProject(IProject project, IProgressMonitor monitor) throws CoreException {
-		return addNatureToProject(WOLipsNatureUtils.ANT_FRAMEWORK_ID, project, monitor);
-	}
-
-	/**
-	 * @param project
-	 * @param monitor
-	 * @return true when the nature successfully added
-	 * @throws CoreException
-	 */
-	public static boolean addAntApplicationNatureToProject(IProject project, IProgressMonitor monitor) throws CoreException {
-		return addNatureToProject(WOLipsNatureUtils.ANT_APPLICATION_ID, project, monitor);
-	}
-
 	public static boolean addNatureToProject(String id, IProject project, IProgressMonitor monitor) throws CoreException {
 		IProjectNature nature = project.getNature(id);
 		if (nature == null) {
@@ -133,30 +113,5 @@ public class WOLipsNatureUtils {
 
 	public static boolean isWOLipsNature(IProject project) {
 		return WOLipsNatureUtils.getNature(project) != null;
-	}
-	
-	/**
-	 * Returns true if this project is a Maven project.
-	 * 
-	 * @param project the project to test
-	 * @return true if the project is a Maven project
-	 */
-	public static boolean isMavenNature(IProject project) {
-		try {
-			// The old nature string
-			boolean hasMavenNature = project.hasNature("org.maven.ide.eclipse.maven2Nature");
-
-			if(!hasMavenNature ) {
-				// The nature id used today
-				hasMavenNature = project.hasNature("org.eclipse.m2e.core.maven2Nature");
-			}
-
-			return hasMavenNature;
-			
-		} catch (CoreException e) {
-			Activator.getDefault().debug("Error while resolving nature for project: " + project.getName(), e);
-			return false;
-		}
-
 	}
 }
