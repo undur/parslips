@@ -37,20 +37,16 @@ public class HtmlCacheEntry extends AbstractCacheEntry<FuzzyXMLDocument> impleme
     setValidated(true);
     IFile htmlFile = getFile();
     FuzzyXMLDocument htmlXmlDocument = _getModel();
-    System.out.println("[ng.componenteditor] HtmlCacheEntry.validate() htmlFile=" + htmlFile + " xmlDoc=" + (htmlXmlDocument != null ? "present" : "null"));
     if (htmlXmlDocument != null && (htmlFile == null || htmlFile.exists())) {
       String htmlErrorsSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.HTML_ERRORS_SEVERITY_KEY);
       if (!PreferenceConstants.IGNORE.equals(htmlErrorsSeverity)) {
         if (htmlFile != null && htmlFile.exists()) {
           for (HtmlProblem problem : getParserProblems()) {
-            System.out.println("[ng.componenteditor] HTML parser problem: " + problem);
             problem.createMarker(htmlFile, htmlErrorsSeverity);
           }
         }
       }
       new TemplateValidator(getCache()).validate(htmlXmlDocument);
-    } else {
-      System.out.println("[ng.componenteditor] HtmlCacheEntry.validate() SKIPPED - xmlDoc null or file doesn't exist");
     }
   }
 
