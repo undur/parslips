@@ -79,8 +79,6 @@ import org.objectstyle.wolips.core.CorePlugin;
 import org.objectstyle.wolips.core.resources.internal.build.AntApplicationNature;
 import org.objectstyle.wolips.core.resources.internal.build.AntFrameworkNature;
 import org.objectstyle.wolips.core.resources.internal.types.AbstractResourceAdapter;
-import org.objectstyle.wolips.core.resources.types.IPBDotProjectOwner;
-import org.objectstyle.wolips.core.resources.types.file.IPBDotProjectAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IBuildAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotApplicationAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotFrameworkAdapter;
@@ -89,7 +87,7 @@ import org.objectstyle.wolips.core.resources.types.folder.IWoprojectAdapter;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.variables.VariablesPlugin;
 
-public class ProjectAdapter extends AbstractResourceAdapter implements IPBDotProjectOwner {
+public class ProjectAdapter extends AbstractResourceAdapter {
 	private IProject _underlyingProject;
 
 	private boolean _isFramework;
@@ -139,13 +137,6 @@ public class ProjectAdapter extends AbstractResourceAdapter implements IPBDotPro
 		return !this.isFramework();
 	}
 
-	public IPBDotProjectAdapter getPBDotProjectAdapter() {
-		IContainer underlyingContainer = this.getUnderlyingProject();
-		IResource pbDotProjectResource = underlyingContainer.getFile(new Path(IPBDotProjectAdapter.FILE_NAME));
-		IPBDotProjectAdapter pbDotProjectAdapter = (IPBDotProjectAdapter) pbDotProjectResource.getAdapter(IPBDotProjectAdapter.class);
-		return pbDotProjectAdapter;
-	}
-
 	public IWoprojectAdapter getWoprojectAdapter() {
 		IContainer underlyingContainer = this.getUnderlyingProject();
 		IFolder wprojectFolder = null;
@@ -163,21 +154,6 @@ public class ProjectAdapter extends AbstractResourceAdapter implements IPBDotPro
 		}
 		return wprojectAdapter;
 
-	}
-
-	public IPBDotProjectOwner getPBDotProjectOwner(IResource resource) {
-		if (resource == this.getUnderlyingProject()) {
-			return this;
-		}
-		return super.getPBDotProjectOwner(resource);
-	}
-
-	public IPBDotProjectOwner getPBDotProjectOwner() {
-		return this;
-	}
-
-	public boolean hasParentPBDotProjectAdapter() {
-		return false;
 	}
 
 	private IFolder getBuildFolder() {

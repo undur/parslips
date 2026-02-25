@@ -55,15 +55,8 @@
  */
 package org.objectstyle.wolips.core.resources.internal.types;
 
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.objectstyle.wolips.core.resources.types.ILocalizedPath;
-import org.objectstyle.wolips.core.resources.types.IPBDotProjectOwner;
 import org.objectstyle.wolips.core.resources.types.IResourceType;
-import org.objectstyle.wolips.core.resources.types.folder.IDotSubprojAdapter;
-import org.objectstyle.wolips.core.resources.types.project.ProjectAdapter;
 
 public abstract class AbstractResourceAdapter implements IResourceType {
 
@@ -76,58 +69,5 @@ public abstract class AbstractResourceAdapter implements IResourceType {
 
 	public IResource getUnderlyingResource() {
 		return this.underlyingResource;
-	}
-
-	public IPBDotProjectOwner getPBDotProjectOwner() {
-		return this.getPBDotProjectOwner(this.getUnderlyingResource());
-	}
-
-	public IPBDotProjectOwner getPBDotProjectOwner(IResource resource) {
-		IContainer parent = null;
-		if (resource instanceof IFile) {
-			parent = resource.getParent();
-		} else {
-			parent = (IContainer) resource;
-		}
-		if (!(parent instanceof IProject)) {
-			do {
-				IDotSubprojAdapter subprojectAdapter = (IDotSubprojAdapter) parent.getAdapter(IDotSubprojAdapter.class);
-				if (subprojectAdapter != null) {
-					return subprojectAdapter;
-				}
-				parent = parent.getParent();
-			} while (!(parent instanceof IProject));
-		}
-		if (this instanceof ProjectAdapter) {
-			return (IPBDotProjectOwner) this;
-		}
-		ProjectAdapter projectAdapter = (ProjectAdapter) resource.getProject().getAdapter(ProjectAdapter.class);
-		return projectAdapter;
-	}
-
-	/**
-	 * Method localizedRelativeResourcePath.
-	 * 
-	 * @param pbDotProjectOwner
-	 * @param resource
-	 * @return ILocalizedPath
-	 */
-	public ILocalizedPath localizedRelativeResourcePath(IPBDotProjectOwner pbDotProjectOwner, IResource resource) {
-		// determine relativ path to resource
-		String resourcePath;
-		if (pbDotProjectOwner.getUnderlyingResource().equals(resource.getParent())) {
-			// same folder
-			resourcePath = resource.getName();
-		} else if (pbDotProjectOwner.getUnderlyingResource().getFullPath().matchingFirstSegments(resource.getFullPath()) == pbDotProjectOwner.getUnderlyingResource().getFullPath().segmentCount()) {
-			// resource is deeper in directory structure
-			resourcePath = resource.getFullPath().removeFirstSegments(pbDotProjectOwner.getUnderlyingResource().getFullPath().matchingFirstSegments(resource.getFullPath())).toString();
-		} else {
-			// resource is higher or paralell in directory structure
-			resourcePath = resource.getProjectRelativePath().toString();
-			for (int i = 0; i < pbDotProjectOwner.getUnderlyingResource().getProjectRelativePath().segmentCount() - 1; i++) {
-				resourcePath = "../" + resourcePath;
-			}
-		}
-		return new LocalizedPath(resourcePath, null);
 	}
 }

@@ -67,7 +67,6 @@ import org.objectstyle.wolips.core.resources.types.folder.IDotApplicationAdapter
 import org.objectstyle.wolips.core.resources.types.folder.IDotEOModeldAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotFrameworkAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotLprojAdapter;
-import org.objectstyle.wolips.core.resources.types.folder.IDotSubprojAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IDotWoAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IResourcesAdapter;
 import org.objectstyle.wolips.core.resources.types.folder.IWebServerResourcesAdapter;
@@ -78,7 +77,7 @@ import org.objectstyle.wolips.core.resources.types.folder.IWoprojectAdapter;
  */
 public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 
-	private Class[] adapterList = new Class[] { IDotApplicationAdapter.class, IDotFrameworkAdapter.class, IDotLprojAdapter.class, IDotSubprojAdapter.class, IDotWoAdapter.class, IWoprojectAdapter.class };
+	private Class[] adapterList = new Class[] { IDotApplicationAdapter.class, IDotFrameworkAdapter.class, IDotLprojAdapter.class, IDotWoAdapter.class, IWoprojectAdapter.class };
 
 	public Class[] getAdapterList() {
 		return this.adapterList;
@@ -101,8 +100,6 @@ public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 		} else if (adapterType == IDotFrameworkAdapter.class) {
 			return true;
 		} else if (adapterType == IDotLprojAdapter.class) {
-			return true;
-		} else if (adapterType == IDotSubprojAdapter.class) {
 			return true;
 		} else if (adapterType == IDotWoAdapter.class) {
 			return true;
@@ -143,10 +140,6 @@ public class FolderAdapterFactory extends AbstractResourceAdapterFactory {
 		} else if (adapterType == IDotFrameworkAdapter.class) {
 			if (folder.getFileExtension() != null && IDotFrameworkAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
 				return new DotFrameworkAdapter(folder);
-			}
-		} else if (adapterType == IDotSubprojAdapter.class) {
-			if (folder.getFileExtension() != null && IDotSubprojAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {
-				return new DotSubprojAdapter(folder);
 			}
 		} else if (adapterType == IDotLprojAdapter.class) {
 			if (folder.getFileExtension() != null && IDotLprojAdapter.FILE_NAME_EXTENSION.equals(folder.getFileExtension())) {

@@ -74,8 +74,6 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.objectstyle.wolips.core.CorePlugin;
 import org.objectstyle.wolips.core.resources.pattern.PatternsetMatcher;
 import org.objectstyle.wolips.core.resources.pattern.PatternsetWriter;
-import org.objectstyle.wolips.core.resources.types.ILocalizedPath;
-import org.objectstyle.wolips.core.resources.types.IPBDotProjectOwner;
 import org.objectstyle.wolips.core.resources.types.IResourceType;
 import org.objectstyle.wolips.core.resources.types.project.IProjectPatternsets;
 
@@ -685,19 +683,7 @@ public class ProjectPatternsets implements IProjectPatternsets, IResourceType {
 		return project;
 	}
 
-	public IPBDotProjectOwner getPBDotProjectOwner() {
-		return null;
-	}
-
-	public IPBDotProjectOwner getPBDotProjectOwner(IResource resource) {
-		return null;
-	}
-
 	public IResource getUnderlyingResource() {
-		return null;
-	}
-
-	public ILocalizedPath localizedRelativeResourcePath(IPBDotProjectOwner pbDotProjectOwner, IResource resource) {
 		return null;
 	}
 
