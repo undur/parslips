@@ -352,6 +352,23 @@
    </extension>
 
 <!-- =================================================================================== -->
+<!-- New Wizards                                                                         -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.newWizards">
+      <category
+            id="ng.componenteditor.newWizards"
+            name="NG Objects"/>
+      <wizard
+            category="ng.componenteditor.newWizards"
+            class="org.objectstyle.wolips.wizards.WOComponentCreationWizard"
+            icon="icons/wobuilder/WOComponentBundle.png"
+            id="ng.componenteditor.newWOComponentWizard"
+            name="NG Component">
+         <description>Create a new NG component</description>
+      </wizard>
+   </extension>
+
+<!-- =================================================================================== -->
 <!-- Popup Menus                                                                         -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.ui.popupMenus">

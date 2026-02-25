@@ -1,0 +1,14 @@
+#if( ${WOLipsContext.createPackageDeclaration} )
+package ${WOLipsContext.packageName};
+#end
+
+import ng.appserver.templating.NGContext;
+#if (${WOLipsContext.superclassImportRequired})
+import ${WOLipsContext.superclassName};
+#end
+
+public class ${WOLipsContext.componentName} extends ${WOLipsContext.superclassShortName} {
+    public ${WOLipsContext.componentName}(NGContext context) {
+        super(context);
+    }
+}

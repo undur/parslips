@@ -51,7 +51,12 @@ Bundle-ClassPath: .,
  lib/commons-jxpath-1.2.jar,
  lib/woenvironment.jar,
  lib/commons-collections-3.1.jar,
- lib/EOFSQLUtils.jar
+ lib/EOFSQLUtils.jar,
+ lib/velocity-1.5.jar,
+ lib/velocity-tools-generic-1.4.jar,
+ lib/commons-lang-2.1.jar,
+ lib/oro-2.0.8.jar,
+ lib/avalon-logkit-2.1.jar
 Export-Package: org.objectstyle.wolips.templateeditor,
  org.objectstyle.wolips.componenteditor.part,
  org.objectstyle.wolips.wodclipse.core.completion,
