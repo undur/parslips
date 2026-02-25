@@ -72,9 +72,10 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 
 	public Object getAdapter(Object adaptableObject, Class adapterType) {
 		IProject project = (IProject) adaptableObject;
-		if (!WOLipsNatureUtils.isWOLipsNature(project)) {
-			return null;
-		}
+		// FIXME: WOLips nature check removed — ng-objects projects don't have WOLips nature
+		// if (!WOLipsNatureUtils.isWOLipsNature(project)) {
+		// 	return null;
+		// }
 
 		BuildProperties properties = null;
 		if (adapterType == BuildProperties.class) {
@@ -100,7 +101,11 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 	}
 
 	public static void initializeBuildProperties(BuildProperties buildProperties) {
+		// FIXME: extension point may not exist when running without WOLips variables plugin
 		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("org.objectstyle.wolips.variables.buildPropertiesInitializer");
+		if (extensionPoint == null) {
+			return;
+		}
 		IExtension[] extensions = extensionPoint.getExtensions();
 		for (IExtension extension : extensions) {
 			IConfigurationElement[] configurationElements = extension.getConfigurationElements();
@@ -117,7 +122,11 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 	}
 
 	public static void initializeBuildPropertiesDefaults(BuildProperties buildProperties) {
+		// FIXME: extension point may not exist when running without WOLips variables plugin
 		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("org.objectstyle.wolips.variables.buildPropertiesInitializer");
+		if (extensionPoint == null) {
+			return;
+		}
 		IExtension[] extensions = extensionPoint.getExtensions();
 		for (IExtension extension : extensions) {
 			IConfigurationElement[] configurationElements = extension.getConfigurationElements();

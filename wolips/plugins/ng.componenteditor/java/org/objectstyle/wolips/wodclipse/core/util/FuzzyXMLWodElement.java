@@ -17,6 +17,10 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
   private FuzzyXMLElement _xmlElement;
 
   public FuzzyXMLWodElement(FuzzyXMLElement element, BuildProperties buildProperties) {
+    // FIXME: buildProperties can be null when the project doesn't have WOLips nature / adapter
+    String inlineBindingPrefix = buildProperties != null ? buildProperties.getInlineBindingPrefix() : "$";
+    String inlineBindingSuffix = buildProperties != null ? buildProperties.getInlineBindingSuffix() : "";
+
     String elementName = element.getName();
     String namespaceElementName = elementName.substring("wo:".length()).trim();
     int elementTypePosition = element.getOffset() + element.getNameOffset() + "wo:".length() + 1;
@@ -39,7 +43,7 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
 
     if (matchingTagShortcut != null) {
       for (Map.Entry<String, String> shortcutAttribute : matchingTagShortcut.getAttributes().entrySet()) {
-        BindingValue value = WodHtmlUtils.toBindingValue(shortcutAttribute.getValue(), buildProperties.getInlineBindingPrefix(), buildProperties.getInlineBindingSuffix());
+        BindingValue value = WodHtmlUtils.toBindingValue(shortcutAttribute.getValue(), inlineBindingPrefix, inlineBindingSuffix);
         SimpleWodBinding wodBinding = new SimpleWodBinding(null, shortcutAttribute.getKey(), value.getValue());
         addBinding(wodBinding);
       }
@@ -50,7 +54,7 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
       String namespace = attribute.getNamespace();
       String name = attribute.getName();
       String originalValue = attribute.getValue();
-      BindingValue value = WodHtmlUtils.toBindingValue(originalValue, buildProperties.getInlineBindingPrefix(), buildProperties.getInlineBindingSuffix());
+      BindingValue value = WodHtmlUtils.toBindingValue(originalValue, inlineBindingPrefix, inlineBindingSuffix);
       Position valuePosition;
       Position valueNamespacePosition = null;
       if (value.getValueNamespace() != null) {
