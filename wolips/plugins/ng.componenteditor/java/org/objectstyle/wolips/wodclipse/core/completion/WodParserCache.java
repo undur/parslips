@@ -321,8 +321,9 @@ public class WodParserCache implements ITypeOwner {
       }
     }
 
+    System.out.println("[ng.componenteditor] validate(force=" + force + ", threaded=" + threaded + ") validate=" + validate + ", _validated=" + _validated);
+
     if (validate) {
-      //System.out.println("WodParserCache.validate: force = " + force + ", threaded = " + threaded + ", validated = " + _validated + ", validating = " + _validating + ", (" + Thread.currentThread() + ")");
       if (force || !_validated) {
         if (threaded) {
           WodBuilder.validateComponent(_woFolder, true, null);
@@ -339,7 +340,11 @@ public class WodParserCache implements ITypeOwner {
             }
           }
         }
+      } else {
+        System.out.println("[ng.componenteditor] validate() skipped: already validated");
       }
+    } else {
+      System.out.println("[ng.componenteditor] validate() skipped: already validating");
     }
   }
 
@@ -377,18 +382,24 @@ public class WodParserCache implements ITypeOwner {
     }
 
     try {
-      //System.out.println("WodParserCache.validate: a " + _woFolder + " (" + Thread.currentThread() + ")");
+      System.out.println("[ng.componenteditor] _validate() called for " + _woFolder);
 
       _htmlEntry.deleteProblems();
       _wodEntry.deleteProblems();
       _wooEntry.deleteProblems();
 
-      if (Activator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.VALIDATE_TEMPLATES_KEY)) {
+      boolean validateEnabled = Activator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.VALIDATE_TEMPLATES_KEY);
+      System.out.println("[ng.componenteditor] VALIDATE_TEMPLATES_KEY = " + validateEnabled);
+      System.out.println("[ng.componenteditor] htmlFile = " + _htmlEntry.getFile() + ", wodFile = " + _wodEntry.getFile());
+
+      if (validateEnabled) {
         _htmlEntry.validate();
         _wodEntry.validate();
         _wooEntry.validate();
+        System.out.println("[ng.componenteditor] validation complete");
+      } else {
+        System.out.println("[ng.componenteditor] validation SKIPPED (preference disabled)");
       }
-      //System.out.println("WodParserCache.validate: b " + _woFolder + " (" + Thread.currentThread() + ")");
     }
     finally {
       synchronized (_validationLock) {

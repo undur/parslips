@@ -181,26 +181,12 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
 
   @Override
   protected void doValidate() {
-    //    if(!isFileEditorInput()){
-    //      return;
-    //    }
     try {
-      String[] natureIds = HTMLPlugin.getDefault().getNoValidationNatureId();
-      IFile file = ((IFileEditorInput) getEditorInput()).getFile();
-      for (int i = 0; i < natureIds.length; i++) {
-        if (file.getProject().hasNature(natureIds[i])) {
-          return;
+      ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+        public void run(IProgressMonitor monitor) {
+          _validate();
         }
-      }
-
-      boolean autoBuild = ResourcesPlugin.getPlugin().getPluginPreferences().getDefaultBoolean(ResourcesPlugin.PREF_AUTO_BUILDING);
-      if (!autoBuild) {
-        ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-          public void run(IProgressMonitor monitor) {
-            _validate();
-          }
-        }, null);
-      }
+      }, null);
     }
     catch (Exception ex) {
       HTMLPlugin.logException(ex);
@@ -211,7 +197,7 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
     try {
       WodParserCache cache = TemplateSourceEditor.this.getParserCache();
       cache.parse();
-      cache.validate(false, true);
+      cache.validate(true, false);
       if (_breadcrumb != null) {
         _breadcrumb.updateBreadcrumb();
       }

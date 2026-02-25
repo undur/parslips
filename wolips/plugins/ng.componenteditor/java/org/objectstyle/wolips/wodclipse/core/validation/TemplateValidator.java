@@ -92,6 +92,7 @@ public class TemplateValidator {
 
     String elementName = element.getName();
     if (WodHtmlUtils.isInline(elementName)) {
+      System.out.println("[ng.componenteditor] TemplateValidator: found inline element <" + elementName + ">");
       if (validate) {
         IWodElement wodElement = new FuzzyXMLWodElement(element, _buildProperties);
         if (wodElement != null) {
@@ -99,7 +100,12 @@ public class TemplateValidator {
           //String invalidOGNLSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.INVALID_OGNL_SEVERITY_KEY);
           List<WodProblem> wodProblems = new LinkedList<WodProblem>();
           try {
+            System.out.println("[ng.componenteditor] TemplateValidator: componentType=" + _cache.getComponentType() + " validateBindingValues=" + validateBindingValues);
             wodElement.fillInProblems(_cache.getJavaProject(), _cache.getComponentType(), validateBindingValues, wodProblems, WodParserCache.getTypeCache(), _cache.getHtmlEntry().getHtmlElementCache());
+            System.out.println("[ng.componenteditor] TemplateValidator: " + wodProblems.size() + " problems found for <" + elementName + ">");
+            for (WodProblem p : wodProblems) {
+              System.out.println("[ng.componenteditor]   problem: " + p.getMessage());
+            }
             inlineProblems.add(new InlineWodProblem(element, wodProblems, _cache));
           }
           catch (JavaModelException e) {

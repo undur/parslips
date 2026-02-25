@@ -10,7 +10,7 @@ public class Activator extends AbstractBaseUIActivator {
   // The plug-in ID
   public static final String PLUGIN_ID = "org.objectstyle.wolips.wodclipse.core";
 
-  public static final String TEMPLATE_PROBLEM_MARKER = Activator.PLUGIN_ID + ".problem";
+  public static final String TEMPLATE_PROBLEM_MARKER = "ng.componenteditor.problem";
 
   // The shared instance
   private static Activator plugin;

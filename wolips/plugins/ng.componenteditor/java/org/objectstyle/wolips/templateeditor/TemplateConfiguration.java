@@ -2,6 +2,9 @@ package org.objectstyle.wolips.templateeditor;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
+import org.eclipse.jface.text.reconciler.IReconciler;
+import org.eclipse.jface.text.reconciler.MonoReconciler;
+import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.variables.BuildProperties;
@@ -35,7 +38,18 @@ public class TemplateConfiguration extends HTMLConfiguration {
     hyperlinkDetector.addHyperlinkProvider(new InlineWodElementHyperlinkProvider());
     return hyperlinkDetector;
   }
-  
+
+  @Override
+  public IReconciler getReconciler(ISourceViewer sourceViewer) {
+    if (getEditorPart() instanceof TemplateSourceEditor) {
+      TemplateReconcilingStrategy strategy = new TemplateReconcilingStrategy((TemplateSourceEditor) getEditorPart());
+      MonoReconciler reconciler = new MonoReconciler(strategy, false);
+      reconciler.setDelay(500);
+      return reconciler;
+    }
+    return null;
+  }
+
 //  @Override
 //  public IHyperlinkDetector[] getHyperlinkDetectors(ISourceViewer sourceViewer) {
 //    IHyperlinkDetector[] hyperlinkDetectors = super.getHyperlinkDetectors(sourceViewer);
