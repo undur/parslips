@@ -60,6 +60,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.objectstyle.wolips.bindings.Activator;
+
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -176,14 +178,16 @@ public class Wo extends AbstractApiModelElement {
   }
 
   public List<Validation> getFailedValidations(Map<String, String> bindings) {
-    List<Validation> validations = getValidations();
-    List<Validation> failedValidations = new LinkedList<Validation>();
-    for (Validation validation : validations) {
-      if (validation.evaluate(bindings)) {
-        failedValidations.add(validation);
+    synchronized (this.apiModel) {
+      List<Validation> validations = getValidations();
+      List<Validation> failedValidations = new LinkedList<Validation>();
+      for (Validation validation : validations) {
+        if (validation.evaluate(bindings)) {
+          failedValidations.add(validation);
+        }
       }
+      return failedValidations;
     }
-    return failedValidations;
   }
 
   public Binding getBinding(String name) {

@@ -32,8 +32,7 @@ public class Count extends AbstractValidationContainer {
     int count = 0;
     List<IValidation> validationChildren = getValidationChildren();
     for (IValidation validation : validationChildren) {
-      boolean evaluation = validation.evaluate(bindings);
-      if (evaluation) {
+      if (validation.evaluate(bindings)) {
         count++;
       }
     }

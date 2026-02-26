@@ -298,7 +298,58 @@ Ported the WO Explorer project view from `org.objectstyle.wolips.jdt` into `ng.c
 - `ng.componenteditor.explorer.NGPackageExplorerContentProvider` — content provider with source folder pull-up and `isComponentBundle()` helper
 - `ng.componenteditor.explorer.NGWorkingSetAwareContentProvider` — working set variant with same pull-up
 - `ng.componenteditor.explorer.NGJavaElementComparator` — sorting for source folders, .wo bundles
-- `ng.componenteditor.explorer.SourceFolderLabelProvider` — wraps the tree label provider to show full paths for pulled-up folders
+- `ng.componenteditor.explorer.SourceFolderDecorator` — wraps the tree's inner `IStyledLabelProvider` to show full paths and WO overlay badges for pulled-up source folders
 - `ng.componenteditor.explorer.WOComponentDecorator` — global `ILabelDecorator` for `.wo` folder icon + problem markers
 - `ng.componenteditor.explorer.NGWorkingSetAwareJavaElementSorter` — working set sorting variant
 - `plugin.xml` — view registration, JDT filters, decorator registration
+
+### Syntax highlighting improvements
+
+- **Distinct OGNL syntax colors:** OGNL keypaths (e.g. `session.user.name`) now have their own syntax color (dark teal), distinct from constant strings. Previously, both OGNL expressions and string constants used the same color, making it hard to distinguish dynamic bindings from static values at a glance.
+- **Distinct dynamic binding tag color:** `<wo:` and `<webobject>` tags now use a distinct color (dark purple) to visually separate them from regular HTML tags.
+- **Subtle background tint for WO tags:** Dynamic binding tags (`<wo:...>`, `<webobject>`) render with a subtle warm-tinted background to make component boundaries easy to spot in dense templates.
+
+### Source folder labels and badges
+
+- **Uniform source folder labels:** Pulled-up source folders in the Parsley Explorer (e.g. `src/main/components`) display their full project-relative path as a uniform-styled label — no grey qualifier prefix that the default JDT label provider would add.
+- **WO overlay badge:** Pulled-up source folders display a small "wo" overlay badge at bottom-left, similar to how JDT marks Java source folders. The badge uses `DecorationOverlayIcon` with a cached composite image.
+
+### Source folder decorator: reflection-based wrapping
+
+The `SourceFolderDecorator` was rewritten to preserve Eclipse's platform decorator chain (EGit branch labels, problem markers, team decorations).
+
+**Problem:** The original approach replaced the `DecoratingStyledCellLabelProvider` on the tree viewer with a custom wrapper. This severed the connection to Eclipse's `DecorationScheduler`, which feeds asynchronous decorator updates (EGit git branch/status labels, problem markers, etc.) into the viewer. Result: git decorations were missing from the Parsley Explorer.
+
+**Solution:** Instead of replacing the label provider, `SourceFolderDecorator.install()` now wraps only the *inner* `IStyledLabelProvider` delegate inside the existing `DecoratingStyledCellLabelProvider`, using reflection to re-inject the wrapper. The outer decorator chain stays intact, so all platform decorators continue to work. A `FallbackSourceFolderLabelProvider` is used as a last resort if the reflection approach fails.
+
+### Added: Parsley perspective
+
+Added a dedicated Parsley perspective for WebObjects / ng-objects component development.
+
+**Layout:**
+- Left: Parsley Explorer + Type Hierarchy
+- Center: Editor area
+- Center bottom: Problems, Console, Javadoc, Source views
+- Right: Outline
+
+**Includes:** Debug, Java, and element creation action sets. Team/EGit action sets for git toolbar actions. Show View shortcuts for all commonly used views. New wizard shortcuts for Java types, source folders, and files.
+
+**Key files:**
+- `ng.componenteditor.NGPerspectiveFactory` — perspective layout definition
+- `plugin.xml` — perspective registration with `icons/parsley16.png` icon
+
+### Renamed: perspective and explorer branding
+
+The perspective is now called "Parsley" and the explorer view is called "Parsley Explorer". The perspective factory class is `NGPerspectiveFactory` and the perspective ID is `ng.componenteditor.ParsleyPerspective`.
+
+### Fixed: WOD validation false positives (DOM thread-safety)
+
+Fixed a long-standing intermittent bug where WOD validation would report false errors like "exactly one of 'count' or 'list' must be bound" on `WORepetition` — even though `list` was clearly bound.
+
+**Root cause:** The `WebObjectDefinitions.xml` API model is a shared static singleton (`_globalApiModel` in `ApiUtils`). Its backing DOM `Document` was accessed concurrently by multiple WOD validation threads. Java's DOM implementation (Xerces) is not thread-safe, even for read-only access. When multiple threads simultaneously traversed the DOM tree (calling `getChildNodes()`, `getAttribute()`, etc.), `getAttribute("name")` on `<bound name="list"/>` elements would intermittently return `""` instead of `"list"`, causing the validation count to be 0 instead of 1, which triggered the false error.
+
+**Fix:** `Wo.getFailedValidations()` now holds `synchronized (this.apiModel)` for the entire validation evaluation, ensuring exclusive access to the DOM tree during validation. This is the same lock used by `parse()`, `getWODefinitions()`, and other DOM-accessing methods.
+
+### Deleted: old WOLips plugin
+
+The original WOLips plugin suite (all `org.objectstyle.wolips.*` plugins, features, and the p2 update site) was deleted from the repository. Only `ng.componenteditor` and the build infrastructure remain.
