@@ -56,6 +56,7 @@ import java.util.TreeSet;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.objectstyle.wolips.variables.BuildProperties;
@@ -160,12 +161,15 @@ public class TypeNameCollector extends TypeNameRequestor {
 					}
 				}
 				if (typeMatches) {
-//					ITypeHierarchy typeHierarchy = SuperTypeHierarchyCache.getTypeHierarchy(type);
-//					if (_superclassType != null && typeHierarchy.contains(_superclassType)) {
-						_typeNames.add(className);
-						_typeNameToPath.put(className, path);
-						_typeNameToType.put(className, type);
-//					}
+					if (_superclassType != null) {
+						ITypeHierarchy typeHierarchy = SuperTypeHierarchyCache.getTypeHierarchy(type);
+						if (!typeHierarchy.contains(_superclassType)) {
+							return;
+						}
+					}
+					_typeNames.add(className);
+					_typeNameToPath.put(className, path);
+					_typeNameToType.put(className, type);
 				}
 			}
 		} catch (Throwable t) {
