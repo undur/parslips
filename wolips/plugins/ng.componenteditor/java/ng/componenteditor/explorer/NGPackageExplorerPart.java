@@ -58,6 +58,7 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 		super.createPartControl(parent);
 		switchToNGSorter();
 		installComponentOpenListeners();
+		SourceFolderDecorator.install(getTreeViewer());
 	}
 
 	@Override

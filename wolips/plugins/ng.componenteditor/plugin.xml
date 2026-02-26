@@ -796,16 +796,6 @@
          </enablement>
       </decorator>
       <decorator
-            class="ng.componenteditor.explorer.SourceFolderDecorator"
-            id="ng.componenteditor.decorator.SourceFolderDecorator"
-            label="NG Source Folder Decorator"
-            lightweight="false"
-            state="true">
-         <enablement>
-            <objectClass name="org.eclipse.core.resources.IFolder"/>
-         </enablement>
-      </decorator>
-      <decorator
             class="ng.componenteditor.explorer.ProjectDecorator"
             id="ng.componenteditor.decorator.ProjectDecorator"
             label="NG/WO Project Decorator"
