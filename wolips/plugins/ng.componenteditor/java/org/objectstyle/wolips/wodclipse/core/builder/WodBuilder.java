@@ -155,6 +155,13 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 										wodFile.touch(progressMonitor);
 										validateWodFile(wodFile, progressMonitor);
 									}
+									else {
+										// No .wod file — try standalone HTML template
+										IFile htmlFile = results.getFirstHtmlFile();
+										if (htmlFile != null && htmlFile.exists()) {
+											validateWodFile(htmlFile, progressMonitor);
+										}
+									}
 								}
 							}
 						}
@@ -233,6 +240,11 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 						else if ("woo".equals(fileExtension)) {
 							validate = shouldValidate(file, buildCache);
 						}
+					}
+					else if ("html".equals(resource.getFileExtension())) {
+						// Standalone HTML component (not inside a .wo folder) —
+						// validate if it looks like a component template
+						validate = shouldValidate(resource, buildCache);
 					}
 				}
 				else if (resource instanceof IContainer) {
