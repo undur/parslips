@@ -580,8 +580,10 @@ public class BuildProperties {
 		if ("wo".equals(base)) {
 			return false;
 		}
-		// No explicit override — probe the classpath
-		return classpathContains(NG_ELEMENT_CLASS);
+		// No explicit override — probe the classpath.
+		// Only claim ng if NGElement is present and WOElement is not;
+		// if both are on the classpath (mixed workspace) default to WO.
+		return classpathContains(NG_ELEMENT_CLASS) && !classpathContains(WO_ELEMENT_CLASS);
 	}
 
 	private String resolveFrameworkClass(String ngClass, String woClass) {
@@ -592,8 +594,10 @@ public class BuildProperties {
 		if ("wo".equals(base)) {
 			return woClass;
 		}
-		// No explicit override — probe the classpath
-		if (classpathContains(ngClass)) {
+		// No explicit override — probe the classpath.
+		// Only use ng classes if NGElement is present and WOElement is not;
+		// if both are on the classpath (mixed workspace) default to WO.
+		if (classpathContains(ngClass) && !classpathContains(woClass)) {
 			return ngClass;
 		}
 		return woClass;

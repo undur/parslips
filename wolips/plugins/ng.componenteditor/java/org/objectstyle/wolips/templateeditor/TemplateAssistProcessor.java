@@ -182,6 +182,11 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         IFile wodFile = getFile();
         String componentTypeName = wodFile.getLocation().removeFileExtension().lastSegment();
         IType componentType = BindingReflectionUtils.findElementType(wodTagInfo.getJavaProject(), componentTypeName, true, WodParserCache.getTypeCache());
+        // If no Java class exists for this component, fall back to WOComponent/NGComponent
+        if (componentType == null && wodTagInfo.getJavaProject() != null) {
+          String fallbackClass = BuildProperties.getComponentClass(wodTagInfo.getJavaProject());
+          componentType = wodTagInfo.getJavaProject().findType(fallbackClass);
+        }
         Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();
         int dotIndex = bindingValue.lastIndexOf('.');
         if (dotIndex == -1) {
