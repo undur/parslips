@@ -34,6 +34,18 @@ public class ColorProvider {
 	   }
 	   return token;
 	}
+
+	public IToken getToken(String prefKey, RGB background){
+	   String compositeKey = prefKey + "__bg";
+	   Token token = tokenTable.get(compositeKey);
+	   if (token == null){
+		  String colorName = store.getString(prefKey);
+		  RGB rgb = StringConverter.asRGB(colorName);
+		  token = new Token(new TextAttribute(getColor(rgb), getColor(background), 0));
+		  tokenTable.put(compositeKey, token);
+	   }
+	   return token;
+	}
 	
 	public void dispose(){
 		Iterator e = colorTable.values().iterator();
@@ -48,7 +60,7 @@ public class ColorProvider {
 		  return getColor(rgb);
 	}
 	
-	private Color getColor(RGB rgb) {
+	public Color getColor(RGB rgb) {
 		Color color = colorTable.get(rgb);
 		if (color == null){
 		   color = new Color(Display.getCurrent(), rgb);

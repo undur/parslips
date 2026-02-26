@@ -14,6 +14,7 @@ public interface IHTMLColorConstants {
 	RGB SCRIPT       = new RGB(184,  93,   0);
 	RGB OGNL         = new RGB(180,   0,  60);
 	RGB DYNAMIC      = new RGB(  0, 112, 180);
+	RGB WO_TAG_BG    = new RGB(237, 245, 245);
 	RGB CSS_PROP     = new RGB(  0,   0, 255);
 	RGB CSS_COMMENT  = new RGB( 63,  95, 191);
 	RGB CSS_VALUE    = new RGB(  0, 128,   0);
