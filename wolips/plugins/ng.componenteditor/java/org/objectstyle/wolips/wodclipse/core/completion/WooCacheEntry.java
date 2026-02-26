@@ -23,7 +23,7 @@ public class WooCacheEntry extends AbstractCacheEntry<WooModel> {
       WodParserCache cache = getCache();
       IJavaProject javaProject = cache.getJavaProject();
       IType componentType = cache.getComponentType();
-      List<WodProblem> wodProblems = wooModel.getProblems(javaProject, componentType, WodParserCache.getTypeCache(), WodParserCache.getModelGroupCache());
+      List<WodProblem> wodProblems = wooModel.getProblems(javaProject, componentType, WodParserCache.getTypeCache());
       IFile wooFile = getFile();
       if (wooFile != null && wooFile.exists()) {
         for (WodProblem wodProblem : wodProblems) {

@@ -41,15 +41,6 @@ public class AddKeyInfo {
     _createMutatorMethod = true;
   }
 
-  // FIXME: eomodeler removed — getModelGroup() returned EOModelGroup from WodParserCache
-  // public EOModelGroup getModelGroup() {
-  //   if (_modelGroup == null) {
-  //     _modelGroup = WodParserCache.getModelGroupCache().getModelGroup(_componentType.getJavaProject().getProject());
-  //   }
-  //   return _modelGroup;
-  // }
-
-  // FIXME: eomodeler removed — getEntityNames() used EOModelGroup.getNonPrototypeEntityNames()
   public String[] getEntityNames() {
     return new String[0];
   }

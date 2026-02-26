@@ -333,9 +333,6 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 		case IEditorTarget.TARGET_HTML:
 			this.switchToHtml();
 			break;
-		case IEditorTarget.TARGET_PREVIEW:
-			this.switchToPreview();
-			break;
 		case IEditorTarget.TARGET_WOD:
 			this.switchToWod();
 			break;
@@ -366,10 +363,6 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 
 	public void switchToWoo() {
 		switchToPage(wooPageId);
-	}
-
-	public void switchToPreview() {
-		// preview tab removed
 	}
 
 	public void switchToApi() {

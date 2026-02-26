@@ -122,7 +122,6 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 		}
 		_threadedBuild = getBooleanProperty("component.threadedValidation", PreferenceConstants.THREADED_VALIDATION_KEY, project, Activator.getDefault().getPreferenceStore());
 		if (kind == IncrementalProjectBuilder.FULL_BUILD) {
-			WodParserCache.getModelGroupCache().clearCacheForProject(project);
 			WodParserCache.getTypeCache().clearCacheForProject(project);
 			WOHierarchyScope.clearCacheForProject(project);
 		}

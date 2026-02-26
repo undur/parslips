@@ -53,8 +53,6 @@ public interface IEditorTarget {
 
 	public final int TARGET_WOD = 1;
 
-	public final int TARGET_PREVIEW = 2;
-
 	public final int TARGET_API = 3;
 	
 	public final int TARGET_WOO = 4;
@@ -64,8 +62,6 @@ public interface IEditorTarget {
 	public abstract void switchToHtml();
 
 	public abstract void switchToWod();
-
-	public abstract void switchToPreview();
 
 	public abstract void switchToApi();
 	

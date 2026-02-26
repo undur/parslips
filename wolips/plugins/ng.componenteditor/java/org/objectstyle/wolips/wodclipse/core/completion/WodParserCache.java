@@ -33,11 +33,8 @@ import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.wodclipse.core.builder.WodBuilder;
-import org.objectstyle.wolips.wodclipse.core.util.EOModelGroupCache;
-
 public class WodParserCache implements ITypeOwner {
   private static TypeCache _typeCache;
-  private static EOModelGroupCache _modelGroupCache;
   private static LimitedLRUCache<String, WodParserCache> _parsers;
 
   private WodCacheEntry _wodEntry;
@@ -61,7 +58,6 @@ public class WodParserCache implements ITypeOwner {
 
   static {
     WodParserCache._typeCache = new TypeCache();
-    WodParserCache._modelGroupCache = new EOModelGroupCache();
   }
   
   /**
@@ -289,10 +285,6 @@ public class WodParserCache implements ITypeOwner {
 
   public static TypeCache getTypeCache() {
     return WodParserCache._typeCache;
-  }
-
-  public static EOModelGroupCache getModelGroupCache() {
-    return WodParserCache._modelGroupCache;
   }
 
   public IType getType() throws CoreException, LocateException {

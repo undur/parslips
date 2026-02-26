@@ -33,8 +33,6 @@ import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelMap;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelParserDataStructureFactory;
-import org.objectstyle.wolips.wodclipse.core.util.EOModelGroupCache;
-
 public class WooModel {
   public static final String IS_DIRTY = "IS_DIRTY";
 
@@ -262,7 +260,7 @@ public class WooModel {
     return modelStream.toString();
   }
 
-  public List<WodProblem> getProblems(IJavaProject javaProject, IType type, TypeCache typeCache, EOModelGroupCache modelCache) {
+  public List<WodProblem> getProblems(IJavaProject javaProject, IType type, TypeCache typeCache) {
     final List<WodProblem> problems = new ArrayList<WodProblem>();
 
     try {
