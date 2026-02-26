@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerContentProvider;
 
 /**
- * Content provider for the NG Explorer. Extends the standard JDT content
+ * Content provider for the Parsley Explorer. Extends the standard JDT content
  * provider with two customizations:
  * <ul>
  *   <li>Pulls up WebObjects/ng-objects source folders ({@code src/main/components},

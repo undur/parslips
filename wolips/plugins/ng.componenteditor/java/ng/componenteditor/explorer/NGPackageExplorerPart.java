@@ -20,11 +20,11 @@ import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.editors.EditorsPlugin;
 
 /**
- * NG Explorer — a Package Explorer variant with component-aware behavior.
+ * Parsley Explorer — a Package Explorer variant with component-aware behavior.
  * <p>
  * .wo component bundle folders are shown with their normal children (the
  * expansion triangle is visible), but double-clicking or pressing Enter
- * on a .wo folder opens the NG Component Editor. The expansion state of
+ * on a .wo folder opens the Component Editor. The expansion state of
  * the .wo folder is preserved (not toggled) on double-click.
  * <p>
  * A registered decorator ({@code WOComponentDecorator}) provides the

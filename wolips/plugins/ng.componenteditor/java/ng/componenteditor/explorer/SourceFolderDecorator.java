@@ -8,36 +8,40 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.DecorationOverlayIcon;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
+import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
 import org.eclipse.jface.viewers.IDecoration;
-import org.eclipse.jface.viewers.ILabelDecorator;
-import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 /**
- * Installs a label provider wrapper on the tree viewer that overrides the
- * rendered text and icon for pulled-up source folders.
+ * Installs source-folder-aware label overrides on the Parsley Explorer's
+ * tree viewer <em>without</em> replacing its label provider.
  * <p>
- * <b>Text:</b> Replaces just the folder name with the full project-relative
- * path (e.g. {@code src/main/components}) in a uniform style — no grey
- * qualifier prefix.
+ * The JDT Package Explorer uses a {@code DecoratingStyledCellLabelProvider}
+ * which connects to Eclipse's {@code DecorationScheduler}. That scheduler
+ * feeds asynchronous decorator updates (EGit branch labels, problem markers,
+ * etc.) into the viewer. Replacing the label provider — as we did previously
+ * — severs that connection and loses git/team decorations.
  * <p>
- * <b>Icon:</b> Adds a small "wo" overlay badge (bottom-left) to the folder
- * icon, similar to how JDT marks Java source folders with a package badge.
+ * Instead, this class wraps the <em>inner</em> {@link IStyledLabelProvider}
+ * that the {@code DecoratingStyledCellLabelProvider} delegates to, and
+ * re-injects the wrapper using reflection. The outer decorator chain stays
+ * intact, so all platform decorators (EGit, Team, problems, etc.) continue
+ * to work.
  * <p>
- * Because this wrapper replaces the viewer's label provider, Eclipse's
- * decorator manager is no longer directly connected to the viewer. To
- * compensate, the wrapper explicitly applies registered decorators during
- * {@link #update(ViewerCell)} for all elements.
+ * <b>Text override:</b> For pulled-up source folders, replaces the folder
+ * name with the full project-relative path (e.g. {@code src/main/components})
+ * in a uniform style — no grey qualifier prefix.
+ * <p>
+ * <b>Icon override:</b> For pulled-up source folders, composites a small "wo"
+ * overlay badge at bottom-left, similar to how JDT marks Java source folders.
  */
 public class SourceFolderDecorator {
 
@@ -48,115 +52,92 @@ public class SourceFolderDecorator {
 	 * Must be called after the viewer's label provider is set up.
 	 */
 	public static void install(TreeViewer viewer) {
-		CellLabelProvider existingProvider = viewer.getLabelProvider(0);
+		Object existingProvider = viewer.getLabelProvider();
 
-		if (existingProvider instanceof DelegatingStyledCellLabelProvider delegating) {
-			viewer.setLabelProvider(new SourceFolderLabelProvider(delegating));
+		if (existingProvider instanceof DelegatingStyledCellLabelProvider decorating) {
+			IStyledLabelProvider inner = decorating.getStyledStringProvider();
+			if (inner != null && !(inner instanceof SourceFolderStyledLabelProvider)) {
+				// Wrap the inner provider with our override
+				SourceFolderStyledLabelProvider wrapper = new SourceFolderStyledLabelProvider(inner);
+
+				// Re-inject the wrapper into the DecoratingStyledCellLabelProvider
+				// via reflection. The field is "styledLabelProvider" in the superclass
+				// DelegatingStyledCellLabelProvider.
+				try {
+					java.lang.reflect.Field field = DelegatingStyledCellLabelProvider.class
+							.getDeclaredField("styledLabelProvider");
+					field.setAccessible(true);
+					field.set(decorating, wrapper);
+				} catch (Exception e) {
+					// Reflection failed — fall back to the old approach as a last resort.
+					// This means git decorations won't work, but at least the view loads.
+					viewer.setLabelProvider(new FallbackSourceFolderLabelProvider(decorating));
+				}
+			}
 		}
 	}
 
 	/**
-	 * A label provider that wraps the existing {@link DelegatingStyledCellLabelProvider},
-	 * delegating all calls to it, but overriding the rendered text and icon for
-	 * pulled-up source folders. Also explicitly applies platform decorators
-	 * so that .wo component icons and other decorations continue to work.
+	 * Wraps an {@link IStyledLabelProvider}, overriding text and images for
+	 * pulled-up source folders while delegating everything else.
 	 */
-	private static class SourceFolderLabelProvider extends DelegatingStyledCellLabelProvider implements ILabelProvider {
+	private static class SourceFolderStyledLabelProvider implements IStyledLabelProvider {
 
-		private final DelegatingStyledCellLabelProvider _delegate;
+		private final IStyledLabelProvider _delegate;
 		private ImageDescriptor _woOverlay;
 		private final Map<Image, Image> _badgeCache = new HashMap<>();
 
-		SourceFolderLabelProvider(DelegatingStyledCellLabelProvider delegate) {
-			super(delegate.getStyledStringProvider());
+		SourceFolderStyledLabelProvider(IStyledLabelProvider delegate) {
 			_delegate = delegate;
 		}
 
 		@Override
-		public void update(ViewerCell cell) {
-			// Let the original provider do its full work (base labels)
-			_delegate.update(cell);
-
-			Object element = cell.getElement();
-
-			// Apply platform decorators (WOComponentDecorator, ProjectDecorator, etc.)
-			// Since we replaced the DecoratingStyledCellLabelProvider, decorations
-			// from plugin.xml won't fire automatically — we apply them explicitly.
-			applyDecorations(cell, element);
-
-			// Override text and icon for pulled-up source folders
+		public StyledString getStyledText(Object element) {
 			if (element instanceof IFolder folder) {
 				if (NGPackageExplorerContentProvider.isSourceFolder(folder)) {
-					String fullPath = folder.getProjectRelativePath().toString();
-					cell.setText(fullPath);
-					cell.setStyleRanges(new StyleRange[0]);
-
-					Image baseImage = cell.getImage();
-					if (baseImage != null) {
-						cell.setImage(badgedImage(baseImage));
-					}
+					return new StyledString(folder.getProjectRelativePath().toString());
 				}
 			}
-		}
-
-		/**
-		 * Applies platform-level decorations (from org.eclipse.ui.decorators
-		 * extension point) to the cell's image and text.
-		 */
-		private void applyDecorations(ViewerCell cell, Object element) {
-			try {
-				ILabelDecorator decorator = PlatformUI.getWorkbench()
-						.getDecoratorManager().getLabelDecorator();
-
-				Image image = cell.getImage();
-				if (image != null) {
-					Image decorated = decorator.decorateImage(image, element);
-					if (decorated != null) {
-						cell.setImage(decorated);
-					}
-				}
-
-				String text = cell.getText();
-				if (text != null) {
-					String decorated = decorator.decorateText(text, element);
-					if (decorated != null) {
-						cell.setText(decorated);
-					}
-				}
-			} catch (Exception e) {
-				// If decoration fails, keep the undecorated label
-			}
+			return _delegate.getStyledText(element);
 		}
 
 		@Override
 		public Image getImage(Object element) {
-			if (_delegate instanceof ILabelProvider lp) {
-				Image base = lp.getImage(element);
-				if (element instanceof IFolder folder && NGPackageExplorerContentProvider.isSourceFolder(folder)) {
+			Image base = _delegate.getImage(element);
+			if (element instanceof IFolder folder) {
+				if (NGPackageExplorerContentProvider.isSourceFolder(folder)) {
 					return base != null ? badgedImage(base) : null;
 				}
-				return base;
 			}
-			return null;
+			return base;
 		}
 
 		@Override
-		public String getText(Object element) {
-			if (element instanceof IFolder folder) {
-				if (NGPackageExplorerContentProvider.isSourceFolder(folder)) {
-					return folder.getProjectRelativePath().toString();
-				}
-			}
-			if (_delegate instanceof ILabelProvider lp) {
-				return lp.getText(element);
-			}
-			return element == null ? "" : element.toString();
+		public void addListener(ILabelProviderListener listener) {
+			_delegate.addListener(listener);
 		}
 
-		/**
-		 * Returns the base image with the "wo" overlay badge composited at
-		 * bottom-left. Results are cached to avoid creating new images on every update.
-		 */
+		@Override
+		public void removeListener(ILabelProviderListener listener) {
+			_delegate.removeListener(listener);
+		}
+
+		@Override
+		public boolean isLabelProperty(Object element, String property) {
+			return _delegate.isLabelProperty(element, property);
+		}
+
+		@Override
+		public void dispose() {
+			for (Image img : _badgeCache.values()) {
+				if (img != null && !img.isDisposed()) {
+					img.dispose();
+				}
+			}
+			_badgeCache.clear();
+			_delegate.dispose();
+		}
+
 		private Image badgedImage(Image baseImage) {
 			Image cached = _badgeCache.get(baseImage);
 			if (cached != null && !cached.isDisposed()) {
@@ -192,16 +173,72 @@ public class SourceFolderDecorator {
 			}
 			return _woOverlay;
 		}
+	}
+
+	/**
+	 * Fallback label provider used only if reflection fails. This is the old
+	 * approach that replaces the label provider entirely — it works for source
+	 * folder labels but loses async decorator updates (e.g. EGit).
+	 */
+	private static class FallbackSourceFolderLabelProvider
+			extends DelegatingStyledCellLabelProvider
+			implements org.eclipse.jface.viewers.ILabelProvider {
+
+		private final DelegatingStyledCellLabelProvider _delegate;
+
+		FallbackSourceFolderLabelProvider(DelegatingStyledCellLabelProvider delegate) {
+			super(delegate.getStyledStringProvider());
+			_delegate = delegate;
+		}
 
 		@Override
-		public void dispose() {
-			for (Image img : _badgeCache.values()) {
-				if (img != null && !img.isDisposed()) {
-					img.dispose();
+		public void update(org.eclipse.jface.viewers.ViewerCell cell) {
+			_delegate.update(cell);
+
+			Object element = cell.getElement();
+			try {
+				org.eclipse.jface.viewers.ILabelDecorator decorator =
+						org.eclipse.ui.PlatformUI.getWorkbench()
+								.getDecoratorManager().getLabelDecorator();
+				Image image = cell.getImage();
+				if (image != null) {
+					Image decorated = decorator.decorateImage(image, element);
+					if (decorated != null) cell.setImage(decorated);
+				}
+				String text = cell.getText();
+				if (text != null) {
+					String decorated = decorator.decorateText(text, element);
+					if (decorated != null) cell.setText(decorated);
+				}
+			} catch (Exception e) { }
+
+			if (element instanceof IFolder folder) {
+				if (NGPackageExplorerContentProvider.isSourceFolder(folder)) {
+					cell.setText(folder.getProjectRelativePath().toString());
+					cell.setStyleRanges(new org.eclipse.swt.custom.StyleRange[0]);
 				}
 			}
-			_badgeCache.clear();
-			super.dispose();
+		}
+
+		@Override
+		public Image getImage(Object element) {
+			if (_delegate instanceof org.eclipse.jface.viewers.ILabelProvider lp) {
+				return lp.getImage(element);
+			}
+			return null;
+		}
+
+		@Override
+		public String getText(Object element) {
+			if (element instanceof IFolder folder) {
+				if (NGPackageExplorerContentProvider.isSourceFolder(folder)) {
+					return folder.getProjectRelativePath().toString();
+				}
+			}
+			if (_delegate instanceof org.eclipse.jface.viewers.ILabelProvider lp) {
+				return lp.getText(element);
+			}
+			return element == null ? "" : element.toString();
 		}
 	}
 }

@@ -20,8 +20,8 @@ import org.osgi.framework.FrameworkUtil;
  * problem decoration (error/warning overlay markers).
  * <p>
  * Registered via {@code org.eclipse.ui.decorators} in plugin.xml, so the
- * icon appears in ALL views (NG Explorer, Package Explorer, Project Explorer,
- * etc.), not just the NG Explorer.
+ * icon appears in ALL views (Parsley Explorer, Package Explorer, Project Explorer,
+ * etc.), not just the Parsley Explorer.
  */
 public class WOComponentDecorator implements ILabelDecorator {
 	private boolean _decorating;

@@ -434,11 +434,11 @@
             category="ng.componenteditor.views"
             class="org.objectstyle.wolips.componenteditor.inspector.BindingsInspectorPageBookView"
             id="ng.componenteditor.inspector.BindingsInspectorPageBookView"/>
-      <view name="NG Explorer"
+      <view name="Parsley Explorer"
             allowMultiple="false"
             category="ng.componenteditor.views"
             class="ng.componenteditor.explorer.NGPackageExplorerPart"
-            icon="icons/ComponentEditor.png"
+            icon="icons/parsley16.png"
             id="ng.componenteditor.explorer.NGPackageExplorer"/>
    </extension>
 
@@ -644,7 +644,7 @@
    </extension>
 
 <!-- =================================================================================== -->
-<!-- NG Explorer View Filters (mirror of JDT Package Explorer standard filters)         -->
+<!-- Parsley Explorer View Filters (mirror of JDT Package Explorer standard filters)    -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.jdt.ui.javaElementFilters">
       <filter
@@ -812,6 +812,31 @@
             </or>
          </enablement>
       </decorator>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Parsley Perspective                                                                 -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.perspectives">
+      <perspective
+            name="Parsley"
+            icon="icons/parsley16.png"
+            class="ng.componenteditor.NGPerspectiveFactory"
+            id="ng.componenteditor.ParsleyPerspective"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension targetID="ng.componenteditor.ParsleyPerspective">
+         <perspectiveShortcut id="org.eclipse.debug.ui.DebugPerspective"/>
+         <perspectiveShortcut id="org.eclipse.jdt.ui.JavaPerspective"/>
+         <perspectiveShortcut id="org.eclipse.ui.resourcePerspective"/>
+      </perspectiveExtension>
+      <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <perspectiveShortcut id="ng.componenteditor.ParsleyPerspective"/>
+      </perspectiveExtension>
+      <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">
+         <perspectiveShortcut id="ng.componenteditor.ParsleyPerspective"/>
+      </perspectiveExtension>
    </extension>
 
 </plugin>

@@ -10,7 +10,7 @@ import org.eclipse.jdt.internal.ui.packageview.WorkingSetAwareContentProvider;
 import org.eclipse.jdt.internal.ui.workingsets.WorkingSetModel;
 
 /**
- * Working-set-aware variant of the content provider for the NG Explorer.
+ * Working-set-aware variant of the content provider for the Parsley Explorer.
  * Applies the same source folder pull-up as {@link NGPackageExplorerContentProvider}.
  */
 public class NGWorkingSetAwareContentProvider extends WorkingSetAwareContentProvider {

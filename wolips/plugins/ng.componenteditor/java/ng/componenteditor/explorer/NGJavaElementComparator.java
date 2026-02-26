@@ -11,7 +11,7 @@ import org.eclipse.jdt.ui.JavaElementComparator;
 import org.eclipse.jface.viewers.Viewer;
 
 /**
- * Comparator for the NG Explorer that handles two special cases:
+ * Comparator for the Parsley Explorer that handles two special cases:
  * <ul>
  *   <li><b>Pulled-up source folders</b> ({@code components}, {@code woresources},
  *       {@code webserver-resources}) — positioned right after Java source roots
