@@ -80,7 +80,7 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 		try {
 			BuildProperties buildProps = (BuildProperties) project.getAdapter(BuildProperties.class);
 			if (buildProps != null) {
-				return "ng".equals(buildProps.get("base"));
+				return buildProps.isNGProject();
 			}
 		} catch (Exception e) {
 			// Ignore — fall through to false

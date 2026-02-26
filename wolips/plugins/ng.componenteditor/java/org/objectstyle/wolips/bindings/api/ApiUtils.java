@@ -124,7 +124,8 @@ public class ApiUtils {
         if (apiMissing == null || !apiMissing.booleanValue()) {
           ApiModel apiModel = null;
           try {
-            if (elementType.getFullyQualifiedName().startsWith("ng.appserver.templating._private.")) {
+            String fqn = elementType.getFullyQualifiedName();
+            if (fqn.startsWith("ng.appserver.templating._private.") || fqn.startsWith("com.webobjects.appserver._private.")) {
               ensureGlobalApiModel();
               apiModel = _globalApiModel;
             }

@@ -172,7 +172,7 @@ public class BindingReflectionUtils {
   }
 
   public static boolean isWOComponent(IType type, TypeCache cache) throws JavaModelException {
-    return BindingReflectionUtils.isType(type, new String[] { "ng.appserver.templating.NGComponent" }, cache);
+    return BindingReflectionUtils.isType(type, new String[] { "ng.appserver.templating.NGComponent", "com.webobjects.appserver.WOComponent" }, cache);
   }
 
   public static boolean isNSKeyValueCoding(IType type, TypeCache cache) throws JavaModelException {
@@ -461,9 +461,14 @@ public class BindingReflectionUtils {
   static {
     _systemTypeNames = new HashSet<String>();
     _systemTypeNames.add("Object");
+    // ng-objects types
     _systemTypeNames.add("NGElement");
     _systemTypeNames.add("NGActionResults");
     _systemTypeNames.add("NGComponent");
+    // WebObjects types
+    _systemTypeNames.add("WOElement");
+    _systemTypeNames.add("WOActionResults");
+    _systemTypeNames.add("WOComponent");
 
     _uselessSystemBindings = new HashSet<String>();
     _uselessSystemBindings.add("baseURL");

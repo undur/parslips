@@ -58,6 +58,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.objectstyle.wolips.variables.BuildProperties;
 
 /**
  * @author mike
@@ -76,11 +77,11 @@ public class TypeNameCollector extends TypeNameRequestor {
 	private boolean _requireTypeInProject;
 
 	public TypeNameCollector(IJavaProject project, boolean requireTypeInProject) throws JavaModelException {
-		this("ng.appserver.templating.NGElement", project, requireTypeInProject, new TreeSet<String>());
+		this(BuildProperties.getElementClass(project), project, requireTypeInProject, new TreeSet<String>());
 	}
 
 	public TypeNameCollector(IJavaProject project, boolean requireTypeInProject, Set<String> typeNames) throws JavaModelException {
-		this("ng.appserver.templating.NGElement", project, requireTypeInProject, typeNames);
+		this(BuildProperties.getElementClass(project), project, requireTypeInProject, typeNames);
 	}
 	
 	public TypeNameCollector(String superclassTypeName, IJavaProject project, boolean requireTypeInProject) throws JavaModelException {

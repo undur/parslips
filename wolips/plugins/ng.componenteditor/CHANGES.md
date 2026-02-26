@@ -247,3 +247,26 @@ Merged 12 single/two-file packages into their logical neighbors, eliminating unn
 | `thirdparty.velocity.resourceloader` | `templateengine` | `ResourceLoader` |
 | `core.resources.types.project` | `core.resources.types` | `ProjectAdapter` |
 | `core.resources.internal.types.project` | `core.resources.internal.types` | `ProjectAdapterFactory` |
+
+### Dual framework support (ng-objects + WebObjects)
+
+The plugin can now be used for both ng-objects and WebObjects projects. Previously, the element type hierarchy was hardcoded to `ng.appserver.templating.NGElement` — which meant autocomplete, validation, and the "New Component" wizard only worked with ng-objects projects.
+
+**Detection priority** (per-project):
+1. `base=ng` in `build.properties` → uses ng-objects types (`NGElement`, `NGComponent`)
+2. `base=wo` in `build.properties` → uses WebObjects types (`WOElement`, `WOComponent`)
+3. Neither set → probes the project classpath (tries `NGElement` first, falls back to `WOElement`)
+
+This allows users with mixed-framework workspaces (or projects that include both library sets) to explicitly control which framework the plugin targets via `build.properties`.
+
+**Key changes:**
+- `BuildProperties` — added framework detection utility: `getElementClass()`, `getComponentClass()`, `getPrivateElementPackage()`, `isNGProject()`, plus static convenience overloads accepting `IProject`/`IJavaProject`. Constants for both ng and WO type names defined centrally.
+- `TypeNameCollector` — default constructors now call `BuildProperties.getElementClass(project)` instead of hardcoding `NGElement`
+- `WodBuilder.handleSource()` — element type lookup now uses `BuildProperties.getElementClass()` for the project
+- `LocalizedComponentsLocateResult` — `superclasses` array now includes both `NGElement` and `WOElement` (this class has no project context at init time)
+- `BindingReflectionUtils.isWOComponent()` — now checks for both `NGComponent` and `WOComponent` in the type hierarchy
+- `BindingReflectionUtils._systemTypeNames` — now includes both ng and WO system type names (`NGElement`/`WOElement`, `NGComponent`/`WOComponent`, `NGActionResults`/`WOActionResults`)
+- `ApiUtils.findApiModelWo()` — private element package check now matches both `ng.appserver.templating._private.` and `com.webobjects.appserver._private.`
+- `AbstractWodElement.fillInProblems()` — error message updated from "does not extend NGElement" to framework-agnostic wording
+- `WOComponentCreationPage` — "New Component" wizard default superclass now resolved dynamically from the target project
+- `NGEditorAssociationOverride.isNGProject()` — now delegates to `BuildProperties.isNGProject()` (includes classpath probing, not just `base=ng` check)

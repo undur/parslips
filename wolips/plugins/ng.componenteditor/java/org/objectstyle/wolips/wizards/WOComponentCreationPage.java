@@ -114,6 +114,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.variables.BuildProperties;
 
 /**
  * @author mnolte
@@ -391,7 +392,8 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		_superclassDialogField.doFillIntoGrid(javaGroup, 4);
 		String superclass = this.getDialogSettings().get(WOComponentCreationPage.SUPERCLASS_KEY);
 		if (superclass == null || superclass.length() == 0) {
-			_superclassDialogField.setText("ng.appserver.templating.NGComponent");
+			IProject wizProject = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
+			_superclassDialogField.setText(BuildProperties.getComponentClass(wizProject));
 		}
 		else {
 			_superclassDialogField.setText(superclass);

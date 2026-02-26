@@ -76,6 +76,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
+import org.objectstyle.wolips.variables.BuildProperties;
 
 /**
  * Holds the result of locating all files belonging to a single component.
@@ -102,7 +103,7 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 	private IFile dotGroovy;
 	private IFile dotApi;
 
-	private String[] superclasses = new String[] { "ng.appserver.templating.NGElement" };
+	private String[] superclasses = new String[] { BuildProperties.NG_ELEMENT_CLASS, BuildProperties.WO_ELEMENT_CLASS };
 
 	public LocalizedComponentsLocateResult() {
 		super();
