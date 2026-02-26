@@ -1,9 +1,12 @@
 package org.objectstyle.wolips.wodclipse.core.completion;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
@@ -29,6 +32,36 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyDialog;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyInfo;
 
 public class WodCompletionUtils {
+  // Cache of all element type names per project.  Populated once via a full
+  // JDT search, then filtered by prefix on each autocomplete invocation.
+  // Cleared when Java files change (see clearElementTypeCacheForProject).
+  private static Map<IProject, TypeNameCollector> _elementTypeCache = new HashMap<IProject, TypeNameCollector>();
+
+  /**
+   * Clears the cached element type list for the given project.
+   * Should be called when Java files are added, removed, or changed.
+   */
+  public static synchronized void clearElementTypeCacheForProject(IProject project) {
+    _elementTypeCache.remove(project);
+  }
+
+  /**
+   * Returns a TypeNameCollector containing ALL element types for the project.
+   * The result is cached; subsequent calls return the cached collector.
+   */
+  private static synchronized TypeNameCollector getElementTypeCollector(IJavaProject project, IProgressMonitor progressMonitor) throws JavaModelException {
+    IProject iProject = project.getProject();
+    TypeNameCollector cached = _elementTypeCache.get(iProject);
+    if (cached != null) {
+      return cached;
+    }
+    // Build full element type list — empty prefix with R_PREFIX_MATCH matches all types
+    TypeNameCollector collector = new TypeNameCollector(project, false);
+    BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, progressMonitor);
+    _elementTypeCache.put(iProject, collector);
+    return collector;
+  }
+
   public static void openBinding(String bindingValue, IApiBinding binding, IType componentType, boolean onlyIfMissing) throws CoreException {
     BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(bindingValue, componentType, componentType.getJavaProject(), WodParserCache.getTypeCache());
     if (bindingValueKeyPath.isValid() && bindingValueKeyPath.exists()) {
@@ -82,25 +115,24 @@ public class WodCompletionUtils {
   }
 
   public static void fillInElementTypeCompletionProposals(IJavaProject project, String token, int tokenOffset, int offset, Set<WodCompletionProposal> completionProposalsSet, boolean guessed, IProgressMonitor progressMonitor) throws JavaModelException {
-    // Lookup type names that extend WOElement based on the current partial
-    // token
     String partialToken = partialToken(token, tokenOffset, offset);
     if (partialToken.length() > 0) {
-      TypeNameCollector typeNameCollector = new TypeNameCollector(project, false);
-      BindingReflectionUtils.findMatchingElementClassNames(partialToken, SearchPattern.R_PREFIX_MATCH, typeNameCollector, progressMonitor);
+      // Use the cached full element type list and filter by prefix
+      TypeNameCollector allTypes = getElementTypeCollector(project, progressMonitor);
+      String lowercasePartialToken = partialToken.toLowerCase();
       boolean includePackageName = token.indexOf('.') != -1;
-      Iterator<String> matchingElementClassNamesIter = typeNameCollector.typeNames();
-      while (matchingElementClassNamesIter.hasNext()) {
-        String matchingElementTypeName = matchingElementClassNamesIter.next();
-        String elementTypeName;
-        if (includePackageName) {
-          elementTypeName = matchingElementTypeName;
+      Iterator<String> allTypeNamesIter = allTypes.typeNames();
+      while (allTypeNamesIter.hasNext()) {
+        String matchingElementTypeName = allTypeNamesIter.next();
+        String shortName = BindingReflectionUtils.getShortClassName(matchingElementTypeName);
+        // Match against short name or full name depending on whether user typed a dot
+        String matchTarget = includePackageName ? matchingElementTypeName : shortName;
+        if (!matchTarget.toLowerCase().startsWith(lowercasePartialToken)) {
+          continue;
         }
-        else {
-          elementTypeName = BindingReflectionUtils.getShortClassName(matchingElementTypeName);
-        }
+        String elementTypeName = includePackageName ? matchingElementTypeName : shortName;
         WodCompletionProposal completionProposal;
-        IType type = typeNameCollector.getTypeForClassName(matchingElementTypeName);
+        IType type = allTypes.getTypeForClassName(matchingElementTypeName);
         if (WodCompletionUtils.shouldSmartInsert() && guessed) {
           if (BindingReflectionUtils.memberIsDeprecated(type)) {
             completionProposal = new WodDeprecatedCompletionProposal(token, tokenOffset, offset, elementTypeName + " {\n\t\n}", elementTypeName, elementTypeName.length() + 4);

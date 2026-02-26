@@ -43,10 +43,11 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
       String name = file.getName().toLowerCase();
       if (name.endsWith(".java")) {
         if (delta.getKind() == IResourceDelta.ADDED) {
-          // IGNORE
+          WodCompletionUtils.clearElementTypeCacheForProject(file.getProject());
         }
         else if (delta.getKind() == IResourceDelta.REMOVED) {
           WodParserCache.getTypeCache().clearCacheForResource(resource);
+          WodCompletionUtils.clearElementTypeCacheForProject(file.getProject());
         }
         else if (delta.getKind() == IResourceDelta.CHANGED) {
           IJavaElement javaElement = JavaCore.create(file);
@@ -65,6 +66,7 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
               Activator.getDefault().log("Failed to clear caches for " + resource + ".", e);
             }
           }
+          WodCompletionUtils.clearElementTypeCacheForProject(file.getProject());
         }
       }
       else if (name.endsWith(".api")) {
@@ -72,17 +74,6 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
         if (javaProject != null) {
           String elementName = file.getName().substring(0, file.getName().lastIndexOf('.'));
           WodParserCache.getTypeCache().getApiCache(javaProject).clearCacheForElementNamed(elementName);
-        }
-      }
-      else if (file.getParent() != null && file.getParent().getName().endsWith(".eomodeld")) {
-        if (delta.getKind() == IResourceDelta.ADDED) {
-          WodParserCache.getModelGroupCache().clearCacheForProject(file.getProject());
-        }
-        else if (delta.getKind() == IResourceDelta.REMOVED) {
-          WodParserCache.getModelGroupCache().clearCacheForProject(file.getProject());
-        }
-        else if (delta.getKind() == IResourceDelta.CHANGED && ((delta.getFlags() & IResourceDelta.CONTENT) != 0)) {
-          WodParserCache.getModelGroupCache().clearCacheForProject(file.getProject());
         }
       }
       else if (file.getParent() != null && file.getParent().getName().endsWith(".wo")) {
