@@ -617,7 +617,7 @@ public class BuildProperties {
 
 	/**
 	 * Convenience: resolves the element class for the given project.
-	 * Returns {@value #NG_ELEMENT_CLASS} if no project or build.properties can be obtained.
+	 * Falls back to {@value #WO_ELEMENT_CLASS} if no project or build.properties can be obtained.
 	 */
 	public static String getElementClass(IProject project) {
 		if (project != null) {
@@ -630,11 +630,12 @@ public class BuildProperties {
 				// ignore
 			}
 		}
-		return NG_ELEMENT_CLASS;
+		return WO_ELEMENT_CLASS;
 	}
 
 	/**
 	 * Convenience: resolves the component class for the given project.
+	 * Falls back to {@value #WO_COMPONENT_CLASS} if no project or build.properties can be obtained.
 	 */
 	public static String getComponentClass(IProject project) {
 		if (project != null) {
@@ -647,7 +648,7 @@ public class BuildProperties {
 				// ignore
 			}
 		}
-		return NG_COMPONENT_CLASS;
+		return WO_COMPONENT_CLASS;
 	}
 
 	/**
@@ -657,7 +658,7 @@ public class BuildProperties {
 		if (javaProject != null) {
 			return getElementClass(javaProject.getProject());
 		}
-		return NG_ELEMENT_CLASS;
+		return WO_ELEMENT_CLASS;
 	}
 
 	/**
@@ -667,7 +668,7 @@ public class BuildProperties {
 		if (javaProject != null) {
 			return getComponentClass(javaProject.getProject());
 		}
-		return NG_COMPONENT_CLASS;
+		return WO_COMPONENT_CLASS;
 	}
 
 	/**
