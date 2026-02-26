@@ -334,10 +334,14 @@ public class WodParserCache implements ITypeOwner {
 
     if (validate) {
       if (force || !_validated) {
-        if (threaded) {
+        boolean isWoFolder = _woFolder != null && "wo".equals(_woFolder.getFileExtension());
+        if (threaded && isWoFolder) {
           WodBuilder.validateComponent(_woFolder, true, null);
         }
         else {
+          // For standalone HTML templates _woFolder is the parent directory,
+          // not a .wo bundle, so WodBuilder.validateComponent can't re-locate
+          // the component.  Validate directly on this cache instance instead.
           try {
             WodParserCache.this._validate();
           }
