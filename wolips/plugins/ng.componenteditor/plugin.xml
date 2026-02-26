@@ -676,11 +676,103 @@
             enabled="false"
             targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
       <filter
+            id="ng.componenteditor.explorer.EmptyInnerPackageFilter"
+            name="Empty parent packages"
+            description="Hides empty parent packages (compresses the package tree)"
+            class="org.eclipse.jdt.internal.ui.filters.EmptyInnerPackageFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
             id="ng.componenteditor.explorer.LibraryFilter"
             name="Referenced libraries"
             description="Hides referenced libraries"
             class="org.eclipse.jdt.internal.ui.filters.LibraryFilter"
             enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.ContainedLibraryFilter"
+            name="Contained libraries"
+            description="Hides libraries contained within a project (e.g. lib/ JARs on the classpath)"
+            class="org.eclipse.jdt.internal.ui.filters.ContainedLibraryFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.InnerClassFilesFilter"
+            name="Inner class files"
+            description="Hides inner class files in source folders"
+            class="org.eclipse.jdt.internal.ui.filters.InnerClassFilesFilter"
+            enabled="true"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.PackageDeclarationFilter"
+            name="Package declarations"
+            description="Hides package declarations"
+            class="org.eclipse.jdt.internal.ui.filters.PackageDeclarationFilter"
+            enabled="true"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.ImportDeclarationFilter"
+            name="Import declarations"
+            description="Hides import declarations"
+            class="org.eclipse.jdt.internal.ui.filters.ImportDeclarationFilter"
+            enabled="true"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.SyntheticMembersFilter"
+            name="Synthetic members"
+            description="Hides synthetic (compiler-generated) members"
+            class="org.eclipse.jdt.internal.ui.filters.SyntheticMembersFilter"
+            enabled="true"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.DeprecatedFilter"
+            name="Deprecated fields and methods"
+            description="Hides deprecated fields and methods"
+            class="org.eclipse.jdt.internal.ui.filters.DeprecatedFieldsAndMethodsFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.FieldsFilter"
+            name="Fields"
+            description="Hides all fields"
+            class="org.eclipse.jdt.internal.ui.filters.FieldsFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.StaticsFilter"
+            name="Static members"
+            description="Hides all static fields and methods"
+            class="org.eclipse.jdt.internal.ui.filters.StaticsFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.NonPublicFilter"
+            name="Non-public members"
+            description="Hides all non-public members"
+            class="org.eclipse.jdt.internal.ui.filters.NonPublicFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <!-- Pattern-based filters (no code needed) -->
+      <filter
+            id="ng.componenteditor.explorer.DotFilesFilter"
+            name="System files (.*)"
+            description="Hides files and folders whose names start with a dot"
+            pattern=".*"
+            enabled="true"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.BuildXmlFilter"
+            name="build.xml"
+            description="Hides Ant build.xml files"
+            pattern="build.xml"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.XcodeFilesFilter"
+            name="Xcode files"
+            description="Hides Xcode project files (*.xcode*)"
+            pattern="*.xcode*"
+            enabled="true"
             targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
    </extension>
 

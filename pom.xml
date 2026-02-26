@@ -6,7 +6,7 @@
 	<artifactId>wolips-project</artifactId>
 	<version>5.0.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<url>https://github.com/wocommunity/wolips/</url>
+	<url>https://github.com/undur/wolips/</url>
 
 	<properties>
 		<maven.compiler.release>21</maven.compiler.release>
@@ -14,20 +14,19 @@
 		<maven.deploy.skip>true</maven.deploy.skip>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<tycho.version>5.0.0</tycho.version>
-		<sonar.exclusions>**/src-gen/**</sonar.exclusions>
 		<env.ui.test>-Xms512m -Xmx2048m</env.ui.test>
 	</properties>
 
 	<issueManagement>
-		<system>gihhub</system>
-		<url>https://github.com/wocommunity/wolips/issues</url>
+		<system>github</system>
+		<url>https://github.com/undur/wolips/issues</url>
 	</issueManagement>
 
-	<inceptionYear>2001</inceptionYear>
+	<inceptionYear>2024</inceptionYear>
 
 	<organization>
-		<name>WOCommunity</name>
-		<url>http://wocommunity.org/</url>
+		<name>ng-objects</name>
+		<url>https://github.com/undur/</url>
 	</organization>
 
 	<repositories>
@@ -52,191 +51,19 @@
 		<url>https://github.com/${github.repository}</url>
 	</scm>
 
-	<profiles>
-		<profile>
-			<id>release</id>
-			<modules>
-				<module>wolips.product</module>
-			</modules>
-		</profile>
-	</profiles>
-
 	<modules>
-		<!--tycho stuff-->
 		<module>wolips.p2</module>
 		<module>wolips.targetplatform</module>
-		<!--plugins-->
-		<module>wolips/plugins/org.objectstyle.wolips</module>
-		<module>wolips/plugins/org.objectstyle.wolips.ant</module>
-		<module>wolips/plugins/org.objectstyle.wolips.apieditor</module>
-		<module>wolips/plugins/org.objectstyle.wolips.baseforplugins</module>
-		<module>wolips/plugins/org.objectstyle.wolips.baseforuiplugins</module>
-		<module>wolips/plugins/org.objectstyle.wolips.bindings</module>
-		<module>wolips/plugins/org.objectstyle.wolips.builder</module>
-		<module>wolips/plugins/org.objectstyle.wolips.componenteditor</module>
-		<module>wolips/plugins/org.objectstyle.wolips.components</module>
-		<module>wolips/plugins/org.objectstyle.wolips.debug</module>
-		<module>wolips/plugins/org.objectstyle.wolips.deployment.ui</module>
-		<module>wolips/plugins/org.objectstyle.wolips.documentation</module>
-		<module>wolips/plugins/org.objectstyle.wolips.editors</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eogenerator.core</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eogenerator.jdt</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eogenerator.ui</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eomodeler</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eomodeler.core</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eomodeler.doc</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eomodeler.eclipse</module>
-		<module>wolips/plugins/org.objectstyle.wolips.eomodeler.factories</module>
-		<module>wolips/plugins/org.objectstyle.wolips.htmlpreview</module>
-		<module>wolips/plugins/org.objectstyle.wolips.jdt</module>
-		<module>wolips/plugins/org.objectstyle.wolips.launching</module>
-		<module>wolips/plugins/org.objectstyle.wolips.locate</module>
-		<module>wolips/plugins/org.objectstyle.wolips.pbserver</module>
-		<module>wolips/plugins/org.objectstyle.wolips.preferences</module>
-		<module>wolips/plugins/org.objectstyle.wolips.refactoring</module>
-		<module>wolips/plugins/org.objectstyle.wolips.ruleeditor</module>
-		<module>wolips/plugins/org.objectstyle.wolips.targetbuilder</module>
-		<module>wolips/plugins/org.objectstyle.wolips.team</module>
-		<module>wolips/plugins/org.objectstyle.wolips.templateengine</module>
-		<module>
-			wolips/plugins/org.objectstyle.wolips.thirdparty.commonscollections</module>
-		<module>wolips/plugins/org.objectstyle.wolips.thirdparty.log4j</module>
-		<module>wolips/plugins/org.objectstyle.wolips.thirdparty.velocity</module>
-		<module>wolips/plugins/org.objectstyle.wolips.tkhtmleditor</module>
-		<module>wolips/plugins/org.objectstyle.wolips.ui</module>
-		<module>wolips/plugins/org.objectstyle.wolips.variables</module>
-		<module>wolips/plugins/org.objectstyle.wolips.wizards</module>
-		<module>wolips/plugins/org.objectstyle.wolips.wodclipse</module>
-		<module>wolips/plugins/org.objectstyle.wolips.wodclipse.core</module>
-		<module>wolips/plugins/org.objectstyle.wolips.womodeler</module>
-		<module>wolips/plugins/org.objectstyle.wolips.wooeditor</module>
-		<module>wolips/plugins/org.objectstyle.wolips.woproject</module>
-		<module>wolips/plugins/org.objectstyle.wolips.woproject.ant</module>
-		<module>wolips/plugins/org.objectstyle.wolips.workbenchutilities</module>
 		<module>wolips/plugins/ng.componenteditor</module>
-		<!--features-->
 		<module>wolips/features/ng.componenteditor.feature</module>
 	</modules>
-
-	<!-- Not used for now, but one day, let's not use mystery meat jars in a lib
-	dir. -->
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>io.github.wocommunity</groupId>
-				<artifactId>woenvironment</artifactId>
-				<version>5.0.0</version>
-			</dependency>
-			<dependency>
-				<groupId>io.github.wocommunity</groupId>
-				<artifactId>woproject-ant-tasks</artifactId>
-				<version>5.0.0</version>
-			</dependency>
-			<dependency>
-				<groupId>com.wutka</groupId>
-				<artifactId>dtdparser</artifactId>
-				<version>1.21</version>
-			</dependency>
-			<dependency>
-				<groupId>org.relaxng</groupId>
-				<artifactId>trang</artifactId>
-				<version>20220510</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jvnet.hudson</groupId>
-				<artifactId>org.suigeneris.jrcs.diff</artifactId>
-				<version>0.4.2</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mozilla</groupId>
-				<artifactId>rhino</artifactId>
-				<version>1.7.15</version>
-			</dependency>
-			<dependency>
-				<groupId>com.helger</groupId>
-				<artifactId>ph-css</artifactId>
-				<version>7.0.3</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<build>
 		<pluginManagement>
 			<plugins>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-dependency-plugin</artifactId>
-					<version>3.8.1</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-plugin-plugin</artifactId>
-					<version>3.15.1</version>
-					<dependencies>
-						<dependency>
-							<groupId>org.apache.maven.plugin-tools</groupId>
-							<artifactId>maven-plugin-tools-ant</artifactId>
-							<version>3.15.1</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.13.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.4.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.5.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.4.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.12.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.0.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>build-helper-maven-plugin</artifactId>
-					<version>3.3.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-report-plugin</artifactId>
-					<version>3.0.0-M8</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-enforcer-plugin</artifactId>
-					<version>3.2.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
-					<version>3.3.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-clean-plugin</artifactId>
-					<version>3.2.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jxr-plugin</artifactId>
 					<version>3.3.0</version>
 				</plugin>
 				<plugin>
@@ -261,11 +88,6 @@
 					<version>${tycho.version}</version>
 				</plugin>
 				<plugin>
-					<groupId>org.eclipse.tycho.extras</groupId>
-					<artifactId>tycho-source-feature-plugin</artifactId>
-					<version>${tycho.version}</version>
-				</plugin>
-				<plugin>
 					<groupId>org.eclipse.tycho</groupId>
 					<artifactId>tycho-p2-plugin</artifactId>
 					<version>${tycho.version}</version>
@@ -277,11 +99,6 @@
 				</plugin>
 				<plugin>
 					<groupId>org.eclipse.tycho</groupId>
-					<artifactId>tycho-p2-director-plugin</artifactId>
-					<version>${tycho.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.eclipse.tycho</groupId>
 					<artifactId>tycho-surefire-plugin</artifactId>
 					<version>${tycho.version}</version>
 				</plugin>
@@ -289,26 +106,6 @@
 					<groupId>org.eclipse.tycho</groupId>
 					<artifactId>target-platform-configuration</artifactId>
 					<version>${tycho.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.eclipse.tycho.extras</groupId>
-					<artifactId>tycho-pack200a-plugin</artifactId>
-					<version>${tycho.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.eclipse.tycho.extras</groupId>
-					<artifactId>tycho-pack200b-plugin</artifactId>
-					<version>${tycho.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.eclipse.cbi.maven.plugins</groupId>
-					<artifactId>eclipse-jarsigner-plugin</artifactId>
-					<version>1.1.7</version>
-				</plugin>
-				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>exec-maven-plugin</artifactId>
-					<version>3.5.0</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -355,32 +152,6 @@
 						<goals>
 							<goal>feature-source</goal>
 						</goals>
-						<configuration>
-							<excludes>
-								<plugin id="com.google.guava" />
-								<plugin id="com.google.inject" />
-								<plugin id="org.apache.batik.pdf" />
-								<plugin id="org.apache.log4j" />
-								<plugin id="org.apache.batik.bridge" />
-								<plugin id="org.apache.batik.css" />
-								<plugin id="org.apache.batik.dom" />
-								<plugin id="org.apache.batik.dom.svg" />
-								<plugin id="org.apache.batik.ext.awt" />
-								<plugin id="org.apache.batik.parser" />
-								<plugin id="org.apache.batik.svggen" />
-								<plugin id="org.apache.batik.transcoder" />
-								<plugin id="org.apache.batik.util" />
-								<plugin id="org.apache.batik.util.gui" />
-								<plugin id="org.apache.batik.xml" />
-								<plugin id="org.apache.commons.lang" />
-								<plugin id="org.eclipse.m2m.qvt.oml.project" />
-								<plugin id="org.eclipse.m2m.qvt.oml.runtime" />
-								<plugin id="org.eclipse.xtend.shared.ui" />
-								<plugin id="org.eclipse.xwt.ui.workbench" />
-								<plugin
-									id="org.eclipse.wst.common.project.facet.core" />
-							</excludes>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
