@@ -55,8 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.objectstyle.wolips.eomodeler.core.utils.BooleanUtils;
-
 public class EOModelMap implements Map, Cloneable {
 	public static final int YESNO = 1;
 

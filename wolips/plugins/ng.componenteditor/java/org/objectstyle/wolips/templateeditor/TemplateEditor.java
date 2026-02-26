@@ -37,7 +37,7 @@ import org.objectstyle.wolips.components.editor.ComponentEditorInteraction;
 import org.objectstyle.wolips.components.editor.IEmbeddedEditor;
 import org.objectstyle.wolips.components.editor.IHtmlDocumentProvider;
 import org.objectstyle.wolips.components.editor.IWebobjectTagListener;
-import org.objectstyle.wolips.editors.contentdescriber.ContentDescriberWO;
+import org.objectstyle.wolips.editors.ContentDescriberWO;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;

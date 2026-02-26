@@ -3,7 +3,7 @@
  * 
  * The ObjectStyle Group Software License, Version 1.0
  * 
- * Copyright (c) 2006 The ObjectStyle Group and individual authors of the
+ * Copyright (c) 2005 The ObjectStyle Group and individual authors of the
  * software. All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,66 +43,63 @@
  */
 package org.objectstyle.wolips.componenteditor.part;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IPropertyListener;
-import org.eclipse.ui.PartInitException;
-import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.wooeditor.WooEditor;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
-public class WooTab extends ComponentEditorTab {
+/**
+ * @author uli
+ */
+public class EmptyOutlinePage implements IContentOutlinePage {
+	private Composite control;
 
-	private WooEditor wooEditor;
+	public EmptyOutlinePage() {
+		super();
 
-	private IEditorInput wooInput;
-
-	public WooTab(ComponentEditorPart componentEditorPart, int tabIndex, IEditorInput wooInput) {
-		super(componentEditorPart, tabIndex);
-		this.wooInput = wooInput;
 	}
 
-	public IEditorPart getActiveEmbeddedEditor() {
-		return wooEditor;
+	public void createControl(Composite parent) {
+		control = new Composite(parent, SWT.NULL);
 	}
 
-	public void createTab() {
-		wooEditor = new WooEditor();
-		IEditorSite wooSite = this.getComponentEditorPart().publicCreateSite(wooEditor);
-		try {
-			wooEditor.init(wooSite, wooInput);
-		} catch (PartInitException e) {
-			ComponenteditorPlugin.getDefault().log(e);
-		}
-		createInnerPartControl(this.getParentSashForm(), wooEditor);
-		wooEditor.addPropertyListener(new IPropertyListener() {
-			public void propertyChanged(Object source, int propertyId) {
-				WooTab.this.getComponentEditorPart().publicHandlePropertyChange(propertyId);
-			}
-		});
-	}
-
-	public void doSave(IProgressMonitor monitor) {
-		wooEditor.doSave(monitor);
-	}
-
-	public void close(boolean save) {
-		wooEditor.close(save);
-	}
-
-	@Override
 	public void dispose() {
-		wooEditor.dispose();
-		super.dispose();
-	}
-	
-	public IEditorInput getActiveEditorInput() {
-		return wooInput;
+		control = null;
 	}
 
-	public boolean isDirty() {
-		return wooEditor.isDirty();
+	public Control getControl() {
+		return control;
+	}
+
+	public void setActionBars(IActionBars actionBars) {
+		return;
+	}
+
+	public void setFocus() {
+		return;
+	}
+
+	public void addSelectionChangedListener(ISelectionChangedListener listener) {
+		return;
+	}
+
+	public ISelection getSelection() {
+		return new ISelection() {
+			public boolean isEmpty() {
+				return true;
+			}
+		};
+	}
+
+	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+		return;
+	}
+
+	public void setSelection(ISelection selection) {
+		return;
 	}
 
 }

@@ -3,16 +3,14 @@ package tk.eclipse.plugin.htmleditor;
 import java.util.Map;
 
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
-import tk.eclipse.plugin.jspeditor.editors.IJSPValidationMarkerCreator;
-import tk.eclipse.plugin.jspeditor.editors.JSPInfo;
 
 /**
- * An interface to convert taglibs for HTML preview.
- * 
+ * An interface to validate custom tags.
+ *
  * @author Naoki Takezoe
  */
 public interface ICustomTagValidator {
-	
-	public void validate(IJSPValidationMarkerCreator creator, Map attrs,FuzzyXMLElement element,JSPInfo info);
-	
+
+	public void validate(Map attrs,FuzzyXMLElement element);
+
 }

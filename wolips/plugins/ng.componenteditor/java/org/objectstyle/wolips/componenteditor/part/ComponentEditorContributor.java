@@ -3,7 +3,7 @@
  * 
  * The ObjectStyle Group Software License, Version 1.0
  * 
- * Copyright (c) 2006 The ObjectStyle Group and individual authors of the
+ * Copyright (c) 2005 - 2006 The ObjectStyle Group and individual authors of the
  * software. All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,66 +43,47 @@
  */
 package org.objectstyle.wolips.componenteditor.part;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.ui.IEditorInput;
+import org.eclipse.jface.action.IAction;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IPropertyListener;
-import org.eclipse.ui.PartInitException;
-import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.wooeditor.WooEditor;
+import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.ide.IDEActionFactory;
+import org.eclipse.ui.part.MultiPageEditorActionBarContributor;
+import org.eclipse.ui.texteditor.ITextEditor;
+import org.eclipse.ui.texteditor.ITextEditorActionConstants;
 
-public class WooTab extends ComponentEditorTab {
+public class ComponentEditorContributor extends MultiPageEditorActionBarContributor {
+	private IEditorPart activeEditorPart;
 
-	private WooEditor wooEditor;
-
-	private IEditorInput wooInput;
-
-	public WooTab(ComponentEditorPart componentEditorPart, int tabIndex, IEditorInput wooInput) {
-		super(componentEditorPart, tabIndex);
-		this.wooInput = wooInput;
+	public ComponentEditorContributor() {
+		super();
 	}
 
-	public IEditorPart getActiveEmbeddedEditor() {
-		return wooEditor;
+	protected IAction getAction(ITextEditor editor, String actionID) {
+		return (editor == null ? null : editor.getAction(actionID));
 	}
 
-	public void createTab() {
-		wooEditor = new WooEditor();
-		IEditorSite wooSite = this.getComponentEditorPart().publicCreateSite(wooEditor);
-		try {
-			wooEditor.init(wooSite, wooInput);
-		} catch (PartInitException e) {
-			ComponenteditorPlugin.getDefault().log(e);
+	public void setActivePage(IEditorPart part) {
+		if (activeEditorPart == part)
+			return;
+
+		activeEditorPart = part;
+		IActionBars actionBars = getActionBars();
+		if (actionBars != null) {
+
+			ITextEditor editor = (part instanceof ITextEditor) ? (ITextEditor) part : null;
+
+			actionBars.setGlobalActionHandler(ActionFactory.DELETE.getId(), getAction(editor, ITextEditorActionConstants.DELETE));
+			actionBars.setGlobalActionHandler(ActionFactory.UNDO.getId(), getAction(editor, ITextEditorActionConstants.UNDO));
+			actionBars.setGlobalActionHandler(ActionFactory.REDO.getId(), getAction(editor, ITextEditorActionConstants.REDO));
+			actionBars.setGlobalActionHandler(ActionFactory.CUT.getId(), getAction(editor, ITextEditorActionConstants.CUT));
+			actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(), getAction(editor, ITextEditorActionConstants.COPY));
+			actionBars.setGlobalActionHandler(ActionFactory.PASTE.getId(), getAction(editor, ITextEditorActionConstants.PASTE));
+			actionBars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), getAction(editor, ITextEditorActionConstants.SELECT_ALL));
+			actionBars.setGlobalActionHandler(ActionFactory.FIND.getId(), getAction(editor, ITextEditorActionConstants.FIND));
+			actionBars.setGlobalActionHandler(IDEActionFactory.BOOKMARK.getId(), getAction(editor, IDEActionFactory.BOOKMARK.getId()));
+			actionBars.updateActionBars();
+			actionBars.getMenuManager().update();
 		}
-		createInnerPartControl(this.getParentSashForm(), wooEditor);
-		wooEditor.addPropertyListener(new IPropertyListener() {
-			public void propertyChanged(Object source, int propertyId) {
-				WooTab.this.getComponentEditorPart().publicHandlePropertyChange(propertyId);
-			}
-		});
 	}
-
-	public void doSave(IProgressMonitor monitor) {
-		wooEditor.doSave(monitor);
-	}
-
-	public void close(boolean save) {
-		wooEditor.close(save);
-	}
-
-	@Override
-	public void dispose() {
-		wooEditor.dispose();
-		super.dispose();
-	}
-	
-	public IEditorInput getActiveEditorInput() {
-		return wooInput;
-	}
-
-	public boolean isDirty() {
-		return wooEditor.isDirty();
-	}
-
 }

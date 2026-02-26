@@ -15,8 +15,6 @@ import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.wod.HtmlElementCache;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
-import org.objectstyle.wolips.wodclipse.core.validation.HtmlProblem;
-import org.objectstyle.wolips.wodclipse.core.validation.TemplateValidator;
 
 public class HtmlCacheEntry extends AbstractCacheEntry<FuzzyXMLDocument> implements FuzzyXMLErrorListener {
   private HtmlElementCache _htmlElementCache;

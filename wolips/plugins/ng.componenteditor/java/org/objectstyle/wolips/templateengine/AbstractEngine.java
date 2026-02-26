@@ -111,7 +111,7 @@ public abstract class AbstractEngine implements IRunnableWithProgress {
 			 * initialize the engine
 			 */
 			this.velocityEngine.setProperty("resource.loader", "wolips");
-			this.velocityEngine.setProperty("wolips.resource.loader.class", "org.objectstyle.wolips.thirdparty.velocity.resourceloader.ResourceLoader");
+			this.velocityEngine.setProperty("wolips.resource.loader.class", "org.objectstyle.wolips.templateengine.ResourceLoader");
 			this.velocityEngine.setProperty("wolips.resource.loader.bundle", TemplateEnginePlugin.getDefault().getBundle());
 	//		this.velocityEngine.setProperty("jar.resource.loader.path", "jar:" + TemplateEnginePlugin.getDefault().getBundle().getResource("plugin.xml").getFile());
 			this.velocityEngine.init();

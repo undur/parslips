@@ -205,3 +205,45 @@ Removed the noisy debug log message from `AbstractResourceAdapterFactory.getAdap
 Removed `org.apache.ant` and `org.eclipse.ant.core` from `Require-Bundle` in MANIFEST.MF. These bundles are not always present in modern Eclipse installations (e.g. Eclipse IDE for Java Developers) and were preventing the OSGi bundle from resolving.
 
 The only usage was `org.apache.tools.ant.types.selectors.SelectorUtils.matchPath()` in `Pattern.java` — replaced with an equivalent pure-Java Ant-style glob matcher. The `Pattern` / `IPattern` classes themselves are currently unused by any other code in the plugin.
+
+### Added: install.sh
+
+Added `install.sh` — a one-command build-and-install script for local development. Usage: `./install.sh /path/to/Eclipse.app`. Builds the plugin via Maven/Tycho, installs it via the p2 director, and patches `bundles.info` so Eclipse actually loads the new version on restart. (The p2 director updates the p2 profile in `~/.p2/` but does not update the SimpleConfigurator's `bundles.info` inside `Eclipse.app`, causing Eclipse to keep loading the old version — the script fixes this.)
+
+### Removed: JSP editor
+
+Deleted the entire `tk.eclipse.plugin.jspeditor` package tree (28 Java files) — a vendored JSP editor from the Amateras HTML editor suite. JSP editing is irrelevant to WebObjects/ng-objects component development, and none of the JSP classes were registered in `plugin.xml` or referenced by active code.
+
+Also deleted JSP-specific resource files: 5 DTDs (`jspxml.dtd`, `web-jsptaglibrary_1_1.dtd`, `web-jsptaglibrary_1_2.dtd`, `web-app_2_2.dtd`, `web-app_2_3.dtd`), 4 XSDs (`jsp_2_0.xsd`, `jspxml.xsd`, `web-jsptaglibrary_2_0.xsd`, `web-app_2_4.xsd`), and the entire `TLD/` directory (15 JSTL tag library descriptors).
+
+Cleaned up 5 residual JSP references in HTML editor code:
+- `HTMLPlugin` — removed `IJSPFilter` / `ITLDLocator` fields and methods
+- `TLDPreferencePage` — removed `ITLDLocator` usage in `performDefaults()`
+- `ICustomTagConverter` — removed `JSPInfo` parameter from `process()` method
+- `ICustomTagValidator` — removed `IJSPValidationMarkerCreator` and `JSPInfo` parameters from `validate()` method
+- `JarAcceptor` — removed `TLDInfo`-dependent `accept(IProject, ...)` overload
+
+### Removed: dead utilities
+
+- `com.uwyn.rife.tools.ObjectUtils` — vendored RIFE utility class with zero references
+- `StringUtilities.java` — merged 2 used methods (`isDigitsOnly`, `isNumericOnly`) into `StringUtils.java`, deleted 4 unused methods. Callers updated: `AbstractWodBinding`, `ElementRename`.
+- `StringUtils.java` — trimmed from 16 methods down to 5 (the only ones with callers): `isDigitsOnly`, `isNumericOnly`, `getErrorMessage` (2 overloads), `findUnusedName`.
+
+### Package structure: merged tiny packages
+
+Merged 12 single/two-file packages into their logical neighbors, eliminating unnecessary package fragmentation. All `plugin.xml` class references and Java imports updated accordingly.
+
+| Merged package | → Into | Files moved |
+|---|---|---|
+| `componenteditor.contributor` | `componenteditor.part` | `ComponentEditorContributor` |
+| `componenteditor.listener` | `componenteditor.part` | `JavaChangeRevalidator` |
+| `componenteditor.bindings` | `componenteditor.actions` | `AddActionAction`, `AddKeyAction` |
+| `componenteditor.outline` | `componenteditor.part` | `ComponentEditorOutline`, `EmptyOutlinePage` |
+| `componenteditor.launcher` | `componenteditor.part` | `ComponentEditorMatchingStrategy`, `NGEditorAssociationOverride` |
+| `editors.contentdescriber` | `editors` | `ContentDescriberWO` |
+| `wodclipse.core.validation` | `wodclipse.core.completion` | `TemplateValidator`, `HtmlProblem`, `InlineWodProblem` |
+| `eomodeler.core.utils` | `eomodeler.core.model` | `BooleanUtils` |
+| `wooeditor.editor` | `wooeditor` | `WooEditor`, `NonExistingFileEditorInput` |
+| `thirdparty.velocity.resourceloader` | `templateengine` | `ResourceLoader` |
+| `core.resources.types.project` | `core.resources.types` | `ProjectAdapter` |
+| `core.resources.internal.types.project` | `core.resources.internal.types` | `ProjectAdapterFactory` |

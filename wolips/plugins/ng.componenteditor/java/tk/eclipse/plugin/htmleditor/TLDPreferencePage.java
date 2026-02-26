@@ -24,8 +24,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import tk.eclipse.plugin.jspeditor.editors.ITLDLocator;
-
 /**
  * The preference page to configure TLD settings.
  * 
@@ -175,16 +173,6 @@ public class TLDPreferencePage extends PreferencePage implements IWorkbenchPrefe
 			}
 		}
 		
-		ITLDLocator[] contribs = HTMLPlugin.getDefault().getTLDLocatorContributions();
-		for ( int i = 0; i < contribs.length; i++) {
-			String cURI = contribs[i].getURI();
-			String cPath = contribs[i].getPath();
-			if(!cURI.trim().equals("") && !cPath.trim().equals("")){
-				TableItem item = new TableItem(table,SWT.NONE);
-				item.setText(new String[]{cURI.trim(),"[Default]"+cPath.trim()});
-			}
-			
-		}
 	}
 	
 	/**

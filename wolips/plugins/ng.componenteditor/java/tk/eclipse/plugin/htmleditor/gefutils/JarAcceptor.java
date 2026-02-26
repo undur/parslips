@@ -5,11 +5,7 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IProject;
-
 import tk.eclipse.plugin.htmleditor.HTMLPlugin;
-import tk.eclipse.plugin.jspeditor.editors.TLDInfo;
 
 /**
  * An acceptor for each entries of <tt>WEB-INF/lib/*.jar</tt>.
@@ -19,17 +15,6 @@ import tk.eclipse.plugin.jspeditor.editors.TLDInfo;
  * @see IJarVisitor
  */
 public class JarAcceptor {
-	
-	public static Object accept(IProject project, IJarVisitor visitor){
-		try {
-			IContainer container = TLDInfo.getBaseDir(project);
-			File basedir = container.getLocation().makeAbsolute().toFile();
-			return accept(basedir, visitor);
-		} catch(Exception ex){
-			HTMLPlugin.logException(ex);
-		}
-		return null;
-	}
 	
 	public static Object accept(File basedir, IJarVisitor visitor){
 		try {

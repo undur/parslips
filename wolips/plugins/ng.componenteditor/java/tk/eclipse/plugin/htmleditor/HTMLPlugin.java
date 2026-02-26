@@ -2,7 +2,6 @@ package tk.eclipse.plugin.htmleditor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +26,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import tk.eclipse.plugin.htmleditor.views.IPaletteContributer;
-import tk.eclipse.plugin.jspeditor.editors.IJSPFilter;
-import tk.eclipse.plugin.jspeditor.editors.ITLDLocator;
 
 
 /**
@@ -226,7 +223,7 @@ public class HTMLPlugin extends AbstractUIPlugin {
   public void start(BundleContext context) throws Exception {
 		super.start(context);
 		colorProvider = new ColorProvider(getPreferenceStore());
-		org.objectstyle.wolips.componenteditor.listener.JavaChangeRevalidator.install();
+		org.objectstyle.wolips.componenteditor.part.JavaChangeRevalidator.install();
 	}
 	
 	@Override
@@ -295,7 +292,7 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	 */
 	@Override
   public void stop(BundleContext context) throws Exception {
-		org.objectstyle.wolips.componenteditor.listener.JavaChangeRevalidator.uninstall();
+		org.objectstyle.wolips.componenteditor.part.JavaChangeRevalidator.uninstall();
 		colorProvider.dispose();
 		super.stop(context);
 	}
@@ -562,63 +559,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 			logException(ex);
 			return null;
 		}
-	}
-	
-	/** List of ITLDLocator */
-	private HashSet<ITLDLocator> tldlocators = null;
-
-	/**
-	 * Returns the array of contributed <code>ITLDLocator</code>s.
-	 */
-	public ITLDLocator[] getTLDLocatorContributions(){
-		if(tldlocators == null){
-			loadTLDLocatorContributions();
-		}
-		return tldlocators.toArray(new ITLDLocator[tldlocators.size()]);
-	}
-
-	private void loadTLDLocatorContributions() {
-		try {
-			tldlocators = new HashSet<ITLDLocator>();
-			IExtensionRegistry registry = Platform.getExtensionRegistry();
-			IExtensionPoint point = registry.getExtensionPoint(getPluginId() + ".tldLocator");
-			IExtension[] extensions = point.getExtensions();
-			for(int i=0;i<extensions.length;i++){
-				IConfigurationElement[] elements = extensions[i].getConfigurationElements();
-				for (int j = 0; j < elements.length; j++) {
-					if ("contributer".equals(elements[j].getName())) {
-						//String group = elements[j].getAttribute("name");
-						ITLDLocator contributer = (ITLDLocator) elements[j].createExecutableExtension("class");
-						tldlocators.add(contributer);
-					}
-				}
-			}
-		} catch(Exception ex){
-			logException(ex);
-		}
-	}
-	
-	
-	/*
-	 * Collect Filters contributed by other plugins
-	 * @since 2.0.5
-	 */
-	private IJSPFilter[] jspFilters = null;
-	
-	/**
-	 * Returns the array of contributed <code>IJSPFilter</code>s.
-	 * 
-	 * @since 2.0.5
-	 */
-	public IJSPFilter[] getJSPFilters() {
-		if (jspFilters != null) {
-			return jspFilters;
-		}
-		
-		List<IJSPFilter> filters = loadContributedClasses("pagefilter", "jspfilter");
-		jspFilters = filters.toArray(new IJSPFilter[filters.size()]);
-
-		return jspFilters;
 	}
 	
 	/**

@@ -52,7 +52,7 @@
       </content-type>
       <content-type
             base-type="org.eclipse.core.runtime.text"
-            describer="org.objectstyle.wolips.editors.contentdescriber.ContentDescriberWO"
+            describer="org.objectstyle.wolips.editors.ContentDescriberWO"
             file-extensions="html"
             id="ng.componenteditor.html"
             name="NG Html with WO tags"
@@ -65,12 +65,12 @@
    <extension point="org.eclipse.ui.editors">
       <editor
             class="org.objectstyle.wolips.componenteditor.part.ComponentEditor"
-            contributorClass="org.objectstyle.wolips.componenteditor.contributor.ComponentEditorContributor"
+            contributorClass="org.objectstyle.wolips.componenteditor.part.ComponentEditorContributor"
             default="true"
             extensions="wod,html,api,woo"
             icon="icons/ComponentEditor.png"
             id="ng.componenteditor.ComponentEditor"
-            matchingStrategy="org.objectstyle.wolips.componenteditor.launcher.ComponentEditorMatchingStrategy"
+            matchingStrategy="org.objectstyle.wolips.componenteditor.part.ComponentEditorMatchingStrategy"
             name="NG Component Editor">
          <contentTypeBinding contentTypeId="ng.componenteditor.html"/>
          <contentTypeBinding contentTypeId="ng.componenteditor.api"/>
@@ -118,7 +118,7 @@
             extensions="woo"
             icon="icons/WooEditor.gif"
             id="ng.componenteditor.WooEditor"
-            class="org.objectstyle.wolips.wooeditor.editor.WooEditor"
+            class="org.objectstyle.wolips.wooeditor.WooEditor"
             name="NG WOO Editor">
          <contentTypeBinding contentTypeId="ng.componenteditor.woo"/>
       </editor>
@@ -580,9 +580,9 @@
 <!-- Adapters (from core plugin)                                                         -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.core.runtime.adapters">
-      <factory class="org.objectstyle.wolips.core.resources.internal.types.project.ProjectAdapterFactory"
+      <factory class="org.objectstyle.wolips.core.resources.internal.types.ProjectAdapterFactory"
             adaptableType="org.eclipse.core.resources.IProject">
-         <adapter type="org.objectstyle.wolips.core.resources.types.project.ProjectAdapter"/>
+         <adapter type="org.objectstyle.wolips.core.resources.types.ProjectAdapter"/>
       </factory>
    </extension>
 
@@ -601,7 +601,7 @@
    <extension point="org.eclipse.ui.editors.documentProviders">
       <provider class="org.eclipse.ui.editors.text.TextFileDocumentProvider"
             id="ng.componenteditor.NullDocumentProvider"
-            inputTypes="org.objectstyle.wolips.wooeditor.editor.NonExistingFileEditorInput"/>
+            inputTypes="org.objectstyle.wolips.wooeditor.NonExistingFileEditorInput"/>
    </extension>
 
 <!-- =================================================================================== -->
@@ -630,7 +630,7 @@
    <extension point="org.eclipse.ui.ide.editorAssociationOverride">
       <editorAssociationOverride
             id="ng.componenteditor.editorAssociationOverride"
-            class="org.objectstyle.wolips.componenteditor.launcher.NGEditorAssociationOverride"/>
+            class="org.objectstyle.wolips.componenteditor.part.NGEditorAssociationOverride"/>
    </extension>
 
 </plugin>

@@ -3,7 +3,7 @@ package org.objectstyle.wolips.wodclipse.core.refactoring;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.objectstyle.wolips.baseforplugins.util.StringUtilities;
+import org.objectstyle.wolips.baseforplugins.util.StringUtils;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodModel;
 
@@ -37,7 +37,7 @@ public class ElementRename {
     }
 
     String elementName = wodElement.getElementName();
-    if (forceRename || (elementName.startsWith(shortTypeName) && StringUtilities.isDigitsOnly(elementName.substring(shortTypeName.length())))) {
+    if (forceRename || (elementName.startsWith(shortTypeName) && StringUtils.isDigitsOnly(elementName.substring(shortTypeName.length())))) {
       String newName = null;
       boolean forceAppendNumber = false;
 

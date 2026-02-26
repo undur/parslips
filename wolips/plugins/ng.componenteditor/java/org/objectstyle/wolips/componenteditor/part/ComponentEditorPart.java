@@ -71,7 +71,7 @@ import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.part.MultiPageSelectionProvider;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.objectstyle.wolips.baseforuiplugins.IEditorTarget;
-import org.objectstyle.wolips.componenteditor.outline.ComponentEditorOutline;
+// ComponentEditorOutline is now in this same package
 import org.objectstyle.wolips.components.editor.ComponentEditorInteraction;
 import org.objectstyle.wolips.components.editor.IComponentEditor;
 import org.objectstyle.wolips.components.input.ComponentEditorInput;

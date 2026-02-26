@@ -41,68 +41,36 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editors;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IPropertyListener;
-import org.eclipse.ui.PartInitException;
-import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.wooeditor.WooEditor;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 
-public class WooTab extends ComponentEditorTab {
+import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.content.IContentDescription;
+import org.eclipse.core.runtime.content.ITextContentDescriber;
 
-	private WooEditor wooEditor;
+public class ContentDescriberWO implements ITextContentDescriber {
 
-	private IEditorInput wooInput;
+	private final static QualifiedName[] SUPPORTED_OPTIONS = { IContentDescription.BYTE_ORDER_MARK };
 
-	public WooTab(ComponentEditorPart componentEditorPart, int tabIndex, IEditorInput wooInput) {
-		super(componentEditorPart, tabIndex);
-		this.wooInput = wooInput;
+	public static int ANSWER = INVALID;
+
+	public ContentDescriberWO() {
+		super();
 	}
 
-	public IEditorPart getActiveEmbeddedEditor() {
-		return wooEditor;
+	public int describe(Reader contents, IContentDescription description) throws IOException {
+		return INVALID;
 	}
 
-	public void createTab() {
-		wooEditor = new WooEditor();
-		IEditorSite wooSite = this.getComponentEditorPart().publicCreateSite(wooEditor);
-		try {
-			wooEditor.init(wooSite, wooInput);
-		} catch (PartInitException e) {
-			ComponenteditorPlugin.getDefault().log(e);
-		}
-		createInnerPartControl(this.getParentSashForm(), wooEditor);
-		wooEditor.addPropertyListener(new IPropertyListener() {
-			public void propertyChanged(Object source, int propertyId) {
-				WooTab.this.getComponentEditorPart().publicHandlePropertyChange(propertyId);
-			}
-		});
+	public int describe(InputStream contents, IContentDescription description) throws IOException {
+		return ANSWER;
 	}
 
-	public void doSave(IProgressMonitor monitor) {
-		wooEditor.doSave(monitor);
-	}
-
-	public void close(boolean save) {
-		wooEditor.close(save);
-	}
-
-	@Override
-	public void dispose() {
-		wooEditor.dispose();
-		super.dispose();
-	}
-	
-	public IEditorInput getActiveEditorInput() {
-		return wooInput;
-	}
-
-	public boolean isDirty() {
-		return wooEditor.isDirty();
+	public QualifiedName[] getSupportedOptions() {
+		return SUPPORTED_OPTIONS;
 	}
 
 }

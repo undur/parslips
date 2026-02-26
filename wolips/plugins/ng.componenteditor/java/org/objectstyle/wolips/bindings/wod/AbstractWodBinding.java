@@ -56,7 +56,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
-import org.objectstyle.wolips.baseforplugins.util.StringUtilities;
+import org.objectstyle.wolips.baseforplugins.util.StringUtils;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
@@ -176,7 +176,7 @@ public abstract class AbstractWodBinding implements IWodBinding {
   
   public boolean isDigitsOnly() {
     String bindingValue = getValue();
-    return !isEmpty() && StringUtilities.isNumericOnly(bindingValue);
+    return !isEmpty() && StringUtils.isNumericOnly(bindingValue);
   }
 
   public boolean isCaret() {
