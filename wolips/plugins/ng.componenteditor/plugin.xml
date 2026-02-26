@@ -434,6 +434,12 @@
             category="ng.componenteditor.views"
             class="org.objectstyle.wolips.componenteditor.inspector.BindingsInspectorPageBookView"
             id="ng.componenteditor.inspector.BindingsInspectorPageBookView"/>
+      <view name="NG Explorer"
+            allowMultiple="false"
+            category="ng.componenteditor.views"
+            class="ng.componenteditor.explorer.NGPackageExplorerPart"
+            icon="icons/ComponentEditor.png"
+            id="ng.componenteditor.explorer.NGPackageExplorer"/>
    </extension>
 
 <!-- =================================================================================== -->
@@ -631,6 +637,47 @@
       <editorAssociationOverride
             id="ng.componenteditor.editorAssociationOverride"
             class="org.objectstyle.wolips.componenteditor.part.NGEditorAssociationOverride"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- NG Explorer View Filters (mirror of JDT Package Explorer standard filters)         -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.jdt.ui.javaElementFilters">
+      <filter
+            id="ng.componenteditor.explorer.ClosedProjectsFilter"
+            name="Closed projects"
+            description="Hides closed projects"
+            class="org.eclipse.jdt.internal.ui.filters.ClosedProjectFilter"
+            enabled="true"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.NonJavaProjectsFilter"
+            name="Non-Java projects"
+            description="Hides non-Java projects"
+            class="org.eclipse.jdt.internal.ui.filters.NonJavaProjectFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.NonJavaElementFilter"
+            name="Non-Java elements"
+            description="Hides non-Java elements"
+            class="org.eclipse.jdt.internal.ui.filters.NonJavaElementFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.EmptyPackageFilter"
+            name="Empty packages"
+            description="Hides empty packages"
+            class="org.eclipse.jdt.internal.ui.filters.EmptyPackageFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <filter
+            id="ng.componenteditor.explorer.LibraryFilter"
+            name="Referenced libraries"
+            description="Hides referenced libraries"
+            class="org.eclipse.jdt.internal.ui.filters.LibraryFilter"
+            enabled="false"
+            targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
    </extension>
 
 </plugin>
