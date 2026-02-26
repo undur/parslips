@@ -31,6 +31,7 @@ import org.objectstyle.wolips.core.resources.types.LimitedLRUCache;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.wodclipse.core.builder.WodBuilder;
 import org.objectstyle.wolips.wodclipse.core.util.EOModelGroupCache;
 
@@ -167,7 +168,17 @@ public class WodParserCache implements ITypeOwner {
     if (_componentType == null) {
     	_componentType = _componentsLocateResults.getDotJavaType();
     }
-    return _componentType;
+    if (_componentType != null) {
+    	return _componentType;
+    }
+    // No Java class for this component — return WOComponent/NGComponent as
+    // a fallback so validation still runs, but do NOT cache it in
+    // _componentType (the real type may resolve on a later call).
+    if (_javaProject != null) {
+    	String fallbackClass = BuildProperties.getComponentClass(_javaProject);
+    	return _javaProject.findType(fallbackClass);
+    }
+    return null;
   }
 
   public IProject getProject() {
