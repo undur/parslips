@@ -50,6 +50,7 @@ public class WodParserCache implements ITypeOwner {
   private IJavaProject _javaProject;
   private IType _componentType;
   private IContainer _woFolder;
+  private IFile _standaloneFile; // non-null for standalone HTML files (not inside .wo folder)
   private IFile _apiFile;
 
   private long _lastJavaParseTime;
@@ -97,7 +98,8 @@ public class WodParserCache implements ITypeOwner {
     String key = WodParserCache.getCacheKey(resource);
     WodParserCache cache = WodParserCache._parsers.get(key);
     if (cache == null && createIfMissing) {
-      cache = new WodParserCache(getWoFolder(resource));
+      IFile standaloneFile = isStandaloneFile(resource) ? (IFile) resource : null;
+      cache = new WodParserCache(getWoFolder(resource), standaloneFile);
       WodParserCache._parsers.put(key, cache);
     }
     return cache;
@@ -120,6 +122,11 @@ public class WodParserCache implements ITypeOwner {
   }
 
   private static String getCacheKey(IResource resource) {
+    // For standalone HTML files, use the file itself as the key (not the parent folder,
+    // which may contain multiple unrelated standalone templates).
+    if (isStandaloneFile(resource)) {
+      return resource.getLocation().toPortableString();
+    }
     String cacheKey;
     IContainer woFolder = getWoFolder(resource);
     if (woFolder == null) {
@@ -129,6 +136,21 @@ public class WodParserCache implements ITypeOwner {
       cacheKey = woFolder.getLocation().toPortableString();
     }
     return cacheKey;
+  }
+
+  /**
+   * Returns true if the given resource is a standalone component file (HTML or WOD)
+   * that is NOT inside a .wo folder.
+   */
+  private static boolean isStandaloneFile(IResource resource) {
+    if (resource instanceof IFile) {
+      String ext = resource.getFileExtension();
+      if ("html".equals(ext) || "wod".equals(ext)) {
+        IContainer parent = resource.getParent();
+        return parent == null || !"wo".equals(parent.getFileExtension());
+      }
+    }
+    return false;
   }
 
   private static IContainer getWoFolder(IResource resource) {
@@ -142,8 +164,9 @@ public class WodParserCache implements ITypeOwner {
     return woFolder;
   }
 
-  protected WodParserCache(IContainer woFolder) throws CoreException, LocateException {
+  protected WodParserCache(IContainer woFolder, IFile standaloneFile) throws CoreException, LocateException {
     _woFolder = woFolder;
+    _standaloneFile = standaloneFile;
     init();
   }
 
@@ -198,6 +221,7 @@ public class WodParserCache implements ITypeOwner {
     cache._project = _project;
     cache._componentType = _componentType;
     cache._woFolder = _woFolder;
+    cache._standaloneFile = _standaloneFile;
     cache._apiFile = _apiFile;
     cache._htmlEntry.setFile(_htmlEntry.getFile());
     cache._wodEntry.setFile(_wodEntry.getFile());
@@ -215,10 +239,15 @@ public class WodParserCache implements ITypeOwner {
 
   public void clearLocateResultsCache() throws CoreException, LocateException {
     if (_woFolder != null && _woFolder.exists() && LocatePlugin.getDefault() != null) {
-      _componentsLocateResults = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(_woFolder);
+      // For standalone HTML files, use the file itself for locate operations
+      // (the file's name minus extension is the component name).
+      // For .wo folders, the folder name minus extension is the component name.
+      IResource locateResource = (_standaloneFile != null && _standaloneFile.exists()) ? _standaloneFile : _woFolder;
+      _componentsLocateResults = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(locateResource);
       _project = _woFolder.getProject();
       _javaProject = JavaCore.create(_project);
-      _htmlEntry.setFile(_componentsLocateResults.getFirstHtmlFile());
+      IFile locatedHtml = _componentsLocateResults.getFirstHtmlFile();
+      _htmlEntry.setFile(locatedHtml != null ? locatedHtml : _standaloneFile);
       _wodEntry.setFile(_componentsLocateResults.getFirstWodFile());
       _apiFile = _componentsLocateResults.getDotApi(true);
       _componentType = null;

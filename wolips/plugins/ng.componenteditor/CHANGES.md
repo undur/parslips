@@ -350,6 +350,36 @@ Fixed a long-standing intermittent bug where WOD validation would report false e
 
 **Fix:** `Wo.getFailedValidations()` now holds `synchronized (this.apiModel)` for the entire validation evaluation, ensuring exclusive access to the DOM tree during validation. This is the same lock used by `parse()`, `getWODefinitions()`, and other DOM-accessing methods.
 
+### Full editor support for standalone HTML templates
+
+Standalone HTML templates (`.html` files not inside `.wo` bundles) now have full editor support: **autocomplete**, **keypath validation**, and **build-time validation** — all on par with traditional `.wo` folder components. This is new territory beyond what WOLips ever supported, and a key enabler for ng-objects, where single-file templates are the primary component format.
+
+**What works now:**
+- Inline `wo:` tag autocomplete with correct element type filtering (only WOElement/NGElement subclasses)
+- Keypath completion against the component's Java class (or the base component class for classless templates)
+- Validation markers for invalid keypaths, missing bindings, undefined elements
+- Build-time validation triggered by both template saves and Java class saves
+- Correct framework detection (ng-objects vs WebObjects) in mixed workspaces
+
+**What was fixed (cumulative across multiple commits):**
+
+*Validation for classless components:*
+- `WodParserCache.getComponentType()` — when no Java class exists for a component, returns `WOComponent`/`NGComponent` as a fallback so validation still runs. The fallback is intentionally NOT cached in `_componentType` to avoid poisoning the cache if JDT's index isn't ready yet.
+
+*Element type autocomplete filtering:*
+- `BuildProperties.WO_ELEMENT_CLASS` — corrected from `com.webobjects.appserver._private.WOElement` to `com.webobjects.appserver.WOElement`. The `_private` package is for built-in element implementations, not the `WOElement` base class itself. This caused `findType()` to return null → no superclass filtering → every Java class appeared in autocomplete.
+- `TypeNameCollector.acceptType()` — re-enabled the supertype hierarchy check as a safety net. The check had been commented out, relying solely on `WOHierarchyScope` which can return `true` for everything in edge cases.
+- `BuildProperties` static convenience methods — changed fallback defaults from `NG_*` to `WO_*` when the project adapter lookup fails (the common case for projects without explicit `base=` configuration).
+
+*Build-time validation for standalone templates:*
+- `WodBuilder.handleWoappResources()` — added handling for `.html` files not inside `.wo` folders. Previously only `.wo` folder contents were processed.
+- `WodBuilder.handleSource()` — when a Java class is saved, now also re-validates standalone HTML templates (not just `.wod` files inside `.wo` folders).
+- `WodParserCache.validate()` — for standalone templates, validates directly on the cache instance instead of delegating to `WodBuilder.validateComponent()` (which can't re-locate a component from a plain parent directory).
+
+*Component file location for standalone templates (the deep one):*
+- `WodParserCache` — added `_standaloneFile` field to track the original HTML file. Previously, the cache only stored `_woFolder` (the parent directory for standalone files), and `clearLocateResultsCache()` passed this to `LocatePlugin.getLocalizedComponentsLocateResult()`. The locate system extracted the component name via `fileNameWithoutExtension()` on the folder — getting the *directory name* (e.g. "Components") instead of the *component name* (e.g. "MyPage"). With the fix, standalone files are passed directly to the locate system, so it searches for the correct component name and finds the associated Java class, API file, etc.
+- `WodParserCache.getCacheKey()` — standalone templates now use the file path as the cache key (not the parent directory), since multiple standalone templates can live in the same directory.
+
 ### Deleted: old WOLips plugin
 
 The original WOLips plugin suite (all `org.objectstyle.wolips.*` plugins, features, and the p2 update site) was deleted from the repository. Only `ng.componenteditor` and the build infrastructure remain.
