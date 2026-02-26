@@ -12,9 +12,15 @@ import org.eclipse.core.runtime.content.IContentType;
 import org.objectstyle.wolips.variables.BuildProperties;
 
 /**
- * Overrides Eclipse's default editor selection so that files in ng-objects
- * projects (identified by {@code base=ng} in {@code build.properties}) open
- * in the NG Component Editor instead of any other editor (WOLips, generic HTML, etc.).
+ * Overrides Eclipse's default editor selection so that component files open
+ * in the NG Component Editor instead of any other editor.
+ *
+ * Activates for:
+ * <ul>
+ *   <li>Any file inside a {@code .wo} folder (unambiguously a WO component)</li>
+ *   <li>Component files ({@code .html}, {@code .wod}, {@code .woo}, {@code .api})
+ *       in ng-objects projects (identified by {@code base=ng} in {@code build.properties})</li>
+ * </ul>
  */
 public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 
@@ -36,7 +42,7 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 			return editorDescriptor;
 		}
 
-		if (!isComponentFile(file) || !isNGProject(file.getProject())) {
+		if (!shouldUseComponentEditor(file)) {
 			return editorDescriptor;
 		}
 
@@ -56,7 +62,7 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 	@Override
 	public IEditorDescriptor[] overrideEditors(IEditorInput editorInput, IContentType contentType, IEditorDescriptor[] editorDescriptors) {
 		IFile file = ResourceUtil.getFile(editorInput);
-		if (file == null || !isComponentFile(file) || !isNGProject(file.getProject())) {
+		if (file == null || !shouldUseComponentEditor(file)) {
 			return editorDescriptors;
 		}
 
@@ -66,6 +72,22 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 	@Override
 	public IEditorDescriptor[] overrideEditors(String fileName, IContentType contentType, IEditorDescriptor[] editorDescriptors) {
 		return editorDescriptors;
+	}
+
+	/**
+	 * Returns true if this file should be opened with the component editor.
+	 * A file qualifies if it's inside a .wo folder, or if it's a component
+	 * file extension in an ng-objects project.
+	 */
+	private boolean shouldUseComponentEditor(IFile file) {
+		if (isInsideWoFolder(file)) {
+			return true;
+		}
+		return isComponentFile(file) && isNGProject(file.getProject());
+	}
+
+	private boolean isInsideWoFolder(IFile file) {
+		return file.getParent() != null && file.getParent().getName().endsWith(".wo");
 	}
 
 	private boolean isComponentFile(IFile file) {
