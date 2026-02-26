@@ -24,8 +24,8 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(HTMLPlugin.PREF_COLOR_COMMENT,StringConverter.asString(IHTMLColorConstants.HTML_COMMENT));
 		store.setDefault(HTMLPlugin.PREF_COLOR_DOCTYPE,StringConverter.asString(IHTMLColorConstants.PROC_INSTR));
 		store.setDefault(HTMLPlugin.PREF_COLOR_STRING,StringConverter.asString(IHTMLColorConstants.STRING));
-    store.setDefault(HTMLPlugin.PREF_COLOR_OGNL,StringConverter.asString(IHTMLColorConstants.SCRIPT));
-    store.setDefault(HTMLPlugin.PREF_COLOR_DYNAMIC,StringConverter.asString(IHTMLColorConstants.SCRIPT));
+    store.setDefault(HTMLPlugin.PREF_COLOR_OGNL,StringConverter.asString(IHTMLColorConstants.OGNL));
+    store.setDefault(HTMLPlugin.PREF_COLOR_DYNAMIC,StringConverter.asString(IHTMLColorConstants.DYNAMIC));
 		store.setDefault(HTMLPlugin.PREF_COLOR_SCRIPT,StringConverter.asString(IHTMLColorConstants.SCRIPT));
 		store.setDefault(HTMLPlugin.PREF_COLOR_CSSPROP,StringConverter.asString(IHTMLColorConstants.CSS_PROP));
 		store.setDefault(HTMLPlugin.PREF_COLOR_CSSCOMMENT,StringConverter.asString(IHTMLColorConstants.CSS_COMMENT));
