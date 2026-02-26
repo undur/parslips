@@ -273,26 +273,30 @@ This allows users with mixed-framework workspaces (or projects that include both
 
 ### Added: NG Explorer view
 
-Ported the WO Explorer project view from `org.objectstyle.wolips.jdt` into `ng.componenteditor`. The NG Explorer is a Package Explorer variant that collapses `.wo` component bundle folders into single tree nodes (with a custom icon) and sorts them alongside regular files.
+Ported the WO Explorer project view from `org.objectstyle.wolips.jdt` into `ng.componenteditor`. The NG Explorer is a Package Explorer variant with component-aware behavior for `.wo` bundle folders.
 
 **What's included:**
-- `.wo` folder collapsing — component bundles appear as single leaf nodes (no children shown)
-- Custom `.wo` component icon — `WOComponentBundle.png`
+- `.wo` component folders show the expansion triangle — can be expanded to see contents (html/wod/woo files)
+- Double-click or Enter on a `.wo` folder opens the NG Component Editor (finds the HTML template inside)
+- Custom `.wo` component icon via a global decorator (`WOComponentDecorator`) — appears in ALL views (NG Explorer, Package Explorer, Project Explorer, etc.), with problem marker overlays
 - Custom sorting — `.wo` bundles sorted alphabetically alongside files, after regular folders
-- Working Set mode support — all the above works when Package Explorer is in "Working Sets" root mode
+- Working Set mode support
+
+**Improvement over WOLips' WO Explorer:**
+- `.wo` folders are expandable (WOLips collapsed them into opaque leaf nodes with no way to see contents)
 
 **What's been stripped (vs WOLips' WO Explorer):**
 - Tagged Components feature — unused virtual folder grouping (~1,000 lines removed)
 - `.eomodeld` bundle handling — ng-objects doesn't use EOF
 - `RenameWOComponentAction` — required the separate WOLips refactoring plugin
 
-**Coexistence:** Uses unique identifiers (`ng.componenteditor.explorer.*`) so it can coexist with WOLips' WO Explorer (`org.objectstyle.wolips.jdt.ui.WOPackageExplorer`) in the same Eclipse installation. The view appears under the "NG Component Editor" view category.
+**Coexistence:** Uses unique identifiers (`ng.componenteditor.explorer.*`, `ng.componenteditor.decorator.*`) so it can coexist with WOLips' WO Explorer in the same Eclipse installation. The view appears under the "NG Component Editor" view category.
 
 **Key files:**
-- `ng.componenteditor.explorer.NGPackageExplorerPart` — main view class
-- `ng.componenteditor.explorer.NGPackageExplorerContentProvider` — collapses `.wo` bundles
-- `ng.componenteditor.explorer.NGPackageExplorerLabelProvider` — custom `.wo` icon
+- `ng.componenteditor.explorer.NGPackageExplorerPart` — main view class (double-click + Enter handling)
+- `ng.componenteditor.explorer.NGPackageExplorerContentProvider` — content provider with `isComponentBundle()` helper
+- `ng.componenteditor.explorer.WOComponentDecorator` — global `ILabelDecorator` for `.wo` folder icon + problem markers
 - `ng.componenteditor.explorer.NGJavaElementComparator` — sorting
 - `ng.componenteditor.explorer.NGWorkingSetAwareContentProvider` — working set variant
 - `ng.componenteditor.explorer.NGWorkingSetAwareJavaElementSorter` — working set sorting variant
-- `plugin.xml` — view registration with standard JDT filters
+- `plugin.xml` — view registration, JDT filters, decorator registration

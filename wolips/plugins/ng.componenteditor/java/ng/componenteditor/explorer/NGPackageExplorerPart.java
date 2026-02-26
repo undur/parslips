@@ -1,7 +1,6 @@
 package ng.componenteditor.explorer;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
@@ -11,22 +10,26 @@ import org.eclipse.jdt.internal.ui.packageview.PackageExplorerContentProvider;
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IOpenListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.OpenEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.editors.EditorsPlugin;
 
 /**
- * NG Explorer — a Package Explorer variant that collapses .wo bundles
- * into single nodes and sorts them alongside regular files.
+ * NG Explorer — a Package Explorer variant with component-aware behavior.
  * <p>
- * Double-clicking a .wo component folder opens it in the NG Component Editor.
+ * .wo component bundle folders are shown with their normal children (the
+ * expansion triangle is visible), but double-clicking or pressing Enter
+ * on a .wo folder opens the NG Component Editor. The expansion state of
+ * the .wo folder is preserved (not toggled) on double-click.
  * <p>
- * Based on the WOLips WO Explorer but stripped of Tagged Components,
- * .eomodeld handling, and the WO-specific component rename action.
+ * A registered decorator ({@code WOComponentDecorator}) provides the
+ * custom component icon in all views.
+ * <p>
  * Uses unique IDs so it can coexist with WOLips' WO Explorer.
  */
 public class NGPackageExplorerPart extends PackageExplorerPart {
@@ -34,6 +37,7 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 	private static final int SHOW_WORKING_SETS = PackageExplorerPart.WORKING_SETS_AS_ROOTS;
 
 	private IDoubleClickListener _componentDoubleClickListener;
+	private IOpenListener _componentOpenListener;
 
 	public NGPackageExplorerPart() {
 		super();
@@ -53,7 +57,7 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
 		switchToNGSorter();
-		installComponentDoubleClickListener();
+		installComponentOpenListeners();
 	}
 
 	@Override
@@ -64,8 +68,14 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 
 	@Override
 	public void dispose() {
-		if (_componentDoubleClickListener != null) {
-			getTreeViewer().removeDoubleClickListener(_componentDoubleClickListener);
+		TreeViewer viewer = getTreeViewer();
+		if (viewer != null) {
+			if (_componentDoubleClickListener != null) {
+				viewer.removeDoubleClickListener(_componentDoubleClickListener);
+			}
+			if (_componentOpenListener != null) {
+				viewer.removeOpenListener(_componentOpenListener);
+			}
 		}
 		super.dispose();
 	}
@@ -81,23 +91,48 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 	}
 
 	/**
-	 * Installs a double-click listener that opens .wo component bundles
-	 * in the NG Component Editor. When a .wo folder is double-clicked,
-	 * the HTML template file inside it is located and opened.
+	 * Installs listeners for double-click and Enter/Return on .wo
+	 * component bundles.
+	 * <p>
+	 * The double-click listener snapshots the expansion state of the .wo
+	 * folder before the default handler runs, then restores it via
+	 * {@code asyncExec} so the tree doesn't visually toggle.
 	 */
-	private void installComponentDoubleClickListener() {
-		_componentDoubleClickListener = new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event) {
-				if (!(event.getSelection() instanceof IStructuredSelection)) {
-					return;
+	private void installComponentOpenListeners() {
+		TreeViewer viewer = getTreeViewer();
+
+		// Double-click: open the component and undo any expand/collapse
+		_componentDoubleClickListener = event -> {
+			if (!(event.getSelection() instanceof IStructuredSelection)) {
+				return;
+			}
+			IStructuredSelection sel = (IStructuredSelection) event.getSelection();
+			if (sel.size() == 1 && sel.getFirstElement() instanceof IFolder) {
+				IFolder folder = (IFolder) sel.getFirstElement();
+				if (NGPackageExplorerContentProvider.isComponentBundle(folder)) {
+					// Snapshot current expansion state — the tree will have
+					// already toggled it by the time this listener fires
+					boolean isNowExpanded = viewer.getExpandedState(folder);
+					openComponentBundle(folder);
+					// Restore: undo the toggle on the next event loop tick
+					viewer.getTree().getDisplay().asyncExec(() -> {
+						if (!viewer.getTree().isDisposed()) {
+							viewer.setExpandedState(folder, !isNowExpanded);
+						}
+					});
 				}
-				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-				Iterator<?> iter = selection.iterator();
-				while (iter.hasNext()) {
-					Object selected = iter.next();
-					if (selected instanceof IFolder) {
-						IFolder folder = (IFolder) selected;
+			}
+		};
+		viewer.addDoubleClickListener(_componentDoubleClickListener);
+
+		// Enter/Return key handler
+		_componentOpenListener = new IOpenListener() {
+			@Override
+			public void open(OpenEvent event) {
+				if (event.getSelection() instanceof IStructuredSelection) {
+					IStructuredSelection sel = (IStructuredSelection) event.getSelection();
+					if (sel.size() == 1 && sel.getFirstElement() instanceof IFolder) {
+						IFolder folder = (IFolder) sel.getFirstElement();
 						if (NGPackageExplorerContentProvider.isComponentBundle(folder)) {
 							openComponentBundle(folder);
 						}
@@ -105,7 +140,7 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 				}
 			}
 		};
-		getTreeViewer().addDoubleClickListener(_componentDoubleClickListener);
+		viewer.addOpenListener(_componentOpenListener);
 	}
 
 	/**

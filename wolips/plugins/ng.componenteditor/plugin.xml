@@ -680,4 +680,25 @@
             targetId="ng.componenteditor.explorer.NGPackageExplorer"/>
    </extension>
 
+<!-- =================================================================================== -->
+<!-- Decorators (custom icons for .wo component bundles in all views)                    -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.decorators">
+      <decorator
+            class="ng.componenteditor.explorer.WOComponentDecorator"
+            id="ng.componenteditor.decorator.WOComponentDecorator"
+            label="NG Component Decorator"
+            lightweight="false"
+            state="true">
+         <enablement>
+            <and>
+               <objectClass name="org.eclipse.core.resources.IFolder"/>
+               <objectState
+                     name="extension"
+                     value="wo"/>
+            </and>
+         </enablement>
+      </decorator>
+   </extension>
+
 </plugin>
