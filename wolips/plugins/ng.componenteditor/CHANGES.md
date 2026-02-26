@@ -282,8 +282,9 @@ Ported the WO Explorer project view from `org.objectstyle.wolips.jdt` into `ng.c
 - Custom sorting — `.wo` bundles sorted alphabetically alongside files, after regular folders
 - Working Set mode support
 
-**Improvement over WOLips' WO Explorer:**
+**Improvements over WOLips' WO Explorer:**
 - `.wo` folders are expandable (WOLips collapsed them into opaque leaf nodes with no way to see contents)
+- Source folder pull-up: `src/main/components`, `src/main/woresources`, and `src/main/webserver-resources` are pulled up to the project root level (similar to how Eclipse shows `src/main/java`). Only folders that actually exist in the project are shown. They are removed from their physical location under `src/main/` to avoid duplication. Labels show the full project-relative path (e.g., `src/main/components`). Ordering: `src/main/*` Java source roots first, then pulled-up folders, then `src/test/*` source roots, then classpath containers (JRE, Maven, etc.).
 
 **What's been stripped (vs WOLips' WO Explorer):**
 - Tagged Components feature — unused virtual folder grouping (~1,000 lines removed)
@@ -293,10 +294,11 @@ Ported the WO Explorer project view from `org.objectstyle.wolips.jdt` into `ng.c
 **Coexistence:** Uses unique identifiers (`ng.componenteditor.explorer.*`, `ng.componenteditor.decorator.*`) so it can coexist with WOLips' WO Explorer in the same Eclipse installation. The view appears under the "NG Component Editor" view category.
 
 **Key files:**
-- `ng.componenteditor.explorer.NGPackageExplorerPart` — main view class (double-click + Enter handling)
-- `ng.componenteditor.explorer.NGPackageExplorerContentProvider` — content provider with `isComponentBundle()` helper
+- `ng.componenteditor.explorer.NGPackageExplorerPart` — main view class (double-click + Enter handling, label provider install)
+- `ng.componenteditor.explorer.NGPackageExplorerContentProvider` — content provider with source folder pull-up and `isComponentBundle()` helper
+- `ng.componenteditor.explorer.NGWorkingSetAwareContentProvider` — working set variant with same pull-up
+- `ng.componenteditor.explorer.NGJavaElementComparator` — sorting for source folders, .wo bundles
+- `ng.componenteditor.explorer.SourceFolderLabelProvider` — wraps the tree label provider to show full paths for pulled-up folders
 - `ng.componenteditor.explorer.WOComponentDecorator` — global `ILabelDecorator` for `.wo` folder icon + problem markers
-- `ng.componenteditor.explorer.NGJavaElementComparator` — sorting
-- `ng.componenteditor.explorer.NGWorkingSetAwareContentProvider` — working set variant
 - `ng.componenteditor.explorer.NGWorkingSetAwareJavaElementSorter` — working set sorting variant
 - `plugin.xml` — view registration, JDT filters, decorator registration

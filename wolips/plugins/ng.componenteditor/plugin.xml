@@ -498,6 +498,10 @@
       <page class="tk.eclipse.plugin.htmleditor.HTMLEditorPreferencePage"
             id="ng.componenteditor.preferences"
             name="NG Component Editor"/>
+      <page class="tk.eclipse.plugin.htmleditor.XMLPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.XML"
+            name="Template Formatting"/>
       <page class="org.objectstyle.wolips.wodclipse.core.preferences.WodEditorPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.WodEditor"
@@ -697,6 +701,33 @@
                      name="extension"
                      value="wo"/>
             </and>
+         </enablement>
+      </decorator>
+      <decorator
+            class="ng.componenteditor.explorer.SourceFolderDecorator"
+            id="ng.componenteditor.decorator.SourceFolderDecorator"
+            label="NG Source Folder Decorator"
+            lightweight="false"
+            state="true">
+         <enablement>
+            <objectClass name="org.eclipse.core.resources.IFolder"/>
+         </enablement>
+      </decorator>
+      <decorator
+            class="ng.componenteditor.explorer.ProjectDecorator"
+            id="ng.componenteditor.decorator.ProjectDecorator"
+            label="NG/WO Project Decorator"
+            lightweight="false"
+            adaptable="true"
+            state="true">
+         <description>
+            Adds ng-objects or WebObjects badge to recognized projects
+         </description>
+         <enablement>
+            <or>
+               <objectClass name="org.eclipse.core.resources.IProject"/>
+               <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+            </or>
          </enablement>
       </decorator>
    </extension>
