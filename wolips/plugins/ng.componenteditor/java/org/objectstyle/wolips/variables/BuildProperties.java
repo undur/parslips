@@ -537,7 +537,7 @@ public class BuildProperties {
 	public static final String NG_PRIVATE_ELEMENT_PACKAGE = "ng.appserver.templating._private.";
 
 	/** Fully-qualified root element type for WebObjects projects. */
-	public static final String WO_ELEMENT_CLASS = "com.webobjects.appserver._private.WOElement";
+	public static final String WO_ELEMENT_CLASS = "com.webobjects.appserver.WOElement";
 	/** Fully-qualified root component type for WebObjects projects. */
 	public static final String WO_COMPONENT_CLASS = "com.webobjects.appserver.WOComponent";
 	/** Package prefix for WebObjects built-in ("private") elements. */
