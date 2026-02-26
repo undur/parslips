@@ -350,7 +350,13 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 			valid = false;
 		}
 
-		if (dotJava != null && !dotJava.exists()) {
+		if (dotJava == null) {
+			// No Java class was found at locate time.  Invalidate so the
+			// locate runs again — a Java class may have been created since.
+			// The ComponentLocateCache handles caching, so re-locating is
+			// cheap when nothing has changed.
+			valid = false;
+		} else if (!dotJava.exists()) {
 			valid = false;
 		}
 
