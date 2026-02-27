@@ -95,14 +95,28 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 	 * Installs listeners for double-click and Enter/Return on .wo
 	 * component bundles.
 	 * <p>
-	 * The double-click listener snapshots the expansion state of the .wo
-	 * folder before the default handler runs, then restores it via
-	 * {@code asyncExec} so the tree doesn't visually toggle.
+	 * <b>The expansion flash problem:</b> when the user double-clicks a
+	 * .wo folder, the TreeViewer's built-in handler toggles the expansion
+	 * state before our {@code IDoubleClickListener} fires. Additionally,
+	 * opening a file inside the .wo folder (via {@code WorkbenchUtilities.open})
+	 * can trigger an editor "reveal" that re-expands the parent node.
+	 * <p>
+	 * <b>The fix:</b> in the {@code IDoubleClickListener}, compute the
+	 * desired expansion state (the inverse of what the TreeViewer toggled
+	 * to), then open the component, then restore the expansion state.
+	 * This order ensures both the TreeViewer's toggle and any reveal-triggered
+	 * expansion are undone in a single event dispatch cycle — no
+	 * intermediate state is ever painted.
+	 * <p>
+	 * <b>Important:</b> the expansion undo must <i>only</i> happen in the
+	 * {@code IDoubleClickListener}, not in the {@code IOpenListener}. A
+	 * double-click fires both listeners, and if both try to toggle the
+	 * expansion state they cancel each other out.
 	 */
 	private void installComponentOpenListeners() {
 		TreeViewer viewer = getTreeViewer();
 
-		// Double-click: open the component and undo any expand/collapse
+		// Double-click: open the component and immediately undo the expansion toggle
 		_componentDoubleClickListener = event -> {
 			if (!(event.getSelection() instanceof IStructuredSelection)) {
 				return;
@@ -111,22 +125,23 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 			if (sel.size() == 1 && sel.getFirstElement() instanceof IFolder) {
 				IFolder folder = (IFolder) sel.getFirstElement();
 				if (NGPackageExplorerContentProvider.isComponentBundle(folder)) {
-					// Snapshot current expansion state — the tree will have
-					// already toggled it by the time this listener fires
-					boolean isNowExpanded = viewer.getExpandedState(folder);
+					// The TreeViewer toggles expansion before this listener
+					// fires. We need to undo it, but opening the component
+					// first — because WorkbenchUtilities.open() can trigger
+					// a "reveal" that re-expands the parent .wo folder.
+					// By computing the desired state before the open and
+					// restoring it after, both the toggle and the reveal
+					// are undone in a single event dispatch cycle.
+					boolean wasExpanded = !viewer.getExpandedState(folder);
 					openComponentBundle(folder);
-					// Restore: undo the toggle on the next event loop tick
-					viewer.getTree().getDisplay().asyncExec(() -> {
-						if (!viewer.getTree().isDisposed()) {
-							viewer.setExpandedState(folder, !isNowExpanded);
-						}
-					});
+					viewer.setExpandedState(folder, wasExpanded);
 				}
 			}
 		};
 		viewer.addDoubleClickListener(_componentDoubleClickListener);
 
-		// Enter/Return key handler
+		// Enter/Return: just open the component (no expansion undo needed —
+		// the TreeViewer only toggles expansion on double-click, not on Enter)
 		_componentOpenListener = new IOpenListener() {
 			@Override
 			public void open(OpenEvent event) {
