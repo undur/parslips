@@ -147,6 +147,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	private StringButtonStatusDialogField _superclassDialogField;
 
 	private Object _currentSelection;
+	private IStructuredSelection _originalSelection;
 
 
 	enum HTML {
@@ -235,6 +236,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		super("createWOComponentPage1", WOComponentCreationPage.processSelection(selection));
 		this.setTitle(Messages.getString("WOComponentCreationPage.title"));
 		this.setDescription(Messages.getString("WOComponentCreationPage.description"));
+		_originalSelection = selection;
 
 		if (selection != null) {
 			Object selectedObject = selection.getFirstElement();
@@ -242,19 +244,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				IJavaElement parentJavaElement = JavaCore.create((IFolder) selectedObject);
 				if (parentJavaElement instanceof IPackageFragment) {
 					_currentSelection = parentJavaElement;
-					setContainerFullPath(componentPathForPackage((IPackageFragment)_currentSelection));
-				} 
-				else {
-					IFolder selectedFolder = (IFolder)selectedObject;
-					IPath rootFolder = selectedFolder.getProjectRelativePath().uptoSegment(1);
-					if (!rootFolder.equals(selectedFolder.getProject().getProjectRelativePath())) {
-						setContainerFullPath(selectedFolder.getProject().getFullPath());
-					}
 				}
-			}
-			else if (selectedObject instanceof IResource) {
-				IResource selectedResource = (IResource) selectedObject;
-				setContainerFullPath(selectedResource.getProject().getFullPath());
 			}
 		}
 	}
@@ -287,6 +277,29 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 
 	@Override
 	protected void initialPopulateContainerNameField() {
+		if (_originalSelection != null) {
+			Object selectedObject = _originalSelection.getFirstElement();
+			if (_currentSelection instanceof IPackageFragment) {
+				IPath packagePath = componentPathForPackage((IPackageFragment) _currentSelection);
+				if (packagePath != null) {
+					setContainerFullPath(packagePath);
+					return;
+				}
+			}
+			IProject project = null;
+			if (selectedObject instanceof IJavaElement) {
+				project = ((IJavaElement) selectedObject).getJavaProject().getProject();
+			} else if (selectedObject instanceof IResource) {
+				project = ((IResource) selectedObject).getProject();
+			}
+			if (project != null) {
+				IPath componentsFolder = findComponentsFolder(project);
+				if (componentsFolder != null) {
+					setContainerFullPath(componentsFolder);
+					return;
+				}
+			}
+		}
 		super.initialPopulateContainerNameField();
 	}
 
@@ -675,6 +688,39 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		return null;
 	}
 	
+	/**
+	 * Searches for a folder named "components" under src/main/ in the given project.
+	 * Returns the full path of the first match, or null if none found.
+	 * Handles both WO layout (src/main/components) and ng layout
+	 * (src/main/ng/something/components or deeper).
+	 */
+	protected static IPath findComponentsFolder(IProject project) {
+		try {
+			IFolder srcMain = project.getFolder("src/main");
+			if (srcMain.exists()) {
+				return findComponentsFolderIn(srcMain);
+			}
+		} catch (CoreException e) {
+			// fall through
+		}
+		return null;
+	}
+
+	private static IPath findComponentsFolderIn(IContainer container) throws CoreException {
+		for (IResource member : container.members()) {
+			if (member.getType() == IResource.FOLDER) {
+				if ("components".equals(member.getName())) {
+					return member.getFullPath();
+				}
+				IPath found = findComponentsFolderIn((IFolder) member);
+				if (found != null) {
+					return found;
+				}
+			}
+		}
+		return null;
+	}
+
 	protected IPath componentPathForPackage(IPackageFragment _selection) {
 		try {
 			LocatePlugin locate = LocatePlugin.getDefault();
