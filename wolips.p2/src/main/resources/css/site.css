@@ -173,3 +173,78 @@ body {
 	border-radius: 3px;
 	color: #3a5a3a;
 }
+
+/* Changelog page */
+
+.changelog .card {
+	padding: 28px 32px;
+}
+
+.date-header {
+	font-size: 14px;
+	font-weight: 600;
+	color: #5a6e5a;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	margin-bottom: 24px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #e8f0e8;
+}
+
+.changelog-entry {
+	padding: 12px 0;
+	border-bottom: 1px solid #f0f5f0;
+}
+
+.changelog-entry:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.changelog-entry:first-of-type {
+	padding-top: 0;
+}
+
+.changelog-entry h3 {
+	font-size: 16px;
+	font-weight: 600;
+	color: #1a2e1a;
+	margin-bottom: 6px;
+}
+
+.changelog-entry p {
+	font-size: 15px;
+	color: #4a5e4a;
+	line-height: 1.55;
+}
+
+.changelog-entry code {
+	font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	background: #f0f5f0;
+	padding: 2px 5px;
+	border-radius: 3px;
+	color: #3a5a3a;
+}
+
+.changelog-entry img {
+	display: block;
+	max-width: 100%;
+	border-radius: 8px;
+	margin-top: 12px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.changelog-link {
+	display: inline-block;
+	font-size: 14px;
+	color: #3a6e3a;
+	text-decoration: none;
+	font-weight: 500;
+	transition: color 0.15s;
+}
+
+.changelog-link:hover {
+	color: #2a5a2a;
+	text-decoration: underline;
+}

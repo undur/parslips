@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Parsley Template Editor — Changelog</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/site.css"/>
+		<link rel="icon" type="image/x-icon" href="img/favicon.ico"/>
+	</head>
+	<body>
+		<div class="container changelog">
+			<div class="hero">
+				<div class="hero-emoji">🌿</div>
+				<h1>Changelog</h1>
+				<p class="tagline">What's new in Parsley Template Editor</p>
+			</div>
+
+			<!-- February 27, 2026 -->
+			<div class="card">
+				<h2 class="date-header">February 27, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>New Project wizard</h3>
+					<p>Create new ng-objects or WebObjects projects from scratch — complete Maven projects with a sample Main component, ready to run. The wizard generates all source files and imports the project via m2e.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Smarter New Component wizard</h3>
+					<p>The New Component wizard now defaults to the project's <code>components</code> folder and handles a wider variety of Package Explorer selections gracefully.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Removed woenvironment.jar dependency</h3>
+					<p>The vendored <code>woenvironment.jar</code> (which wasn't tracked by git) has been eliminated. All functionality it provided has been replaced with lightweight inline implementations. This fixes CI builds and removes a hidden dependency.</p>
+				</div>
+			</div>
+
+			<!-- February 26, 2026 -->
+			<div class="card">
+				<h2 class="date-header">February 26, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Full editor support for standalone HTML templates</h3>
+					<p>Single-file <code>.html</code> templates (not inside <code>.wo</code> bundles) now have full editor support: autocomplete, keypath validation, and build-time validation — all on par with traditional <code>.wo</code> components. This is a key enabler for ng-objects, where single-file templates are the primary component format.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>WOD validation thread-safety fix</h3>
+					<p>Fixed a long-standing intermittent bug inherited from WOLips where validation would report false errors — e.g. "exactly one of 'count' or 'list' must be bound" on a <code>WORepetition</code> that was correctly bound. The root cause was concurrent DOM access to the shared API model.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Dual framework support</h3>
+					<p>The plugin now works with both ng-objects and WebObjects projects in the same workspace. Per-project framework detection uses <code>build.properties</code> (<code>base=ng</code> or <code>base=wo</code>) with automatic classpath probing as a fallback.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Element type autocomplete filtering</h3>
+					<p>Tag autocomplete now correctly filters to only show element types (subclasses of <code>NGElement</code> or <code>WOElement</code>), instead of listing every Java class in the project.</p>
+				</div>
+			</div>
+
+			<!-- February 25, 2026 -->
+			<div class="card">
+				<h2 class="date-header">February 25, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Initial release</h3>
+					<p>Parsley Template Editor — extracted from the WOLips plugin suite (~18 plugins merged into one bundle), rebuilt as a standalone Eclipse plugin with unique identifiers for coexistence with WOLips.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Multi-tab component editor</h3>
+					<p>Edit HTML template, WOD bindings, and WOO settings in a single tabbed editor — for both <code>.wo</code> bundles and standalone <code>.html</code> templates.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Tag and binding autocomplete</h3>
+					<p>Autocomplete for <code>wo:</code> tags and binding attribute names, with keypath validation against the component's Java class.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Syntax highlighting</h3>
+					<p>Distinct colors for OGNL keypaths, constant strings, and dynamic binding tags. A subtle background tint on <code>&lt;wo:&gt;</code> tags makes component boundaries easy to spot.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Parsley Explorer</h3>
+					<p>A Package Explorer variant with component-aware behavior: <code>.wo</code> bundles are expandable (unlike WOLips), source folders like <code>src/main/components</code> are pulled up to the project root, and everything gets the right icons and decorators.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Parsley perspective</h3>
+					<p>A dedicated perspective with the Parsley Explorer, editor area, Problems/Console views, and Outline — ready for component development out of the box.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Insert component toolbar</h3>
+					<p>Quick-insert buttons for common WebObjects elements: WOForm, WORepetition, WOConditional, WOString, WOHyperlink, and more.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Editor association</h3>
+					<p>Component files (<code>.html</code>, <code>.wod</code>, <code>.woo</code>, <code>.api</code>) automatically open in the Parsley editor — for any file inside a <code>.wo</code> folder, or for component files in ng-objects projects.</p>
+				</div>
+			</div>
+
+			<div class="footer">
+				<p>🌿 <a href="index.html">Back to Parsley</a> · <a href="https://github.com/undur/parslips">GitHub</a></p>
+			</div>
+		</div>
+	</body>
+</html>
