@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# NGLips — Build & Install
+# Parsley Template Editor — Build & Install
 #
-# Builds the ng.componenteditor plugin and installs it into Eclipse.
+# Builds all Parsley plugins and installs them into Eclipse.
 #
 # Usage:
 #   ./install.sh /path/to/Eclipse.app
@@ -15,7 +15,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$SCRIPT_DIR"
 P2_REPO="$REPO_DIR/wolips.p2/target/repository"
-BUNDLE_ID="ng.componenteditor"
+
+# The bundle IDs that make up the Parsley feature
+BUNDLE_IDS=(
+    "ng.componenteditor"
+    "parslips.tooling"
+    "parslips.lsp"
+)
 
 # --- Locate Eclipse ---
 
@@ -50,27 +56,17 @@ echo "🔧 Eclipse: $ECLIPSE_APP"
 # --- Build ---
 
 echo ""
-echo "📦 Building ng.componenteditor..."
+echo "📦 Building Parsley Template Editor..."
 cd "$REPO_DIR"
 
-./mvnw -B -q package \
-    -pl wolips/plugins/ng.componenteditor,wolips/features/ng.componenteditor.feature,wolips.p2 \
-    -am
+./mvnw -B -q package
 
 if [[ ! -d "$P2_REPO" ]]; then
     echo "❌ Build succeeded but p2 repository not found at: $P2_REPO"
     exit 1
 fi
 
-# Find the built plugin jar
-BUILT_JAR=$(find "$P2_REPO/plugins" -name "${BUNDLE_ID}_*.jar" -type f | head -1)
-if [[ -z "$BUILT_JAR" ]]; then
-    echo "❌ Built plugin jar not found in $P2_REPO/plugins/"
-    exit 1
-fi
-
-NEW_VERSION=$(basename "$BUILT_JAR" | sed "s/${BUNDLE_ID}_//; s/\.jar$//")
-echo "   ✅ Build complete ($NEW_VERSION)"
+echo "   ✅ Build complete"
 
 # --- Install / Update via p2 director ---
 
@@ -100,7 +96,7 @@ if [[ -n "$INSTALLED" ]]; then
         -installIU "$FEATURE_ID" \
         2>&1 | grep -v "^WARNING:" | grep -v "^$" | grep -v "DEBUG" || true
 else
-    echo "🆕 Installing ng.componenteditor for the first time..."
+    echo "🆕 Installing Parsley Template Editor for the first time..."
 
     "$ECLIPSE_BIN" -nosplash \
         -application org.eclipse.equinox.p2.director \
@@ -116,7 +112,7 @@ fi
 # The p2 director updates the profile but does NOT update bundles.info, so Eclipse
 # keeps loading the old plugin version at startup.
 #
-# Fix: copy the built jar into the Eclipse bundle cache and update bundles.info to
+# Fix: copy each built jar into the Eclipse bundle cache and update bundles.info to
 # point to it.
 
 # Find (or create) the p2 bundle cache directory inside this Eclipse installation
@@ -134,48 +130,58 @@ if [[ -z "$CACHE_DIR" ]]; then
     CACHE_DIR="$ECLIPSE_APP/Contents/Eclipse/plugins"
 fi
 
-# Copy the built jar into the cache
-JAR_NAME="${BUNDLE_ID}_${NEW_VERSION}.jar"
-INSTALLED_JAR="$CACHE_DIR/$JAR_NAME"
-cp "$BUILT_JAR" "$INSTALLED_JAR"
+echo ""
 
-# Read the current bundles.info entry for our bundle
-OLD_LINE=$(grep "^${BUNDLE_ID}," "$BUNDLES_INFO" || true)
-
-if [[ -n "$OLD_LINE" ]]; then
-    # Extract start level and autostart from existing entry
-    START_LEVEL=$(echo "$OLD_LINE" | cut -d',' -f4)
-    AUTOSTART=$(echo "$OLD_LINE" | cut -d',' -f5)
-else
-    # New installation — use sensible defaults
-    START_LEVEL=4
-    AUTOSTART=false
-fi
-
-NEW_LINE="${BUNDLE_ID},${NEW_VERSION},${INSTALLED_JAR},${START_LEVEL},${AUTOSTART}"
-
-if [[ -n "$OLD_LINE" ]]; then
-    if [[ "$OLD_LINE" == "$NEW_LINE" ]]; then
-        echo ""
-        echo "✅ bundles.info already up to date ($NEW_VERSION)"
-    else
-        # Replace the old entry with the new one
-        TEMP_FILE=$(mktemp)
-        sed "s|^${BUNDLE_ID},.*|${NEW_LINE}|" "$BUNDLES_INFO" > "$TEMP_FILE"
-        mv "$TEMP_FILE" "$BUNDLES_INFO"
-        echo ""
-        echo "✅ bundles.info updated → $NEW_VERSION"
+for BUNDLE_ID in "${BUNDLE_IDS[@]}"; do
+    # Find the built plugin jar
+    BUILT_JAR=$(find "$P2_REPO/plugins" -name "${BUNDLE_ID}_*.jar" -type f | head -1)
+    if [[ -z "$BUILT_JAR" ]]; then
+        echo "⚠️  Built jar not found for $BUNDLE_ID — skipping"
+        continue
     fi
-else
-    # Append new entry
-    echo "$NEW_LINE" >> "$BUNDLES_INFO"
-    echo ""
-    echo "✅ bundles.info entry added → $NEW_VERSION"
-fi
+
+    NEW_VERSION=$(basename "$BUILT_JAR" | sed "s/${BUNDLE_ID}_//; s/\.jar$//")
+
+    # Copy the built jar into the cache
+    JAR_NAME="${BUNDLE_ID}_${NEW_VERSION}.jar"
+    INSTALLED_JAR="$CACHE_DIR/$JAR_NAME"
+    cp "$BUILT_JAR" "$INSTALLED_JAR"
+
+    # Read the current bundles.info entry for this bundle
+    OLD_LINE=$(grep "^${BUNDLE_ID}," "$BUNDLES_INFO" || true)
+
+    if [[ -n "$OLD_LINE" ]]; then
+        # Extract start level and autostart from existing entry
+        START_LEVEL=$(echo "$OLD_LINE" | cut -d',' -f4)
+        AUTOSTART=$(echo "$OLD_LINE" | cut -d',' -f5)
+    else
+        # New installation — use sensible defaults
+        START_LEVEL=4
+        AUTOSTART=false
+    fi
+
+    NEW_LINE="${BUNDLE_ID},${NEW_VERSION},${INSTALLED_JAR},${START_LEVEL},${AUTOSTART}"
+
+    if [[ -n "$OLD_LINE" ]]; then
+        if [[ "$OLD_LINE" == "$NEW_LINE" ]]; then
+            echo "   ✅ $BUNDLE_ID already up to date ($NEW_VERSION)"
+        else
+            # Replace the old entry with the new one
+            TEMP_FILE=$(mktemp)
+            sed "s|^${BUNDLE_ID},.*|${NEW_LINE}|" "$BUNDLES_INFO" > "$TEMP_FILE"
+            mv "$TEMP_FILE" "$BUNDLES_INFO"
+            echo "   ✅ $BUNDLE_ID updated → $NEW_VERSION"
+        fi
+    else
+        # Append new entry
+        echo "$NEW_LINE" >> "$BUNDLES_INFO"
+        echo "   ✅ $BUNDLE_ID added → $NEW_VERSION"
+    fi
+done
 
 # --- Done ---
 
 echo ""
-echo "✅ Installed: ng.componenteditor $NEW_VERSION"
+echo "✅ Parsley Template Editor installed"
 echo ""
 echo "🔄 Restart Eclipse to pick up the changes."
