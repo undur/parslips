@@ -117,36 +117,61 @@ import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.BuildProperties;
 
 /**
+ * Second page of the New WO Component wizard. Handles choosing the destination
+ * folder, java package, superclass, HTML doctype, encoding, and optional files.
+ *
+ * Lifecycle overview (important for understanding the code flow):
+ *
+ * 1. Constructor is called with the user's current Package Explorer selection.
+ *    processSelection() sanitizes it (redirecting packages, source folders,
+ *    classpath containers etc. to the project) and passes the result to super.
+ *    We also store the original selection for use in initialPopulateContainerNameField().
+ *
+ * 2. Eclipse calls createControl(), which calls super.createControl(). Inside
+ *    super.createControl(), the UI widgets are created and initialPopulateContainerNameField()
+ *    is called to set the initial container path in the text widget.
+ *
+ * 3. After super.createControl() returns, we add our own controls (package,
+ *    superclass, HTML options) and use getContainerFullPath() to read back
+ *    the container path for initializing those fields.
+ *
+ * Key subtlety: getContainerFullPath() can return null if no valid container
+ * was resolved (e.g. if an unrecognized selection type slipped through).
+ * All callers must null-check it.
+ *
  * @author mnolte
  * @author uli
  */
 public class WOComponentCreationPage extends WizardNewWOResourcePage {
-	// widgets
+
+	/** Dialog settings keys — used to persist user preferences between wizard invocations */
 	private static final String BODY_CHECKBOX_KEY = "WOComponentCreationWizardSection.bodyCheckbox";
-
 	private static final String API_CHECKBOX_KEY = "WOComponentCreationWizardSection.apiCheckbox";
-
 	private static final String HTML_DOCTYPE_KEY = "WOComponentCreationWizardSection.htmlDocType";
-
 	private static final String NSSTRING_ENCODING_KEY = "WOComponentCreationWizardSection.encoding";
-
 	private static final String SUPERCLASS_KEY = "WOComponentCreationWizardSection.superclass";
 
 	private Button _bodyCheckbox;
-
 	private Combo _htmlCombo;
-
 	private Combo _encodingCombo;
-
 	private Button _apiCheckbox;
-
 	private IResource[] _resourcesToReveal;
-
 	private StringButtonStatusDialogField _packageDialogField;
-
 	private StringButtonStatusDialogField _superclassDialogField;
 
+	/**
+	 * If the user selected a Java package folder, this holds the IPackageFragment.
+	 * Used to pre-fill the package field and to find the right component folder.
+	 * Null for all other selection types.
+	 */
 	private Object _currentSelection;
+
+	/**
+	 * The raw, unprocessed selection from the Package Explorer. We need this
+	 * because processSelection() transforms the selection before passing it
+	 * to super, but initialPopulateContainerNameField() needs access to the
+	 * original to extract the project and find the components folder.
+	 */
 	private IStructuredSelection _originalSelection;
 
 
@@ -226,18 +251,25 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 
 	/**
 	 * Creates the page for the wocomponent creation wizard.
-	 * 
-	 * @param workbench
-	 *            the workbench on which the page should be created
-	 * @param selection
-	 *            the current selection
+	 *
+	 * @param selection the user's current selection in the Package Explorer
 	 */
 	public WOComponentCreationPage(IStructuredSelection selection) {
+		// Pass the sanitized selection to super. processSelection() redirects
+		// unsuitable targets (packages, source folders, classpath containers)
+		// to the project, so the superclass can resolve a valid container path.
 		super("createWOComponentPage1", WOComponentCreationPage.processSelection(selection));
 		this.setTitle(Messages.getString("WOComponentCreationPage.title"));
 		this.setDescription(Messages.getString("WOComponentCreationPage.description"));
+
+		// Store the original (unprocessed) selection. We need it later in
+		// initialPopulateContainerNameField() to extract the project and
+		// find the "components" folder as the default location.
 		_originalSelection = selection;
 
+		// If the user selected a Java package folder, remember the IPackageFragment.
+		// This is used later to pre-fill the package name field and to find
+		// which folder the package's components live in.
 		if (selection != null) {
 			Object selectedObject = selection.getFirstElement();
 			if (selectedObject instanceof IFolder) {
@@ -249,36 +281,91 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		}
 	}
 
+	/**
+	 * Sanitizes the user's Package Explorer selection into something the
+	 * superclass (WizardNewFileCreationPage) can use as a valid container.
+	 *
+	 * The Eclipse Package Explorer can return many different object types
+	 * depending on what the user clicked:
+	 *   - IProject / IJavaProject for the project root
+	 *   - IFolder for regular folders
+	 *   - IFile for files
+	 *   - IPackageFragment for Java packages (looks like a folder)
+	 *   - IPackageFragmentRoot for source folders (src/main/java, src/test/java)
+	 *   - Classpath containers ("Maven Dependencies", "JRE System Library")
+	 *   - Other IJavaElement subtypes
+	 *
+	 * Components shouldn't be created inside Java packages, source folders, or
+	 * other components, so we redirect those selections to the project root.
+	 * The actual smart default folder (components/) is handled separately in
+	 * initialPopulateContainerNameField().
+	 *
+	 * @return a sanitized selection pointing to a valid container, or null
+	 *         if the original selection is acceptable as-is
+	 */
 	public static IStructuredSelection processSelection(IStructuredSelection selection) {
 		IStructuredSelection processedSelection = null;
 		if (selection != null) {
 			Object selectedObject = selection.getFirstElement();
+
+			// If a file is selected, use its parent folder instead
 			if (selectedObject instanceof IFile) {
 				selectedObject = ((IFile)selectedObject).getParent();
 				processedSelection = null;
 			}
+
 			if (selectedObject instanceof IFolder) {
 				IFolder currentFolder = (IFolder) selectedObject;
 				IJavaElement parentJavaElement = JavaCore.create(currentFolder);
 				if (parentJavaElement instanceof IPackageFragment) {
-					// Don't let you put WO's in a package
+					// Java package — don't create components inside packages, redirect to project
 					processedSelection = new StructuredSelection(currentFolder.getProject());
 				} else if (parentJavaElement instanceof IPackageFragmentRoot) {
-					// Don't let you put WO's in a source folder
+					// Source folder (e.g. src/main/java) — redirect to project
 					processedSelection = new StructuredSelection(currentFolder.getProject());
 				} else if (currentFolder.getName().endsWith(".wo")) {
-					// Don't let you put WO's inside of WO's by accident
+					// Another .wo component — go up one level to avoid nesting components
 					processedSelection = new StructuredSelection(currentFolder.getParent());
+				}
+			} else if (selectedObject instanceof IJavaElement && !(selectedObject instanceof IJavaProject)) {
+				// Classpath containers (e.g. "Maven Dependencies"), package fragment roots
+				// shown as JDT elements rather than folders, and other JDT-specific nodes.
+				// These aren't valid containers for files, so redirect to the project.
+				// IJavaProject is excluded because it maps directly to IProject and is
+				// already handled correctly by the superclass.
+				try {
+					IProject project = ((IJavaElement) selectedObject).getJavaProject().getProject();
+					processedSelection = new StructuredSelection(project);
+				} catch (Exception e) {
+					// Some IJavaElement types might not have a java project (unlikely but defensive)
 				}
 			}
 		}
 		return processedSelection;
 	}
 
+	/**
+	 * Called by the superclass during createControl() to set the initial value
+	 * of the container (destination folder) text field.
+	 *
+	 * We override this to implement smart defaulting:
+	 * 1. If a Java package was selected, find the folder where that package's
+	 *    components already live (so new components go alongside existing ones).
+	 * 2. Otherwise, find the "components" folder under src/main/ and default there.
+	 * 3. If neither works, fall back to super (which uses the raw selection).
+	 *
+	 * Important: when we call setContainerFullPath() and return without calling
+	 * super, it works because the text widget already exists at this point and
+	 * setContainerFullPath() writes directly to it. If we called super after
+	 * setting our path, super would overwrite it.
+	 */
 	@Override
 	protected void initialPopulateContainerNameField() {
 		if (_originalSelection != null) {
 			Object selectedObject = _originalSelection.getFirstElement();
+
+			// If the user selected a Java package, find where that package's
+			// components are stored and default to that folder
 			if (_currentSelection instanceof IPackageFragment) {
 				IPath packagePath = componentPathForPackage((IPackageFragment) _currentSelection);
 				if (packagePath != null) {
@@ -286,6 +373,11 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 					return;
 				}
 			}
+
+			// For any other selection, extract the project and look for
+			// a "components" folder under src/main/. This handles all the
+			// various selection types: IJavaElement (project root, source
+			// folders, classpath containers) and IResource (folders, files).
 			IProject project = null;
 			if (selectedObject instanceof IJavaElement) {
 				project = ((IJavaElement) selectedObject).getJavaProject().getProject();
@@ -300,28 +392,55 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				}
 			}
 		}
+
+		// No smart default found — let the superclass use its default logic
 		super.initialPopulateContainerNameField();
 	}
 
+	/**
+	 * Suppresses the "Advanced" linked resource controls from the superclass.
+	 * We don't support creating linked WO components.
+	 */
 	@Override
 	protected void createAdvancedControls(Composite parent) {
-		// super.createAdvancedControls(parent);
+		// intentionally empty
 	}
 
+	/**
+	 * Linked resources aren't applicable to WO components, so always return OK.
+	 */
 	@Override
 	protected IStatus validateLinkedResource() {
 		return Status.OK_STATUS;
 	}
-	
+
+	/**
+	 * Validates the wizard page state. Called whenever the user changes
+	 * the container path or file name.
+	 *
+	 * getContainerFullPath() can return null if an unrecognized selection
+	 * type was used, so we must guard against that before accessing segments.
+	 */
 	@Override
 	protected boolean validatePage() {
+		IPath containerPath = getContainerFullPath();
+		if (containerPath == null || containerPath.segmentCount() == 0) {
+			setErrorMessage("Please select a valid location");
+			return false;
+		}
+
+		// Validate that the component name is a legal Java identifier
+		// (since we also generate a .java file with this name)
 		IStatus status = JavaConventions.validateCompilationUnitName(this.getFileName() + ".java",
 				CompilerOptions.VERSION_1_3, CompilerOptions.VERSION_1_3);
 		if (!status.isOK()) {
 			setErrorMessage(status.getMessage());
 			return false;
 		}
-		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
+
+		// Check for duplicate component names within the project.
+		// The first path segment is always the project name in Eclipse workspace paths.
+		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(containerPath.segment(0));
 
 		// This may need to change depending on how we want to deal with localized components in future.
 		LocatePlugin locatePlugin = LocatePlugin.getDefault();
@@ -335,31 +454,35 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		// Check that we aren't going to create a wocomponent inside another wocomponent
-		IPath path = getContainerFullPath();
-		if (path.lastSegment().endsWith(".wo")) {
+
+		// Prevent creating a component inside another component's .wo folder
+		if (containerPath.lastSegment().endsWith(".wo")) {
 			setErrorMessage("Cannot create a component within another component");
 			return false;
 		}
-		
+
 		return super.validatePage();
 	}
 
 	/**
-	 * (non-Javadoc) Method declared on IDialogPage.
+	 * Creates the wizard page UI. Called by the wizard framework.
+	 *
+	 * super.createControl() creates the container selector and file name fields,
+	 * and calls initialPopulateContainerNameField() to set the initial container.
+	 * After that, we add our WO-specific controls: package, superclass, HTML
+	 * doctype, encoding, and optional files (API, body tag).
+	 *
+	 * Note: getContainerFullPath() is used here to initialize the package and
+	 * superclass fields. It can be null if an unrecognized selection type was
+	 * used, so we null-check before using it.
 	 */
 	public void createControl(Composite parent) {
-		// inherit default container and name specification widgets
 		super.createControl(parent);
 
 		Composite composite = (Composite) getControl();
-		// WorkbenchHelp.setHelp(composite,
-		// IReadmeConstants.CREATION_WIZARD_PAGE_CONTEXT);
 		this.setFileName(Messages.getString("WOComponentCreationPage.newComponent.defaultName"));
 
-		// new Label(composite, SWT.NONE); // vertical spacer
-
+		// --- Java settings group (package + superclass) ---
 		Group javaGroup = new Group(composite, SWT.NONE);
 		javaGroup.setText(Messages.getString("WOComponentCreationPage.creationOptions.javaFile.group"));
 		GridLayout javaLayout = new GridLayout();
@@ -367,6 +490,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		javaGroup.setLayout(javaLayout);
 		javaGroup.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
 
+		// Package field with browse button
 		PackageButtonAdapter packageButtonAdapter = new PackageButtonAdapter();
 		_packageDialogField = new StringButtonStatusDialogField(packageButtonAdapter);
 		_packageDialogField.setDialogFieldListener(packageButtonAdapter);
@@ -377,25 +501,31 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		Text packageText = _packageDialogField.getTextControl(null);
 		LayoutUtil.setWidthHint(packageText, convertWidthInCharsToPixels(40));
 		LayoutUtil.setHorizontalGrabbing(packageText);
-		// JavaPackageCompletionProcessor packageCompletionProcessor= new
-		// JavaPackageCompletionProcessor();
-		// ControlContentAssistHelper.createTextContentAssistant(text,
-		// packageCompletionProcessor);
 
+		// Pre-fill the package name. If the user selected a Java package,
+		// use that directly. Otherwise, try to infer the package from existing
+		// components in the destination folder or from the "Main" component.
 		if (_currentSelection instanceof IPackageFragment) {
 			_packageDialogField.setText(((IPackageFragment) _currentSelection).getElementName());
 		} else {
 			String _package = null;
-			IResource _resource = ResourcesPlugin.getWorkspace().getRoot().findMember(this.getContainerFullPath());
-			if (_resource instanceof IFolder) {
-				_package = packageNameForComponentFolder((IFolder)_resource);
+			IPath containerPath = this.getContainerFullPath();
+			if (containerPath != null) {
+				IResource _resource = ResourcesPlugin.getWorkspace().getRoot().findMember(containerPath);
+				if (_resource instanceof IFolder) {
+					_package = packageNameForComponentFolder((IFolder)_resource);
+				}
+				if (_package == null) {
+					_package = packageNameForComponent("Main");
+				}
 			}
-			if (_package == null && (_package = packageNameForComponent("Main")) == null) {
+			if (_package == null) {
 				_package = "";
 			}
 			_packageDialogField.setText(_package);
 		}
 
+		// Superclass field with browse button
 		SuperclassButtonAdapter superclassButtonAdapter = new SuperclassButtonAdapter();
 		_superclassDialogField = new StringButtonStatusDialogField(superclassButtonAdapter);
 		_superclassDialogField.setDialogFieldListener(superclassButtonAdapter);
@@ -403,10 +533,18 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		_superclassDialogField.setButtonLabel(NewWizardMessages.NewTypeWizardPage_superclass_button);
 		_superclassDialogField.setStatusWidthHint(NewWizardMessages.NewTypeWizardPage_default);
 		_superclassDialogField.doFillIntoGrid(javaGroup, 4);
+
+		// Pre-fill superclass: use saved preference, or look up the project's
+		// configured component class from build.properties
 		String superclass = this.getDialogSettings().get(WOComponentCreationPage.SUPERCLASS_KEY);
 		if (superclass == null || superclass.length() == 0) {
-			IProject wizProject = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
-			_superclassDialogField.setText(BuildProperties.getComponentClass(wizProject));
+			IPath scContainerPath = getContainerFullPath();
+			if (scContainerPath != null && scContainerPath.segmentCount() > 0) {
+				IProject wizProject = ResourcesPlugin.getWorkspace().getRoot().getProject(scContainerPath.segment(0));
+				_superclassDialogField.setText(BuildProperties.getComponentClass(wizProject));
+			} else {
+				_superclassDialogField.setText("");
+			}
 		}
 		else {
 			_superclassDialogField.setText(superclass);
@@ -417,9 +555,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 
 		new Label(composite, SWT.NONE); // vertical spacer
 
-		/*
-		 * HTML body generation options
-		 */
+		// --- Component options group (body tag, HTML doctype, API file, encoding) ---
 		Group optionalFilesGroup = new Group(composite, SWT.NONE);
 		optionalFilesGroup.setLayout(new GridLayout(3, false));
 		optionalFilesGroup.setText(Messages.getString("WOComponentCreationPage.creationOptions.group"));
@@ -443,7 +579,6 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 
 		_apiCheckbox = new Button(optionalFilesGroup, SWT.CHECK);
 		GridData apiLayoutData = new GridData();
-//		apiLayoutData.horizontalSpan = 3;
 		_apiCheckbox.setLayoutData(apiLayoutData);
 		_apiCheckbox.setText(Messages.getString("WOComponentCreationPage.creationOptions.apiFile.button"));
 		_apiCheckbox.setSelection(this.getDialogSettings().getBoolean(API_CHECKBOX_KEY));
@@ -458,45 +593,51 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		populateStringEncodingCombo(_encodingCombo);
 
 		setPageComplete(validatePage());
-
 	}
 	
 	/**
-	 * Creates a new file resource as requested by the user. If everything is OK
-	 * then answer true. If not, false will cause the dialog to stay open and
-	 * the appropriate error message is shown
-	 * 
-	 * @return whether creation was successful
-	 * @see WOComponentCreationWizard#performFinish()
+	 * Creates the WO component files (.wo folder, .html, .wod, .woo, .java, optionally .api).
+	 * Called by WOComponentCreationWizard.performFinish() after the user clicks Finish.
+	 *
+	 * Eclipse workspace paths always start with the project name as the first segment.
+	 * If the path has only one segment, the component goes in the project root.
+	 * Otherwise, we strip the project segment to get the project-relative subfolder path.
+	 *
+	 * @return true if creation was successful, false to keep the wizard open
 	 */
 	public boolean createComponent() {
 		WOComponentCreator componentCreator;
 		String componentName = getFileName();
 		String packageName = _packageDialogField.getText();
 		String superclassName = _superclassDialogField.getText();
+
+		// First path segment = project name (e.g. "myproject/src/main/components" -> "myproject")
 		IProject actualProject = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
+
 		switch (getContainerFullPath().segmentCount()) {
 		case 0:
-			// not possible ( see validatePage() )
+			// Can't happen — validatePage() rejects empty paths
 			setErrorMessage("unknown error");
 			return false;
 		case 1:
+			// Path is just the project root (e.g. "/myproject")
 			componentCreator = new WOComponentCreator(actualProject, componentName, packageName, superclassName, _bodyCheckbox.getSelection(), _apiCheckbox.getSelection(), this);
 			break;
 		default:
-			// determine parent resource for component creator by removing
-			// first element (workspace) from full path
+			// Path is a subfolder within the project — strip the project segment
+			// to get the project-relative path (e.g. "src/main/components")
 			IFolder subprojectFolder = actualProject.getFolder(getContainerFullPath().removeFirstSegments(1));
 			componentCreator = new WOComponentCreator(subprojectFolder, componentName, packageName, superclassName, _bodyCheckbox.getSelection(), _apiCheckbox.getSelection(), this);
 			break;
 		}
+
+		// Persist the user's choices so they're remembered next time
 		this.getDialogSettings().put(WOComponentCreationPage.SUPERCLASS_KEY, _superclassDialogField.getText());
 		this.getDialogSettings().put(WOComponentCreationPage.BODY_CHECKBOX_KEY, _bodyCheckbox.getSelection());
 		this.getDialogSettings().put(WOComponentCreationPage.HTML_DOCTYPE_KEY, _htmlCombo.getText());
 		this.getDialogSettings().put(WOComponentCreationPage.NSSTRING_ENCODING_KEY, _encodingCombo.getText());
 		this.getDialogSettings().put(WOComponentCreationPage.API_CHECKBOX_KEY, _apiCheckbox.getSelection());
 
-		// logPreferences();
 		IRunnableWithProgress op = new WorkspaceModifyDelegatingOperation(componentCreator);
 		return createResourceOperation(op);
 	}
@@ -659,8 +800,20 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		this._resourcesToReveal = resources;
 	}
 
+	/**
+	 * Looks up the Java package name for a given component by finding its .java
+	 * file and reading the package from it. Used to pre-fill the package field
+	 * based on existing components (e.g. if "Main" is in com.example.app,
+	 * new components should probably go there too).
+	 *
+	 * @return the package name, or null if the component doesn't exist or has no .java file
+	 */
 	protected String packageNameForComponent(String componentName) {
-		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
+		IPath containerPath = getContainerFullPath();
+		if (containerPath == null || containerPath.segmentCount() == 0) {
+			return null;
+		}
+		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(containerPath.segment(0));
 		try {
 			LocalizedComponentsLocateResult result = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(project, componentName);
 			IType javaType;
@@ -674,7 +827,15 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		}
 		return null;
 	}
-	
+
+	/**
+	 * Finds the Java package name used by components in the given folder.
+	 * Looks for the first .wo subfolder and checks what package its .java
+	 * file is in. This is used when the user selects a components folder
+	 * directly, to pre-fill the package field.
+	 *
+	 * @return the package name, or null if no components are found in the folder
+	 */
 	protected String packageNameForComponentFolder(IFolder folder) {
 		try {
 			for(IResource resource : folder.members()) {
@@ -721,6 +882,17 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		return null;
 	}
 
+	/**
+	 * Given a Java package, finds the folder where that package's components
+	 * (.wo folders) are stored. This allows the wizard to default to the same
+	 * folder when the user selects a Java package in the Package Explorer.
+	 *
+	 * Iterates through the Java files in the package and checks if any of them
+	 * correspond to a WO component. If so, returns the parent folder of the
+	 * first component found.
+	 *
+	 * @return the folder path where the package's components live, or null
+	 */
 	protected IPath componentPathForPackage(IPackageFragment _selection) {
 		try {
 			LocatePlugin locate = LocatePlugin.getDefault();
@@ -730,24 +902,31 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 						_selection.getJavaProject().getProject(), componentName);
 				IFolder[] components = result.getComponents();
 				if (components.length > 0) {
+					// Return the parent of the .wo folder (i.e. the components directory)
 					IContainer selectionPath = components[0].getParent();
 					return selectionPath.getFullPath();
 				}
 			}
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (LocateException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
 	
+	/**
+	 * Opens a dialog for the user to browse and select a Java package.
+	 * Lists all packages from source folders in the project.
+	 */
 	protected IPackageFragment choosePackage() {
+		IPath containerPath = getContainerFullPath();
+		if (containerPath == null || containerPath.segmentCount() == 0) {
+			return null;
+		}
 		List<IJavaElement> packagesList = new LinkedList<IJavaElement>();
 		try {
-			IProject actualProject = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
+			IProject actualProject = ResourcesPlugin.getWorkspace().getRoot().getProject(containerPath.segment(0));
 			IJavaProject javaProject = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProject(actualProject);
 			IPackageFragmentRoot[] roots = javaProject.getPackageFragmentRoots();
 			for (int k = 0; k < roots.length; k++) {
@@ -777,20 +956,23 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		return null;
 	}
 
+	/**
+	 * Opens a dialog for the user to browse and select a superclass.
+	 * Lists all WO element (component) classes available in the project.
+	 */
 	protected String chooseSuperclass() {
+		IPath containerPath = getContainerFullPath();
+		if (containerPath == null || containerPath.segmentCount() == 0) {
+			return null;
+		}
 		Set<String> superclasses = new HashSet<String>();
 		try {
-			IProject actualProject = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
+			IProject actualProject = ResourcesPlugin.getWorkspace().getRoot().getProject(containerPath.segment(0));
 			IJavaProject javaProject = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProject(actualProject);
 
 			TypeNameCollector typeNameCollector = new TypeNameCollector(javaProject, false);
 			BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, typeNameCollector, new NullProgressMonitor());
 			for (String typeName : typeNameCollector.getTypeNames()) {
-				// int dotIndex = typeName.lastIndexOf('.');
-				// if (dotIndex != -1) {
-				// typeName = typeName.substring(dotIndex + 1);
-				// }
-				// validValues.add("\"" + typeName + "\"");
 				superclasses.add(typeName);
 			}
 		} catch (JavaModelException e) {
@@ -811,21 +993,14 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		return null;
 	}
 
+	/**
+	 * Updates dependent UI controls when a checkbox is toggled.
+	 * Currently, the HTML doctype combo is only enabled when the body checkbox is checked.
+	 */
 	protected void refreshButtonSettings(Button button) {
 		if (button.equals(_bodyCheckbox)) {
-			if (_bodyCheckbox.getSelection()) {
-				_htmlCombo.setEnabled(true);
-			} else {
-				_htmlCombo.setEnabled(false);
-			}
+			_htmlCombo.setEnabled(_bodyCheckbox.getSelection());
 		}
-
-		if (button.equals(_apiCheckbox)) {
-			// if (_apiCheckbox.getSelection()) {
-			// setPageComplete(false);
-			// }
-		}
-
 	}
 
 	protected void handleSelectionEvent(SelectionEvent event) {
@@ -843,6 +1018,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		return _superclassDialogField;
 	}
 
+	/** Handles the "Browse..." button click for the package field */
 	protected class PackageButtonAdapter implements IStringButtonAdapter, IDialogFieldListener {
 		public void changeControlPressed(DialogField _field) {
 			IPackageFragment pack = choosePackage();
@@ -852,11 +1028,11 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		}
 
 		public void dialogFieldChanged(DialogField _field) {
-			// fPackageStatus= packageChanged();
-			// updatePackageStatusLabel();
+			// Could be used for live validation of the package name
 		}
 	}
 
+	/** Handles the "Browse..." button click for the superclass field */
 	protected class SuperclassButtonAdapter implements IStringButtonAdapter, IDialogFieldListener {
 		public void changeControlPressed(DialogField _field) {
 			String superclass = chooseSuperclass();
@@ -866,11 +1042,11 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		}
 
 		public void dialogFieldChanged(DialogField _field) {
-			// fPackageStatus= packageChanged();
-			// updatePackageStatusLabel();
+			// Could be used for live validation of the superclass name
 		}
 	}
 
+	/** Forwards checkbox selection events to refreshButtonSettings() */
 	protected class ButtonSelectionAdaptor implements SelectionListener {
 
 		public void widgetDefaultSelected(SelectionEvent event) {
@@ -880,6 +1056,5 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		public void widgetSelected(SelectionEvent event) {
 			handleSelectionEvent(event);
 		}
-
 	}
 }
