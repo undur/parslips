@@ -175,6 +175,13 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 			settings.put(FRAMEWORK_KEY, isNGProject() ? "ng" : "wo");
 		}
 
+		// Capture all SWT widget values on the UI thread before entering the
+		// background thread. SWT widgets can only be accessed from the UI thread.
+		final String projectName = getProjectName();
+		final String packageName = derivePackageName();
+		final boolean isNG = isNGProject();
+		final URI locationURI = getLocationURI();
+
 		try {
 			IFile[] result = new IFile[1];
 			new ProgressMonitorDialog(getShell()).run(true, false, monitor -> {
@@ -182,22 +189,21 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 					// Determine the project directory on disk.
 					// getLocationURI() returns null for the default workspace location.
 					Path projectDir;
-					URI locationURI = getLocationURI();
 					if (locationURI != null) {
-						projectDir = Path.of(locationURI).resolve(getProjectName());
+						projectDir = Path.of(locationURI).resolve(projectName);
 					}
 					else {
 						projectDir = ResourcesPlugin.getWorkspace().getRoot()
 								.getLocation().toFile().toPath()
-								.resolve(getProjectName());
+								.resolve(projectName);
 					}
 
 					// Phase 1: Write files to disk (no Eclipse APIs)
-					monitor.beginTask("Creating project " + getProjectName(), 3);
+					monitor.beginTask("Creating project " + projectName, 3);
 					WOProjectCreator creator = new WOProjectCreator(
-						getProjectName(),
-						derivePackageName(),
-						isNGProject(),
+						projectName,
+						packageName,
+						isNG,
 						projectDir
 					);
 					Path mainTemplatePath = creator.createProject();
@@ -210,7 +216,7 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 
 					// Resolve the Main.html IFile within the imported project
 					if (project != null) {
-						String componentBase = isNGProject()
+						String componentBase = isNG
 								? "src/main/components/"
 								: "src/main/components/Main.wo/";
 						result[0] = project.getFile(componentBase + "Main.html");
