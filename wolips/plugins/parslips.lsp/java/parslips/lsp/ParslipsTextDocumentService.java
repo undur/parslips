@@ -11,15 +11,13 @@ import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.InsertTextFormat;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -125,40 +123,12 @@ public class ParslipsTextDocumentService implements TextDocumentService {
 	}
 
 	/**
-	 * Scans the document for {@code <wo:} tags and publishes an informational
-	 * diagnostic for each one. This is a proof-of-life placeholder — it will be
-	 * replaced with real validation from parslips.tooling.
+	 * Publishes diagnostics for the given document. Currently a no-op — real
+	 * validation from parslips.tooling will be wired in here.
 	 */
 	private void publishDiagnostics(String uri, String text) {
 		final List<Diagnostic> diagnostics = new ArrayList<>();
-		final String[] lines = text.split("\n", -1);
-
-		for (int lineNum = 0; lineNum < lines.length; lineNum++) {
-			final String line = lines[lineNum];
-			int searchFrom = 0;
-
-			while (true) {
-				final int tagStart = line.indexOf("<wo:", searchFrom);
-
-				if (tagStart == -1) {
-					break;
-				}
-
-				// Find the end of the tag name (space, >, or /)
-				int tagNameEnd = tagStart + 4; // skip past "<wo:"
-				while (tagNameEnd < line.length() && line.charAt(tagNameEnd) != ' ' && line.charAt(tagNameEnd) != '>' && line.charAt(tagNameEnd) != '/') {
-					tagNameEnd++;
-				}
-
-				final String tagName = line.substring(tagStart + 1, tagNameEnd); // e.g. "wo:repetition"
-				final Range range = new Range(new Position(lineNum, tagStart), new Position(lineNum, tagNameEnd));
-				final Diagnostic diagnostic = new Diagnostic(range, "Parslips sees: <" + tagName + ">", DiagnosticSeverity.Information, "parslips");
-				diagnostics.add(diagnostic);
-
-				searchFrom = tagNameEnd;
-			}
-		}
-
+		// TODO: wire in real validation from parslips.tooling
 		_client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
 	}
 
