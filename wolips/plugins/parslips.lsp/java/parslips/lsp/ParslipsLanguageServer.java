@@ -1,5 +1,6 @@
 package parslips.lsp;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CompletionOptions;
@@ -63,6 +64,8 @@ public class ParslipsLanguageServer implements LanguageServer, LanguageClientAwa
 		// request completions automatically when the user types them.
 		final CompletionOptions completionOptions = new CompletionOptions();
 		completionOptions.setResolveProvider(false);
+		// Trigger completion when the user types '<' (start of tag) or ':' (after 'wo:')
+		completionOptions.setTriggerCharacters(List.of("<", ":"));
 		capabilities.setCompletionProvider(completionOptions);
 
 		return CompletableFuture.completedFuture(new InitializeResult(capabilities));
