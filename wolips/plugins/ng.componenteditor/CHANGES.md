@@ -453,3 +453,23 @@ Added a wizard for creating new ng-objects or WebObjects Maven projects from scr
 - `plugin.xml` — wizard registration with `project="true"`
 - `Messages.properties` — 6 new strings for wizard UI labels
 - MANIFEST.MF — added `org.eclipse.m2e.core` to `Require-Bundle`
+
+### Added: Maven preference page
+
+Added a "Maven" preference page under Preferences → NG Component Editor → Maven.
+
+**WOCommunity Maven Repository setup:**
+- Detects whether the user's `settings.xml` already has the WOCommunity repository configured (searches for `maven.wocommunity.org` in any `<url>` element)
+- If not configured, provides an "Add WOCommunity Repository" button that adds a profile with release and snapshot repositories (plus matching plugin repositories)
+- Creates a backup (`settings.xml.bak`) before modifying
+- Handles missing `settings.xml` (creates a new one) and missing `~/.m2/` directory
+- Uses m2e's configured user settings path, falling back to `~/.m2/settings.xml`
+
+**WOCommunity Archetype Catalog:**
+- Statically registered via the `org.eclipse.m2e.core.archetypeCatalogs` extension point
+- Always available in Eclipse's New Maven Project wizard — no user action needed
+- The preference page shows the registration status
+
+**Key files:**
+- `MavenPreferencePage.java` — preference page with DOM-based settings.xml manipulation
+- `plugin.xml` — preference page registration + archetype catalog extension

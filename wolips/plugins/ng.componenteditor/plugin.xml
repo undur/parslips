@@ -527,6 +527,19 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.Validation"
             name="Validation"/>
+      <page class="org.objectstyle.wolips.wizards.MavenPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.Maven"
+            name="Maven"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Maven Archetype Catalogs                                                            -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.m2e.core.archetypeCatalogs">
+      <remote
+            url="https://maven.wocommunity.org/content/groups/public/archetype-catalog.xml"
+            description="WOCommunity Archetype Catalog"/>
    </extension>
 
 <!-- =================================================================================== -->

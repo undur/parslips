@@ -25,13 +25,13 @@
 				</div>
 
 				<div class="changelog-entry">
-					<h3>Smarter New Component wizard</h3>
-					<p>The New Component wizard now defaults to the project's <code>components</code> folder and handles a wider variety of Package Explorer selections gracefully.</p>
+					<h3>Maven settings page</h3>
+					<p>A new "Maven" preference page under NG Component Editor settings. Detects whether your <code>settings.xml</code> has the WOCommunity repository configured and offers a one-click button to add it — no more hand-editing XML to get WebObjects dependencies resolving.</p>
 				</div>
 
 				<div class="changelog-entry">
-					<h3>Removed woenvironment.jar dependency</h3>
-					<p>The vendored <code>woenvironment.jar</code> (which wasn't tracked by git) has been eliminated. All functionality it provided has been replaced with lightweight inline implementations. This fixes CI builds and removes a hidden dependency.</p>
+					<h3>WOCommunity archetype catalog</h3>
+					<p>The WOCommunity Maven archetype catalog is now registered automatically, making WO project archetypes available in Eclipse's New Maven Project wizard.</p>
 				</div>
 			</div>
 
@@ -54,11 +54,7 @@
 					<p>The plugin now works with both ng-objects and WebObjects projects in the same workspace. Per-project framework detection uses <code>build.properties</code> (<code>base=ng</code> or <code>base=wo</code>) with automatic classpath probing as a fallback.</p>
 				</div>
 
-				<div class="changelog-entry">
-					<h3>Element type autocomplete filtering</h3>
-					<p>Tag autocomplete now correctly filters to only show element types (subclasses of <code>NGElement</code> or <code>WOElement</code>), instead of listing every Java class in the project.</p>
 				</div>
-			</div>
 
 			<!-- February 25, 2026 -->
 			<div class="card">
@@ -67,11 +63,6 @@
 				<div class="changelog-entry">
 					<h3>Initial release</h3>
 					<p>Parsley Template Editor — extracted from the WOLips plugin suite (~18 plugins merged into one bundle), rebuilt as a standalone Eclipse plugin with unique identifiers for coexistence with WOLips.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Multi-tab component editor</h3>
-					<p>Edit HTML template, WOD bindings, and WOO settings in a single tabbed editor — for both <code>.wo</code> bundles and standalone <code>.html</code> templates.</p>
 				</div>
 
 				<div class="changelog-entry">
@@ -85,18 +76,18 @@
 				</div>
 
 				<div class="changelog-entry">
+					<h3>Project badges</h3>
+					<p>WebObjects and ng-objects projects are marked with framework badges in the Package Explorer, making it easy to tell at a glance which framework each project uses.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Source folder pull-up with badges</h3>
+					<p>WO and ng-objects specific source folders (<code>src/main/components</code>, <code>src/main/woresources</code>, <code>src/main/webserver-resources</code>) are pulled up to the project root alongside standard Java source folders, and marked with badges so they stand out.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Parsley Explorer</h3>
-					<p>A Package Explorer variant with component-aware behavior: <code>.wo</code> bundles are expandable (unlike WOLips), source folders like <code>src/main/components</code> are pulled up to the project root, and everything gets the right icons and decorators.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Parsley perspective</h3>
-					<p>A dedicated perspective with the Parsley Explorer, editor area, Problems/Console views, and Outline — ready for component development out of the box.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Insert component toolbar</h3>
-					<p>Quick-insert buttons for common WebObjects elements: WOForm, WORepetition, WOConditional, WOString, WOHyperlink, and more.</p>
+					<p>A Package Explorer variant with component-aware behavior: <code>.wo</code> bundles are expandable (unlike WOLips), pulled-up source folders, and project/component decorators throughout.</p>
 				</div>
 
 				<div class="changelog-entry">
