@@ -1,4 +1,153 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
 body {
-	background-color: honeydew;
-	color: saddlebrown;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+	background-color: #f0f7f0;
+	color: #2d3a2d;
+	line-height: 1.6;
+	min-height: 100vh;
+	display: flex;
+	justify-content: center;
+	padding: 60px 20px;
+}
+
+.container {
+	max-width: 640px;
+	width: 100%;
+}
+
+.hero {
+	text-align: center;
+	margin-bottom: 48px;
+}
+
+.hero-emoji {
+	font-size: 72px;
+	line-height: 1;
+	margin-bottom: 16px;
+}
+
+.hero h1 {
+	font-size: 32px;
+	font-weight: 700;
+	color: #1a2e1a;
+	margin-bottom: 8px;
+}
+
+.hero .tagline {
+	font-size: 17px;
+	color: #5a6e5a;
+	font-weight: 400;
+}
+
+.card {
+	background: white;
+	border-radius: 12px;
+	padding: 32px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+	margin-bottom: 24px;
+}
+
+.card h2 {
+	font-size: 18px;
+	font-weight: 600;
+	color: #1a2e1a;
+	margin-bottom: 20px;
+}
+
+.steps {
+	list-style: none;
+	counter-reset: steps;
+}
+
+.steps li {
+	counter-increment: steps;
+	padding: 12px 0 12px 40px;
+	position: relative;
+	border-bottom: 1px solid #e8f0e8;
+}
+
+.steps li:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.steps li:first-child {
+	padding-top: 0;
+}
+
+.steps li::before {
+	content: counter(steps);
+	position: absolute;
+	left: 0;
+	top: 12px;
+	width: 26px;
+	height: 26px;
+	background: #e8f0e8;
+	color: #3a5a3a;
+	border-radius: 50%;
+	font-size: 13px;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.steps li:first-child::before {
+	top: 0;
+}
+
+.update-url {
+	display: block;
+	margin-top: 10px;
+	padding: 10px 14px;
+	background: #f5f9f5;
+	border: 1px solid #d4e4d4;
+	border-radius: 6px;
+	font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 14px;
+	color: #2d6a2d;
+	word-break: break-all;
+	text-decoration: none;
+	transition: background 0.15s, border-color 0.15s;
+}
+
+.update-url:hover {
+	background: #eaf3ea;
+	border-color: #b4d4b4;
+}
+
+.note {
+	font-size: 14px;
+	color: #5a6e5a;
+	margin-top: 8px;
+}
+
+.footer {
+	text-align: center;
+	font-size: 13px;
+	color: #8a9e8a;
+	padding: 24px 0;
+}
+
+.footer a {
+	color: #5a7e5a;
+	text-decoration: none;
+}
+
+.footer a:hover {
+	text-decoration: underline;
+}
+
+.path {
+	font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	background: #f5f9f5;
+	padding: 2px 6px;
+	border-radius: 3px;
+	color: #3a5a3a;
 }
