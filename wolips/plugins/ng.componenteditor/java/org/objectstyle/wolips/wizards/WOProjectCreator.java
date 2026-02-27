@@ -1,34 +1,20 @@
 package org.objectstyle.wolips.wizards;
 
-import java.io.ByteArrayInputStream;
-import java.net.URI;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.core.resources.ICommand;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.launching.JavaRuntime;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
- * Creates all files and folders for a new ng-objects or WebObjects Maven project.
+ * Writes all files and folders for a new ng-objects or WebObjects Maven project
+ * to a directory on disk.
  *
- * <p>Invoked from {@link WOProjectCreationPage} during the wizard's performFinish().
- * Runs inside a {@link org.eclipse.jface.dialogs.ProgressMonitorDialog}.
+ * <p>This class has zero Eclipse dependencies — it works purely with
+ * {@link java.nio.file.Path}. The caller (typically {@link WOProjectCreationPage})
+ * is responsible for importing the result into Eclipse as a Maven project via m2e.
+ *
+ * <p>This separation means the same file generation logic could later be reused
+ * by a Maven archetype or a command-line scaffolding tool.
  *
  * <p>The generated project follows standard Maven conventions:
  * <pre>
@@ -48,159 +34,76 @@ public class WOProjectCreator {
 	private final String _projectName;
 	private final String _packageName;
 	private final boolean _isNG;
-	private final URI _locationURI;
+	private final Path _projectDir;
 
 	/**
-	 * @param projectName  the Eclipse project name (also used as Maven artifactId)
+	 * @param projectName  the project name (also used as Maven artifactId)
 	 * @param packageName  the Java package for generated classes
 	 * @param isNG         true for ng-objects, false for WebObjects
-	 * @param locationURI  custom project location, or null for workspace default
+	 * @param projectDir   the directory where files will be written
 	 */
-	public WOProjectCreator(String projectName, String packageName, boolean isNG, URI locationURI) {
+	public WOProjectCreator(String projectName, String packageName, boolean isNG, Path projectDir) {
 		_projectName = projectName;
 		_packageName = packageName;
 		_isNG = isNG;
-		_locationURI = locationURI;
+		_projectDir = projectDir;
 	}
 
 	/**
-	 * Creates the project and all its contents.
+	 * Writes the complete project structure to disk.
 	 *
-	 * @return the Main.html IFile to reveal in the editor
+	 * <p>Creates the project directory if it doesn't exist. Does not create
+	 * any Eclipse project metadata — the caller should import via m2e.
+	 *
+	 * @return the path to Main.html (for revealing in an editor after import)
 	 */
-	public IFile createProject(IProgressMonitor monitor) throws CoreException {
-		SubMonitor subMonitor = SubMonitor.convert(monitor, "Creating project " + _projectName, 10);
+	public Path createProject() throws IOException {
+		Files.createDirectories(_projectDir);
 
-		try {
-			// 1. Create the Eclipse project with Java nature
-			IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-			IProject project = root.getProject(_projectName);
-			IProjectDescription description = ResourcesPlugin.getWorkspace().newProjectDescription(_projectName);
+		// 1. Create folder structure
+		String packagePath = _packageName.replace('.', '/');
 
-			// Set custom location if specified (null means workspace default)
-			if (_locationURI != null) {
-				description.setLocationURI(_locationURI);
-			}
-
-			// Add Java nature so Eclipse recognizes this as a Java project immediately
-			description.setNatureIds(new String[] { JavaCore.NATURE_ID });
-
-			// Add the Java builder
-			ICommand javaBuildCommand = description.newCommand();
-			javaBuildCommand.setBuilderName(JavaCore.BUILDER_ID);
-			description.setBuildSpec(new ICommand[] { javaBuildCommand });
-
-			project.create(description, subMonitor.split(1));
-			project.open(subMonitor.split(1));
-
-			// 2. Configure the JDT classpath so Eclipse recognizes source folders.
-			// Without this, JDT treats all folders as flat packages instead of a
-			// proper source tree. The user can later do "Update Maven Project" to
-			// let m2e take over classpath management from the pom.xml.
-			createFolder(project, "src/main/java", subMonitor.split(1));
-			createFolder(project, "src/main/resources", subMonitor.split(1));
-			createFolder(project, "target/classes", subMonitor.split(1));
-
-			IJavaProject javaProject = JavaCore.create(project);
-			IPath outputLocation = project.getFullPath().append("target/classes");
-
-			List<IClasspathEntry> classpathEntries = new ArrayList<>();
-
-			// src/main/java → compiled output goes to target/classes
-			classpathEntries.add(JavaCore.newSourceEntry(
-					project.getFullPath().append("src/main/java"),
-					new IPath[0],                    // no inclusion patterns
-					new IPath[0],                    // no exclusion patterns
-					outputLocation));
-
-			// src/main/resources → also to target/classes (standard Maven convention)
-			classpathEntries.add(JavaCore.newSourceEntry(
-					project.getFullPath().append("src/main/resources"),
-					new IPath[0],
-					new IPath[0],
-					outputLocation));
-
-			// JRE system library container
-			classpathEntries.add(JavaCore.newContainerEntry(
-					new Path(JavaRuntime.JRE_CONTAINER)));
-
-			javaProject.setRawClasspath(
-					classpathEntries.toArray(new IClasspathEntry[0]),
-					outputLocation,
-					subMonitor.split(1));
-
-			// 3. Create remaining folders (src/main/java and src/main/resources
-			// already exist from step 2)
-			String packagePath = _packageName.replace('.', '/');
-
-			createFolder(project, "src/main/java/" + packagePath, subMonitor);
-			createFolder(project, "src/main/java/" + packagePath + "/components", subMonitor);
-			if (_isNG) {
-				createFolder(project, "src/main/components", subMonitor);
-			}
-			else {
-				createFolder(project, "src/main/components/Main.wo", subMonitor);
-			}
-			createFolder(project, "src/main/webserver-resources", subMonitor);
-
-			// 4. Create files
-			createFile(project, "pom.xml", generatePomXml(), subMonitor);
-			createFile(project, "build.properties", generateBuildProperties(), subMonitor);
-
-			// Java sources
-			String javaBase = "src/main/java/" + packagePath + "/";
-			createFile(project, javaBase + "Application.java", generateApplicationJava(), subMonitor);
-			createFile(project, javaBase + "Session.java", generateSessionJava(), subMonitor);
-			createFile(project, javaBase + "DirectAction.java", generateDirectActionJava(), subMonitor);
-			createFile(project, javaBase + "components/Main.java", generateMainJava(), subMonitor);
-			subMonitor.worked(1);
-
-			// Component template files
-			String componentBase = _isNG ? "src/main/components/" : "src/main/components/Main.wo/";
-			createFile(project, componentBase + "Main.html", generateMainHtml(), subMonitor);
-			createFile(project, componentBase + "Main.wod", "", subMonitor);
-			createFile(project, componentBase + "Main.woo", generateMainWoo(), subMonitor);
-
-			// WO-specific files
-			if (!_isNG) {
-				createFile(project, "src/main/resources/Properties", generateWOProperties(), subMonitor);
-			}
-			subMonitor.worked(1);
-
-			// 5. Refresh so Eclipse sees all new files
-			project.refreshLocal(IResource.DEPTH_INFINITE, subMonitor.split(1));
-
-			return project.getFile(componentBase + "Main.html");
+		Files.createDirectories(_projectDir.resolve("src/main/java/" + packagePath + "/components"));
+		if (_isNG) {
+			Files.createDirectories(_projectDir.resolve("src/main/components"));
 		}
-		finally {
-			monitor.done();
+		else {
+			Files.createDirectories(_projectDir.resolve("src/main/components/Main.wo"));
 		}
-	}
+		Files.createDirectories(_projectDir.resolve("src/main/resources"));
+		Files.createDirectories(_projectDir.resolve("src/main/webserver-resources"));
 
-	// ---- Folder/file helpers ----
+		// 2. Write files
+		writeFile("pom.xml", generatePomXml());
+		writeFile("build.properties", generateBuildProperties());
 
-	/**
-	 * Creates a folder and all its parent folders.
-	 */
-	private void createFolder(IProject project, String path, IProgressMonitor monitor) throws CoreException {
-		String[] segments = path.split("/");
-		IFolder current = null;
+		// Java sources
+		String javaBase = "src/main/java/" + packagePath + "/";
+		writeFile(javaBase + "Application.java", generateApplicationJava());
+		writeFile(javaBase + "Session.java", generateSessionJava());
+		writeFile(javaBase + "DirectAction.java", generateDirectActionJava());
+		writeFile(javaBase + "components/Main.java", generateMainJava());
 
-		for (String segment : segments) {
-			current = (current == null) ? project.getFolder(segment) : current.getFolder(segment);
-			if (!current.exists()) {
-				current.create(false, true, monitor);
-			}
+		// Component template files
+		String componentBase = _isNG ? "src/main/components/" : "src/main/components/Main.wo/";
+		writeFile(componentBase + "Main.html", generateMainHtml());
+		writeFile(componentBase + "Main.wod", "");
+		writeFile(componentBase + "Main.woo", generateMainWoo());
+
+		// WO-specific files
+		if (!_isNG) {
+			writeFile("src/main/resources/Properties", generateWOProperties());
 		}
+
+		return _projectDir.resolve(componentBase + "Main.html");
 	}
 
 	/**
-	 * Creates a file with the given UTF-8 content.
+	 * Writes a UTF-8 file relative to the project directory.
 	 */
-	private void createFile(IProject project, String path, String content, IProgressMonitor monitor) throws CoreException {
-		IFile file = project.getFile(path);
-		byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-		file.create(new ByteArrayInputStream(bytes), false, monitor);
+	private void writeFile(String relativePath, String content) throws IOException {
+		Path file = _projectDir.resolve(relativePath);
+		Files.writeString(file, content, StandardCharsets.UTF_8);
 	}
 
 	// ---- Content generators ----
