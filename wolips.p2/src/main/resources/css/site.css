@@ -44,6 +44,28 @@ body {
 	font-weight: 400;
 }
 
+.warning {
+	background: #fef9ee;
+	border: 1px solid #e8d5a3;
+	border-radius: 12px;
+	padding: 20px 24px;
+	margin-bottom: 24px;
+	font-size: 15px;
+	color: #6b5a2e;
+	line-height: 1.5;
+}
+
+.warning strong {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 15px;
+	color: #5a4a1e;
+}
+
+.warning p {
+	margin: 0;
+}
+
 .card {
 	background: white;
 	border-radius: 12px;
