@@ -17,9 +17,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.objectstyle.woenvironment.frameworks.Root;
-import org.objectstyle.woenvironment.frameworks.Version;
-import org.objectstyle.woenvironment.plist.ToHellWithProperties;
 
 public class BuildProperties {
 	private IProject _project;
@@ -151,17 +148,24 @@ public class BuildProperties {
 	}
 
 	public synchronized void save() throws CoreException, IOException {
-		Properties properties = new ToHellWithProperties();
-		properties.putAll(_properties);
-		
 		if (!_dirty) {
 			return;
 		}
 
+		// Use a sorted Properties subclass so the output is deterministic.
+		// This replaces the old ToHellWithProperties from woenvironment.jar.
+		Properties sorted = new Properties() {
+			@Override
+			public java.util.Enumeration<Object> keys() {
+				return java.util.Collections.enumeration(new java.util.TreeSet<>(super.keySet()));
+			}
+		};
+		sorted.putAll(_properties);
+
 		File file = getBuildPropertiesFile();
 		FileOutputStream fos = new FileOutputStream(file);
 		try {
-			properties.store(fos, null);
+			sorted.store(fos, null);
 		}
 		finally {
 			fos.close();
@@ -172,7 +176,7 @@ public class BuildProperties {
 				getBuildPropertiesEclipseFile().refreshLocal(IResource.DEPTH_ONE, monitor);
 			}
 		}, null);
-		
+
 		_dirty = false;
 	}
 
@@ -252,21 +256,6 @@ public class BuildProperties {
 	 */
 	public void setPrincipalClass(String principalClass) {
 		put("principalClass", (principalClass == null) ? "" : principalClass);
-	}
-
-	public boolean isEmbed(Root root) {
-		String shortName = root.getShortName();
-		return getBoolean("embed." + shortName, false);
-	}
-
-	public void setEmbed(Root root, boolean embed) {
-		String shortName = root.getShortName();
-		if (!embed) {
-			remove("embed." + shortName);
-		}
-		else {
-			put("embed." + shortName, embed);
-		}
 	}
 
 	public String getCustomInfoPListContent() {
@@ -379,9 +368,9 @@ public class BuildProperties {
 	
 	private boolean _defaultsInitialized;
 
-	private Version _woVersionDefault;
+	private String _woVersionDefault;
 
-	private Version _versionDefault;
+	private String _versionDefault;
 
 	private String _inlineBindingPrefixDefault;
 
@@ -402,7 +391,7 @@ public class BuildProperties {
 	protected synchronized void ensureDefaultsInitialized() {
 		if (!_defaultsInitialized) {
 			_defaultsInitialized = true;
-			_woVersionDefault = new Version("5.3.3");
+			_woVersionDefault = "5.3.3";
 			_inlineBindingPrefixDefault = "$";
 			_inlineBindingSuffixDefault = "";
 			_wellFormedTemplateRequiredDefault = "yes".equals(Platform.getPreferencesService().getString("ng.componenteditor", "WellFormedTemplate", null, null));
@@ -410,50 +399,50 @@ public class BuildProperties {
 		}
 	}
 
-	public void setWOVersionDefault(Version woVersionDefault) {
+	public void setWOVersionDefault(String woVersionDefault) {
 		_woVersionDefault = woVersionDefault;
 	}
 
-	public Version getWOVersionDefault() {
+	public String getWOVersionDefault() {
 		ensureDefaultsInitialized();
 		return _woVersionDefault;
 	}
 
-	public void setVersionDefault(Version versionDefault) {
+	public void setVersionDefault(String versionDefault) {
 		_versionDefault = versionDefault;
 	}
-	
-	public Version getVersionDefault() {
+
+	public String getVersionDefault() {
 		ensureDefaultsInitialized();
 		return _versionDefault;
 	}
-	
-	public void setVersion(Version version) {
+
+	public void setVersion(String version) {
 		if (version != null) {
-			put("version", version.getVersionStr());
+			put("version", version);
 		}
 		else {
 			remove("version");
 		}
 	}
 
-	public Version getVersion() {
-		Version versionDefault = getVersionDefault();
-		return new Version(get("version", versionDefault == null ? null : versionDefault.getVersionStr()));
+	public String getVersion() {
+		String versionDefault = getVersionDefault();
+		return get("version", versionDefault);
 	}
-	
-	public void setWOVersion(Version woVersion) {
+
+	public void setWOVersion(String woVersion) {
 		if (woVersion != null) {
-			put("wo.version", woVersion.getVersionStr());
+			put("wo.version", woVersion);
 		}
 		else {
 			remove("wo.version");
 		}
 	}
 
-	public Version getWOVersion() {
-		Version woVersionDefault = getWOVersionDefault();
-		return new Version(get("wo.version", woVersionDefault == null ? null : woVersionDefault.getVersionStr()));
+	public String getWOVersion() {
+		String woVersionDefault = getWOVersionDefault();
+		return get("wo.version", woVersionDefault);
 	}
 
 	public void setInlineBindingPrefixDefault(String inlineBindingPrefixDefault) {
@@ -521,10 +510,6 @@ public class BuildProperties {
 	public boolean isWellFormedTemplateRequired() {
 		boolean wellFormedTemplateRequired = getBoolean("component.wellFormedTemplateRequired", getWellFormedTemplateRequiredDefault());
 		return wellFormedTemplateRequired;
-	}
-
-	public boolean isBuildFolderRequired() {
-		return getWOVersion().isAtLeastVersion(5, 6);
 	}
 
 	// ---- Framework detection (ng-objects vs WebObjects) ----

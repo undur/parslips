@@ -48,6 +48,5 @@ Bundle-ClassPath: .,
  lib/slf4j-api-2.0.15.jar,
  lib/jsr305-3.0.2.jar,
  lib/commons-jxpath-1.2.jar,
- lib/woenvironment.jar,
  lib/commons-collections-3.1.jar,
  lib/velocity-1.5.jar

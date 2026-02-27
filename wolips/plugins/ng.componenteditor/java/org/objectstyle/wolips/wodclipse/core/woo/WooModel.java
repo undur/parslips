@@ -24,15 +24,12 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
-import org.objectstyle.woenvironment.plist.PropertyListParserException;
-import org.objectstyle.woenvironment.plist.WOLPropertyListSerialization;
 import org.objectstyle.wolips.baseforplugins.util.CharSetUtils;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelMap;
-import org.objectstyle.wolips.eomodeler.core.model.EOModelParserDataStructureFactory;
 public class WooModel {
   public static final String IS_DIRTY = "IS_DIRTY";
 
@@ -99,7 +96,7 @@ public class WooModel {
     }
   }
 
-  private void init() throws IOException, PropertyListParserException {
+  private void init() throws IOException {
     if (_file == null || !_file.exists()) {
       loadModelFromStream(new ByteArrayInputStream(blankContent().getBytes()));
     }
@@ -157,12 +154,20 @@ public class WooModel {
     _changes.firePropertyChange(ENCODING, oldEncoding, _encoding);
   }
 
-  private void loadModelFromFile(final File file) throws IOException, PropertyListParserException {
-    _modelMap = new EOModelMap((java.util.Map<?, ?>) WOLPropertyListSerialization.propertyListFromFile(file, new EOModelParserDataStructureFactory()));
+  private void loadModelFromFile(final File file) throws IOException {
+    try (InputStream input = new java.io.FileInputStream(file)) {
+      loadModelFromStream(input);
+    }
   }
 
-  public void loadModelFromStream(final InputStream input) throws IOException, PropertyListParserException {
-    _modelMap = new EOModelMap((java.util.Map<?, ?>) WOLPropertyListSerialization.propertyListFromStream(input, new EOModelParserDataStructureFactory()));
+  /**
+   * Parses a simple NeXT-style plist dictionary from the given stream.
+   * The .woo format is a flat dictionary of string key-value pairs:
+   * {@code { "key" = "value"; "key2" = "value2"; }}
+   */
+  public void loadModelFromStream(final InputStream input) throws IOException {
+    String text = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+    _modelMap = new EOModelMap(parseSimplePlist(text));
   }
 
   public void parseModel() {
@@ -201,15 +206,10 @@ public class WooModel {
 
   public void doSave(final OutputStream writer) throws IOException {
     EOModelMap modelMap = toModelMap();
-    try {
-      WOLPropertyListSerialization.propertyListToStream(writer, modelMap);
-    }
-    catch (PropertyListParserException e) {
-      e.printStackTrace();
-    }
+    writer.write(serializeSimplePlist(modelMap).getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 
-  public void doRevertToSaved() throws IOException, PropertyListParserException {
+  public void doRevertToSaved() throws IOException {
     resetModel();
     loadModelFromFile(_file.getLocation().toFile());
     parseModel();
@@ -326,10 +326,12 @@ public class WooModel {
         	_file.createNewFile();
         }
         FileOutputStream writer = new FileOutputStream(_file);
-        WOLPropertyListSerialization.propertyListToStream(writer, model._modelMap);
-      }
-      catch (PropertyListParserException e) {
-        e.printStackTrace();
+        try {
+          writer.write(serializeSimplePlist(model._modelMap).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        finally {
+          writer.close();
+        }
       }
       catch (Throwable e) {
       	e.printStackTrace();
@@ -343,5 +345,160 @@ public class WooModel {
 
   public void setFile(IFile file) {
 	this._file = file;
+  }
+
+  // ---- Minimal NeXT-style plist parser/serializer for .woo files ----
+
+  /**
+   * Parses a simple NeXT-style plist dictionary with string key-value pairs.
+   * Expected format: {@code { "key" = "value"; "key2" = "value2"; }}
+   *
+   * <p>This is a minimal parser sufficient for .woo files, which only contain
+   * a flat dictionary of string values. It does not handle nested dictionaries,
+   * arrays, data, or other plist types.
+   */
+  @SuppressWarnings("rawtypes")
+  private static java.util.Map parseSimplePlist(String text) throws IOException {
+    java.util.Map<String, String> map = new org.objectstyle.wolips.eomodeler.core.model.PropertyListMap<>();
+    int i = 0;
+    int len = text.length();
+
+    // Skip to opening brace
+    while (i < len && text.charAt(i) != '{') {
+      i++;
+    }
+    if (i >= len) {
+      throw new IOException("Invalid plist: no opening brace found");
+    }
+    i++; // skip '{'
+
+    while (i < len) {
+      // Skip whitespace
+      while (i < len && Character.isWhitespace(text.charAt(i))) {
+        i++;
+      }
+      if (i >= len || text.charAt(i) == '}') {
+        break;
+      }
+
+      // Parse key
+      String key;
+      if (text.charAt(i) == '"') {
+        int[] endRef = { 0 };
+        key = parseQuotedString(text, i, endRef);
+        i = endRef[0];
+      }
+      else {
+        int start = i;
+        while (i < len && !Character.isWhitespace(text.charAt(i)) && text.charAt(i) != '=') {
+          i++;
+        }
+        key = text.substring(start, i);
+      }
+
+      // Skip whitespace and '='
+      while (i < len && Character.isWhitespace(text.charAt(i))) {
+        i++;
+      }
+      if (i < len && text.charAt(i) == '=') {
+        i++;
+      }
+
+      // Skip whitespace
+      while (i < len && Character.isWhitespace(text.charAt(i))) {
+        i++;
+      }
+
+      // Parse value
+      String value;
+      if (i < len && text.charAt(i) == '"') {
+        int[] endRef = { 0 };
+        value = parseQuotedString(text, i, endRef);
+        i = endRef[0];
+      }
+      else {
+        int start = i;
+        while (i < len && text.charAt(i) != ';' && !Character.isWhitespace(text.charAt(i))) {
+          i++;
+        }
+        value = text.substring(start, i);
+      }
+
+      // Skip whitespace and ';'
+      while (i < len && Character.isWhitespace(text.charAt(i))) {
+        i++;
+      }
+      if (i < len && text.charAt(i) == ';') {
+        i++;
+      }
+
+      map.put(key, value);
+    }
+
+    return map;
+  }
+
+  /**
+   * Parses a double-quoted string starting at position {@code start} in the text,
+   * handling backslash escapes. Returns the unescaped string content and sets
+   * {@code endRef[0]} to the position after the closing quote.
+   */
+  private static String parseQuotedString(String text, int start, int[] endRef) {
+    StringBuilder sb = new StringBuilder();
+    int i = start + 1; // skip opening quote
+    int len = text.length();
+
+    while (i < len && text.charAt(i) != '"') {
+      if (text.charAt(i) == '\\' && i + 1 < len) {
+        i++;
+        sb.append(text.charAt(i));
+      }
+      else {
+        sb.append(text.charAt(i));
+      }
+      i++;
+    }
+    if (i < len) {
+      i++; // skip closing quote
+    }
+    endRef[0] = i;
+    return sb.toString();
+  }
+
+  /**
+   * Serializes a map as a NeXT-style plist dictionary.
+   * Produces output like: {@code { "key" = "value"; "key2" = "value2"; }}
+   */
+  @SuppressWarnings("rawtypes")
+  private static String serializeSimplePlist(java.util.Map map) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{\n");
+    for (Object entryObj : map.entrySet()) {
+      java.util.Map.Entry entry = (java.util.Map.Entry) entryObj;
+      sb.append("    ");
+      sb.append(quoteIfNeeded(String.valueOf(entry.getKey())));
+      sb.append(" = ");
+      sb.append(quoteIfNeeded(String.valueOf(entry.getValue())));
+      sb.append(";\n");
+    }
+    sb.append("}\n");
+    return sb.toString();
+  }
+
+  /**
+   * Wraps a string in double quotes, escaping any internal quotes or backslashes.
+   */
+  private static String quoteIfNeeded(String s) {
+    StringBuilder sb = new StringBuilder();
+    sb.append('"');
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (c == '"' || c == '\\') {
+        sb.append('\\');
+      }
+      sb.append(c);
+    }
+    sb.append('"');
+    return sb.toString();
   }
 }

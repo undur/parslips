@@ -398,3 +398,23 @@ Two new modules added alongside `ng.componenteditor` to begin separating templat
 - `plugin.xml` — registers the server with LSP4E, maps to HTML template and WOD content types
 
 Both modules are included in the feature (`ng.componenteditor.feature`) and the p2 update site. The parent POM builds them before `ng.componenteditor` (since `ng.componenteditor` may eventually depend on `parslips.tooling`).
+
+### Removed: woenvironment.jar dependency
+
+Eliminated the `woenvironment.jar` vendored dependency. This JAR was gitignored and not tracked by git, which caused CI builds (GitHub Actions) to fail because the JAR wasn't present.
+
+**What was removed:**
+- `lib/woenvironment.jar` — deleted
+- `woenvironment.jar` entry in `.gitignore` — removed (no longer needed)
+- `lib/woenvironment.jar` entry in MANIFEST.MF `Bundle-ClassPath` — removed
+- `EOModelParserDataStructureFactory.java` — deleted (only consumer of `ParserDataStructureFactory` interface from the JAR)
+
+**What was replaced in `BuildProperties.java`:**
+- `Version` class → replaced with plain `String`. The `Version` class was a version string holder with comparison methods, but the only version comparison (`isBuildFolderRequired()` calling `isAtLeastVersion(5, 6)`) had zero callers. Removed `isBuildFolderRequired()` as dead code.
+- `Root` class → `isEmbed(Root)` and `setEmbed(Root)` methods had zero callers. Removed as dead code.
+- `ToHellWithProperties` → replaced with an anonymous `Properties` subclass that sorts keys via `TreeSet` (same deterministic output behavior).
+
+**What was replaced in `WooModel.java`:**
+- `WOLPropertyListSerialization` → replaced with inline `parseSimplePlist()` and `serializeSimplePlist()` methods. The `.woo` file format is a simple NeXT-style plist dictionary (`{ "key" = "value"; }`) with only flat string key-value pairs, so a minimal parser is sufficient. Handles quoted strings with backslash escapes.
+- `PropertyListParserException` → no longer thrown; `IOException` is used instead.
+- `EOModelParserDataStructureFactory` → no longer needed (was only passed to `WOLPropertyListSerialization`).
