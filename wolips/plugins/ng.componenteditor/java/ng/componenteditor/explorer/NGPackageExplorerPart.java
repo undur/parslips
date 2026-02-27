@@ -14,6 +14,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IOpenListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.OpenEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
@@ -135,6 +136,10 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 					boolean wasExpanded = !viewer.getExpandedState(folder);
 					openComponentBundle(folder);
 					viewer.setExpandedState(folder, wasExpanded);
+					// Opening the component's HTML file can cause "Link with
+					// Editor" to move the selection to the (now hidden) child
+					// file. Re-select the .wo folder so it stays highlighted.
+					viewer.setSelection(new StructuredSelection(folder));
 				}
 			}
 		};
@@ -151,6 +156,9 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 						IFolder folder = (IFolder) sel.getFirstElement();
 						if (NGPackageExplorerContentProvider.isComponentBundle(folder)) {
 							openComponentBundle(folder);
+							// Re-select the .wo folder — same reason as in the
+							// double-click listener above.
+							viewer.setSelection(new StructuredSelection(folder));
 						}
 					}
 				}
