@@ -71,6 +71,9 @@ public class WOProjectCreator {
 			Files.createDirectories(_projectDir.resolve("src/main/components/Main.wo"));
 		}
 		Files.createDirectories(_projectDir.resolve("src/main/resources"));
+		if (!_isNG) {
+			Files.createDirectories(_projectDir.resolve("src/main/woresources"));
+		}
 		Files.createDirectories(_projectDir.resolve("src/main/webserver-resources"));
 
 		// 2. Write files
@@ -92,7 +95,7 @@ public class WOProjectCreator {
 
 		// WO-specific files
 		if (!_isNG) {
-			writeFile("src/main/resources/Properties", generateWOProperties());
+			writeFile("src/main/woresources/Properties", generateWOProperties());
 		}
 
 		return _projectDir.resolve(componentBase + "Main.html");
@@ -139,12 +142,17 @@ public class WOProjectCreator {
 					            <artifactId>ng-adaptor-jetty</artifactId>
 					            <version>0.1.0-SNAPSHOT</version>
 					        </dependency>
+					        <dependency>
+					            <groupId>org.slf4j</groupId>
+					            <artifactId>slf4j-simple</artifactId>
+					            <version>2.0.16</version>
+					        </dependency>
 					    </dependencies>
 					</project>
 					""", _packageName, _projectName);
 		}
 
-		// WebObjects pom.xml — uses Maven ${property} references (pass through String.format safely)
+		// WebObjects pom.xml
 		return String.format("""
 				<?xml version="1.0" encoding="UTF-8"?>
 				<project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -155,47 +163,53 @@ public class WOProjectCreator {
 				    <groupId>%s</groupId>
 				    <artifactId>%s</artifactId>
 				    <version>1.0.0-SNAPSHOT</version>
-				    <packaging>war</packaging>
+				    <packaging>woapplication</packaging>
 
 				    <properties>
-				        <maven.compiler.source>21</maven.compiler.source>
-				        <maven.compiler.target>21</maven.compiler.target>
+				        <maven.compiler.source>25</maven.compiler.source>
+				        <maven.compiler.target>25</maven.compiler.target>
 				        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-				        <wonder.core.group>wonder.core</wonder.core.group>
-				        <wonder.ajax.group>wonder.ajax</wonder.ajax.group>
-				        <wonder.version>7.4</wonder.version>
-				        <webobjects.group>com.webobjects</webobjects.group>
-				        <webobjects.version>5.4.3</webobjects.version>
 				    </properties>
 
 				    <dependencies>
 				        <dependency>
-				            <groupId>${wonder.core.group}</groupId>
+				            <groupId>wonder.core</groupId>
 				            <artifactId>ERExtensions</artifactId>
-				            <version>${wonder.version}</version>
+				            <version>8.0.0.slim-SNAPSHOT</version>
 				        </dependency>
 				        <dependency>
-				            <groupId>${wonder.core.group}</groupId>
+				            <groupId>wonder.core</groupId>
 				            <artifactId>ERLoggingReload4j</artifactId>
-				            <version>${wonder.version}</version>
+				            <version>8.0.0.slim-SNAPSHOT</version>
 				        </dependency>
 				        <dependency>
-				            <groupId>${wonder.ajax.group}</groupId>
+				            <groupId>wonder.ajax</groupId>
 				            <artifactId>Ajax</artifactId>
-				            <version>${wonder.version}</version>
+				            <version>8.0.0.slim-SNAPSHOT</version>
 				        </dependency>
 				        <dependency>
-				            <groupId>${webobjects.group}</groupId>
+				            <groupId>com.webobjects</groupId>
 				            <artifactId>JavaWebObjects</artifactId>
-				            <version>${webobjects.version}</version>
+				            <version>5.4.3</version>
 				            <exclusions>
 				                <exclusion>
-				                    <groupId>${webobjects.group}</groupId>
+				                    <groupId>com.webobjects</groupId>
 				                    <artifactId>JavaXML</artifactId>
 				                </exclusion>
 				            </exclusions>
 				        </dependency>
 				    </dependencies>
+
+				    <build>
+				        <plugins>
+				            <plugin>
+				                <groupId>is.rebbi</groupId>
+				                <artifactId>vermilingua-maven-plugin</artifactId>
+				                <version>1.0.5</version>
+				                <extensions>true</extensions>
+				            </plugin>
+				        </plugins>
+				    </build>
 				</project>
 				""", _packageName, _projectName);
 	}
@@ -234,11 +248,6 @@ public class WOProjectCreator {
 				    public static void main(String[] args) {
 				        ERXApplication.main(args, Application.class);
 				    }
-
-				    @Override
-				    public void finishInitialization() {
-				        super.finishInitialization();
-				    }
 				}
 				""", _packageName);
 	}
@@ -270,10 +279,10 @@ public class WOProjectCreator {
 	private String generateDirectActionJava() {
 		if (_isNG) {
 			return String.format("""
-					package %s;
+					package %1$s;
 
 					import ng.appserver.NGActionResults;
-					import ng.appserver.NGDirectAction;
+					import ng.appserver.directactions.NGDirectAction;
 					import ng.appserver.NGRequest;
 
 					public class DirectAction extends NGDirectAction {
@@ -283,14 +292,14 @@ public class WOProjectCreator {
 					    }
 
 					    public NGActionResults defaultAction() {
-					        return pageWithName(components.Main.class);
+					        return pageWithName(%1$s.components.Main.class);
 					    }
 					}
 					""", _packageName);
 		}
 
 		return String.format("""
-				package %s;
+				package %1$s;
 
 				import com.webobjects.appserver.WOActionResults;
 				import com.webobjects.appserver.WORequest;
@@ -304,7 +313,7 @@ public class WOProjectCreator {
 				    }
 
 				    public WOActionResults defaultAction() {
-				        return pageWithName(components.Main.class);
+				        return pageWithName(%1$s.components.Main.class);
 				    }
 				}
 				""", _packageName);
@@ -315,10 +324,14 @@ public class WOProjectCreator {
 			return String.format("""
 					package %s.components;
 
+					import ng.appserver.NGContext;
 					import ng.appserver.templating.NGComponent;
 
 					public class Main extends NGComponent {
 
+					    public Main(NGContext context) {
+					        super(context);
+					    }
 					}
 					""", _packageName);
 		}
