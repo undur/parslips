@@ -20,7 +20,6 @@ wolips/
       java/                      # Java source (org.objectstyle.wolips.* packages)
       META-INF/MANIFEST.MF       # OSGi bundle manifest
       plugin.xml                 # Eclipse extension registrations
-      CHANGES.md                 # Detailed changelog (treat as project history reference)
       icons/                     # Toolbar and decorator icons
       lib/                       # Vendored JARs (Velocity, Xerces, CSS parser, etc.)
   features/
@@ -28,6 +27,8 @@ wolips/
   p2/                            # p2 update site build
   pom.xml                        # Parent POM (Maven/Tycho build)
   install.sh                     # Build-and-install script for local dev
+  CHANGES.md                     # Detailed changelog (project history reference)
+  ROADMAP.md                     # Feature ideas and planned work
 ```
 
 ## Building
@@ -118,7 +119,7 @@ This codebase was extracted from WOLips which had significant dead code. When yo
 
 ## CHANGES.md
 
-`CHANGES.md` in the plugin directory is the detailed project changelog. It documents every significant change since the initial WOLips extraction. Consult it for:
+`CHANGES.md` at the repository root is the detailed project changelog. It documents every significant change since the initial WOLips extraction. Consult it for:
 - Understanding why code was removed or changed
 - Historical context for architectural decisions
 - What's been cleaned up vs. what remains

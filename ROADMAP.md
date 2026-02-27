@@ -1,0 +1,88 @@
+# Parsley — Feature Roadmap
+
+Ideas and planned features for the Parsley template editor. Items are roughly ordered by perceived impact, not by implementation order.
+
+## Inline validation quick-fixes
+
+"Did you mean `userName`?" with a click-to-correct action.
+
+String-distance-based suggestions are already implemented in the validation layer, but the quick-fix step requires token location tracking in `ng-template-parser`. This needs work on both the parser side (preserving source locations for binding names and values) and the plugin side (mapping parser locations to Eclipse `IMarker` positions and providing `IMarkerResolution` quick-fixes).
+
+## Refactoring across files
+
+Rename a binding in Java and have it update in the WOD and HTML template automatically. Rename a component and update all references across the project.
+
+WO component bundles are inherently multi-file (HTML + WOD + WOO + Java + .api), so cross-file refactoring is where tooling can save the most manual effort. Eclipse's LTK refactoring framework (`org.eclipse.ltk.core.refactoring`) supports this — the plugin already depends on it.
+
+## Component catalog / documentation on hover
+
+Hover over a component tag in the template or WOD and see its API: accepted bindings, which are required, expected types, and a short description.
+
+The data source already exists — `.api` files describe the component interface. This is about surfacing that information inline via `ITextHover` in the template editor and WOD editor.
+
+## Binding type checking
+
+Go beyond "this binding doesn't exist" to "this binding expects a `String`, you're passing an `NSArray`."
+
+Requires bridging the WOD binding values to Java type information via JDT. The validation infrastructure is already in place; this adds a type-resolution step after binding lookup.
+
+## Component dependency graph
+
+A navigable view of "this component uses these sub-components" — useful for understanding unfamiliar codebases and spotting circular dependencies.
+
+Prior work exists in a separate project. Natural home would be an Eclipse view contributed by the plugin, possibly with a graphical representation using Zest or a simple tree/table.
+
+## New component wizard: template type selection
+
+When creating a new component, offer a choice between a `.wo` folder bundle and a single-file (standalone `.html`) component. The wizard should default based on the current project type — WO projects default to `.wo` bundles, ng-objects projects default to single-file components.
+
+The existing `WOComponentCreationPage` already detects project type via `BuildProperties`; this adds a radio button or checkbox and adjusts the file generation accordingly.
+
+## Convert between component formats
+
+Convert a `.wo` folder bundle to a single-file standalone component, and vice versa.
+
+- **`.wo` → single file**: merge the WOD into inline bindings, move the HTML out of the bundle, clean up the `.wo` folder.
+- **Single file → `.wo`**: create the bundle folder, optionally extract inline bindings into a separate `.wod` file, generate a `.woo` file.
+
+Could be offered as a context menu action on components in the explorer.
+
+## Convert between WOD and inline bindings
+
+Convert a component's WOD bindings to inline bindings within the HTML template, and vice versa. Useful when switching coding styles or converting between component formats.
+
+- **WOD → inline**: for each WOD definition, find the corresponding tag in the template and replace it with an inline binding tag, then remove the WOD entry.
+- **Inline → WOD**: extract inline bindings from the template into named WOD definitions, replacing the inline tags with named references.
+
+Requires the parser to map WOD entries to their corresponding template tags. Could be offered as an editor action, a context menu item, or both.
+
+## Rich component API model
+
+A major evolution of the `.api` file format to describe the full component contract. This applies to templating as a whole — not just the parser or the editor, but the runtime framework, the template language, and the tooling around it. Changes touch the API file format itself (in ng-objects or as an extended schema), the `ng-template-parser` (for validation), Parsley (for editor support and UI), and potentially ng-objects itself (for runtime enforcement). Items roughly from most to least impactful:
+
+- **Binding directionality** — specify whether a binding pulls values (get), pushes values (set), or both. Enables validation ("this binding is push-only, you can't read from it") and better documentation.
+- **Deprecated bindings** — mark a binding as deprecated with docs explaining what to use instead. Tooling can show strikethrough, hover warnings, and quick-fix suggestions.
+- **Default values** — specify what a binding defaults to when not bound. Useful for documentation on hover and for understanding component behavior without reading source.
+- **Binding value constraints (enums)** — allow a binding to declare a set of valid values, probably backed by an Enum registered by the element. Enables autocomplete for binding values, not just binding names.
+- **Valid/invalid binding combinations** — express rules like "if you bind `action`, you must not bind `href`" or "`item` requires `list`". Enables cross-binding validation beyond single-binding type checks.
+- **Unknown binding policy** — specify whether a component allows unknown bindings at all. Some components are strict (unknown = error), others are permissive.
+- **Additional attributes and their behavior** — for elements like `<wo:img>`, additional attributes get pushed to the generated HTML tag (e.g. `style`, `class`). The API should be able to declare this pass-through behavior, so tooling knows these aren't "unknown bindings" but intentional HTML attributes.
+- **Embeddability** — specify whether a component is a page-level component or embeddable. Page-level components shouldn't appear in the component selector when editing a template, since they can't be nested.
+- **Content model** — can this component have body content (like `<wo:if>` wrapping child elements) or is it self-closing (like `<wo:img />`)? Enables validation like "`<wo:string>` should not have body content" or "`<wo:form>` requires body content."
+- **Required vs. optional bindings** — explicitly declare which bindings are required. Enables straightforward validation: "missing required binding `list` on `WORepetition`." May already be partially present in the current `.api` format.
+- **Per-binding documentation** — human-readable description for each individual binding, not just the component as a whole. "What does `escapeHTML` actually do?" on hover, without reading the source.
+- **Component description / summary** — a short doc string for the component itself, shown in the component selector and on hover. e.g. "A conditional element that renders its content when `condition` evaluates to true."
+- **Semantic value types** — beyond Java types, a binding might accept a `String` that is semantically a CSS class name, a URL, a date format pattern, a key path, etc. A semantic type layer on top of Java types powers smarter validation and context-aware autocomplete.
+- **Component categories / tags** — grouping components for the selector: "Layout", "Forms", "Navigation", "Data Display". Makes the component catalog browsable instead of a flat alphabetical list.
+
+This feeds into almost every other roadmap item: hover documentation, validation quick-fixes, binding type checking, and the component catalog.
+
+## Extract component from selection
+
+Select a chunk of template HTML, extract it into a new component — generating the `.wo` bundle, WOD entries, and a stub Java class. The template equivalent of "Extract Method."
+
+This ties into the refactoring infrastructure and the "New WO Component" wizard that already exists.
+
+## Live preview
+
+Side-by-side rendering of the template as you edit. Challenging for WO components since they render server-side with dynamic bindings, but even a static structural preview (showing component nesting and placeholder content) could be valuable.
