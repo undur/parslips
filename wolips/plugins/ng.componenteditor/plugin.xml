@@ -466,6 +466,15 @@
             name="NG Objects"/>
       <wizard
             category="ng.componenteditor.newWizards"
+            class="org.objectstyle.wolips.wizards.WOProjectCreationWizard"
+            icon="icons/parsley16.png"
+            id="ng.componenteditor.newWOProjectWizard"
+            name="Parsley Project"
+            project="true">
+         <description>Create a new ng-objects or WebObjects Maven project</description>
+      </wizard>
+      <wizard
+            category="ng.componenteditor.newWizards"
             class="org.objectstyle.wolips.wizards.WOComponentCreationWizard"
             icon="icons/wobuilder/WOComponentBundle.png"
             id="ng.componenteditor.newWOComponentWizard"

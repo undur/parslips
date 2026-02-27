@@ -418,3 +418,35 @@ Eliminated the `woenvironment.jar` vendored dependency. This JAR was gitignored 
 - `WOLPropertyListSerialization` → replaced with inline `parseSimplePlist()` and `serializeSimplePlist()` methods. The `.woo` file format is a simple NeXT-style plist dictionary (`{ "key" = "value"; }`) with only flat string key-value pairs, so a minimal parser is sufficient. Handles quoted strings with backslash escapes.
 - `PropertyListParserException` → no longer thrown; `IOException` is used instead.
 - `EOModelParserDataStructureFactory` → no longer needed (was only passed to `WOLPropertyListSerialization`).
+
+### Added: "New Project" wizard
+
+Added a wizard for creating new ng-objects or WebObjects Maven projects from scratch. Appears in Eclipse's "New Project" dialog under the "NG Objects" category.
+
+**What it does:**
+- Single-page wizard with project name, location controls, and a framework selector (ng-objects / WebObjects)
+- On Finish → generates a complete, ready-to-run Maven project with a sample Main component
+- Opens `Main.html` in the editor after creation
+
+**Generated project structure (ng-objects):**
+- `pom.xml` — jar packaging, Java 21, `ng-appserver` + `ng-adaptor-jetty` dependencies
+- `build.properties` — `base=ng` for framework detection
+- `Application.java`, `Session.java`, `DirectAction.java` — standard ng-objects classes
+- `components/Main.java` — extends `NGComponent`
+- `src/main/components/Main.html` — standalone hello world template
+- `src/main/components/Main.wod`, `Main.woo` — empty WOD and UTF-8 WOO
+
+**Generated project structure (WebObjects):**
+- `pom.xml` — war packaging, Java 21, Wonder (ERExtensions, ERLoggingReload4j, Ajax) + JavaWebObjects dependencies
+- `build.properties` — `base=wo` for framework detection
+- `Application.java`, `Session.java`, `DirectAction.java` — standard Wonder/WO classes
+- `components/Main.java` — extends `WOComponent(WOContext)`
+- `src/main/components/Main.wo/` — bundled component (Main.html, Main.wod, Main.woo)
+- `src/main/resources/Properties` — log4j console configuration
+
+**Key files:**
+- `WOProjectCreationWizard.java` — wizard entry point, follows `WOComponentCreationWizard` pattern
+- `WOProjectCreationPage.java` — extends `WizardNewProjectCreationPage`, adds framework radio buttons, derives package name from project name
+- `WOProjectCreator.java` — pure creation logic, generates all files using Java text blocks with `String.format()`
+- `plugin.xml` — wizard registration with `project="true"`
+- `Messages.properties` — 6 new strings for wizard UI labels
