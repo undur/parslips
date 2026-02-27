@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+
+<!--
+  Parslips LSP Server — Eclipse extension registrations.
+
+  This plugin provides an in-process LSP server for ng-objects template files.
+  It uses LSP4E to connect the server to Eclipse's Generic Editor, providing
+  completion, diagnostics, and other editing features for template files opened
+  outside the main component editor.
+
+  Content types registered here are intentionally separate from ng.componenteditor's
+  content types, so both editors can coexist. The user chooses which editor to use
+  via "Open With" or default editor preferences.
+-->
+<plugin>
+
+   <!--
+     Register the language server with LSP4E.
+     The 'class' points to our StreamConnectionProvider which creates the
+     in-process server and wires it up via piped streams.
+   -->
+   <extension point="org.eclipse.lsp4e.languageServer">
+      <server
+            class="parslips.lsp.ParslipsStreamConnectionProvider"
+            id="parslips.lsp.server"
+            label="Parslips Template Server"/>
+
+      <!--
+        Map the language server to our content types.
+        When a file with one of these content types is opened in Eclipse's
+        Generic Editor, LSP4E will start our server and connect it.
+      -->
+      <contentTypeMapping
+            contentType="parslips.lsp.htmlTemplateContentType"
+            id="parslips.lsp.server"
+            languageId="html"/>
+      <contentTypeMapping
+            contentType="parslips.lsp.wodContentType"
+            id="parslips.lsp.server"
+            languageId="wod"/>
+   </extension>
+
+   <!--
+     Content type definitions for template files.
+     These are separate from ng.componenteditor's content types so both
+     plugins can coexist without conflicts.
+   -->
+   <extension point="org.eclipse.core.contenttype.contentTypes">
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            file-extensions="html"
+            id="parslips.lsp.htmlTemplateContentType"
+            name="Parslips HTML Template"
+            priority="low"/>
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            file-extensions="wod"
+            id="parslips.lsp.wodContentType"
+            name="Parslips WOD File"
+            priority="low"/>
+   </extension>
+
+</plugin>

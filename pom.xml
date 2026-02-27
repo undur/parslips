@@ -54,6 +54,8 @@
 	<modules>
 		<module>wolips.p2</module>
 		<module>wolips.targetplatform</module>
+		<module>wolips/plugins/parslips.tooling</module>
+		<module>wolips/plugins/parslips.lsp</module>
 		<module>wolips/plugins/ng.componenteditor</module>
 		<module>wolips/features/ng.componenteditor.feature</module>
 	</modules>

@@ -383,3 +383,18 @@ Standalone HTML templates (`.html` files not inside `.wo` bundles) now have full
 ### Deleted: old WOLips plugin
 
 The original WOLips plugin suite (all `org.objectstyle.wolips.*` plugins, features, and the p2 update site) was deleted from the repository. Only `ng.componenteditor` and the build infrastructure remain.
+
+### New modules: parslips.tooling and parslips.lsp
+
+Two new modules added alongside `ng.componenteditor` to begin separating template intelligence from the Eclipse editor:
+
+**`parslips.tooling`** — IDE-agnostic template editing intelligence library. Packaged as an OSGi bundle with zero dependencies (no Eclipse, no LSP, no framework imports). This is where generic template completion, validation, hover, and navigation logic will live, consumed by both the Eclipse editor and the LSP server. Currently a skeleton with a `package-info.java` documenting the planned architecture.
+
+**`parslips.lsp`** — In-process LSP server for template files. Uses LSP4E and LSP4J to provide language server capabilities within Eclipse. Architecture:
+- `ParslipsLanguageServer` — implements LSP4J `LanguageServer`, declares capabilities (text sync, completion)
+- `ParslipsTextDocumentService` — handles document lifecycle and editing requests (stub, to be wired to `parslips.tooling`)
+- `ParslipsWorkspaceService` — handles workspace-level requests (stub)
+- `ParslipsStreamConnectionProvider` — bridges LSP4E to the in-process server via piped streams
+- `plugin.xml` — registers the server with LSP4E, maps to HTML template and WOD content types
+
+Both modules are included in the feature (`ng.componenteditor.feature`) and the p2 update site. The parent POM builds them before `ng.componenteditor` (since `ng.componenteditor` may eventually depend on `parslips.tooling`).

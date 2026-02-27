@@ -80,7 +80,18 @@ on the ObjectStyle Group, please see http://objectstyle.org/
       <import plugin="org.eclipse.text"/>
       <import plugin="org.eclipse.e4.core.contexts"/>
       <import plugin="org.eclipse.core.databinding.property"/>
+      <import plugin="org.eclipse.lsp4e"/>
+      <import plugin="org.eclipse.lsp4j"/>
+      <import plugin="org.eclipse.lsp4j.jsonrpc"/>
    </requires>
+
+   <plugin
+         id="parslips.tooling"
+         version="0.0.0"/>
+
+   <plugin
+         id="parslips.lsp"
+         version="0.0.0"/>
 
    <plugin
          id="ng.componenteditor"
