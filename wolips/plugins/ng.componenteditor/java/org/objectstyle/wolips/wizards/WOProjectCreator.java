@@ -3,6 +3,8 @@ package org.objectstyle.wolips.wizards;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFile;
@@ -13,9 +15,14 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.launching.JavaRuntime;
 
 /**
  * Creates all files and folders for a new ng-objects or WebObjects Maven project.
@@ -86,47 +93,81 @@ public class WOProjectCreator {
 			project.create(description, subMonitor.split(1));
 			project.open(subMonitor.split(1));
 
-			// 2. Create the folder structure
+			// 2. Configure the JDT classpath so Eclipse recognizes source folders.
+			// Without this, JDT treats all folders as flat packages instead of a
+			// proper source tree. The user can later do "Update Maven Project" to
+			// let m2e take over classpath management from the pom.xml.
+			createFolder(project, "src/main/java", subMonitor.split(1));
+			createFolder(project, "src/main/resources", subMonitor.split(1));
+			createFolder(project, "target/classes", subMonitor.split(1));
+
+			IJavaProject javaProject = JavaCore.create(project);
+			IPath outputLocation = project.getFullPath().append("target/classes");
+
+			List<IClasspathEntry> classpathEntries = new ArrayList<>();
+
+			// src/main/java → compiled output goes to target/classes
+			classpathEntries.add(JavaCore.newSourceEntry(
+					project.getFullPath().append("src/main/java"),
+					new IPath[0],                    // no inclusion patterns
+					new IPath[0],                    // no exclusion patterns
+					outputLocation));
+
+			// src/main/resources → also to target/classes (standard Maven convention)
+			classpathEntries.add(JavaCore.newSourceEntry(
+					project.getFullPath().append("src/main/resources"),
+					new IPath[0],
+					new IPath[0],
+					outputLocation));
+
+			// JRE system library container
+			classpathEntries.add(JavaCore.newContainerEntry(
+					new Path(JavaRuntime.JRE_CONTAINER)));
+
+			javaProject.setRawClasspath(
+					classpathEntries.toArray(new IClasspathEntry[0]),
+					outputLocation,
+					subMonitor.split(1));
+
+			// 3. Create remaining folders (src/main/java and src/main/resources
+			// already exist from step 2)
 			String packagePath = _packageName.replace('.', '/');
 
-			createFolder(project, "src/main/java/" + packagePath, monitor);
-			createFolder(project, "src/main/java/" + packagePath + "/components", monitor);
+			createFolder(project, "src/main/java/" + packagePath, subMonitor);
+			createFolder(project, "src/main/java/" + packagePath + "/components", subMonitor);
 			if (_isNG) {
-				createFolder(project, "src/main/components", monitor);
+				createFolder(project, "src/main/components", subMonitor);
 			}
 			else {
-				createFolder(project, "src/main/components/Main.wo", monitor);
+				createFolder(project, "src/main/components/Main.wo", subMonitor);
 			}
-			createFolder(project, "src/main/resources", monitor);
-			createFolder(project, "src/main/webserver-resources", monitor);
-			monitor.worked(2);
+			createFolder(project, "src/main/webserver-resources", subMonitor);
 
-			// 3. Create files
-			createFile(project, "pom.xml", generatePomXml(), monitor);
-			createFile(project, "build.properties", generateBuildProperties(), monitor);
+			// 4. Create files
+			createFile(project, "pom.xml", generatePomXml(), subMonitor);
+			createFile(project, "build.properties", generateBuildProperties(), subMonitor);
 
 			// Java sources
 			String javaBase = "src/main/java/" + packagePath + "/";
-			createFile(project, javaBase + "Application.java", generateApplicationJava(), monitor);
-			createFile(project, javaBase + "Session.java", generateSessionJava(), monitor);
-			createFile(project, javaBase + "DirectAction.java", generateDirectActionJava(), monitor);
-			createFile(project, javaBase + "components/Main.java", generateMainJava(), monitor);
-			monitor.worked(3);
+			createFile(project, javaBase + "Application.java", generateApplicationJava(), subMonitor);
+			createFile(project, javaBase + "Session.java", generateSessionJava(), subMonitor);
+			createFile(project, javaBase + "DirectAction.java", generateDirectActionJava(), subMonitor);
+			createFile(project, javaBase + "components/Main.java", generateMainJava(), subMonitor);
+			subMonitor.worked(1);
 
 			// Component template files
 			String componentBase = _isNG ? "src/main/components/" : "src/main/components/Main.wo/";
-			createFile(project, componentBase + "Main.html", generateMainHtml(), monitor);
-			createFile(project, componentBase + "Main.wod", "", monitor);
-			createFile(project, componentBase + "Main.woo", generateMainWoo(), monitor);
-			monitor.worked(1);
+			createFile(project, componentBase + "Main.html", generateMainHtml(), subMonitor);
+			createFile(project, componentBase + "Main.wod", "", subMonitor);
+			createFile(project, componentBase + "Main.woo", generateMainWoo(), subMonitor);
 
 			// WO-specific files
 			if (!_isNG) {
-				createFile(project, "src/main/resources/Properties", generateWOProperties(), monitor);
+				createFile(project, "src/main/resources/Properties", generateWOProperties(), subMonitor);
 			}
-			monitor.worked(1);
+			subMonitor.worked(1);
 
-			// 4. Refresh so Eclipse sees all new files
+			// 5. Refresh so Eclipse sees all new files
 			project.refreshLocal(IResource.DEPTH_INFINITE, subMonitor.split(1));
 
 			return project.getFile(componentBase + "Main.html");
