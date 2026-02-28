@@ -99,10 +99,32 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
     return javaProject;
   }
 
+  /** Available parser directive tags in the {@code p:} namespace. */
+  private static final String[] P_DIRECTIVES = { "p:raw", "p:comment" };
+
   @Override
   protected List<TagInfo> getDynamicTagInfo(String tagName) {
     List<TagInfo> tagInfos = null;
-    if (tagName.startsWith("wo:")) {
+
+    // Parser directive namespace — static completions for p:raw and p:comment
+    if (tagName.startsWith("p:") || tagName.equals("p")) {
+      String lowercaseTagName = tagName.toLowerCase();
+      tagInfos = new LinkedList<TagInfo>();
+      for (String directive : P_DIRECTIVES) {
+        if (directive.startsWith(lowercaseTagName)) {
+          TagInfo info = new TagInfo(directive, true);
+          info.setDescription(directive.equals("p:raw")
+              ? "Literal content block — no dynamic tag processing inside"
+              : "Template-level comment — content is stripped from output");
+          tagInfos.add(info);
+        }
+      }
+      if (tagInfos.isEmpty()) {
+        tagInfos = null;
+      }
+    }
+    // WO element type namespace — dynamic completions from classpath + tag shortcuts
+    else if (tagName.startsWith("wo:")) {
       String partialElementType = tagName.substring("wo:".length());
       IJavaProject javaProject = getJavaProject();
       try {
@@ -287,6 +309,10 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
       InlineWodTagInfo tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());
       tagInfo.setJavaProject(getJavaProject());
       return tagInfo;
+    }
+    // Parser directive tags — p:raw and p:comment
+    if (name.equals("p:raw") || name.equals("p:comment")) {
+      return new TagInfo(name, true);
     }
     List tagList = getTagList();
     for (int i = 0; i < tagList.size(); i++) {

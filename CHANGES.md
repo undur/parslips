@@ -21,7 +21,8 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 - Linked rename (Cmd+2, R) works on both tag types — renaming the open tag updates the close tag and vice versa.
 - Block content is isolated at the partitioner level — unclosed quotes or broken HTML inside a `p:` block cannot leak into the rest of the document.
 - Block content is also blanked during parser preprocessing (`pBlock2space`), preventing unclosed strings from corrupting the FuzzyXML parse of surrounding elements.
-- Modified files: `FuzzyXMLParser.java`, `FuzzyXMLUtil.java`, `WodHtmlUtils.java`, `TemplateValidator.java`, `HTMLTagScanner.java`, `HTMLPartitionScanner.java`, `HTMLConfiguration.java`, `HTMLFileDocumentProvider.java`, `HTMLTextDocumentProvider.java`.
+- Tag autocomplete works in the `p:` namespace — typing `<p:` and pressing Ctrl+Space offers `p:raw` and `p:comment` with descriptions.
+- Modified files: `FuzzyXMLParser.java`, `FuzzyXMLUtil.java`, `WodHtmlUtils.java`, `TemplateValidator.java`, `HTMLTagScanner.java`, `HTMLPartitionScanner.java`, `HTMLConfiguration.java`, `HTMLFileDocumentProvider.java`, `HTMLTextDocumentProvider.java`, `TemplateAssistProcessor.java`.
 
 ### Close-tag completion fix
 
