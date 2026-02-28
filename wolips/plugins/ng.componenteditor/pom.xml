@@ -12,5 +12,25 @@
 	<artifactId>ng.componenteditor</artifactId>
 	<build>
 		<sourceDirectory>java</sourceDirectory>
+		<testSourceDirectory>test</testSourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-surefire-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>plugin-test</id>
+						<goals>
+							<goal>plugin-test</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<useUIHarness>false</useUIHarness>
+					<useUIThread>false</useUIThread>
+					<failIfNoTests>false</failIfNoTests>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 </project>
