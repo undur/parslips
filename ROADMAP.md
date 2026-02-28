@@ -28,11 +28,9 @@ Rename a binding in Java and have it update in the WOD and HTML template automat
 
 WO component bundles are inherently multi-file (HTML + WOD + WOO + Java + .api), so cross-file refactoring is where tooling can save the most manual effort.
 
-## Component catalog / documentation on hover
+## ~~Component documentation on hover~~ ✓
 
-Hover over a component tag in the template or WOD and see its API: accepted bindings, which are required, expected types, and a short description.
-
-The data source already exists — `.api` files describe the component interface. This is about surfacing that information inline via `ITextHover` in the template editor and WOD editor.
+Implemented. Hovering over a `<wo:ComponentName>` tag in the template editor now shows the component's API documentation — accepted bindings, required/settable markers, and defaults. Works for both project components (via `.api` files) and built-in WO components (via `WebObjectDefinitions.xml`). Validation errors take priority when both are available.
 
 ## Binding type checking
 
@@ -91,11 +89,9 @@ A major evolution of the `.api` file format to describe the full component contr
 
 This feeds into almost every other roadmap item: hover documentation, validation quick-fixes, binding type checking, and the component catalog.
 
-## Extract component from selection
+## ~~Extract component from selection~~ ✓
 
-Select a chunk of template HTML, extract it into a new component — generating the `.wo` bundle, WOD entries, and a stub Java class. The template equivalent of "Extract Method."
-
-This ties into the refactoring infrastructure and the "New WO Component" wizard that already exists.
+Implemented. Select HTML in the template, press `Cmd+2, E`, enter a name — the selected HTML is extracted into a new component (`.wo` folder + all files), the selection is replaced with a `<wo:NewComponentName/>` tag, and the new component opens for editing. Uses the same package and superclass as the parent component. The extracted HTML is automatically dedented to start at column 0.
 
 ## Tag namespace support
 

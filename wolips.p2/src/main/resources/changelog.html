@@ -28,6 +28,17 @@
 				<h2 class="date-header">February 28, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Extract Component from selection</h3>
+					<p>Select HTML in the template, press <kbd>Cmd+2, E</kbd> (or Edit &gt; Refactor &gt; Extract Component&hellip;), enter a name &mdash; the selected HTML is extracted into a new component. The plugin creates the <code>.wo</code> folder with all files (<code>.html</code>, <code>.wod</code>, <code>.woo</code>, <code>.java</code>), replaces the selection with a <code>&lt;wo:NewComponentName/&gt;</code> tag, and opens the new component for editing.</p>
+					<p>The new component is placed alongside the current component and uses the same Java package and component superclass. The extracted HTML is automatically dedented &mdash; common leading whitespace is stripped so the new template starts at column 0. The selected HTML is placed as-is &mdash; bindings are wired up manually afterward.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Component documentation on hover</h3>
+					<p>Hovering over a <code>&lt;wo:ComponentName&gt;</code> tag now shows the component's API documentation &mdash; accepted bindings, required/settable markers, and defaults. Works for project components (via <code>.api</code> files) and built-in WO components (via <code>WebObjectDefinitions.xml</code>). When both a validation error and documentation are available, the error appears first with documentation below.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Rename element: cross-reference updating</h3>
 					<p>Renaming any <code>WOElement</code>/<code>NGElement</code> subclass via <strong>Refactor &gt; Rename</strong> now automatically updates all references across the project. Inline binding tags (<code>&lt;wo:OldName&gt;</code> &rarr; <code>&lt;wo:NewName&gt;</code>, including close tags) and WOD element type declarations (<code>Foo : OldName { }</code> &rarr; <code>Foo : NewName { }</code>) are rewritten in every template that uses the renamed type.</p>
 					<p>This applies to all element subclasses &mdash; not just components, but also custom dynamic elements. Tag shortcuts (like <code>&lt;wo:if&gt;</code> for <code>WOConditional</code>) are not affected, since they use the shortcut name rather than the class name.</p>

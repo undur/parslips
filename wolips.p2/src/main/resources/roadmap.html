@@ -39,10 +39,9 @@
 					<p>Rename a binding in Java and have it update in the WOD and HTML template automatically. WO component bundles are inherently multi-file, so cross-file refactoring is where tooling saves the most manual effort.</p>
 				</div>
 
-				<div class="roadmap-entry">
-					<h3>Component catalog / documentation on hover</h3>
-					<p>Hover over a component tag in the template or WOD and see its API: accepted bindings, which are required, expected types, and a short description. The data source already exists in <code>.api</code> files &mdash; this is about surfacing it inline.</p>
-				</div>
+				<!-- Component documentation on hover: implemented. Hovering over
+				     <wo:ComponentName> tags now shows API bindings from .api files
+				     and WebObjectDefinitions.xml. -->
 
 				<div class="roadmap-entry">
 					<h3>Binding type checking</h3>
@@ -74,10 +73,8 @@
 					<p>A major evolution of the <code>.api</code> file format to describe the full component contract. Binding directionality (get/set/both), deprecated bindings, default values, value constraints, required vs. optional bindings, per-binding documentation, component descriptions, content model, and more. This feeds into almost every other roadmap item.</p>
 				</div>
 
-				<div class="roadmap-entry">
-					<h3>Extract component from selection</h3>
-					<p>Select a chunk of template HTML, extract it into a new component &mdash; generating the bundle, WOD entries, and a stub Java class. The template equivalent of "Extract Method."</p>
-				</div>
+				<!-- Extract component from selection: implemented. Cmd+2, E extracts
+				     selected HTML into a new component with all files. -->
 
 				<div class="roadmap-entry">
 					<h3>Tag namespace support</h3>

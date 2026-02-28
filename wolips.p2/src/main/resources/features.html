@@ -108,8 +108,8 @@
 				</div>
 
 				<div class="feature-entry">
-					<h3>Hover help on errors</h3>
-					<p>Hovering over a squiggly-underlined error shows the validation message inline, including any "Did you mean?" suggestions. Works in both the editor body and the vertical ruler.</p>
+					<h3>Hover help</h3>
+					<p>Hovering over a squiggly-underlined error shows the validation message inline. Hovering over a <code>&lt;wo:ComponentName&gt;</code> tag shows the component&rsquo;s API documentation &mdash; accepted bindings, required/settable markers, and defaults. When both are available, the error appears first with documentation below.</p>
 				</div>
 
 				<div class="feature-entry">
@@ -165,6 +165,11 @@
 				<div class="feature-entry">
 					<h3>Linked rename</h3>
 					<p><kbd>Cmd+2, R</kbd> on an element tag enters linked rename mode &mdash; editing the tag name simultaneously updates the matching close tag. Works on <code>&lt;wo:&gt;</code> tags, HTML tags, and parser control tags.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Extract Component</h3>
+					<p><kbd>Cmd+2, E</kbd> extracts the selected HTML into a new component &mdash; creating the <code>.wo</code> folder with all files, replacing the selection with a <code>&lt;wo:NewComponentName/&gt;</code> tag, and opening the new component for editing. The extracted HTML is automatically dedented to start at column 0.</p>
 				</div>
 
 				<div class="feature-entry">

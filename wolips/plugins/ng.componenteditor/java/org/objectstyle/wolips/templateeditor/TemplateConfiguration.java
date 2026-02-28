@@ -57,24 +57,44 @@ public class TemplateConfiguration extends HTMLConfiguration {
   }
 
   /**
-   * Returns a position-aware annotation hover that shows error messages
-   * when the mouse hovers over squiggly-underlined text. Replaces the
-   * default {@link tk.eclipse.plugin.htmleditor.editors.HTMLAnnotationHover}
-   * which only works on the vertical ruler.
+   * Returns a hover for the vertical ruler that shows error messages when
+   * the mouse hovers over annotation markers.
    */
   @Override
   public IAnnotationHover getAnnotationHover(ISourceViewer sourceViewer) {
-    return new WodAnnotationHover(sourceViewer.getAnnotationModel());
+    return new WodAnnotationHover(sourceViewer.getAnnotationModel(), getParserCacheOrNull());
   }
 
   /**
-   * Returns a text hover that shows error messages when the mouse hovers
-   * over annotated text in the editor body. Uses the same annotation-model-based
-   * hover as the vertical ruler.
+   * Returns a text hover that shows error messages on squiggly-underlined
+   * text and component API documentation on {@code <wo:ComponentName>} tags.
+   *
+   * <p>When hovering over a component tag, the hover shows the component's
+   * accepted bindings (from its {@code .api} file or the global
+   * {@code WebObjectDefinitions.xml}), which bindings are required, and
+   * their types/defaults. If the tag also has a validation error, the error
+   * message is shown first, followed by the documentation.
    */
   @Override
   public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
-    return new WodAnnotationHover(sourceViewer.getAnnotationModel());
+    return new WodAnnotationHover(sourceViewer.getAnnotationModel(), getParserCacheOrNull());
+  }
+
+  /**
+   * Attempts to obtain the parser cache for the current file. Returns null
+   * if the cache can't be obtained (e.g. editor not fully initialized).
+   */
+  private WodParserCache getParserCacheOrNull() {
+    try {
+      if (getEditorPart() instanceof TemplateSourceEditor) {
+        IFile file = ((FileEditorInput) getEditorPart().getEditorInput()).getFile();
+        return WodParserCache.parser(file);
+      }
+    }
+    catch (Exception e) {
+      // Fall through — hover works without documentation
+    }
+    return null;
   }
 
   /**

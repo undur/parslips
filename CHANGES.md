@@ -12,6 +12,22 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Extract Component from selection
+
+- **New refactoring action:** Select HTML in the template editor, press `Cmd+2, E` (or Edit > Refactor > Extract Component...), enter a name, and the selected HTML is extracted into a new WO component. The plugin creates the `.wo` folder with `.html`, `.wod`, `.woo`, and `.java` files, replaces the selection with a `<wo:NewComponentName/>` tag, and opens the new component for editing.
+- The new component is created alongside the current component (same parent directory) and uses the same Java package and component superclass.
+- **Automatic dedenting:** The extracted HTML is dedented — the common leading whitespace is stripped from all lines, so the new component's template starts at column 0 regardless of how deeply the code was nested in the parent. The replacement tag in the parent template is placed at the original indentation level.
+- The selected HTML is placed as-is — no automatic binding detection. The user wires up bindings manually afterward.
+- Input validation ensures the name is a valid Java identifier and doesn't conflict with an existing component.
+- New file: `ExtractComponentAction.java`.
+
+### Component documentation on hover
+
+- **Hover over `<wo:ComponentName>` to see its API bindings.** The template editor now shows component documentation — accepted bindings, required/settable markers, and defaults — when hovering over inline binding tags.
+- Works for project components (via `.api` files) and built-in WO components (via `WebObjectDefinitions.xml`).
+- Validation errors still take priority: when both an error and documentation are available, the error message appears first with the documentation below.
+- Enhanced `WodAnnotationHover` to combine error annotations and component documentation in a single hover provider.
+
 ### Rename element type: cross-reference updating
 
 - **Template references are updated automatically:** When renaming any WOElement/NGElement subclass (not just components), all templates in the project that reference the old type name are rewritten. Inline binding tags (`<wo:OldName>` → `<wo:NewName>`, including close tags) and WOD element type declarations (`Foo : OldName { }` → `Foo : NewName { }`) are both handled.
