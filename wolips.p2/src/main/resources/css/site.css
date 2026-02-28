@@ -50,6 +50,18 @@ body {
 	text-decoration: none;
 }
 
+.site-nav .nav-muted {
+	color: #8a9e8a;
+}
+
+.site-nav .nav-muted:hover {
+	color: #5a7e5a;
+}
+
+.site-nav .nav-muted.active {
+	color: #5a6e5a;
+}
+
 .site-nav .nav-github {
 	margin-left: auto;
 }

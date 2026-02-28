@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Parsley Template Editor — Non-Features</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/site.css"/>
+		<link rel="icon" type="image/x-icon" href="img/favicon.ico"/>
+	</head>
+	<body>
+		<div class="container features">
+			<nav class="site-nav">
+				<a href="index.html">Home</a>
+				<a href="features.html">Features</a>
+				<a href="changelog.html">Changelog</a>
+				<a href="roadmap.html">Roadmap</a>
+				<a href="non-features.html" class="nav-muted active">Non-Features</a>
+				<a href="https://github.com/undur/parslips" class="nav-github">GitHub ↗</a>
+			</nav>
+
+			<div class="hero">
+				<div class="hero-emoji">🌿</div>
+				<h1>Non-Features</h1>
+				<p class="tagline">What WOLips did that Parsley does not</p>
+			</div>
+
+			<div class="card">
+				<p style="font-size: 15px; color: #4a5e4a; line-height: 1.55; margin-bottom: 0;">Parsley is a <strong>template editor</strong>, not a full IDE suite. The original WOLips was a collection of ~18 Eclipse plugins covering the entire WebObjects development lifecycle &mdash; from data modeling to deployment. Parsley focuses on the component editing experience and drops everything else. This page documents what was intentionally left behind.</p>
+			</div>
+
+			<!-- ===== ENTITY MODELER ===== -->
+			<div class="card">
+				<h2 class="section-header">Entity Modeler</h2>
+
+				<div class="feature-entry">
+					<h3>Visual EOModel editor</h3>
+					<p>WOLips included a full graphical editor for Enterprise Objects models (<code>.eomodeld</code>). Entity diagrams, attribute and relationship management, fetch specification editing, stored procedure definitions, database configuration &mdash; all through a dedicated multi-tab editor with property panels.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Entity Modeler perspective</h3>
+					<p>A dedicated Eclipse perspective for data modeling, with its own layout and toolbars.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Database operations</h3>
+					<p>Reverse-engineering database schemas into EOModels, SQL generation with vendor-specific support, and migration generation for schema changes.</p>
+				</div>
+			</div>
+
+			<!-- ===== CODE GENERATION ===== -->
+			<div class="card">
+				<h2 class="section-header">Code Generation</h2>
+
+				<div class="feature-entry">
+					<h3>EOGenerator</h3>
+					<p>An integrated <code>.eogen</code> file editor for generating Java classes from EOModels. Managed EOModelGroups for multi-model projects and automatic class file generation as part of the build process.</p>
+				</div>
+			</div>
+
+			<!-- ===== D2W ===== -->
+			<div class="card">
+				<h2 class="section-header">Direct to Web</h2>
+
+				<div class="feature-entry">
+					<h3>D2W rule editor</h3>
+					<p>A visual editor for Direct to Web rule models (<code>.d2wmodel</code> files). D2W is a WebObjects framework that generates web UIs from EOModels using configurable rules.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>D2W project wizards</h3>
+					<p>Wizards for creating new Direct to Web applications, including both standard WebObjects D2W and Project Wonder D2W projects, with look-and-feel selection (Basic, Neutral, WebObjects, Classic, Wonder).</p>
+				</div>
+			</div>
+
+			<!-- ===== BUILD & LAUNCH ===== -->
+			<div class="card">
+				<h2 class="section-header">Build &amp; Launch</h2>
+
+				<div class="feature-entry">
+					<h3>WO launch configurations</h3>
+					<p>A custom Eclipse launch type for running and debugging WebObjects applications. Included classpath resolution for WOFrameworks, environment variable setup, and the Wonder <code>ERXMainRunner</code> launch shortcut.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Incremental builder</h3>
+					<p>A custom Eclipse builder for WOApplications and WOFrameworks, with Ant-based build integration and framework target management.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Classpath management</h3>
+					<p>Custom classpath variables (<code>NEXT_LOCAL_ROOT</code>, <code>NEXT_SYSTEM_ROOT</code>, <code>NEXT_ROOT</code>, <code>EXTERNAL_BUILD_ROOT</code>) and a WOFramework classpath container with a GUI for selecting frameworks from the local WebObjects installation.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Resource management</h3>
+					<p>Tools to include/exclude resources as WebServerResources, WOResources, or Classes &mdash; managing the <code>build.properties</code> pattern sets that control what gets packaged into the application or framework bundle.</p>
+				</div>
+			</div>
+
+			<!-- ===== DEBUGGING ===== -->
+			<div class="card">
+				<h2 class="section-header">Debugging</h2>
+
+				<div class="feature-entry">
+					<h3>WO-specific debug support</h3>
+					<p>Logical structure providers for WebObjects classes in the debugger, plus custom exception handlers for <code>NSKeyValueCoding</code> exceptions and <code>WODeclarationFormat</code> errors. Console line trackers for navigating build failures and runtime exceptions.</p>
+				</div>
+			</div>
+
+			<!-- ===== PROJECT WIZARDS ===== -->
+			<div class="card">
+				<h2 class="section-header">Project Wizards</h2>
+
+				<div class="feature-entry">
+					<h3>Non-Maven project types</h3>
+					<p>WOLips supported creating WebObjects Applications, Frameworks, and Subprojects using the legacy Ant-based build system. Parsley only creates Maven projects.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Specialized project wizards</h3>
+					<p>Dedicated wizards for ERRest applications, Direct to Java Client projects, Direct to WebService applications, Jar projects, and importing PB (Project Builder) projects from the pre-Xcode era.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>EOModel import wizard</h3>
+					<p>A wizard for importing existing EOModel files into a project during project creation.</p>
+				</div>
+			</div>
+
+			<!-- ===== VIEWS ===== -->
+			<div class="card">
+				<h2 class="section-header">Views</h2>
+
+				<div class="feature-entry">
+					<h3>Related view</h3>
+					<p>A view showing files related to the current selection &mdash; the other files that make up a component, associated EOModels, etc.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>WOBuilder view</h3>
+					<p>A visual component builder tab in the component editor, inherited from the original Apple WebObjects Builder tool. Allowed drag-and-drop layout of components.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Preview tab</h3>
+					<p>A preview tab in the component editor for viewing a rendered approximation of the template.</p>
+				</div>
+			</div>
+
+			<!-- ===== DECORATORS ===== -->
+			<div class="card">
+				<h2 class="section-header">Decorators &amp; Markers</h2>
+
+				<div class="feature-entry">
+					<h3>Project nature decorators</h3>
+					<p>Visual markers distinguishing WOApplication projects from WOFramework projects, with decorators for build folders, subproject folders, <code>woproject</code> folders, and Xcode project files.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Action method decorators</h3>
+					<p>Decorators in the Java editor identifying action methods (methods returning <code>WOActionResults</code>).</p>
+				</div>
+			</div>
+
+			<!-- ===== PREFERENCES ===== -->
+			<div class="card">
+				<h2 class="section-header">Preferences</h2>
+
+				<div class="feature-entry">
+					<h3>Build &amp; launch preferences</h3>
+					<p>Dedicated preference pages for WOLips build configuration, launch settings, and debugging options. Parsley has no build or launch integration.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>EOGenerator preferences</h3>
+					<p>Preference page for configuring EOGenerator code generation settings (templates, output paths, naming conventions).</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Per-project deployment settings</h3>
+					<p>Property pages for configuring development and deployment settings on individual projects (servlet adaptor, JNDI support, WebServices, etc.).</p>
+				</div>
+			</div>
+
+			<!-- ===== MISC ===== -->
+			<div class="card">
+				<h2 class="section-header">Miscellaneous</h2>
+
+				<div class="feature-entry">
+					<h3>Find unused WO code</h3>
+					<p>A project-wide analysis tool for finding unreferenced WebObjects code.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>WebServices support</h3>
+					<p>Wizards and configuration for Direct to WebServices applications, with client and server WebServices support options.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Ant &amp; Maven tool menus</h3>
+					<p>Context menu contributions for WOLips-specific Ant tasks and Maven operations.</p>
+				</div>
+			</div>
+
+			<div class="footer">
+				<p>🌿 <a href="https://github.com/undur/parslips">github.com/undur/parslips</a></p>
+			</div>
+		</div>
+	</body>
+</html>
