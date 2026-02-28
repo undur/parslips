@@ -121,11 +121,14 @@ public class ReplaceKeypathQuickFix implements IMarkerResolution {
         return -1;
       }
 
-      // Verify it's a complete segment: preceded by start-of-string or '.'
-      // and followed by end-of-string or '.'
+      // Verify it's a complete segment: preceded by start-of-string, '.',
+      // '$', or ':' and followed by end-of-string or '.'.
+      // The ':' delimiter supports element type names in inline bindings
+      // where the marker range includes the namespace prefix (e.g. "wo:WOString").
       boolean startOk = (idx == 0)
           || bindingValue.charAt(idx - 1) == '.'
-          || bindingValue.charAt(idx - 1) == '$';
+          || bindingValue.charAt(idx - 1) == '$'
+          || bindingValue.charAt(idx - 1) == ':';
       boolean endOk = (idx + key.length() == bindingValue.length())
           || bindingValue.charAt(idx + key.length()) == '.';
 

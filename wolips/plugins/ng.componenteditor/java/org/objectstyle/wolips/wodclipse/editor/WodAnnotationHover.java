@@ -49,11 +49,15 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	}
 
 	public String getHoverInfo(ITextViewer _textViewer, IRegion _hoverRegion) {
+		// Annotation model may be null if the editor hasn't fully initialized yet
+		if (myAnnotationModel == null) {
+			return null;
+		}
 		Iterator annotationsIter = myAnnotationModel.getAnnotationIterator();
 		while (annotationsIter.hasNext()) {
 			Annotation annotation = (Annotation) annotationsIter.next();
 			Position position = myAnnotationModel.getPosition(annotation);
-			if (position.overlapsWith(_hoverRegion.getOffset(), _hoverRegion.getLength())) {
+			if (position != null && position.overlapsWith(_hoverRegion.getOffset(), _hoverRegion.getLength())) {
 				String text = annotation.getText();
 				if (text != null && text.trim().length() > 0) {
 					return text;
@@ -64,12 +68,15 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	}
 
 	public IRegion getHoverRegion(ITextViewer _textViewer, int _offset) {
-		// TODO If this is too slow then we might return new Region(offset, 0)
+		// Annotation model may be null if the editor hasn't fully initialized yet
+		if (myAnnotationModel == null) {
+			return null;
+		}
 		Iterator annotationsIter = myAnnotationModel.getAnnotationIterator();
 		while (annotationsIter.hasNext()) {
 			Annotation annotation = (Annotation) annotationsIter.next();
 			Position position = myAnnotationModel.getPosition(annotation);
-			if (position.overlapsWith(_offset, 0)) {
+			if (position != null && position.overlapsWith(_offset, 0)) {
 				String text = annotation.getText();
 				if (text != null && text.trim().length() > 0) {
 					return new Region(position.offset, position.length);

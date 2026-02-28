@@ -45,6 +45,7 @@ package org.objectstyle.wolips.bindings.wod;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,12 +56,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
 import org.objectstyle.wolips.bindings.api.Binding;
@@ -69,6 +73,8 @@ import org.objectstyle.wolips.bindings.api.Validation;
 import org.objectstyle.wolips.bindings.api.Wo;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
+import org.objectstyle.wolips.bindings.utils.StringDistance;
+import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
 
 /**
  * @author mschrag
@@ -268,7 +274,25 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 
     String elementName = getElementName();
     int lineNumber = getLineNumber();
+
   	String wodMissingComponentSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.WOD_MISSING_COMPONENT_SEVERITY_KEY);
+
+    // Check for tag shortcut case mismatch (e.g. user wrote "Repetition"
+    // but the shortcut is defined as "repetition"). Produce the same error
+    // message format as a missing element type — the user shouldn't need to
+    // know whether what they typed was a shortcut or a class name.
+    if (!PreferenceConstants.IGNORE.equals(wodMissingComponentSeverity) && this instanceof SimpleWodElement) {
+      SimpleWodElement simpleElement = (SimpleWodElement) this;
+      if (simpleElement.getTagShortcutCaseMismatch() != null) {
+        String originalText = simpleElement.getTagShortcutCaseMismatch();
+        String correctCase = simpleElement.getTagShortcutCorrectCase();
+        List<String> suggestions = Collections.singletonList(correctCase);
+        String message = "The class for '" + originalText + "' is either missing or does not extend a known element root type (NGElement/WOElement). Did you mean '" + correctCase + "'?";
+        WodElementProblem problem = new WodElementProblem(this, message, getElementTypePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodMissingComponentSeverity));
+        problem.setSuggestions(suggestions);
+        problems.add(problem);
+      }
+    }
   	String unusedWodElementSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.UNUSED_WOD_ELEMENT_SEVERITY_KEY);
     if (!PreferenceConstants.IGNORE.equals(unusedWodElementSeverity) && !_inline && !htmlCache.containsElementNamed(elementName)) {
       problems.add(new WodElementProblem(this, "There is no element named '" + elementName + "' in your component HTML file", getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(unusedWodElementSeverity)));
@@ -286,7 +310,27 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     if (!PreferenceConstants.IGNORE.equals(wodMissingComponentSeverity)) {
     	IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
 	    if (elementType == null || (!elementType.getElementName().equals(elementTypeName) && !elementType.getFullyQualifiedName().equals(elementTypeName))) {
-	      problems.add(new WodElementProblem(this, "The class for '" + elementTypeName + "' is either missing or does not extend a known element root type (NGElement/WOElement).", getElementTypePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodMissingComponentSeverity)));
+	      // Compute "did you mean?" suggestions for the mistyped element type name.
+	      List<String> suggestions = suggestElementTypeNames(javaProject, elementTypeName);
+	      String message = "The class for '" + elementTypeName + "' is either missing or does not extend a known element root type (NGElement/WOElement).";
+	      if (!suggestions.isEmpty()) {
+	        if (suggestions.size() == 1) {
+	          message += " Did you mean '" + suggestions.get(0) + "'?";
+	        }
+	        else {
+	          StringBuilder sb = new StringBuilder();
+	          sb.append(" Did you mean ");
+	          for (int i = 0; i < suggestions.size(); i++) {
+	            if (i > 0) sb.append(", ");
+	            sb.append("'").append(suggestions.get(i)).append("'");
+	          }
+	          sb.append("?");
+	          message += sb.toString();
+	        }
+	      }
+	      WodElementProblem problem = new WodElementProblem(this, message, getElementTypePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodMissingComponentSeverity));
+	      problem.setSuggestions(suggestions);
+	      problems.add(problem);
 	    }
 	    else {
 	    	String wodApiProblemSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY);
@@ -353,6 +397,71 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 
     if (javaModelException != null) {
       throw javaModelException;
+    }
+  }
+
+  /**
+   * Finds element type names similar to the given (mistyped) name.
+   * First checks for case-only mismatches (e.g. "Str" → "str"), which are
+   * the most common error, then uses Damerau–Levenshtein distance for
+   * typo-based suggestions (e.g. "WOStirng" → "WOString").
+   *
+   * @param javaProject the project to search for element types
+   * @param invalidName the mistyped element type name
+   * @return suggestions sorted by relevance (case-only matches first, then by edit distance)
+   */
+  private List<String> suggestElementTypeNames(IJavaProject javaProject, String invalidName) {
+    try {
+      TypeNameCollector collector = new TypeNameCollector(javaProject, false);
+      BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, new NullProgressMonitor());
+
+      // Extract simple class names from the fully-qualified names
+      Set<String> qualifiedNames = collector.getTypeNames();
+      List<String> simpleNames = new ArrayList<String>(qualifiedNames.size());
+      for (String qualifiedName : qualifiedNames) {
+        int lastDot = qualifiedName.lastIndexOf('.');
+        simpleNames.add(lastDot >= 0 ? qualifiedName.substring(lastDot + 1) : qualifiedName);
+      }
+
+      // Also include tag shortcut names as candidates. A user typing
+      // "repetiti" is more likely trying to type the shortcut "repetition"
+      // (distance 2) than the class name "WORepetition" (distance 4).
+      for (TagShortcut tagShortcut : ApiCache.getTagShortcuts()) {
+        String shortcutName = tagShortcut.getShortcut();
+        if (!simpleNames.contains(shortcutName)) {
+          simpleNames.add(shortcutName);
+        }
+      }
+
+      List<String> suggestions = new ArrayList<String>();
+
+      // Case-only mismatches: StringDistance is case-insensitive and returns
+      // distance 0 for these, so closestMatches() would filter them out.
+      // Check explicitly since capitalization errors are the most common mistake.
+      for (String candidate : simpleNames) {
+        if (candidate.equalsIgnoreCase(invalidName) && !candidate.equals(invalidName)) {
+          suggestions.add(candidate);
+        }
+      }
+
+      // Typo-based suggestions via edit distance
+      List<String> typoSuggestions = StringDistance.closestMatches(invalidName, simpleNames, 3);
+      for (String suggestion : typoSuggestions) {
+        if (!suggestions.contains(suggestion)) {
+          suggestions.add(suggestion);
+        }
+      }
+
+      // Cap at 3 total suggestions
+      if (suggestions.size() > 3) {
+        suggestions = suggestions.subList(0, 3);
+      }
+
+      return suggestions;
+    }
+    catch (Exception e) {
+      Activator.getDefault().log("Failed to compute element type suggestions for '" + invalidName + "'.", e);
+      return Collections.emptyList();
     }
   }
 

@@ -33,6 +33,12 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
       }
     }
     if (matchingTagShortcut != null) {
+      // Flag case mismatches: user wrote "Repetition" but shortcut is "repetition".
+      // We still expand to the actual class name so binding validation works,
+      // but record the mismatch so fillInProblems() can warn about it.
+      if (!namespaceElementName.equals(matchingTagShortcut.getShortcut())) {
+        setTagShortcutCaseMismatch(namespaceElementName, matchingTagShortcut.getShortcut());
+      }
       namespaceElementName = matchingTagShortcut.getActual();
     }
 

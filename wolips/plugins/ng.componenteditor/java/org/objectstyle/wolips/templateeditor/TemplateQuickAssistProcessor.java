@@ -1,8 +1,10 @@
 package org.objectstyle.wolips.templateeditor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.text.BadLocationException;
@@ -23,9 +25,13 @@ import org.objectstyle.wolips.wodclipse.core.quickfix.ReplaceKeypathQuickFix;
  *
  * <p>When invoked at a position that overlaps with a problem marker, this
  * processor reads the marker's "suggestions" attribute and offers completion
- * proposals that replace the invalid keypath segment with the suggested
- * correction. This gives the same quick-fix experience as the Problems view,
- * but accessible directly in the editor via Cmd+1.
+ * proposals that replace the invalid text with the suggested correction.
+ * Supports both keypath errors ("There is no key 'nme'") and element type
+ * errors ("The class for 'Str' is either missing").
+ *
+ * <p>Multiple errors on the same line are handled correctly — each marker
+ * produces its own set of proposals, and the replacements target different
+ * regions (e.g. the tag name vs. a binding value).
  */
 public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
 
@@ -72,6 +78,12 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
 
     List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
+    // Track which proposals we've already added to avoid duplicates.
+    // Duplicates can occur when both the builder and the reconciler create
+    // markers for the same error, resulting in two MarkerAnnotation objects
+    // with identical messages and positions.
+    Set<String> seenProposals = new HashSet<String>();
+
     Iterator<?> annotations = annotationModel.getAnnotationIterator();
     while (annotations.hasNext()) {
       Annotation annotation = (Annotation) annotations.next();
@@ -98,59 +110,84 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
       }
 
       IMarker marker = ((MarkerAnnotation) annotation).getMarker();
-      try {
-        String suggestionsStr = (String) marker.getAttribute("suggestions");
-        if (suggestionsStr == null || suggestionsStr.isEmpty()) {
-          continue;
-        }
+      addProposalsForMarker(marker, document, proposals, seenProposals);
+    }
 
-        String message = (String) marker.getAttribute(IMarker.MESSAGE);
-        String invalidKey = KeypathQuickFixGenerator.extractInvalidKey(message);
-        if (invalidKey == null) {
-          continue;
-        }
+    return proposals.toArray(new ICompletionProposal[proposals.size()]);
+  }
 
-        // Read the document text at the marker range to find the
-        // invalid key segment within the binding value.
-        int charStart = marker.getAttribute(IMarker.CHAR_START, -1);
-        int charEnd = marker.getAttribute(IMarker.CHAR_END, -1);
-        if (charStart < 0 || charEnd < 0 || charEnd <= charStart) {
-          continue;
-        }
+  /**
+   * Extracts the invalid name and suggestions from a marker and builds
+   * completion proposals for each suggestion.  Handles keypath errors
+   * ("There is no key 'nme'") and element type errors ("The class for 'Str'
+   * is either missing"), including miscapitalized tag shortcuts which use
+   * the same message format.
+   */
+  private void addProposalsForMarker(IMarker marker, IDocument document,
+      List<ICompletionProposal> proposals, Set<String> seenProposals) {
+    try {
+      String suggestionsStr = (String) marker.getAttribute("suggestions");
+      if (suggestionsStr == null || suggestionsStr.isEmpty()) {
+        return;
+      }
 
-        String markedText = document.get(charStart, charEnd - charStart);
-        int keyOffset = ReplaceKeypathQuickFix.findKeySegmentOffset(markedText, invalidKey);
-        if (keyOffset < 0) {
-          continue;
-        }
+      // Try to extract the invalid name from the error message.
+      // Could be a keypath segment or an element type name (including
+      // miscapitalized tag shortcuts, which use the same message format).
+      String message = (String) marker.getAttribute(IMarker.MESSAGE);
+      String invalidName = KeypathQuickFixGenerator.extractInvalidKey(message);
+      if (invalidName == null) {
+        invalidName = KeypathQuickFixGenerator.extractInvalidElementType(message);
+      }
+      if (invalidName == null) {
+        return;
+      }
 
-        int replaceStart = charStart + keyOffset;
+      // Read the document text at the marker range to find the
+      // invalid name within the marked region.
+      int charStart = marker.getAttribute(IMarker.CHAR_START, -1);
+      int charEnd = marker.getAttribute(IMarker.CHAR_END, -1);
+      if (charStart < 0 || charEnd < 0 || charEnd <= charStart) {
+        return;
+      }
 
-        String[] suggestions = suggestionsStr.split(";");
-        for (String suggestion : suggestions) {
-          String trimmed = suggestion.trim();
-          if (!trimmed.isEmpty()) {
+      String markedText = document.get(charStart, charEnd - charStart);
+      int keyOffset = ReplaceKeypathQuickFix.findKeySegmentOffset(markedText, invalidName);
+      if (keyOffset < 0) {
+        return;
+      }
+
+      int replaceStart = charStart + keyOffset;
+
+      String[] suggestions = suggestionsStr.split(";");
+      for (String suggestion : suggestions) {
+        String trimmed = suggestion.trim();
+        if (!trimmed.isEmpty()) {
+          // Deduplicate: build a key from the replacement offset, length,
+          // and suggestion text. This prevents the same proposal from
+          // appearing twice when both the builder and reconciler create
+          // markers for the same error.
+          String proposalKey = replaceStart + ":" + invalidName.length() + ":" + trimmed;
+          if (seenProposals.add(proposalKey)) {
             proposals.add(new CompletionProposal(
                 trimmed,
                 replaceStart,
-                invalidKey.length(),
+                invalidName.length(),
                 trimmed.length(),
                 null,
-                "Replace '" + invalidKey + "' with '" + trimmed + "'",
+                "Replace '" + invalidName + "' with '" + trimmed + "'",
                 null,
                 null));
           }
         }
       }
-      catch (BadLocationException e) {
-        // Marker position may be stale after edits
-      }
-      catch (Exception e) {
-        // Marker may have been deleted
-      }
     }
-
-    return proposals.toArray(new ICompletionProposal[proposals.size()]);
+    catch (BadLocationException e) {
+      // Marker position may be stale after edits
+    }
+    catch (Exception e) {
+      // Marker may have been deleted
+    }
   }
 
   @Override

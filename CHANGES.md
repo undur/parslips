@@ -12,6 +12,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Tag shortcut capitalization validation
+
+- **Miscapitalized tag shortcuts are now flagged:** Writing `<wo:Repetition>` when the shortcut is defined as `repetition` now produces a validation error with a "Did you mean 'repetition'?" suggestion. Uses the same error format as element type errors — the user doesn't need to know whether what they typed was a shortcut or a class name. Previously, the case-insensitive shortcut matching silently accepted any capitalization.
+- Quick-fix support via Cmd+1 and the Problems view to correct the capitalization.
+- Severity follows the "Missing component" preference — error by default.
+
+### Element type quick-fixes ("Did you mean?")
+
+- **"Did you mean?" suggestions for mistyped element type names:** When `<wo:Str>` or `<wo:WOStirng>` fails validation, the editor now suggests corrections — e.g. "Did you mean 'str'?" or "Did you mean 'WOString'?". Particularly useful for capitalization errors, which are the most common mistake.
+- Extends the same quick-fix infrastructure as keypath errors: Cmd+1 anywhere on the line, Problems view Quick Fix, and hover help all work for element type errors.
+- Multiple errors on the same line (e.g. `<wo:Str value="$application.nme" />`) are handled correctly — Cmd+1 shows proposals for both the element name and the keypath error.
+
 ### Keypath quick-fixes ("Did you mean?")
 
 - **"Did you mean?" suggestions for mistyped keys:** When a keypath validation error is found (e.g. "There is no key 'nme' in MyComponent"), the validator now computes close matches using Damerau–Levenshtein string distance against all valid keys on the type where resolution failed. The best suggestion is included in the error message itself ("Did you mean 'name'?"), and up to 3 suggestions are available as quick-fixes.

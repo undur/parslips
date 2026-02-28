@@ -1,5 +1,6 @@
 package org.objectstyle.wolips.wodclipse.core.completion;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -60,6 +61,26 @@ public class WodCompletionUtils {
     BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, progressMonitor);
     _elementTypeCache.put(iProject, collector);
     return collector;
+  }
+
+  /**
+   * Returns the simple (unqualified) class names of all element types
+   * available in the given project.  Used by the element type validation
+   * to generate "did you mean?" suggestions for mistyped tag names.
+   *
+   * @param project the Java project to search
+   * @param progressMonitor progress monitor (may be null)
+   * @return list of simple names like "WOString", "WOConditional", "str", etc.
+   */
+  public static List<String> getSimpleElementTypeNames(IJavaProject project, IProgressMonitor progressMonitor) throws JavaModelException {
+    TypeNameCollector collector = getElementTypeCollector(project, progressMonitor);
+    Set<String> qualifiedNames = collector.getTypeNames();
+    List<String> simpleNames = new ArrayList<String>(qualifiedNames.size());
+    for (String qualifiedName : qualifiedNames) {
+      int lastDot = qualifiedName.lastIndexOf('.');
+      simpleNames.add(lastDot >= 0 ? qualifiedName.substring(lastDot + 1) : qualifiedName);
+    }
+    return simpleNames;
   }
 
   public static void openBinding(String bindingValue, IApiBinding binding, IType componentType, boolean onlyIfMissing) throws CoreException {

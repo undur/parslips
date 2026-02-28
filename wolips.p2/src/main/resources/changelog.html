@@ -20,6 +20,17 @@
 				<h2 class="date-header">February 28, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Tag shortcut capitalization validation</h3>
+					<p>Miscapitalized tag shortcuts are now flagged as validation errors. Writing <code>&lt;wo:Repetition&gt;</code> when the shortcut is defined as <code>repetition</code> now produces an error with a <em>"Did you mean 'repetition'?"</em> suggestion. Uses the same error format as element type errors &mdash; no distinction between shortcuts and class names. Previously, the case-insensitive matching silently accepted any capitalization. Quick-fix support via <strong>Cmd+1</strong> and the Problems view.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Element type quick-fixes: "Did you mean?"</h3>
+					<p>Mistype an element name after <code>&lt;wo:</code> and the editor now suggests corrections &mdash; <em>"The class for 'Str' is either missing... Did you mean 'str'?"</em>. Catches capitalization errors (<code>Str</code> &rarr; <code>str</code>) and typos (<code>WOStirng</code> &rarr; <code>WOString</code>). Uses the same quick-fix infrastructure as keypath errors: <strong>Cmd+1</strong>, Problems view, and hover help.</p>
+					<p>When a line has multiple errors (e.g. <code>&lt;wo:Str value="$application.nme" /&gt;</code>), <strong>Cmd+1</strong> shows proposals for both the element name and the keypath error.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Keypath quick-fixes: "Did you mean?"</h3>
 					<p>Mistype a key in a binding value and the editor now suggests corrections &mdash; <em>"There is no key 'nme' in MyComponent. Did you mean 'name'?"</em>. Suggestions are computed using Damerau&ndash;Levenshtein string distance, which catches transpositions (<code>vlaue</code> &rarr; <code>value</code>), insertions, deletions, and substitutions.</p>
 					<p>Press <strong>Cmd+1</strong> anywhere on the line to apply the fix instantly &mdash; no need to position the cursor on the exact error. Quick-fixes are also available from the Problems view (right-click &rarr; Quick Fix). Hovering over a squiggly-underlined error now shows the message inline.</p>

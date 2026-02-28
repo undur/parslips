@@ -13,6 +13,16 @@ public class SimpleWodElement extends AbstractWodElement {
   private int _newBindingOffset;
   private int _newBindingIndent;
 
+  /**
+   * The text the user actually typed when it doesn't match the tag shortcut's
+   * defined capitalization (e.g. "Repetition" when the shortcut is "repetition").
+   * Null when there is no case mismatch.
+   */
+  private String _tagShortcutCaseMismatch;
+
+  /** The correct shortcut text (e.g. "repetition"). Null when there is no case mismatch. */
+  private String _tagShortcutCorrectCase;
+
   public SimpleWodElement(IWodElement wodElement) {
     if (wodElement != null) {
       _elementName = wodElement.getElementName();
@@ -28,6 +38,11 @@ public class SimpleWodElement extends AbstractWodElement {
       _fullEndOffset = wodElement.getFullEndOffset();
       setNewBindingIndent(wodElement.getNewBindingIndent());
       setNewBindingOffset(wodElement.getNewBindingOffset());
+      if (wodElement instanceof SimpleWodElement) {
+        SimpleWodElement simpleSource = (SimpleWodElement) wodElement;
+        _tagShortcutCaseMismatch = simpleSource._tagShortcutCaseMismatch;
+        _tagShortcutCorrectCase = simpleSource._tagShortcutCorrectCase;
+      }
     }
     else {
       setInline(true);
@@ -143,5 +158,33 @@ public class SimpleWodElement extends AbstractWodElement {
 
   public int getNewBindingIndent() {
     return _newBindingIndent;
+  }
+
+  /**
+   * Records a tag shortcut case mismatch. Called when the user types e.g.
+   * "Repetition" but the shortcut is defined as "repetition".
+   *
+   * @param originalText what the user typed (e.g. "Repetition")
+   * @param correctCase  the shortcut's defined name (e.g. "repetition")
+   */
+  public void setTagShortcutCaseMismatch(String originalText, String correctCase) {
+    _tagShortcutCaseMismatch = originalText;
+    _tagShortcutCorrectCase = correctCase;
+  }
+
+  /**
+   * Returns the user's original text when it doesn't match the tag shortcut's
+   * defined capitalization, or null if there is no case mismatch.
+   */
+  public String getTagShortcutCaseMismatch() {
+    return _tagShortcutCaseMismatch;
+  }
+
+  /**
+   * Returns the correct shortcut text (e.g. "repetition"), or null if there
+   * is no case mismatch.
+   */
+  public String getTagShortcutCorrectCase() {
+    return _tagShortcutCorrectCase;
   }
 }

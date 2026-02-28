@@ -86,17 +86,17 @@
 
 				<div class="feature-entry">
 					<h3>"Did you mean?" suggestions</h3>
-					<p>When a keypath segment is invalid, the editor suggests close matches &mdash; <em>"There is no key 'nme'. Did you mean 'name'?"</em>. Suggestions use Damerau&ndash;Levenshtein string distance, catching transpositions, insertions, deletions, and substitutions.</p>
+					<p>When a keypath segment or element type name is invalid, the editor suggests close matches &mdash; <em>"Did you mean 'name'?"</em> for a mistyped key, or <em>"Did you mean 'str'?"</em> for a mistyped tag name. Suggestions use Damerau&ndash;Levenshtein string distance, catching transpositions, insertions, deletions, substitutions, and capitalization errors.</p>
 				</div>
 
 				<div class="feature-entry">
 					<h3>Cmd+1 quick-fixes</h3>
-					<p>Press <kbd>Cmd+1</kbd> anywhere on a line with a keypath error to apply a "Replace 'nme' with 'name'" fix instantly. No need to position the cursor on the exact error location.</p>
+					<p>Press <kbd>Cmd+1</kbd> anywhere on a line with a validation error to apply a fix instantly. Works for both keypath errors and element type errors. When a line has multiple errors, proposals for all of them appear in the popup.</p>
 				</div>
 
 				<div class="feature-entry">
 					<h3>Problems view quick-fixes</h3>
-					<p>Right-click a keypath error in the Problems view and select Quick Fix to see the same replacement suggestions. Applying a fix opens the file, replaces the invalid segment, and removes the marker.</p>
+					<p>Right-click an error in the Problems view and select Quick Fix to see replacement suggestions. Applying a fix opens the file, replaces the invalid text, and removes the marker.</p>
 				</div>
 
 				<div class="feature-entry">
