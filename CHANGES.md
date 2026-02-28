@@ -12,6 +12,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Keypath quick-fixes ("Did you mean?")
+
+- **"Did you mean?" suggestions for mistyped keys:** When a keypath validation error is found (e.g. "There is no key 'nme' in MyComponent"), the validator now computes close matches using Damerau–Levenshtein string distance against all valid keys on the type where resolution failed. The best suggestion is included in the error message itself ("Did you mean 'name'?"), and up to 3 suggestions are available as quick-fixes.
+- **Cmd+1 quick-fix (Quick Assist):** Pressing Cmd+1 anywhere on a line with a keypath error offers "Replace 'nme' with 'name'" proposals. This works line-wide — the cursor doesn't need to be on the exact error position.
+- **Problems view quick-fix:** Right-click a keypath error in the Problems view and select Quick Fix for the same replacement proposals.
+- **Hover help on errors:** Hovering over squiggly-underlined text in the template editor now shows the error message. Previously, hover only worked on the vertical ruler.
+- **Adaptive distance thresholds:** Short key names (1–4 chars) only match at edit distance 1; medium names (5–8 chars) up to 2; long names (9+ chars) up to 3. This prevents noisy suggestions like "list" for "item" while still catching reasonable typos like "vlaue" for "value".
+- New files: `StringDistance.java`, `KeypathQuickFixGenerator.java`, `ReplaceKeypathQuickFix.java`, `TemplateQuickAssistProcessor.java`.
+- Modified files: `AbstractWodBinding.java`, `BindingValueKeyPath.java`, `WodProblem.java`, `WodModelUtils.java`, `TemplateConfiguration.java`, `plugin.xml`.
+- 37 new unit tests (`StringDistanceTest.java`, `KeypathQuickFixTest.java`).
+- Dead commented-out code removed from `TemplateConfiguration.java` (~80 lines of old JSP scanner stubs).
+
 ### Parser control tags (`p:raw`, `p:comment`)
 
 - **`<p:raw>`:** Content inside this block is treated as literal text — no dynamic tag processing occurs. Useful for embedding example code or content that contains `<wo:` but shouldn't be treated as dynamic.

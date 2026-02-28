@@ -30,6 +30,9 @@ public class BindingValueKeyPath {
 
   private String _invalidKey;
 
+  /** The type on which the invalid key was looked up — used by "did you mean?" to enumerate valid keys. */
+  private IType _invalidKeyType;
+
   private boolean _valid;
 
   private boolean _nsCollection;
@@ -167,6 +170,10 @@ public class BindingValueKeyPath {
           }
           
           if (!keyAccessible) {
+            // Remember the type where resolution failed — used for
+            // "did you mean?" suggestions via StringDistance.
+            _invalidKeyType = currentType;
+
             if (BindingReflectionUtils.isNSKeyValueCoding(currentType, cache) || "java.lang.Object".equals(currentType.getFullyQualifiedName())) {
               _nsKVC = true;
               if (BindingReflectionUtils.isNSCollection(currentType, cache)) {
@@ -248,6 +255,15 @@ public class BindingValueKeyPath {
 
   public String getInvalidKey() {
     return _invalidKey;
+  }
+
+  /**
+   * Returns the type on which the invalid key was looked up, or null if the
+   * keypath resolved successfully.  Used by "did you mean?" suggestions to
+   * enumerate the valid keys on the failing type.
+   */
+  public IType getInvalidKeyType() {
+    return _invalidKeyType;
   }
 
   public String getHelperFunction() {

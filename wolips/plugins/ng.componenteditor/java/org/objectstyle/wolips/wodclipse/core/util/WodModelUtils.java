@@ -211,6 +211,18 @@ public class WodModelUtils {
         marker.setAttribute(IMarker.CHAR_END, problemPosition.getOffset() + problemPosition.getLength());
       }
       marker.setAttribute(IMarker.TRANSIENT, false);
+
+      // Store quick-fix suggestions (e.g. "did you mean 'name'?") so the
+      // marker resolution generator can offer them without re-validating.
+      java.util.List<String> suggestions = wodProblem.getSuggestions();
+      if (!suggestions.isEmpty()) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < suggestions.size(); i++) {
+          if (i > 0) sb.append(';');
+          sb.append(suggestions.get(i));
+        }
+        marker.setAttribute("suggestions", sb.toString());
+      }
     }
     catch (CoreException e) {
       e.printStackTrace();

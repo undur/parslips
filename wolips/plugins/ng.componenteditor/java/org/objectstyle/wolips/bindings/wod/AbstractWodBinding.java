@@ -65,6 +65,7 @@ import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.api.Wo;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
+import org.objectstyle.wolips.bindings.utils.StringDistance;
 
 /**
  * @author mschrag
@@ -271,12 +272,23 @@ public abstract class AbstractWodBinding implements IWodBinding {
                 // the value specified is a component var
               }
               else if (validKeyPath != null) {
+                // Compute "did you mean?" suggestions from the valid keys
+                // on the type where resolution failed.
+                List<String> suggestions = suggestKeysForInvalidKey(bindingValueKeyPath, cache);
+                String suggestionSuffix = "";
+                if (!suggestions.isEmpty()) {
+                  suggestionSuffix = ". Did you mean '" + suggestions.get(0) + "'?";
+                }
+
+                WodBindingValueProblem problem;
                 if (validKeyPath.length() == 0) {
-                  problems.add(new WodBindingValueProblem(element, this, bindingName, "There is no key '" + invalidKey + "' in " + javaFileType.getElementName(), getValuePosition(), lineNumber, false));
+                  problem = new WodBindingValueProblem(element, this, bindingName, "There is no key '" + invalidKey + "' in " + javaFileType.getElementName() + suggestionSuffix, getValuePosition(), lineNumber, false);
                 }
                 else {
-                  problems.add(new WodBindingValueProblem(element, this, bindingName, "There is no key '" + invalidKey + "' for the keypath '" + validKeyPath + "' in " + javaFileType.getElementName(), getValuePosition(), lineNumber, false));
+                  problem = new WodBindingValueProblem(element, this, bindingName, "There is no key '" + invalidKey + "' for the keypath '" + validKeyPath + "' in " + javaFileType.getElementName() + suggestionSuffix, getValuePosition(), lineNumber, false);
                 }
+                problem.setSuggestions(suggestions);
+                problems.add(problem);
               }
             }
             else if (bindingValueKeyPath.isNSCollection()) {
@@ -463,6 +475,35 @@ public abstract class AbstractWodBinding implements IWodBinding {
   @Override
   public String toString() {
     return "[" + getClass().getName() + ": name = " + getName() + "; value = " + getValue() + "]";
+  }
+
+  /**
+   * Computes "did you mean?" suggestions for an invalid key by enumerating
+   * valid keys on the type where resolution failed, then ranking by
+   * Damerau–Levenshtein distance.
+   *
+   * @return up to 3 suggestions sorted by distance, or an empty list
+   */
+  private static List<String> suggestKeysForInvalidKey(BindingValueKeyPath keyPath, TypeCache cache) {
+    IType invalidKeyType = keyPath.getInvalidKeyType();
+    String invalidKey = keyPath.getInvalidKey();
+    if (invalidKeyType == null || invalidKey == null || invalidKey.isEmpty()) {
+      return java.util.Collections.emptyList();
+    }
+    try {
+      List<BindingValueKey> validKeys = BindingReflectionUtils.getBindingKeys(
+        invalidKeyType.getJavaProject(), invalidKeyType, "",
+        false, BindingReflectionUtils.ACCESSORS_ONLY, false, cache);
+      List<String> candidateNames = new java.util.ArrayList<String>(validKeys.size());
+      for (BindingValueKey key : validKeys) {
+        candidateNames.add(key.getBindingName());
+      }
+      return StringDistance.closestMatches(invalidKey, candidateNames, 3);
+    }
+    catch (JavaModelException e) {
+      Activator.getDefault().log(e);
+      return java.util.Collections.emptyList();
+    }
   }
 
   public List<WodProblem> getBindingProblems(String elementType, IType javaFileType, TypeCache typeCache, HtmlElementCache htmlCache) throws JavaModelException, ApiModelException {

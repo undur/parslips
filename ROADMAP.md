@@ -2,11 +2,11 @@
 
 Ideas and planned features for the Parsley template editor. Items are roughly ordered by perceived impact, not by implementation order.
 
-## Inline validation quick-fixes
+## ~~Inline validation quick-fixes~~ ✓
 
-"Did you mean `userName`?" with a click-to-correct action.
+Implemented. Keypath validation errors ("There is no key 'nme'") now include "Did you mean 'name'?" suggestions computed via Damerau–Levenshtein string distance. Quick-fixes are available via Cmd+1 (anywhere on the line) and the Problems view. Hover over the error to see the suggestion inline.
 
-String-distance-based suggestions are already implemented in the validation layer, but the quick-fix step requires token location tracking in `ng-template-parser`. This needs work on both the parser side (preserving source locations for binding names and values) and the plugin side (mapping parser locations to Eclipse `IMarker` positions and providing `IMarkerResolution` quick-fixes).
+Binding *name* validation quick-fixes (is "valu" a valid binding on WOString?) are deferred until the element API model is improved — most WO components accept arbitrary bindings beyond their `.api` definitions, making name validation too noisy.
 
 ## Refactoring across files
 

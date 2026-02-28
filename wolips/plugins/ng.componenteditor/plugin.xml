@@ -559,6 +559,16 @@
       <super type="org.eclipse.core.resources.problemmarker"/>
       <super type="org.eclipse.core.resources.textmarker"/>
       <persistent value="true"/>
+      <attribute name="suggestions"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Quick Fixes (marker resolutions)                                                    -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+            markerType="ng.componenteditor.problem"
+            class="org.objectstyle.wolips.wodclipse.core.quickfix.KeypathQuickFixGenerator"/>
    </extension>
 
 <!-- =================================================================================== -->
