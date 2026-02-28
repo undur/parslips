@@ -86,6 +86,31 @@
 				</div>
 			</div>
 
+			<div class="card">
+				<h2 class="section-header">Technical debt</h2>
+				<p style="color: #8a9e8a; margin-bottom: 1.5em;">Internal modernization. Not user-visible, but improves maintainability and long-term health of the codebase.</p>
+
+				<div class="roadmap-entry">
+					<h3>Modernize Java language usage</h3>
+					<p>The codebase was written for Java 1.4&ndash;5 and never updated. Opportunities include: enhanced for-each loops (replacing <code>Enumeration</code>/<code>Iterator</code> while-loops), generics (eliminating raw types and manual casting), try-with-resources for streams, diamond operator, <code>StringBuilder</code> over <code>StringBuffer</code>, lambdas for anonymous inner classes, and text blocks for multi-line strings.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Thread safety around the API model</h3>
+					<p>The global <code>WebObjectDefinitions.xml</code> model is a shared Xerces DOM singleton with manual <code>synchronized</code> blocks. Xerces DOM is not thread-safe even for reads. This should be replaced with a safer caching strategy or an immutable model.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Continued dead code removal</h3>
+					<p>The plugin was extracted from WOLips (~18 plugins merged into one). While significant cleanup has been done, vestiges remain: unused fields, no-op methods, and code paths that only made sense in the original multi-plugin architecture.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Null contract cleanup</h3>
+					<p>Several internal APIs use <code>null</code> as a control-flow mechanism, with the same method returning <code>null</code> for multiple unrelated scenarios. These should be clarified with proper typing, <code>Optional</code>, or early validation.</p>
+				</div>
+			</div>
+
 			<div class="footer">
 				<p>🌿 <a href="https://github.com/undur/parslips">github.com/undur/parslips</a></p>
 			</div>
