@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
+
 
 import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
 import jp.aonir.fuzzyxml.FuzzyXMLDocument;
@@ -488,113 +488,18 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
    *   <li>3 - previous attribute name</li>
    * </ul>
    */
+  /**
+   * Delegates to {@link TagStackAnalyzer#getLastWord(String)}.
+   */
   protected String[] getLastWord(String text) {
-    // TODO It's dirty...
-    StringBuffer sb = new StringBuffer();
-    Stack<String> stack = new Stack<String>();
-    String word = "";
-    String prevTag = "";
-    String lastTag = "";
-    String attr = "";
-    String temp1 = ""; // temporary
-    String temp2 = ""; // temporary
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      // skip scriptlet
-      if (c == '<' && text.length() > i + 1 && text.charAt(i + 1) == '%') {
-        i = text.indexOf("%>", i + 2);
-        if (i == -1) {
-          i = text.length();
-        }
-        continue;
-      }
-      // skip XML declaration
-      if (c == '<' && text.length() > i + 1 && text.charAt(i + 1) == '?') {
-        i = text.indexOf("?>", i + 2);
-        if (i == -1) {
-          i = text.length();
-        }
-        continue;
-      }
-      if (isDelimiter(c)) {
-        temp1 = sb.toString();
-        // skip whitespaces in the attribute value
-        if (temp1.length() > 1 && ((temp1.startsWith("\"") && !temp1.endsWith("\"") && c != '"') || (temp1.startsWith("'") && !temp1.endsWith("'") && c != '\''))) {
-          sb.append(c);
-          continue;
-        }
-
-        if (!temp1.equals("")) {
-          temp2 = temp1;
-          if (temp2.endsWith("=") && !prevTag.equals("") && !temp2.equals("=")) {
-            attr = temp2.substring(0, temp2.length() - 1);
-          }
-        }
-        if (temp1.startsWith("<") && !temp1.startsWith("</") && !temp1.startsWith("<!")) {
-          prevTag = temp1.substring(1);
-          if (!temp1.endsWith("/")) {
-            stack.push(prevTag);
-          }
-        }
-        else if (temp1.startsWith("</") && stack.size() != 0) {
-          stack.pop();
-        }
-        else if (temp1.endsWith("/") && stack.size() != 0) {
-          stack.pop();
-        }
-        sb.setLength(0);
-
-        if (c == '<') {
-          sb.append(c);
-        }
-        else if (c == '"' || c == '\'') {
-          if (temp1.startsWith("\"") || temp1.startsWith("'")) {
-            sb.append(temp1);
-          }
-          sb.append(c);
-        }
-        else if (c == '>') {
-          prevTag = "";
-          attr = "";
-        }
-      }
-      else {
-        if (c == '=' && !prevTag.equals("")) {
-          attr = temp2.trim();
-        }
-        temp1 = sb.toString();
-        if (temp1.length() > 1 && (temp1.startsWith("\"") && temp1.endsWith("\"")) || (temp1.startsWith("'") && temp1.endsWith("'"))) {
-          sb.setLength(0);
-        }
-        sb.append(c);
-      }
-    }
-
-    if (stack.size() != 0) {
-      lastTag = stack.pop();
-    }
-    // Hmm... it's not perfect...
-    if (attr.endsWith("=")) {
-      attr = attr.substring(0, attr.length() - 1);
-    }
-    word = sb.toString();
-
-    return new String[] { word, prevTag, lastTag, attr };
+    return TagStackAnalyzer.getLastWord(text);
   }
 
   /**
-   * Tests a character is delimiter or not delimiter.
+   * Delegates to {@link TagStackAnalyzer#isDelimiter(char)}.
    */
   protected boolean isDelimiter(char c) {
-    if (c == ' ' || c == '(' || c == ')' || c == ',' //|| c == '.' 
-        || c == ';' || c == '\n' || c == '\r' || c == '\t' || c == '+' || c == '>' || c == '<' || c == '*' || c == '^' //|| c == '{'
-        //|| c == '}' 
-        /*|| c == '[' || c == ']'*/|| c == '"' || c == '\'') {
-      return true;
-    }
-    else {
-      return false;
-    }
+    return TagStackAnalyzer.isDelimiter(c);
   }
 
   @Override
