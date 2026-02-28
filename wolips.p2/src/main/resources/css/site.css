@@ -248,3 +248,68 @@ body {
 	color: #2a5a2a;
 	text-decoration: underline;
 }
+
+/* Features page */
+
+.features .card {
+	padding: 28px 32px;
+}
+
+.section-header {
+	font-size: 14px;
+	font-weight: 600;
+	color: #5a6e5a;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	margin-bottom: 24px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #e8f0e8;
+}
+
+.feature-entry {
+	padding: 12px 0;
+	border-bottom: 1px solid #f0f5f0;
+}
+
+.feature-entry:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.feature-entry:first-of-type {
+	padding-top: 0;
+}
+
+.feature-entry h3 {
+	font-size: 16px;
+	font-weight: 600;
+	color: #1a2e1a;
+	margin-bottom: 6px;
+}
+
+.feature-entry p {
+	font-size: 15px;
+	color: #4a5e4a;
+	line-height: 1.55;
+}
+
+.feature-entry code {
+	font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	background: #f0f5f0;
+	padding: 2px 5px;
+	border-radius: 3px;
+	color: #3a5a3a;
+}
+
+kbd {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+	font-size: 12px;
+	background: #f5f9f5;
+	border: 1px solid #d4e4d4;
+	border-bottom: 2px solid #c4d8c4;
+	border-radius: 4px;
+	padding: 2px 6px;
+	color: #3a5a3a;
+	white-space: nowrap;
+}

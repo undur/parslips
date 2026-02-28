@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Parsley Template Editor — Features</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/site.css"/>
+		<link rel="icon" type="image/x-icon" href="img/favicon.ico"/>
+	</head>
+	<body>
+		<div class="container features">
+			<div class="hero">
+				<div class="hero-emoji">🌿</div>
+				<h1>Features</h1>
+				<p class="tagline">Everything Parsley Template Editor provides</p>
+			</div>
+
+			<!-- ===== TEMPLATE EDITING ===== -->
+			<div class="card">
+				<h2 class="section-header">Template Editing</h2>
+
+				<div class="feature-entry">
+					<h3>Multi-tab component editor</h3>
+					<p>Open <code>.wo</code> bundles or standalone <code>.html</code> templates in a tabbed editor with synchronized views for the HTML template, WOD bindings, API definitions, and WOO settings. Each tab provides specialized editing for its file type.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Standalone template support</h3>
+					<p>Single-file <code>.html</code> templates (not inside <code>.wo</code> bundles) have full editor support: autocomplete, keypath validation, and build-time validation &mdash; all on par with traditional <code>.wo</code> components. This is a key enabler for ng-objects, where single-file templates are the primary component format.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Syntax highlighting</h3>
+					<p>Distinct colors for HTML tags, OGNL keypaths, string constants, and dynamic binding values. A subtle background tint on <code>&lt;wo:&gt;</code> tags makes component boundaries visually distinct from surrounding HTML. Parser control tags (<code>&lt;p:raw&gt;</code>, <code>&lt;p:comment&gt;</code>) are rendered with a muted tint.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Template outline</h3>
+					<p>A structural outline view showing the element hierarchy. Selecting an element in the outline navigates to it in the editor, and moving the cursor in the editor updates the outline selection.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Breadcrumb navigation</h3>
+					<p>A breadcrumb bar above the editor shows the element hierarchy at the cursor position, providing context for deeply nested templates.</p>
+				</div>
+			</div>
+
+			<!-- ===== AUTOCOMPLETE ===== -->
+			<div class="card">
+				<h2 class="section-header">Autocomplete</h2>
+
+				<div class="feature-entry">
+					<h3>Tag completion</h3>
+					<p>Type <code>&lt;wo:</code> and press <kbd>Ctrl+Space</kbd> to see all available component types, filtered by the project's framework (ng-objects or WebObjects). Selecting a component inserts the tag with placeholder bindings.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Binding name completion</h3>
+					<p>Inside a <code>&lt;wo:&gt;</code> tag, <kbd>Ctrl+Space</kbd> shows all valid binding names for that component type, read from the component's <code>.api</code> definition and Java class.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Binding value completion</h3>
+					<p>When editing a binding value, <kbd>Ctrl+Space</kbd> offers OGNL keypath completions resolved against the component's Java class &mdash; walking the full keypath chain and suggesting keys at each level.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Close-tag completion</h3>
+					<p>Typing <code>&lt;/</code> and pressing <kbd>Ctrl+Space</kbd> suggests the correct close tag for the innermost open element. Correctly handles self-closing tags and attribute values containing <code>/</code>.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>WOD content assist</h3>
+					<p>In the WOD editor, <kbd>Ctrl+Space</kbd> completes element type names and binding names with context-aware filtering.</p>
+				</div>
+			</div>
+
+			<!-- ===== VALIDATION ===== -->
+			<div class="card">
+				<h2 class="section-header">Validation &amp; Quick-Fixes</h2>
+
+				<div class="feature-entry">
+					<h3>Live keypath validation</h3>
+					<p>Binding values are validated against the component's Java class in real time. Invalid keypaths are underlined with squiggly markers and reported in the Problems view. Validation re-runs automatically when Java classes are saved.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>"Did you mean?" suggestions</h3>
+					<p>When a keypath segment is invalid, the editor suggests close matches &mdash; <em>"There is no key 'nme'. Did you mean 'name'?"</em>. Suggestions use Damerau&ndash;Levenshtein string distance, catching transpositions, insertions, deletions, and substitutions.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Cmd+1 quick-fixes</h3>
+					<p>Press <kbd>Cmd+1</kbd> anywhere on a line with a keypath error to apply a "Replace 'nme' with 'name'" fix instantly. No need to position the cursor on the exact error location.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Problems view quick-fixes</h3>
+					<p>Right-click a keypath error in the Problems view and select Quick Fix to see the same replacement suggestions. Applying a fix opens the file, replaces the invalid segment, and removes the marker.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Hover help on errors</h3>
+					<p>Hovering over a squiggly-underlined error shows the validation message inline, including any "Did you mean?" suggestions. Works in both the editor body and the vertical ruler.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Thread-safe validation</h3>
+					<p>The shared API model (<code>WebObjectDefinitions.xml</code>) is accessed under synchronization, preventing false validation errors from concurrent DOM reads &mdash; a fix for a long-standing intermittent issue.</p>
+				</div>
+			</div>
+
+			<!-- ===== PARSER CONTROL ===== -->
+			<div class="card">
+				<h2 class="section-header">Parser Control Tags</h2>
+
+				<div class="feature-entry">
+					<h3><code>&lt;p:raw&gt;</code></h3>
+					<p>Wrapping content in <code>&lt;p:raw&gt;...&lt;/p:raw&gt;</code> treats it as literal text &mdash; no dynamic tag processing. Useful for embedding example code that contains <code>&lt;wo:&gt;</code> tags without them being treated as live bindings. Content is excluded from validation.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3><code>&lt;p:comment&gt;</code></h3>
+					<p>Wrapping content in <code>&lt;p:comment&gt;...&lt;/p:comment&gt;</code> creates a template-level comment that is stripped entirely from output, unlike HTML comments which are sent to the client. Content is invisible to validation.</p>
+				</div>
+			</div>
+
+			<!-- ===== NAVIGATION ===== -->
+			<div class="card">
+				<h2 class="section-header">Navigation</h2>
+
+				<div class="feature-entry">
+					<h3>Hyperlink navigation</h3>
+					<p><kbd>Ctrl+Click</kbd> on an element type name in the WOD editor opens the Java class definition. <kbd>Ctrl+Click</kbd> on a binding value navigates to the keypath target. Inline WOD element references in templates are also hyperlinkable.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Component switching shortcuts</h3>
+					<p>Quick switching between a component's files: <kbd>Cmd+Ctrl+1</kbd> opens the Java class, <kbd>Cmd+Ctrl+2</kbd> the HTML template, <kbd>Cmd+Ctrl+3</kbd> the WOD file, <kbd>Cmd+Ctrl+5</kbd> the API definition.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Open component by name</h3>
+					<p><kbd>Cmd+Shift+X</kbd> opens a dialog to quickly find and open any component by name, from anywhere in the workspace.</p>
+				</div>
+			</div>
+
+			<!-- ===== REFACTORING ===== -->
+			<div class="card">
+				<h2 class="section-header">Refactoring</h2>
+
+				<div class="feature-entry">
+					<h3>Linked rename</h3>
+					<p><kbd>Cmd+2, R</kbd> on an element tag enters linked rename mode &mdash; editing the tag name simultaneously updates the matching close tag. Works on <code>&lt;wo:&gt;</code> tags, HTML tags, and parser control tags.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Convert inline to WOD</h3>
+					<p><kbd>Cmd+2, W</kbd> extracts inline bindings from a <code>&lt;wo:&gt;</code> tag in the template into the separate WOD file, replacing the tag with a reference.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Create key / Create action</h3>
+					<p>When a binding references an unresolved keypath, the editor can generate stub methods in the component's Java class &mdash; either a property accessor or an action method.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Delete and unwrap tags</h3>
+					<p>Context menu actions to delete an entire element (including children) or unwrap a tag (removing the tag but keeping its content).</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Format template</h3>
+					<p><kbd>Cmd+Shift+F</kbd> reformats the template with consistent indentation and line wrapping.</p>
+				</div>
+			</div>
+
+			<!-- ===== COMPONENT INSERTION ===== -->
+			<div class="card">
+				<h2 class="section-header">Component Insertion</h2>
+
+				<div class="feature-entry">
+					<h3>Insert component dialog</h3>
+					<p><kbd>Cmd+6</kbd> opens a dialog to browse and insert any available component type. The dialog includes search, filtering, and shows component descriptions from <code>.api</code> files.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Toolbar buttons</h3>
+					<p>The editor toolbar provides one-click insertion for common components: WOString, WOConditional, WORepetition, WOHyperlink, WOTextField, WOForm, WOSubmitButton, WOImage, WOCheckBox, WORadioButton, WOPopUpButton, and more.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Bindings inspector</h3>
+					<p>A view showing all available bindings for the component under the cursor. Bindings can be dragged from the inspector directly into the template or WOD file.</p>
+				</div>
+			</div>
+
+			<!-- ===== PARSLEY EXPLORER ===== -->
+			<div class="card">
+				<h2 class="section-header">Parsley Explorer</h2>
+
+				<div class="feature-entry">
+					<h3>Component-aware Package Explorer</h3>
+					<p>A Package Explorer variant designed for WebObjects development. <code>.wo</code> bundles are expandable (showing their contained files), unlike the standard Package Explorer where they appear as opaque folders.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Source folder pull-up</h3>
+					<p>WO-specific source folders (<code>src/main/components</code>, <code>src/main/woresources</code>, <code>src/main/webserver-resources</code>) are pulled up to the project root level alongside standard Java source folders, keeping the tree shallow.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Project badges</h3>
+					<p>Projects are decorated with framework badges &mdash; ng-objects or WebObjects &mdash; making it easy to tell at a glance which framework each project uses.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Source folder badges</h3>
+					<p>Component source folders are marked with a "wo" badge overlay. Full-path labels (<code>src/main/components</code>) replace Eclipse's default shortened names, while preserving EGit branch decorators.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Component icons</h3>
+					<p>Custom icons for <code>.wo</code> bundles with problem marker overlays, visible across all Eclipse views (explorer, search results, etc.).</p>
+				</div>
+			</div>
+
+			<!-- ===== WIZARDS ===== -->
+			<div class="card">
+				<h2 class="section-header">Wizards</h2>
+
+				<div class="feature-entry">
+					<h3>New Project wizard</h3>
+					<p>Create new ng-objects or WebObjects Maven projects from scratch &mdash; complete projects with a sample Main component, ready to run. The wizard generates all source files and imports the project using m2e.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>New Component wizard</h3>
+					<p>Create new <code>.wo</code> bundles or standalone components with framework-aware defaults. The wizard generates the HTML, WOD, WOO, and Java files and places them in the correct source folder based on the project's framework type.</p>
+				</div>
+			</div>
+
+			<!-- ===== API EDITOR ===== -->
+			<div class="card">
+				<h2 class="section-header">API Editor</h2>
+
+				<div class="feature-entry">
+					<h3>Component API definitions</h3>
+					<p>A multi-page form editor for <code>.api</code> files. Define component bindings (name, type, required/optional), validation rules, display metadata, and creation/deletion behavior through a structured UI rather than editing XML directly.</p>
+				</div>
+			</div>
+
+			<!-- ===== FRAMEWORK ===== -->
+			<div class="card">
+				<h2 class="section-header">Framework Support</h2>
+
+				<div class="feature-entry">
+					<h3>Dual framework support</h3>
+					<p>Works with both ng-objects and WebObjects projects in the same workspace. Per-project framework detection uses <code>build.properties</code> (<code>base=ng</code> or <code>base=wo</code>) with automatic classpath probing as a fallback.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Editor association</h3>
+					<p>Component files (<code>.html</code>, <code>.wod</code>, <code>.woo</code>, <code>.api</code>) automatically open in the Parsley editor &mdash; for any file inside a <code>.wo</code> folder, or for component files in ng-objects projects. Coexists with WOLips without conflicts.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Maven integration</h3>
+					<p>A Maven preference page detects whether your <code>settings.xml</code> has the WOCommunity repository configured and offers a one-click button to add it. The WOCommunity archetype catalog is registered automatically for the New Maven Project wizard.</p>
+				</div>
+			</div>
+
+			<!-- ===== PREFERENCES ===== -->
+			<div class="card">
+				<h2 class="section-header">Preferences</h2>
+
+				<div class="feature-entry">
+					<h3>Syntax colors</h3>
+					<p>Customizable colors for HTML tags, WOD syntax, OGNL expressions, and string constants in both the template and WOD editors.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Validation settings</h3>
+					<p>Control which validation rules are active and their severity levels (error, warning, info). Custom validation rules can be defined for specific binding patterns.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Tag shortcuts</h3>
+					<p>Define custom abbreviations for frequently used inline WOD binding patterns, speeding up template authoring.</p>
+				</div>
+			</div>
+
+			<!-- ===== PERSPECTIVE ===== -->
+			<div class="card">
+				<h2 class="section-header">Perspective</h2>
+
+				<div class="feature-entry">
+					<h3>Parsley perspective</h3>
+					<p>A dedicated Eclipse perspective optimized for WebObjects/ng-objects development. Layout: Parsley Explorer and Type Hierarchy on the left, editors in the center, Problems and Console at the bottom, Outline on the right. Includes Debug, Java, and Team/EGit action sets.</p>
+				</div>
+			</div>
+
+			<div class="footer">
+				<p>🌿 <a href="index.html">Back to Parsley</a> &middot; <a href="changelog.html">Changelog</a> &middot; <a href="https://github.com/undur/parslips">GitHub</a></p>
+			</div>
+		</div>
+	</body>
+</html>
