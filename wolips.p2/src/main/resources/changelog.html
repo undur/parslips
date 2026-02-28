@@ -28,6 +28,18 @@
 				<h2 class="date-header">February 28, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Rename element: cross-reference updating</h3>
+					<p>Renaming any <code>WOElement</code>/<code>NGElement</code> subclass via <strong>Refactor &gt; Rename</strong> now automatically updates all references across the project. Inline binding tags (<code>&lt;wo:OldName&gt;</code> &rarr; <code>&lt;wo:NewName&gt;</code>, including close tags) and WOD element type declarations (<code>Foo : OldName { }</code> &rarr; <code>Foo : NewName { }</code>) are rewritten in every template that uses the renamed type.</p>
+					<p>This applies to all element subclasses &mdash; not just components, but also custom dynamic elements. Tag shortcuts (like <code>&lt;wo:if&gt;</code> for <code>WOConditional</code>) are not affected, since they use the shortcut name rather than the class name.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Rename component (bidirectional)</h3>
+					<p>Renaming a <code>WOComponent</code>/<code>NGComponent</code> Java class via <strong>Refactor &gt; Rename</strong> now also renames the <code>.wo</code> folder, all contained template files (<code>.html</code>, <code>.wod</code>, <code>.woo</code>), standalone <code>.html</code> templates, and <code>.api</code> files to match.</p>
+					<p>Works in both directions: a <strong>&ldquo;Rename Component&hellip;&rdquo;</strong> context menu action on <code>.wo</code> folders renames from the template side, delegating to JDT&rsquo;s rename so both the Java class and template files are renamed together.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Tag shortcut capitalization validation</h3>
 					<p>Miscapitalized tag shortcuts are now flagged as validation errors. Writing <code>&lt;wo:Repetition&gt;</code> when the shortcut is defined as <code>repetition</code> now produces an error with a <em>"Did you mean 'repetition'?"</em> suggestion. Uses the same error format as element type errors &mdash; no distinction between shortcuts and class names. Previously, the case-insensitive matching silently accepted any capitalization. Quick-fix support via <strong>Cmd+1</strong> and the Problems view.</p>
 				</div>

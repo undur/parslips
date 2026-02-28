@@ -12,13 +12,19 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Rename element type: cross-reference updating
+
+- **Template references are updated automatically:** When renaming any WOElement/NGElement subclass (not just components), all templates in the project that reference the old type name are rewritten. Inline binding tags (`<wo:OldName>` → `<wo:NewName>`, including close tags) and WOD element type declarations (`Foo : OldName { }` → `Foo : NewName { }`) are both handled.
+- The participant now activates for all WOElement/NGElement subclasses, not just WOComponent/NGComponent. Custom dynamic elements that appear as tag types in templates are now covered.
+- Uses `TextFileChange` with `ReplaceEdit` for precise text-level edits, integrated with LTK's refactoring preview.
+- Skips derived resources and the component's own template files (which are being renamed at the resource level).
+
 ### Rename Component (bidirectional)
 
 - **Rename Java class → rename template files:** When renaming a WOComponent/NGComponent Java class via Eclipse's Refactor > Rename, the component's template files are now also renamed automatically. The `.wo` folder, all contained files (`.html`, `.wod`, `.woo`), standalone `.html` templates, and `.api` files are renamed to match the new class name. Implemented as an LTK `RenameParticipant` that participates in Eclipse's standard Rename Type refactoring.
 - **Rename `.wo` folder → rename Java class:** Right-click a `.wo` folder and select "Rename Component..." to rename the component from the template side. If a Java class exists, the rename is delegated to Eclipse's JDT refactoring (which triggers the participant above), so both directions produce the same atomic result. Template-only components (no Java class) are also supported.
 - **New files:** `RenameComponentProcessor` (core rename logic), `RenameComponentParticipant` (LTK integration), `RenameComponentAction` (context menu action).
 - **New dependency:** `org.eclipse.ltk.ui.refactoring` added to MANIFEST.MF for programmatic refactoring support.
-- Cross-project reference updating (finding `<wo:OldName>` in other components) is deferred to a future phase.
 
 ### Tag shortcut capitalization validation
 

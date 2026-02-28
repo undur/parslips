@@ -1,33 +1,55 @@
 package org.objectstyle.wolips.wodclipse.core.refactoring;
 
+import java.util.Set;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 import org.objectstyle.wolips.variables.BuildProperties;
 
 /**
- * Participates in Eclipse's Rename Type refactoring to also rename a component's
- * template files when a WOComponent/NGComponent Java class is renamed.
+ * Participates in Eclipse's Rename Type refactoring to update template files
+ * and references when a WOElement/NGElement subclass is renamed.
  *
- * When a user renames e.g. {@code Main.java} to {@code HomePage.java} via
- * Refactor > Rename, this participant detects that Main is a component class
- * and adds changes to rename {@code Main.wo/} (and its contents), standalone
- * {@code Main.html}, and {@code Main.api} to match.
+ * <p>When a user renames e.g. {@code MyWidget.java} to {@code FancyWidget.java}
+ * via Refactor &gt; Rename, this participant:
+ * <ul>
+ *   <li>If the type is a <b>component</b> (extends WOComponent/NGComponent):
+ *       renames the {@code .wo} folder, contained template files, standalone
+ *       {@code .html}, and {@code .api} file to match the new name.</li>
+ *   <li>For <b>any element</b> (extends WOElement/NGElement, which includes
+ *       components): scans all templates in the project and rewrites
+ *       {@code <wo:OldName>} tags and {@code Foo : OldName &#123;&#125;} WOD
+ *       entries to use the new name.</li>
+ * </ul>
  *
- * Registered via plugin.xml as a renameParticipant for {@code IType}.
- * Only activates when the renamed type extends WOComponent or NGComponent.
+ * <p>Registered via plugin.xml as a renameParticipant for {@code IType}.
  */
 public class RenameComponentParticipant extends RenameParticipant {
 
 	/** The Java type being renamed. */
 	private IType _type;
+
+	/**
+	 * True if the type extends WOComponent/NGComponent — triggers file renames
+	 * (the component's own .wo folder, template files, .api).
+	 */
+	private boolean _isComponent;
+
+	/**
+	 * True if the type extends WOElement/NGElement (which includes all
+	 * components) — triggers cross-reference updating in other templates.
+	 */
+	private boolean _isElement;
 
 	@Override
 	protected boolean initialize(Object element) {
@@ -35,24 +57,27 @@ public class RenameComponentParticipant extends RenameParticipant {
 			return false;
 		}
 		_type = (IType) element;
-		return isComponentClass(_type);
+		classifyType(_type);
+		return _isElement;
 	}
 
 	@Override
 	public String getName() {
-		return "Rename WO Component Files";
+		return "Rename WO Element References";
 	}
 
 	@Override
 	public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) throws OperationCanceledException {
-		String newName = getArguments().getNewName();
-		IProject project = _type.getJavaProject().getProject();
+		if (_isComponent) {
+			String newName = getArguments().getNewName();
+			IProject project = _type.getJavaProject().getProject();
 
-		// Check for name conflicts
-		if (RenameComponentProcessor.componentExists(project, newName)) {
-			return RefactoringStatus.createWarningStatus(
-					"A component named '" + newName + "' already exists in this project. "
-					+ "Template files may conflict after renaming.");
+			// Check for name conflicts (only relevant for components with template bundles)
+			if (RenameComponentProcessor.componentExists(project, newName)) {
+				return RefactoringStatus.createWarningStatus(
+						"A component named '" + newName + "' already exists in this project. "
+						+ "Template files may conflict after renaming.");
+			}
 		}
 
 		return new RefactoringStatus();
@@ -64,24 +89,57 @@ public class RenameComponentParticipant extends RenameParticipant {
 		String newName = getArguments().getNewName();
 		IProject project = _type.getJavaProject().getProject();
 
-		// Compute template file renames (Java class rename is handled by LTK itself)
-		return RenameComponentProcessor.computeChanges(project, oldName, newName);
+		CompositeChange allChanges = new CompositeChange("Rename '" + oldName + "' to '" + newName + "'");
+
+		// 1. For components: rename the component's own template files
+		//    (.wo folder, contained files, standalone .html, .api)
+		Set<IPath> ownFilePaths = null;
+		if (_isComponent) {
+			CompositeChange fileRenames = RenameComponentProcessor.computeChanges(project, oldName, newName);
+			if (fileRenames != null) {
+				allChanges.add(fileRenames);
+			}
+			// Collect own file paths to exclude from reference scanning
+			ownFilePaths = RenameComponentProcessor.collectOwnFilePaths(project, oldName);
+		}
+
+		// 2. For all elements: update <wo:OldName> and WOD references in
+		//    other components' templates
+		CompositeChange referenceChanges = RenameComponentProcessor.computeReferenceChanges(
+				project, oldName, newName, ownFilePaths);
+		if (referenceChanges != null) {
+			allChanges.add(referenceChanges);
+		}
+
+		if (allChanges.getChildren().length == 0) {
+			return null;
+		}
+		return allChanges;
 	}
 
 	/**
-	 * Checks whether the given type is a WOComponent or NGComponent subclass.
+	 * Classifies the type by walking its supertype hierarchy, setting
+	 * {@link #_isElement} and {@link #_isComponent} flags.
 	 *
-	 * Uses the type hierarchy to walk supertypes and check against the known
-	 * component root classes for both frameworks.
+	 * <p>A component is always also an element (WOComponent extends WOElement),
+	 * but a WODynamicElement subclass is an element without being a component.
 	 */
-	private static boolean isComponentClass(IType type) {
+	private void classifyType(IType type) {
+		_isElement = false;
+		_isComponent = false;
 		try {
 			ITypeHierarchy hierarchy = type.newSupertypeHierarchy(null);
 			IType[] allSupertypes = hierarchy.getAllClasses();
 			for (IType supertype : allSupertypes) {
 				String fqn = supertype.getFullyQualifiedName();
 				if (BuildProperties.NG_COMPONENT_CLASS.equals(fqn) || BuildProperties.WO_COMPONENT_CLASS.equals(fqn)) {
-					return true;
+					_isComponent = true;
+					_isElement = true;
+					return; // Component implies element — no need to keep looking
+				}
+				if (BuildProperties.NG_ELEMENT_CLASS.equals(fqn) || BuildProperties.WO_ELEMENT_CLASS.equals(fqn)) {
+					_isElement = true;
+					// Don't return — keep looking to see if it's also a component
 				}
 			}
 		}
@@ -89,6 +147,5 @@ public class RenameComponentParticipant extends RenameParticipant {
 			// If we can't resolve the hierarchy, don't participate.
 			// This is conservative — better to skip than to break the rename.
 		}
-		return false;
 	}
 }

@@ -1,41 +1,50 @@
 package org.objectstyle.wolips.wodclipse.core.refactoring;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange;
+import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 
 /**
- * Computes the set of resource changes needed to rename a component from
- * oldName to newName within a project.
+ * Computes the set of changes needed to rename a WOElement/WOComponent.
  *
- * Handles:
+ * <p>Two levels of changes:
  * <ul>
- *   <li>Renaming .wo folders (e.g. Main.wo -> NewName.wo)</li>
- *   <li>Renaming files inside .wo folders (Main.html -> NewName.html, etc.)</li>
- *   <li>Renaming standalone .html templates (ng-objects style)</li>
- *   <li>Renaming the .api file</li>
- * </ul>
- *
- * Does NOT handle:
- * <ul>
- *   <li>Renaming the Java class (Direction 1 relies on LTK handling that;
- *       Direction 2 triggers LTK which handles it)</li>
- *   <li>Updating cross-project references (deferred to a future phase)</li>
+ *   <li><b>File renames</b> ({@link #computeChanges}): renames .wo folders,
+ *       contained template files, standalone .html templates, and .api files.
+ *       Only applicable for WOComponent/NGComponent subclasses that have
+ *       template bundles.</li>
+ *   <li><b>Reference updates</b> ({@link #computeReferenceChanges}): scans all
+ *       templates in the project for {@code <wo:OldName>} tags and
+ *       {@code Foo : OldName &#123; &#125;} WOD entries, rewriting them to use
+ *       the new name. Applicable for any WOElement/NGElement subclass.</li>
  * </ul>
  *
  * Both {@link RenameComponentParticipant} and {@link RenameComponentAction}
- * delegate to this class for computing file-level changes.
+ * delegate to this class for computing changes.
  */
 public class RenameComponentProcessor {
 
@@ -188,5 +197,250 @@ public class RenameComponentProcessor {
 			// fall through
 		}
 		return null;
+	}
+
+	// -----------------------------------------------------------------------
+	// Cross-reference updating: rewrite element type references in templates
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Scans all templates in the project for references to oldName and creates
+	 * text edits to rewrite them to newName.
+	 *
+	 * <p>Finds references in two forms:
+	 * <ul>
+	 *   <li>Inline binding tags in HTML: {@code <wo:OldName ...>} and
+	 *       {@code </wo:OldName>}</li>
+	 *   <li>WOD element type declarations: {@code Foo : OldName &#123; &#125;}</li>
+	 * </ul>
+	 *
+	 * <p>Skips files that belong to the component being renamed (its own .wo
+	 * folder and standalone template), since those files are being physically
+	 * renamed by {@link #computeChanges} and would conflict with text edits.
+	 *
+	 * @param project the project to scan
+	 * @param oldName the current element type name
+	 * @param newName the new element type name
+	 * @param ownFilePaths paths of files belonging to the renamed component
+	 *        itself (to skip), or null to skip none
+	 * @return a CompositeChange containing all text edits, or null if no
+	 *         references were found
+	 */
+	public static CompositeChange computeReferenceChanges(IProject project, String oldName, String newName, Set<IPath> ownFilePaths) throws CoreException {
+		List<Change> changes = new ArrayList<>();
+
+		project.accept(new IResourceVisitor() {
+			@Override
+			public boolean visit(IResource resource) throws CoreException {
+				// Skip derived resources (build output, bin directories)
+				if (resource.isDerived()) {
+					return false;
+				}
+
+				if (resource.getType() != IResource.FILE) {
+					return true;
+				}
+
+				IFile file = (IFile) resource;
+
+				// Skip the component's own files — they're being renamed at
+				// the resource level by computeChanges()
+				if (ownFilePaths != null && ownFilePaths.contains(file.getFullPath())) {
+					return false;
+				}
+
+				String extension = file.getFileExtension();
+				if (extension == null) {
+					return false;
+				}
+
+				try {
+					if ("html".equalsIgnoreCase(extension)) {
+						TextFileChange change = createHtmlReferenceChange(file, oldName, newName);
+						if (change != null) {
+							changes.add(change);
+						}
+					}
+					else if ("wod".equalsIgnoreCase(extension)) {
+						TextFileChange change = createWodReferenceChange(file, oldName, newName);
+						if (change != null) {
+							changes.add(change);
+						}
+					}
+				}
+				catch (IOException e) {
+					// Log but don't fail the entire refactoring for one unreadable file
+					org.objectstyle.wolips.bindings.Activator.getDefault().log(
+							"Failed to scan " + file.getFullPath() + " for element type references", e);
+				}
+
+				return false;
+			}
+		});
+
+		if (changes.isEmpty()) {
+			return null;
+		}
+
+		CompositeChange composite = new CompositeChange("Update '" + oldName + "' references to '" + newName + "'");
+		for (Change change : changes) {
+			composite.add(change);
+		}
+		return composite;
+	}
+
+	/**
+	 * Creates a TextFileChange for an HTML template file, replacing all
+	 * {@code <wo:OldName>} and {@code </wo:OldName>} occurrences with the
+	 * new element type name.
+	 *
+	 * <p>The {@code wo:} prefix is matched case-insensitively (the parser
+	 * accepts both {@code wo:} and {@code WO:}), but the element type name
+	 * is matched case-sensitively since element types are case-sensitive.
+	 *
+	 * @return a TextFileChange, or null if no references were found
+	 */
+	private static TextFileChange createHtmlReferenceChange(IFile file, String oldName, String newName) throws CoreException, IOException {
+		String content = readFileContent(file);
+		if (content == null) {
+			return null;
+		}
+
+		// Match the element type name in wo: tag positions.
+		// Lookbehind: < or </ followed by wo: (case-insensitive)
+		// The element type name itself: case-sensitive match
+		// Lookahead: whitespace, >, /, or end of string (for edge cases)
+		Pattern pattern = Pattern.compile(
+				"(?i:</?wo:)" + Pattern.quote(oldName) + "(?=[\\s>/$])",
+				0);
+
+		Matcher matcher = pattern.matcher(content);
+		List<ReplaceEdit> edits = new ArrayList<>();
+
+		while (matcher.find()) {
+			// The match includes the <wo: or </wo: prefix — we only want to
+			// replace the element type name portion at the end of the match
+			int nameStart = matcher.end() - oldName.length();
+			edits.add(new ReplaceEdit(nameStart, oldName.length(), newName));
+		}
+
+		if (edits.isEmpty()) {
+			return null;
+		}
+
+		TextFileChange change = new TextFileChange("Update element type in " + file.getName(), file);
+		MultiTextEdit multiEdit = new MultiTextEdit();
+		for (ReplaceEdit edit : edits) {
+			multiEdit.addChild(edit);
+		}
+		change.setEdit(multiEdit);
+		return change;
+	}
+
+	/**
+	 * Creates a TextFileChange for a WOD file, replacing all element type
+	 * declarations that reference the old name.
+	 *
+	 * <p>WOD format: {@code ElementName : ElementType &#123; ... &#125;}
+	 * <br>We match {@code : OldName} followed by optional whitespace and
+	 * {@code &#123;}, replacing only the type name portion.
+	 *
+	 * @return a TextFileChange, or null if no references were found
+	 */
+	private static TextFileChange createWodReferenceChange(IFile file, String oldName, String newName) throws CoreException, IOException {
+		String content = readFileContent(file);
+		if (content == null) {
+			return null;
+		}
+
+		// Match element type in WOD declaration: ": OldName {"
+		// The colon and braces are structural — we only replace the name
+		Pattern pattern = Pattern.compile(
+				":\\s*" + Pattern.quote(oldName) + "\\s*\\{");
+
+		Matcher matcher = pattern.matcher(content);
+		List<ReplaceEdit> edits = new ArrayList<>();
+
+		while (matcher.find()) {
+			// Find the exact position of oldName within the match
+			String matchText = matcher.group();
+			int nameOffset = matchText.indexOf(oldName);
+			int nameStart = matcher.start() + nameOffset;
+			edits.add(new ReplaceEdit(nameStart, oldName.length(), newName));
+		}
+
+		if (edits.isEmpty()) {
+			return null;
+		}
+
+		TextFileChange change = new TextFileChange("Update element type in " + file.getName(), file);
+		MultiTextEdit multiEdit = new MultiTextEdit();
+		for (ReplaceEdit edit : edits) {
+			multiEdit.addChild(edit);
+		}
+		change.setEdit(multiEdit);
+		return change;
+	}
+
+	/**
+	 * Collects the file paths of all files belonging to a component, so they
+	 * can be excluded from reference scanning (they're being renamed at the
+	 * resource level, not edited).
+	 *
+	 * @return a set of full paths (IPath) for the component's own files,
+	 *         or an empty set if the component can't be located
+	 */
+	public static Set<IPath> collectOwnFilePaths(IProject project, String componentName) {
+		Set<IPath> paths = new HashSet<>();
+		try {
+			LocalizedComponentsLocateResult result = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(project, componentName);
+			if (result == null) {
+				return paths;
+			}
+
+			// Add all files inside .wo folders
+			for (IFolder woFolder : result.getComponents()) {
+				if (woFolder.exists()) {
+					paths.add(woFolder.getFullPath());
+					for (IResource member : woFolder.members()) {
+						paths.add(member.getFullPath());
+					}
+				}
+			}
+
+			// Add standalone HTML template
+			IFile htmlFile = result.getFirstHtmlFile();
+			if (htmlFile != null && htmlFile.exists()) {
+				paths.add(htmlFile.getFullPath());
+			}
+
+			// Add .api file
+			IFile apiFile = result.getDotApi();
+			if (apiFile != null && apiFile.exists()) {
+				paths.add(apiFile.getFullPath());
+			}
+		}
+		catch (CoreException | LocateException e) {
+			// Best effort — return whatever we collected
+		}
+		return paths;
+	}
+
+	/**
+	 * Reads the full content of an IFile as a String.
+	 *
+	 * @return the file content, or null if the file can't be read
+	 */
+	private static String readFileContent(IFile file) throws CoreException, IOException {
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(file.getContents(), StandardCharsets.UTF_8))) {
+			StringBuilder sb = new StringBuilder();
+			char[] buffer = new char[8192];
+			int read;
+			while ((read = reader.read(buffer)) != -1) {
+				sb.append(buffer, 0, read);
+			}
+			return sb.toString();
+		}
 	}
 }

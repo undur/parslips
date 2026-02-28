@@ -10,14 +10,17 @@ Binding *name* validation quick-fixes (is "valu" a valid binding on WOString?) a
 
 ## Refactoring across files
 
-### ~~Rename component~~ ✓ (partial)
+### ~~Rename component~~ ✓
 
 Implemented. Renaming a WOComponent/NGComponent Java class now also renames the `.wo` folder, contained template files (`.html`, `.wod`, `.woo`), and `.api` file. Works bidirectionally: renaming from the Java side (Refactor > Rename) triggers the template renames via an LTK `RenameParticipant`, and a "Rename Component..." context menu action on `.wo` folders triggers the Java rename.
+
+### ~~Rename element type: cross-reference updating~~ ✓
+
+Implemented. Renaming any WOElement/NGElement subclass now automatically updates all `<wo:OldName>` tags and `Foo : OldName { }` WOD entries across all templates in the project. The participant activates for all element subclasses, not just components — custom dynamic elements are covered too.
 
 Remaining:
 
 - **Undo support** — the undo entry recorded by Eclipse's refactoring framework fails with "No input element provided" after the rename completes. This appears to be a conflict between JDT's compilation unit undo tracking and the resource-level `RenameResourceChange` objects added by our participant. Needs investigation into LTK's undo/redo machinery.
-- **Cross-project reference updating** — renaming a component does not update `<wo:OldName>` references in other components that use it. This requires scanning all templates in the workspace for element type references and rewriting them.
 
 ### Rename binding across files
 
