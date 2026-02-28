@@ -23,6 +23,11 @@
 					<h3>Parser control tags: <code>&lt;p:raw&gt;</code> and <code>&lt;p:comment&gt;</code></h3>
 					<p><code>&lt;p:raw&gt;</code> treats its content as literal text — no dynamic tag processing, useful for embedding example code containing <code>&lt;wo:&gt;</code> tags. <code>&lt;p:comment&gt;</code> is a template-level comment that is stripped entirely from output. Both block types are rendered with a distinct background tint and muted text, are skipped by validation, support linked rename (Cmd+2, R), and isolate their content so broken HTML inside can't affect the rest of the document.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: close-tag completion with <code>/</code> in attribute values</h3>
+					<p>Fixed a long-standing bug where auto-close tag completion (Ctrl+Space) would suggest the wrong tag when an attribute value contained <code>/</code> — e.g. <code>href="/"</code>. The <code>/</code> was mistakenly interpreted as a self-closing tag marker, corrupting the tag stack. A second bug (operator precedence) caused the same issue with single-quoted values. Both are now fixed.</p>
+				</div>
 			</div>
 
 			<!-- February 27, 2026 -->

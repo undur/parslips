@@ -23,6 +23,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 - Block content is also blanked during parser preprocessing (`pBlock2space`), preventing unclosed strings from corrupting the FuzzyXML parse of surrounding elements.
 - Modified files: `FuzzyXMLParser.java`, `FuzzyXMLUtil.java`, `WodHtmlUtils.java`, `TemplateValidator.java`, `HTMLTagScanner.java`, `HTMLPartitionScanner.java`, `HTMLConfiguration.java`, `HTMLFileDocumentProvider.java`, `HTMLTextDocumentProvider.java`.
 
+### Close-tag completion fix
+
+- **Fixed wrong close tag suggested when attributes contain "/":** Typing `<wo:bork>` after an `<a href="/">` and pressing Ctrl+Space would suggest `</div>` instead of `</wo:bork>`. The tag-stack scanner in `getLastWord()` treated the `/` inside `href="/"` as a self-closing tag marker, popping the wrong element from the stack. A second bug — an operator precedence error (`&&`/`||` without proper grouping) — caused the same corruption for single-quoted values like `href='/'`.
+- **Extracted `TagStackAnalyzer`:** The tag-stack logic (`getLastWord` and `isDelimiter`) was extracted from `HTMLAssistProcessor` into a standalone `TagStackAnalyzer` class with no SWT dependencies, making it directly unit-testable.
+- Both bugs are covered by 14 new unit tests.
+
+### Unit test infrastructure
+
+- Added a `test/` source folder to `ng.componenteditor` with JUnit 4 via `tycho-surefire-plugin` (`plugin-test` goal, headless — no UI harness).
+- Tests run automatically during `mvn verify`.
+- Initial test suite: 51 tests covering `FuzzyXMLUtil.pBlock2space()` preprocessing, `FuzzyXMLParser` p: block DOM structure and offset tracking, and `TagStackAnalyzer` close-tag completion logic.
+
 ### Plugin infrastructure
 
 - **New activator:** Bundle activator is `tk.eclipse.plugin.htmleditor.HTMLPlugin` (declared in MANIFEST.MF). Old per-plugin activators were converted to plain singletons.
