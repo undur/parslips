@@ -27,9 +27,10 @@ import org.objectstyle.wolips.variables.BuildProperties;
  *       renames the {@code .wo} folder, contained template files, standalone
  *       {@code .html}, and {@code .api} file to match the new name.</li>
  *   <li>For <b>any element</b> (extends WOElement/NGElement, which includes
- *       components): scans all templates in the project and rewrites
- *       {@code <wo:OldName>} tags and {@code Foo : OldName &#123;&#125;} WOD
- *       entries to use the new name.</li>
+ *       components): renames the {@code .api} file (if present) and scans
+ *       all templates in the project, rewriting {@code <wo:OldName>} tags
+ *       and {@code Foo : OldName &#123;&#125;} WOD entries to use the new
+ *       name.</li>
  * </ul>
  *
  * <p>Registered via plugin.xml as a renameParticipant for {@code IType}.
@@ -92,7 +93,7 @@ public class RenameComponentParticipant extends RenameParticipant {
 		CompositeChange allChanges = new CompositeChange("Rename '" + oldName + "' to '" + newName + "'");
 
 		// 1. For components: rename the component's own template files
-		//    (.wo folder, contained files, standalone .html, .api)
+		//    (.wo folder, contained files, standalone .html)
 		Set<IPath> ownFilePaths = null;
 		if (_isComponent) {
 			CompositeChange fileRenames = RenameComponentProcessor.computeChanges(project, oldName, newName);
@@ -103,7 +104,16 @@ public class RenameComponentParticipant extends RenameParticipant {
 			ownFilePaths = RenameComponentProcessor.collectOwnFilePaths(project, oldName);
 		}
 
-		// 2. For all elements: update <wo:OldName> and WOD references in
+		// 2. For all elements (including non-component WOElement subclasses):
+		//    rename the .api file if one exists
+		if (!_isComponent) {
+			Change apiRename = RenameComponentProcessor.computeApiRename(project, oldName, newName);
+			if (apiRename != null) {
+				allChanges.add(apiRename);
+			}
+		}
+
+		// 3. For all elements: update <wo:OldName> and WOD references in
 		//    other components' templates
 		CompositeChange referenceChanges = RenameComponentProcessor.computeReferenceChanges(
 				project, oldName, newName, ownFilePaths);

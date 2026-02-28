@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Auto-delete empty .wo folders
+
+- Empty `.wo` folders left behind by git (which removes files but not directories) are now automatically deleted. A lightweight resource change listener watches for changes to `.wo` folders and removes them when they become empty, preventing ghost components from blocking the New Component wizard.
+- New file: `EmptyWoFolderCleaner.java`.
+
+### Rename element: .api file support for non-component elements
+
+- Renaming a `WOElement`/`NGElement` subclass (that is not a component) via Refactor > Rename now also renames the associated `.api` file, if one exists. Previously `.api` renames only happened for `WOComponent`/`NGComponent` subclasses.
+
 ### New component wizard: template type selection
 
 - **The New Component wizard now offers a choice between standalone HTML and .wo bundle formats.** A "Component Format" radio group lets the user pick between a single-file `.html` component (ng-objects style) and a traditional `.wo` folder bundle (WebObjects style).

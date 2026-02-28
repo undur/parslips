@@ -199,6 +199,35 @@ public class RenameComponentProcessor {
 		return null;
 	}
 
+	/**
+	 * Computes a rename change for just the .api file of an element.
+	 *
+	 * <p>This is used for non-component WOElement subclasses, which don't have
+	 * template bundles but can still have .api files declaring their bindings.
+	 * Components handle .api renames as part of {@link #computeChanges}.
+	 *
+	 * @return a RenameResourceChange, or null if no .api file exists
+	 */
+	public static Change computeApiRename(IProject project, String oldName, String newName) throws CoreException {
+		LocalizedComponentsLocateResult locateResult;
+		try {
+			locateResult = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(project, oldName);
+		}
+		catch (LocateException e) {
+			return null;
+		}
+
+		if (locateResult == null) {
+			return null;
+		}
+
+		IFile apiFile = locateResult.getDotApi();
+		if (apiFile != null && apiFile.exists()) {
+			return new RenameResourceChange(apiFile.getFullPath(), newName + ".api");
+		}
+		return null;
+	}
+
 	// -----------------------------------------------------------------------
 	// Cross-reference updating: rewrite element type references in templates
 	// -----------------------------------------------------------------------
