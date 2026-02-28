@@ -20,6 +20,40 @@ body {
 	width: 100%;
 }
 
+/* Navigation */
+
+.site-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 24px;
+	align-items: center;
+	font-size: 13px;
+	margin-bottom: 48px;
+}
+
+.site-nav a {
+	color: #5a7e5a;
+	text-decoration: none;
+	transition: color 0.15s;
+}
+
+.site-nav a:hover {
+	text-decoration: underline;
+}
+
+.site-nav a.active {
+	color: #1a2e1a;
+	font-weight: 600;
+}
+
+.site-nav a.active:hover {
+	text-decoration: none;
+}
+
+.site-nav .nav-github {
+	margin-left: auto;
+}
+
 .hero {
 	text-align: center;
 	margin-bottom: 48px;
@@ -312,4 +346,37 @@ kbd {
 	padding: 2px 6px;
 	color: #3a5a3a;
 	white-space: nowrap;
+}
+
+/* Roadmap page */
+
+.roadmap .card {
+	padding: 28px 32px;
+}
+
+.roadmap-entry {
+	padding: 12px 0;
+	border-bottom: 1px solid #f0f5f0;
+}
+
+.roadmap-entry:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.roadmap-entry:first-of-type {
+	padding-top: 0;
+}
+
+.roadmap-entry h3 {
+	font-size: 16px;
+	font-weight: 600;
+	color: #1a2e1a;
+	margin-bottom: 6px;
+}
+
+.roadmap-entry p {
+	font-size: 15px;
+	color: #4a5e4a;
+	line-height: 1.55;
 }

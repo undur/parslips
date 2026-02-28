@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Parsley Template Editor — Roadmap</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/site.css"/>
+		<link rel="icon" type="image/x-icon" href="img/favicon.ico"/>
+	</head>
+	<body>
+		<div class="container roadmap">
+			<nav class="site-nav">
+				<a href="index.html">Home</a>
+				<a href="features.html">Features</a>
+				<a href="changelog.html">Changelog</a>
+				<a href="roadmap.html" class="active">Roadmap</a>
+				<a href="https://github.com/undur/parslips" class="nav-github">GitHub ↗</a>
+			</nav>
+
+			<div class="hero">
+				<div class="hero-emoji">🌿</div>
+				<h1>Roadmap</h1>
+				<p class="tagline">Where Parsley is heading</p>
+			</div>
+
+			<div class="card">
+				<h2 class="section-header">Planned</h2>
+
+				<div class="roadmap-entry">
+					<h3>Refactoring across files</h3>
+					<p>Rename a binding in Java and have it update in the WOD and HTML template automatically. Rename a component and update all references across the project. WO component bundles are inherently multi-file, so cross-file refactoring is where tooling saves the most manual effort.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Component catalog / documentation on hover</h3>
+					<p>Hover over a component tag in the template or WOD and see its API: accepted bindings, which are required, expected types, and a short description. The data source already exists in <code>.api</code> files &mdash; this is about surfacing it inline.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Binding type checking</h3>
+					<p>Go beyond "this binding doesn't exist" to "this binding expects a String, you're passing an NSArray." Requires bridging WOD binding values to Java type information via JDT.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Component dependency graph</h3>
+					<p>A navigable view of "this component uses these sub-components" &mdash; useful for understanding unfamiliar codebases and spotting circular dependencies.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>New component wizard: template type selection</h3>
+					<p>When creating a new component, offer a choice between a <code>.wo</code> folder bundle and a single-file standalone <code>.html</code> template. Defaults based on the project type &mdash; WO projects default to bundles, ng-objects projects default to single-file.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Convert between component formats</h3>
+					<p>Convert a <code>.wo</code> folder bundle to a single-file standalone component and vice versa. Merge or extract WOD bindings, move files, and clean up automatically.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Convert between WOD and inline bindings</h3>
+					<p>Convert a component's WOD bindings to inline bindings within the HTML template, and vice versa. Useful when switching coding styles or converting between component formats.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Rich component API model</h3>
+					<p>A major evolution of the <code>.api</code> file format to describe the full component contract. Binding directionality (get/set/both), deprecated bindings, default values, value constraints, required vs. optional bindings, per-binding documentation, component descriptions, content model, and more. This feeds into almost every other roadmap item.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Extract component from selection</h3>
+					<p>Select a chunk of template HTML, extract it into a new component &mdash; generating the bundle, WOD entries, and a stub Java class. The template equivalent of "Extract Method."</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Tag namespace support</h3>
+					<p>Support for additional tag namespaces beyond <code>wo:</code>. The <code>html:</code> namespace for dynamic HTML tags with binding-valued attributes, and expanded <code>p:</code> parser control directives.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Live preview</h3>
+					<p>Side-by-side rendering of the template as you edit. Challenging for WO components since they render server-side with dynamic bindings, but even a static structural preview showing component nesting and placeholder content could be valuable.</p>
+				</div>
+			</div>
+
+			<div class="footer">
+				<p>🌿 <a href="https://github.com/undur/parslips">github.com/undur/parslips</a></p>
+			</div>
+		</div>
+	</body>
+</html>
