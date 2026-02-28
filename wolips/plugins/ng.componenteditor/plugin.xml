@@ -498,6 +498,32 @@
                label="Generate API File"
                menubarPath="additions"/>
       </objectContribution>
+      <objectContribution adaptable="false"
+            id="ng.componenteditor.renameComponent.woContribution"
+            nameFilter="*.wo"
+            objectClass="org.eclipse.core.resources.IFolder">
+         <action class="org.objectstyle.wolips.componenteditor.actions.RenameComponentAction"
+               enablesFor="1"
+               id="ng.componenteditor.renameComponentAction"
+               label="Rename Component..."
+               menubarPath="additions"/>
+      </objectContribution>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Refactoring Participants                                                             -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
+      <renameParticipant
+            class="org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentParticipant"
+            id="ng.componenteditor.renameComponentParticipant"
+            name="Rename WO Component Files">
+         <enablement>
+            <with variable="element">
+               <instanceof value="org.eclipse.jdt.core.IType"/>
+            </with>
+         </enablement>
+      </renameParticipant>
    </extension>
 
 <!-- =================================================================================== -->

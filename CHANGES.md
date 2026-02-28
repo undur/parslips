@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Rename Component (bidirectional)
+
+- **Rename Java class → rename template files:** When renaming a WOComponent/NGComponent Java class via Eclipse's Refactor > Rename, the component's template files are now also renamed automatically. The `.wo` folder, all contained files (`.html`, `.wod`, `.woo`), standalone `.html` templates, and `.api` files are renamed to match the new class name. Implemented as an LTK `RenameParticipant` that participates in Eclipse's standard Rename Type refactoring.
+- **Rename `.wo` folder → rename Java class:** Right-click a `.wo` folder and select "Rename Component..." to rename the component from the template side. If a Java class exists, the rename is delegated to Eclipse's JDT refactoring (which triggers the participant above), so both directions produce the same atomic result. Template-only components (no Java class) are also supported.
+- **New files:** `RenameComponentProcessor` (core rename logic), `RenameComponentParticipant` (LTK integration), `RenameComponentAction` (context menu action).
+- **New dependency:** `org.eclipse.ltk.ui.refactoring` added to MANIFEST.MF for programmatic refactoring support.
+- Cross-project reference updating (finding `<wo:OldName>` in other components) is deferred to a future phase.
+
 ### Tag shortcut capitalization validation
 
 - **Miscapitalized tag shortcuts are now flagged:** Writing `<wo:Repetition>` when the shortcut is defined as `repetition` now produces a validation error with a "Did you mean 'repetition'?" suggestion. Uses the same error format as element type errors — the user doesn't need to know whether what they typed was a shortcut or a class name. Previously, the case-insensitive shortcut matching silently accepted any capitalization.

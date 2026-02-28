@@ -27,8 +27,18 @@
 				<h2 class="section-header">Planned</h2>
 
 				<div class="roadmap-entry">
-					<h3>Refactoring across files</h3>
-					<p>Rename a binding in Java and have it update in the WOD and HTML template automatically. Rename a component and update all references across the project. WO component bundles are inherently multi-file, so cross-file refactoring is where tooling saves the most manual effort.</p>
+					<h3>Rename component: undo support</h3>
+					<p>Component renaming works but undo fails. The undo entry recorded by Eclipse's refactoring framework conflicts with the resource-level renames added by our LTK participant. Needs investigation into LTK's undo/redo machinery.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Rename component: cross-project reference updating</h3>
+					<p>Renaming a component does not update <code>&lt;wo:OldName&gt;</code> references in other components. Requires scanning all templates in the workspace for element type references and rewriting them.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Rename binding across files</h3>
+					<p>Rename a binding in Java and have it update in the WOD and HTML template automatically. WO component bundles are inherently multi-file, so cross-file refactoring is where tooling saves the most manual effort.</p>
 				</div>
 
 				<div class="roadmap-entry">
