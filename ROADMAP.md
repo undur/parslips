@@ -44,11 +44,9 @@ A navigable view of "this component uses these sub-components" — useful for un
 
 Prior work exists in a separate project. Natural home would be an Eclipse view contributed by the plugin, possibly with a graphical representation using Zest or a simple tree/table.
 
-## New component wizard: template type selection
+## ~~New component wizard: template type selection~~ ✓
 
-When creating a new component, offer a choice between a `.wo` folder bundle and a single-file (standalone `.html`) component. The wizard should default based on the current project type — WO projects default to `.wo` bundles, ng-objects projects default to single-file components.
-
-The existing `WOComponentCreationPage` already detects project type via `BuildProperties`; this adds a radio button or checkbox and adjusts the file generation accordingly.
+Implemented. The wizard now offers a "Component Format" radio group to choose between standalone HTML (ng-objects style) and .wo folder bundle (WebObjects style). The default is detected from the project type, and the choice is persisted between invocations.
 
 ## Convert between component formats
 

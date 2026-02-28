@@ -150,6 +150,11 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	private static final String HTML_DOCTYPE_KEY = "WOComponentCreationWizardSection.htmlDocType";
 	private static final String NSSTRING_ENCODING_KEY = "WOComponentCreationWizardSection.encoding";
 	private static final String SUPERCLASS_KEY = "WOComponentCreationWizardSection.superclass";
+	private static final String COMPONENT_FORMAT_KEY = "WOComponentCreationWizardSection.componentFormat";
+
+	/** Component format values for dialog settings persistence */
+	private static final String FORMAT_STANDALONE = "standalone";
+	private static final String FORMAT_BUNDLE = "bundle";
 
 	private Button _bodyCheckbox;
 	private Combo _htmlCombo;
@@ -158,6 +163,18 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	private IResource[] _resourcesToReveal;
 	private StringButtonStatusDialogField _packageDialogField;
 	private StringButtonStatusDialogField _superclassDialogField;
+
+	/** Radio buttons for choosing between standalone HTML and .wo bundle */
+	private Button _standaloneRadio;
+	private Button _bundleRadio;
+
+	/**
+	 * The Optional Files group — needs a reference so we can show/hide it
+	 * based on the component format selection. Bundle components have
+	 * optional files (body tag, doctype, API, encoding); standalone
+	 * components don't.
+	 */
+	private Group _optionalFilesGroup;
 
 	/**
 	 * If the user selected a Java package folder, this holds the IPackageFragment.
@@ -555,29 +572,63 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 
 		new Label(composite, SWT.NONE); // vertical spacer
 
+		// --- Component format group (standalone HTML vs .wo bundle) ---
+		Group formatGroup = new Group(composite, SWT.NONE);
+		formatGroup.setLayout(new GridLayout(2, false));
+		formatGroup.setText(Messages.getString("WOComponentCreationPage.componentFormat.group"));
+		formatGroup.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
+
+		_standaloneRadio = new Button(formatGroup, SWT.RADIO);
+		_standaloneRadio.setText(Messages.getString("WOComponentCreationPage.componentFormat.standalone"));
+
+		_bundleRadio = new Button(formatGroup, SWT.RADIO);
+		_bundleRadio.setText(Messages.getString("WOComponentCreationPage.componentFormat.bundle"));
+
+		// Default format: saved preference > project type detection.
+		// ng-objects projects default to standalone; WO projects to bundles.
+		boolean defaultToStandalone = resolveDefaultFormat();
+		_standaloneRadio.setSelection(defaultToStandalone);
+		_bundleRadio.setSelection(!defaultToStandalone);
+
+		// When the format changes, show/hide the optional files group
+		// (body tag, doctype, API, encoding are only relevant for bundles)
+		SelectionListener formatListener = new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateOptionalFilesVisibility();
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				updateOptionalFilesVisibility();
+			}
+		};
+		_standaloneRadio.addSelectionListener(formatListener);
+		_bundleRadio.addSelectionListener(formatListener);
+
 		// --- Component options group (body tag, HTML doctype, API file, encoding) ---
-		Group optionalFilesGroup = new Group(composite, SWT.NONE);
-		optionalFilesGroup.setLayout(new GridLayout(3, false));
-		optionalFilesGroup.setText(Messages.getString("WOComponentCreationPage.creationOptions.group"));
-		optionalFilesGroup.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
+		// Only visible when .wo bundle format is selected.
+		_optionalFilesGroup = new Group(composite, SWT.NONE);
+		_optionalFilesGroup.setLayout(new GridLayout(3, false));
+		_optionalFilesGroup.setText(Messages.getString("WOComponentCreationPage.creationOptions.group"));
+		_optionalFilesGroup.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
 
 		ButtonSelectionAdaptor listener = new ButtonSelectionAdaptor();
-		_bodyCheckbox = new Button(optionalFilesGroup, SWT.CHECK);
+		_bodyCheckbox = new Button(_optionalFilesGroup, SWT.CHECK);
 		_bodyCheckbox.setText(Messages.getString("WOComponentCreationPage.creationOptions.bodyTag.button"));
 		_bodyCheckbox.setSelection(this.getDialogSettings().getBoolean(BODY_CHECKBOX_KEY));
 		_bodyCheckbox.setAlignment(SWT.CENTER);
 		_bodyCheckbox.addListener(SWT.Selection, this);
 		_bodyCheckbox.addSelectionListener(listener);
 
-		Label htmlLabel = new Label(optionalFilesGroup, SWT.RIGHT);
+		Label htmlLabel = new Label(_optionalFilesGroup, SWT.RIGHT);
 		htmlLabel.setText(Messages.getString("WOComponentCreationPage.creationOptions.bodyTag.label"));
 		htmlLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		_htmlCombo = new Combo(optionalFilesGroup, SWT.DROP_DOWN);
+		_htmlCombo = new Combo(_optionalFilesGroup, SWT.DROP_DOWN);
 		_htmlCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		populateHTMLCombo(_htmlCombo);
 		refreshButtonSettings(_bodyCheckbox);
 
-		_apiCheckbox = new Button(optionalFilesGroup, SWT.CHECK);
+		_apiCheckbox = new Button(_optionalFilesGroup, SWT.CHECK);
 		GridData apiLayoutData = new GridData();
 		_apiCheckbox.setLayoutData(apiLayoutData);
 		_apiCheckbox.setText(Messages.getString("WOComponentCreationPage.creationOptions.apiFile.button"));
@@ -585,23 +636,31 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		_apiCheckbox.addListener(SWT.Selection, this);
 		_apiCheckbox.addSelectionListener(listener);
 
-		Label encodingLabel = new Label(optionalFilesGroup, SWT.RIGHT);
+		Label encodingLabel = new Label(_optionalFilesGroup, SWT.RIGHT);
 		encodingLabel.setText(Messages.getString("WOComponentCreationPage.creationOptions.wooFile.label"));
 		encodingLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		_encodingCombo = new Combo(optionalFilesGroup, SWT.DROP_DOWN);
+		_encodingCombo = new Combo(_optionalFilesGroup, SWT.DROP_DOWN);
 		_encodingCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		populateStringEncodingCombo(_encodingCombo);
+
+		// Set initial visibility of the optional files group
+		updateOptionalFilesVisibility();
 
 		setPageComplete(validatePage());
 	}
 	
 	/**
-	 * Creates the WO component files (.wo folder, .html, .wod, .woo, .java, optionally .api).
-	 * Called by WOComponentCreationWizard.performFinish() after the user clicks Finish.
+	 * Creates the component files. For .wo bundles, creates the folder with
+	 * .html, .wod, .woo, .java, and optionally .api. For standalone, creates
+	 * just the .html and .java files.
 	 *
-	 * Eclipse workspace paths always start with the project name as the first segment.
-	 * If the path has only one segment, the component goes in the project root.
-	 * Otherwise, we strip the project segment to get the project-relative subfolder path.
+	 * <p>Called by WOComponentCreationWizard.performFinish() after the user
+	 * clicks Finish.
+	 *
+	 * <p>Eclipse workspace paths always start with the project name as the
+	 * first segment. If the path has only one segment, the component goes
+	 * in the project root. Otherwise, we strip the project segment to get
+	 * the project-relative subfolder path.
 	 *
 	 * @return true if creation was successful, false to keep the wizard open
 	 */
@@ -610,6 +669,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		String componentName = getFileName();
 		String packageName = _packageDialogField.getText();
 		String superclassName = _superclassDialogField.getText();
+		boolean standalone = isStandaloneSelected();
 
 		// First path segment = project name (e.g. "myproject/src/main/components" -> "myproject")
 		IProject actualProject = ResourcesPlugin.getWorkspace().getRoot().getProject(getContainerFullPath().segment(0));
@@ -621,13 +681,13 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 			return false;
 		case 1:
 			// Path is just the project root (e.g. "/myproject")
-			componentCreator = new WOComponentCreator(actualProject, componentName, packageName, superclassName, _bodyCheckbox.getSelection(), _apiCheckbox.getSelection(), this);
+			componentCreator = new WOComponentCreator(actualProject, componentName, packageName, superclassName, _bodyCheckbox.getSelection(), _apiCheckbox.getSelection(), standalone, this);
 			break;
 		default:
 			// Path is a subfolder within the project — strip the project segment
 			// to get the project-relative path (e.g. "src/main/components")
 			IFolder subprojectFolder = actualProject.getFolder(getContainerFullPath().removeFirstSegments(1));
-			componentCreator = new WOComponentCreator(subprojectFolder, componentName, packageName, superclassName, _bodyCheckbox.getSelection(), _apiCheckbox.getSelection(), this);
+			componentCreator = new WOComponentCreator(subprojectFolder, componentName, packageName, superclassName, _bodyCheckbox.getSelection(), _apiCheckbox.getSelection(), standalone, this);
 			break;
 		}
 
@@ -637,6 +697,8 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		this.getDialogSettings().put(WOComponentCreationPage.HTML_DOCTYPE_KEY, _htmlCombo.getText());
 		this.getDialogSettings().put(WOComponentCreationPage.NSSTRING_ENCODING_KEY, _encodingCombo.getText());
 		this.getDialogSettings().put(WOComponentCreationPage.API_CHECKBOX_KEY, _apiCheckbox.getSelection());
+		this.getDialogSettings().put(WOComponentCreationPage.COMPONENT_FORMAT_KEY,
+				standalone ? FORMAT_STANDALONE : FORMAT_BUNDLE);
 
 		IRunnableWithProgress op = new WorkspaceModifyDelegatingOperation(componentCreator);
 		return createResourceOperation(op);
@@ -991,6 +1053,79 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 			return (String) dialog.getFirstResult();
 		}
 		return null;
+	}
+
+	/**
+	 * Returns true if the user has selected the standalone HTML format,
+	 * false for .wo bundle format.
+	 */
+	public boolean isStandaloneSelected() {
+		return _standaloneRadio.getSelection();
+	}
+
+	/**
+	 * Determines the default component format based on project type,
+	 * falling back to saved preference if the project type can't be
+	 * detected.
+	 *
+	 * <p>Priority:
+	 * <ol>
+	 *   <li>Project type: ng-objects defaults to standalone, WO to bundle</li>
+	 *   <li>Saved dialog setting from a previous wizard invocation
+	 *       (only when project type detection fails)</li>
+	 *   <li>Bundle as the ultimate fallback</li>
+	 * </ol>
+	 *
+	 * <p>Project type is the primary source because the format choice is
+	 * inherently project-specific — an ng-objects project should always
+	 * default to standalone regardless of what the user last picked in
+	 * a WO project, and vice versa.
+	 *
+	 * @return true for standalone, false for bundle
+	 */
+	private boolean resolveDefaultFormat() {
+		// 1. Detect from project type — this is the primary source
+		IPath containerPath = getContainerFullPath();
+		if (containerPath != null && containerPath.segmentCount() > 0) {
+			IProject project = ResourcesPlugin.getWorkspace().getRoot()
+					.getProject(containerPath.segment(0));
+			if (project != null && project.exists()) {
+				BuildProperties bp = (BuildProperties) project.getAdapter(BuildProperties.class);
+				if (bp != null) {
+					return bp.isNGProject();
+				}
+			}
+		}
+
+		// 2. No project context — fall back to saved preference
+		String savedFormat = this.getDialogSettings().get(COMPONENT_FORMAT_KEY);
+		if (FORMAT_STANDALONE.equals(savedFormat)) {
+			return true;
+		}
+		if (FORMAT_BUNDLE.equals(savedFormat)) {
+			return false;
+		}
+
+		// 3. Fallback: bundle (traditional WO behavior)
+		return false;
+	}
+
+	/**
+	 * Shows or hides the Optional Files group based on the selected
+	 * component format. Bundle components have optional files (body tag,
+	 * doctype, API, encoding); standalone components don't need them.
+	 *
+	 * <p>Uses GridData.exclude to remove the group from the layout
+	 * entirely when hidden, so the dialog doesn't have a blank gap.
+	 */
+	private void updateOptionalFilesVisibility() {
+		boolean isBundle = _bundleRadio.getSelection();
+		_optionalFilesGroup.setVisible(isBundle);
+		((GridData) _optionalFilesGroup.getLayoutData()).exclude = !isBundle;
+
+		// Re-layout the parent composite to adjust the dialog size
+		_optionalFilesGroup.getParent().layout(true, true);
+		getShell().pack(true);
 	}
 
 	/**

@@ -28,6 +28,11 @@
 				<h2 class="date-header">February 28, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>New component wizard: template type selection</h3>
+					<p>The New Component wizard now lets you choose between <strong>Standalone HTML file</strong> (ng-objects style) and <strong>.wo folder bundle</strong> (WebObjects style). The default is auto-detected from the project type &mdash; ng-objects projects default to standalone, WO projects to bundles.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Extract Component from selection</h3>
 					<p>Select HTML in the template, press <kbd>Cmd+2, E</kbd> (or Edit &gt; Refactor &gt; Extract Component&hellip;), enter a name &mdash; the selected HTML is extracted into a new component. The plugin creates the <code>.wo</code> folder with all files (<code>.html</code>, <code>.wod</code>, <code>.woo</code>, <code>.java</code>), replaces the selection with a <code>&lt;wo:NewComponentName/&gt;</code> tag, and opens the new component for editing.</p>
 					<p>The new component is placed alongside the current component and uses the same Java package and component superclass. The extracted HTML is automatically dedented &mdash; common leading whitespace is stripped so the new template starts at column 0. The selected HTML is placed as-is &mdash; bindings are wired up manually afterward.</p>

@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New component wizard: template type selection
+
+- **The New Component wizard now offers a choice between standalone HTML and .wo bundle formats.** A "Component Format" radio group lets the user pick between a single-file `.html` component (ng-objects style) and a traditional `.wo` folder bundle (WebObjects style).
+- The default format is auto-detected from the project type: ng-objects projects default to standalone, WO projects default to bundles.
+- When "Standalone HTML file" is selected, the "Optional Files" group (body tag, doctype, encoding, API) is hidden since those settings are only relevant for bundles.
+- Standalone creation bypasses the Velocity template engine and generates files directly.
+
 ### Extract Component from selection
 
 - **New refactoring action:** Select HTML in the template editor, press `Cmd+2, E` (or Edit > Refactor > Extract Component...), enter a name, and the selected HTML is extracted into a new WO component. The plugin creates the `.wo` folder with `.html`, `.wod`, `.woo`, and `.java` files, replaces the selection with a `<wo:NewComponentName/>` tag, and opens the new component for editing.
