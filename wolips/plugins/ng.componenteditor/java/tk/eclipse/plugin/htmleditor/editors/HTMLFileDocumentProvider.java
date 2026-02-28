@@ -22,7 +22,8 @@ public class HTMLFileDocumentProvider extends FileDocumentProvider {
 								HTMLPartitionScanner.HTML_DOCTYPE,
 								HTMLPartitionScanner.HTML_DIRECTIVE,
 								HTMLPartitionScanner.JAVASCRIPT,
-								HTMLPartitionScanner.HTML_CSS});
+								HTMLPartitionScanner.HTML_CSS,
+								HTMLPartitionScanner.HTML_P_BLOCK});
 			partitioner.connect(document);
 			document.setDocumentPartitioner(partitioner);
 		}

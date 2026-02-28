@@ -16,9 +16,13 @@ import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
+import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.rules.ITokenScanner;
 import org.eclipse.jface.text.rules.RuleBasedScanner;
+import org.eclipse.jface.text.rules.Token;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
@@ -41,7 +45,7 @@ import tk.eclipse.plugin.htmleditor.assist.InnerJavaScriptAssistProcessor;
 public class HTMLConfiguration extends SourceViewerConfiguration {
 	
 	private HTMLDoubleClickStrategy _doubleClickStrategy;
-	
+
 	private HTMLScanner _scanner;
 	private HTMLTagScanner _tagScanner;
 	private RuleBasedScanner _commentScanner;
@@ -50,6 +54,7 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 	private RuleBasedScanner _directiveScanner;
 	private RuleBasedScanner _javaScriptScanner;
 	private RuleBasedScanner _cssScanner;
+	private RuleBasedScanner _pBlockScanner;
 	
 	private ColorProvider _colorProvider;
 	
@@ -127,7 +132,8 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 			HTMLPartitionScanner.HTML_DOCTYPE,
 			HTMLPartitionScanner.HTML_DIRECTIVE,
 			HTMLPartitionScanner.JAVASCRIPT,
-			HTMLPartitionScanner.HTML_CSS};
+			HTMLPartitionScanner.HTML_CSS,
+			HTMLPartitionScanner.HTML_P_BLOCK};
 	}
 	
 	/**
@@ -210,6 +216,7 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 			HTMLAssistProcessor processor = getAssistProcessor();
 			_assistant.setContentAssistProcessor(processor,IDocument.DEFAULT_CONTENT_TYPE);
 			_assistant.setContentAssistProcessor(processor,HTMLPartitionScanner.HTML_TAG);
+			_assistant.setContentAssistProcessor(processor,HTMLPartitionScanner.HTML_P_BLOCK);
 			
 			InnerJavaScriptAssistProcessor jsProcessor = getJavaScriptAssistProcessor();
 			_assistant.setContentAssistProcessor(jsProcessor,HTMLPartitionScanner.JAVASCRIPT);
@@ -326,6 +333,21 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 	}
 	
 	/**
+	 * Creates or returns the scanner for {@code <p:raw>} and {@code <p:comment>} blocks.
+	 * Applies the WO background tint across the entire block content, visually signalling
+	 * that the content is treated differently from the rest of the template.
+	 */
+	protected RuleBasedScanner getPBlockScanner() {
+		if (_pBlockScanner == null) {
+			_pBlockScanner = new RuleBasedScanner();
+			Color fg = _colorProvider.getColor(new RGB(63, 95, 191));
+			Color bg = _colorProvider.getColor(new RGB(237, 245, 245));
+			_pBlockScanner.setDefaultReturnToken(new Token(new TextAttribute(fg, bg, 0)));
+		}
+		return _pBlockScanner;
+	}
+
+	/**
 	 * Creates or Returns the scanner for inner CSS.
 	 */
 	protected RuleBasedScanner getCSSScanner() {
@@ -374,7 +396,11 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 		dr = new JavaScriptDamagerRepairer(getCSSScanner());
 		reconciler.setDamager(dr, HTMLPartitionScanner.HTML_CSS);
 		reconciler.setRepairer(dr, HTMLPartitionScanner.HTML_CSS);
-    
+
+		dr = new DefaultDamagerRepairer(getPBlockScanner());
+		reconciler.setDamager(dr, HTMLPartitionScanner.HTML_P_BLOCK);
+		reconciler.setRepairer(dr, HTMLPartitionScanner.HTML_P_BLOCK);
+
 		return reconciler;
 	}
 	

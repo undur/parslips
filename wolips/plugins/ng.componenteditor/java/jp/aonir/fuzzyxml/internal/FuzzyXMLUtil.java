@@ -55,6 +55,53 @@ public class FuzzyXMLUtil {
   }
 
   /**
+   * Patterns for matching {@code <p:raw>} and {@code <p:comment>} open tags.
+   * Used by {@link #pBlock2space} to find block boundaries.
+   */
+  private static Pattern pBlockOpenTag = Pattern.compile(
+      "<(p:raw|p:comment)(\\s[^>]*)?>",
+      Pattern.CASE_INSENSITIVE);
+
+  /**
+   * Replaces the content inside {@code <p:raw>...</p:raw>} and
+   * {@code <p:comment>...</p:comment>} blocks with spaces, preserving the
+   * open and close tags. This must run before other preprocessing steps
+   * ({@link #escapeString}, {@link #comment2space}, etc.) so that broken
+   * or unclosed quotes inside these blocks don't corrupt the preprocessed
+   * source.
+   */
+  public static String pBlock2space(String source) {
+    StringBuffer sb = new StringBuffer();
+    int last = 0;
+    Matcher openMatcher = pBlockOpenTag.matcher(source);
+    while (openMatcher.find()) {
+      String tagName = openMatcher.group(1); // "p:raw" or "p:comment"
+      int openTagEnd = openMatcher.end();
+      // Find the corresponding close tag (case-insensitive)
+      String closeTag = "</" + tagName + ">";
+      int closeIndex = source.toLowerCase().indexOf(closeTag.toLowerCase(), openTagEnd);
+      if (closeIndex == -1) {
+        // No close tag — leave the rest of the source as-is
+        break;
+      }
+      // Copy everything up to and including the open tag
+      sb.append(source.substring(last, openTagEnd));
+      // Replace content between open and close tags with spaces
+      for (int i = openTagEnd; i < closeIndex; i++) {
+        sb.append(' ');
+      }
+      // Copy the close tag itself
+      int closeTagEnd = closeIndex + closeTag.length();
+      sb.append(source.substring(closeIndex, closeTagEnd));
+      last = closeTagEnd;
+    }
+    if (last < source.length()) {
+      sb.append(source.substring(last));
+    }
+    return sb.toString();
+  }
+
+  /**
    * @param source
    * @return
    */

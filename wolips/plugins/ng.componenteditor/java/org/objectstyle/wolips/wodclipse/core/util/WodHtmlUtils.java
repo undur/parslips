@@ -41,6 +41,23 @@ public class WodHtmlUtils {
     return element != null && WodHtmlUtils.isWOTag(element.getName());
   }
 
+  /**
+   * Returns {@code true} if the tag is a parser control directive ({@code p:raw}
+   * or {@code p:comment}). These tags are handled specially by the parser —
+   * {@code p:raw} treats its content as literal text (no dynamic tag processing),
+   * and {@code p:comment} ignores content entirely (template-level comment).
+   */
+  public static boolean isParserDirective(String tagName) {
+    if (tagName != null) {
+      String lower = tagName.trim().toLowerCase();
+      if (lower.equals("p:raw") || lower.startsWith("p:raw ") ||
+          lower.equals("p:comment") || lower.startsWith("p:comment ")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static boolean isWOTag(String tagName) {
     boolean isWOTag = false;
     if (tagName != null) {

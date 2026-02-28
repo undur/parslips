@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Parser control tags (`p:raw`, `p:comment`)
+
+- **`<p:raw>`:** Content inside this block is treated as literal text — no dynamic tag processing occurs. Useful for embedding example code or content that contains `<wo:` but shouldn't be treated as dynamic.
+- **`<p:comment>`:** Content is ignored entirely — a template-level comment that is stripped from output, unlike HTML comments which are sent to the client.
+- Both block types are rendered with a distinct background tint and muted text color, visually signalling that the content is treated differently from the rest of the template.
+- Validation is skipped for content inside both block types.
+- Linked rename (Cmd+2, R) works on both tag types — renaming the open tag updates the close tag and vice versa.
+- Block content is isolated at the partitioner level — unclosed quotes or broken HTML inside a `p:` block cannot leak into the rest of the document.
+- Block content is also blanked during parser preprocessing (`pBlock2space`), preventing unclosed strings from corrupting the FuzzyXML parse of surrounding elements.
+- Modified files: `FuzzyXMLParser.java`, `FuzzyXMLUtil.java`, `WodHtmlUtils.java`, `TemplateValidator.java`, `HTMLTagScanner.java`, `HTMLPartitionScanner.java`, `HTMLConfiguration.java`, `HTMLFileDocumentProvider.java`, `HTMLTextDocumentProvider.java`.
+
 ### Plugin infrastructure
 
 - **New activator:** Bundle activator is `tk.eclipse.plugin.htmleditor.HTMLPlugin` (declared in MANIFEST.MF). Old per-plugin activators were converted to plain singletons.

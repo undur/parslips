@@ -56,6 +56,8 @@ public class FuzzyXMLParser {
 	private Pattern _docTypeSubset = Pattern.compile("\\[([^\\]]*)\\]>");
 	private Pattern _invalidStringPattern = Pattern.compile("([<>&])");
 	private Pattern _preCloseTagPattern = Pattern.compile("<\\s*/\\s*PRE\\s*>", Pattern.CASE_INSENSITIVE);
+	private Pattern _pRawCloseTagPattern = Pattern.compile("<\\s*/\\s*p:raw\\s*>", Pattern.CASE_INSENSITIVE);
+	private Pattern _pCommentCloseTagPattern = Pattern.compile("<\\s*/\\s*p:comment\\s*>", Pattern.CASE_INSENSITIVE);
 
 	public FuzzyXMLParser(boolean wellFormedRequired) {
 		this(wellFormedRequired, false);
@@ -214,6 +216,16 @@ public class FuzzyXMLParser {
 				end = handlePreTag(start, end);
 				matcher.region(end, source.length());
 			}
+			// p:raw — preserve content as literal text, skip all dynamic tag processing
+			else if (!woOnly && (text.equalsIgnoreCase("p:raw") || text.toLowerCase().startsWith("p:raw ") || text.toLowerCase().startsWith("p:raw/"))) {
+				end = handlePRawTag(start, end);
+				matcher.region(end, source.length());
+			}
+			// p:comment — skip content entirely, treat as a template-level comment
+			else if (!woOnly && (text.equalsIgnoreCase("p:comment") || text.toLowerCase().startsWith("p:comment ") || text.toLowerCase().startsWith("p:comment/"))) {
+				end = handlePCommentTag(start, end);
+				matcher.region(end, source.length());
+			}
 			else if (text.startsWith("/") && (!woOnly || WodHtmlUtils.isWOTag(text.substring(1)))) {
 				handleCloseTag(start, end, text);
 			}
@@ -249,6 +261,9 @@ public class FuzzyXMLParser {
 	public FuzzyXMLDocument parse(String source) {
 		// �I���W�i���̃\�[�X��ۑ����Ă���
 		_originalSource = source;
+		// Blank out p:raw and p:comment block content before any other preprocessing,
+		// so broken/unclosed quotes inside these blocks don't corrupt escapeString
+		source = FuzzyXMLUtil.pBlock2space(source);
 		// �R�����g�ACDATA�ADOCTYPE����������
 		source = FuzzyXMLUtil.comment2space(source, true);
 		source = FuzzyXMLUtil.escapeScript(source);
@@ -334,6 +349,132 @@ public class FuzzyXMLParser {
 		handleStartTag(preNode, info, offset, end);
 		String preBlock = _originalSource.substring(offset, end + text.length() + 1);
 		return _parse(preBlock, offset, true, false) - 1;
+	}
+
+	/**
+	 * Handles a {@code <p:raw>} block. Content between the open and close tags
+	 * is preserved as a single text node — no dynamic tag processing occurs.
+	 * The {@code <p:raw>} element itself appears in the DOM so the validator
+	 * can recognize it and skip child validation.
+	 */
+	private int handlePRawTag(int offset, int end) {
+		closeAutocloseTags();
+		String remaining = _originalSource.substring(end);
+		Matcher closeMatcher = _pRawCloseTagPattern.matcher(remaining);
+		int closeTagEnd;
+		String rawText;
+		boolean hasCloseTag = closeMatcher.find();
+		if (hasCloseTag) {
+			rawText = remaining.substring(0, closeMatcher.start());
+			closeTagEnd = end + closeMatcher.end();
+		} else {
+			// No close tag found — treat rest of document as raw content
+			rawText = remaining;
+			closeTagEnd = _originalSource.length();
+		}
+
+		TagInfo info = parseTagContents(_originalSource.substring(offset + 1, end - 1));
+		FuzzyXMLElementImpl rawElement = new FuzzyXMLElementImpl(getParent(), info.name, offset, closeTagEnd - offset, info.nameOffset);
+
+		// Add attributes (if any) and push onto stack
+		AttrInfo[] attrs = info.getAttrs();
+		for (int i = 0; i < attrs.length; i++) {
+			rawElement.appendChild(createFuzzyXMLAttribute(rawElement, offset, attrs[i]));
+		}
+		_stack.push(rawElement);
+		_nonCloseElements.add(rawElement);
+
+		// Add the raw content as a single text node (no further parsing)
+		if (!rawText.isEmpty()) {
+			FuzzyXMLTextImpl textNode = new FuzzyXMLTextImpl(rawElement, rawText, end, rawText.length());
+			rawElement.appendChild(textNode);
+		}
+
+		// Close the element and record close tag positions so that
+		// linked rename (Cmd+2, R) can pair the open and close tags
+		_stack.pop();
+		rawElement.setLength(closeTagEnd - offset);
+		if (hasCloseTag) {
+			int closeTagAbsoluteOffset = end + closeMatcher.start();
+			String closeTagText = _originalSource.substring(closeTagAbsoluteOffset, closeTagEnd);
+			rawElement.setCloseTagOffset(closeTagAbsoluteOffset);
+			rawElement.setCloseTagLength(closeTagText.length() - 2); // exclude < and >
+			// closeNameOffset is relative to after the '<' (matching handleCloseTag's
+			// convention, since renameHtmlTag computes: closeTagOffset + closeNameOffset + 1)
+			String afterBracket = closeTagText.substring(1);
+			int nameStart = afterBracket.indexOf(info.name);
+			if (nameStart != -1) {
+				rawElement.setCloseNameOffset(nameStart);
+			}
+		}
+		_nonCloseElements.remove(rawElement);
+		if (rawElement.getParentNode() == null) {
+			_roots.add(rawElement);
+		} else {
+			((FuzzyXMLElementImpl) rawElement.getParentNode()).appendChildWithNoCheck(rawElement);
+		}
+
+		return closeTagEnd;
+	}
+
+	/**
+	 * Handles a {@code <p:comment>} block. Content inside is not parsed at all
+	 * and will be invisible to validation. Uses a {@link FuzzyXMLElementImpl}
+	 * (same as {@link #handlePRawTag}) so that linked rename (Cmd+2, R) can
+	 * pair the open and close tags, and the validator can recognise it via
+	 * {@link WodHtmlUtils#isParserDirective(String)}.
+	 */
+	private int handlePCommentTag(int offset, int end) {
+		closeAutocloseTags();
+		String remaining = _originalSource.substring(end);
+		Matcher closeMatcher = _pCommentCloseTagPattern.matcher(remaining);
+		int closeTagEnd;
+		boolean hasCloseTag = closeMatcher.find();
+		if (hasCloseTag) {
+			closeTagEnd = end + closeMatcher.end();
+		} else {
+			// No close tag found — treat rest of document as comment
+			closeTagEnd = _originalSource.length();
+		}
+
+		TagInfo info = parseTagContents(_originalSource.substring(offset + 1, end - 1));
+		FuzzyXMLElementImpl commentElement = new FuzzyXMLElementImpl(getParent(), info.name, offset, closeTagEnd - offset, info.nameOffset);
+
+		// Add attributes (if any) and push onto stack
+		AttrInfo[] attrs = info.getAttrs();
+		for (int i = 0; i < attrs.length; i++) {
+			commentElement.appendChild(createFuzzyXMLAttribute(commentElement, offset, attrs[i]));
+		}
+		_stack.push(commentElement);
+		_nonCloseElements.add(commentElement);
+
+		// No child content — comment content is intentionally discarded
+
+		// Close the element and record close tag positions so that
+		// linked rename (Cmd+2, R) can pair the open and close tags
+		_stack.pop();
+		commentElement.setLength(closeTagEnd - offset);
+		if (hasCloseTag) {
+			int closeTagAbsoluteOffset = end + closeMatcher.start();
+			String closeTagText = _originalSource.substring(closeTagAbsoluteOffset, closeTagEnd);
+			commentElement.setCloseTagOffset(closeTagAbsoluteOffset);
+			commentElement.setCloseTagLength(closeTagText.length() - 2); // exclude < and >
+			// closeNameOffset is relative to after the '<' (matching handleCloseTag's
+			// convention, since renameHtmlTag computes: closeTagOffset + closeNameOffset + 1)
+			String afterBracket = closeTagText.substring(1);
+			int nameStart = afterBracket.indexOf(info.name);
+			if (nameStart != -1) {
+				commentElement.setCloseNameOffset(nameStart);
+			}
+		}
+		_nonCloseElements.remove(commentElement);
+		if (commentElement.getParentNode() == null) {
+			_roots.add(commentElement);
+		} else {
+			((FuzzyXMLElementImpl) commentElement.getParentNode()).appendChildWithNoCheck(commentElement);
+		}
+
+		return closeTagEnd;
 	}
 
 	/** �e�L�X�g�m�[�h���������܂��B */

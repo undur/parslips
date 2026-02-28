@@ -137,6 +137,12 @@ public class TemplateValidator {
       // System.out.println("TemplateValidator.validateElement: " + elementName);
     }
 
+    // p:raw and p:comment — don't validate children (p:raw content is
+    // literal text, p:comment content is ignored entirely)
+    if (WodHtmlUtils.isParserDirective(elementName)) {
+      return;
+    }
+
     FuzzyXMLNode[] nodes = element.getChildren();
     for (int i = 0; i < nodes.length; i++) {
       if (nodes[i] instanceof FuzzyXMLElement) {

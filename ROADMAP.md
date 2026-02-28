@@ -83,6 +83,15 @@ Select a chunk of template HTML, extract it into a new component — generating 
 
 This ties into the refactoring infrastructure and the "New WO Component" wizard that already exists.
 
+## Tag namespace support
+
+The ng-template-parser supports tag namespaces beyond `wo:`. Two namespaces are worth considering:
+
+- **`html:` namespace** — dynamic HTML tags where attributes are processed as binding values/key paths, e.g. `<html:tag attribute="$someValue">`. Convenient shorthand but achievable with existing elements, so the cost/benefit for editor support is questionable.
+- **`p:` namespace (parser control)** — `<p:raw>` and `<p:comment>` are now implemented in the editor (parser, validation, syntax highlighting, linked rename). Future `p:` directives can be added following the same pattern. A possible enhancement: shade the entire content block (not just the tags) with a background tint, to visually signal that the content is treated differently from the rest of the template. This could be done via Eclipse annotations or a custom document partitioner.
+
+General arbitrary namespace support is probably not worth the complexity — each namespace needs the full tooling chain (parser, validation, autocomplete, highlighting) to understand it. Better to support specific, well-defined namespaces as needed.
+
 ## Live preview
 
 Side-by-side rendering of the template as you edit. Challenging for WO components since they render server-side with dynamic bindings, but even a static structural preview (showing component nesting and placeholder content) could be valuable.
