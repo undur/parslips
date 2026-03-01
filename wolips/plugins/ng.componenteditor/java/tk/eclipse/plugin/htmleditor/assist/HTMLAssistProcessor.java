@@ -359,7 +359,7 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
                 assistKeyword = assistKeyword + ">";
               }
               else {
-                assistKeyword = assistKeyword + "/>";
+                assistKeyword = assistKeyword + " />";
               }
             }
           }
@@ -377,6 +377,11 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
               else {
                 position--;
               }
+            }
+            else {
+              // Self-closing non-void tag (e.g. <wo:foo />): back up past " />"
+              // so the cursor lands where attributes should be typed.
+              position -= 3;
             }
           }
           try {
