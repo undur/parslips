@@ -23,11 +23,16 @@ import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 
 public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXMLElement {
 
-  private static final Set<String> FORBIDDEN_SELF_CLOSING = new HashSet<String>(
-      Arrays.asList("a", "div", "span", "script", "pre", "td"));
-  private static final Set<String> FORBIDDEN_CLOSE_TAG = new HashSet<String>(
-      Arrays.asList("meta", "link", "base", "basefont", "br", "frame", "hr", 
-          "area", "img", "param", "input", "isindex", "col"));
+  /**
+   * HTML void elements — tags that must not have a close tag and are always
+   * rendered as self-closing (e.g. {@code <br />}, {@code <img />}).
+   *
+   * @see <a href="https://html.spec.whatwg.org/multipage/syntax.html#void-elements">HTML spec: void elements</a>
+   */
+  private static final Set<String> VOID_ELEMENTS = new HashSet<String>(
+      Arrays.asList("area", "base", "basefont", "br", "col", "embed",
+          "frame", "hr", "img", "input", "isindex", "link", "meta",
+          "param", "source", "track", "wbr"));
   private List<FuzzyXMLNode> _children = new ArrayList<FuzzyXMLNode>();
   private List<FuzzyXMLAttribute> _attributes = new ArrayList<FuzzyXMLAttribute>();
   private String _name;
@@ -772,15 +777,45 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
   
   public boolean isForbiddenFromHavingChildren() {
     String tagName = getName().toLowerCase();
-  	return FORBIDDEN_CLOSE_TAG.contains(tagName);
+    return VOID_ELEMENTS.contains(tagName);
   }
-  
+
+  /**
+   * Determines whether an element should be rendered as a self-closing tag
+   * ({@code <tag />}) rather than an open+close pair ({@code <tag></tag>}).
+   * <p>
+   * An element is self-closing if it has no children AND is one of:
+   * <ul>
+   *   <li>An HTML void element ({@code <br>}, {@code <img>}, etc.)</li>
+   *   <li>A {@code wo:} or {@code p:} namespaced tag</li>
+   * </ul>
+   * <p>
+   * Regular HTML elements like {@code <th>}, {@code <td>}, {@code <div>},
+   * {@code <span>} etc. are never self-closed even when empty — browsers
+   * treat {@code <th />} as an unclosed {@code <th>}, which corrupts the
+   * document structure. Previously, this used a small blocklist of tags
+   * that couldn't self-close, which inevitably missed tags (like {@code <th>}).
+   */
   public static boolean isSelfClosing(FuzzyXMLElement node) {
     FuzzyXMLNode[] children = node.getChildren();
+    if (children.length != 0) {
+      return false;
+    }
+
     String tagName = node.getName().toLowerCase();
-    boolean forbiddenSelfClosing = FORBIDDEN_SELF_CLOSING.contains(tagName);
-    boolean alwaysEmptyTag = FORBIDDEN_CLOSE_TAG.contains(tagName);
-    return ((alwaysEmptyTag || children.length == 0) && !forbiddenSelfClosing);
+
+    // Void elements are always self-closing.
+    if (VOID_ELEMENTS.contains(tagName)) {
+      return true;
+    }
+
+    // wo: and p: namespaced tags can self-close when empty.
+    if (tagName.startsWith("wo:") || tagName.startsWith("p:")) {
+      return true;
+    }
+
+    // All other HTML elements must use <tag></tag> even when empty.
+    return false;
   }
   
   @Override
