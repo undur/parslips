@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Formatter: preserve `&nbsp;` entities in output
+
+- **Fixed `&nbsp;` being lost during formatting** — the earlier fix that stopped converting printable characters to entities (ó, ð, ú) also prevented `&nbsp;` (char 160) from being re-encoded. The parser decodes `&nbsp;` to char 160 on input; without re-encoding, it became a literal non-breaking space indistinguishable from a regular space. `escape()` now uses `Character.getType()` to distinguish printable characters (letters, digits, symbols — left as UTF-8) from non-printable ones (`&nbsp;`, `&shy;`, etc. — re-encoded to their HTML entity names).
+
+### Formatter: respect original line structure (continued)
+
+- **Fixed `<wo:if>` text collapsing inline** — `isNonBreaking()` only checked hidden (whitespace-only) text nodes for newlines, but the parser stores content like `\n\t\ttext\n\t` as a single visible text node. Now also checks visible text for leading/trailing newline characters.
+- **Fixed elements separated by flat whitespace splitting to new lines** — `renderNode()` element branch was triggering newlines for any hidden whitespace separator, even spaces without newlines. Now uses `lastHiddenTextHadNewline()` so elements separated by spaces-only stay on the same line.
+
 ### Formatter: indentation settings in preferences
 
 - **Added "Indent with tabs" checkbox** to `XMLPreferencePage` — wired to `PreferenceConstants.INDENT_TABS`, which `FormatRefactoring` and `XMLEditor` already read. When checked, the indent size spinner is disabled.
