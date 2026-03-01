@@ -228,7 +228,7 @@ public class HTMLOutlinePage extends ContentOutlinePage implements IHTMLOutlineP
       List<FuzzyXMLNode> children = new ArrayList<FuzzyXMLNode>();
       if (doc == null) {
         if (_updating) {
-          System.out.println("RootNode.getChildren: Attempted to update root node while already in an update pass.");
+          HTMLPlugin.logDebug("RootNode.getChildren: Attempted to update root node while already in an update pass.");
         }
         else {
           _updating = true;

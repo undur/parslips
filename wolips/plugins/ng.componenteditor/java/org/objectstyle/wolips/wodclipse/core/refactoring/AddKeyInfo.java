@@ -1,20 +1,15 @@
 package org.objectstyle.wolips.wodclipse.core.refactoring;
 
-import java.util.Set;
-
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.NamingConventions;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
-// FIXME: eomodeler removed — EOModelGroup/EOEntity support for entity-to-class mapping is disabled
-// import org.objectstyle.wolips.eomodeler.core.model.EOEntity;
-// import org.objectstyle.wolips.eomodeler.core.model.EOModelGroup;
-import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
+/**
+ * Configuration for the "Add Key" refactoring dialog. Holds the key name,
+ * type, and options for what code to generate (field, accessor, mutator).
+ */
 public class AddKeyInfo {
-  // FIXME: eomodeler removed — was EOModelGroup _modelGroup
-  // private EOModelGroup _modelGroup;
-
   private IType _componentType;
 
   private String _name;
@@ -41,18 +36,9 @@ public class AddKeyInfo {
     _createMutatorMethod = true;
   }
 
-  public String[] getEntityNames() {
-    return new String[0];
-  }
-
   public String getJavaTypeName() throws JavaModelException {
     String javaTypeName = _typeName;
     if (javaTypeName != null) {
-      // FIXME: eomodeler removed — used to look up EOEntity to resolve entity name to Java class name
-      // EOEntity entity = getModelGroup().getEntityNamed(_typeName);
-      // if (entity != null) {
-      //   javaTypeName = entity.getClassName();
-      // }
       javaTypeName = BindingReflectionUtils.getFullClassName(_componentType.getJavaProject(), javaTypeName);
     }
     return javaTypeName;
@@ -61,11 +47,6 @@ public class AddKeyInfo {
   public String getJavaParameterTypeName() throws JavaModelException {
     String javaParameterTypeName = _parameterTypeName;
     if (javaParameterTypeName != null) {
-      // FIXME: eomodeler removed — used to look up EOEntity to resolve entity name to Java class name
-      // EOEntity entity = getModelGroup().getEntityNamed(_parameterTypeName);
-      // if (entity != null) {
-      //   javaParameterTypeName = entity.getClassName();
-      // }
       javaParameterTypeName = BindingReflectionUtils.getFullClassName(_componentType.getJavaProject(), javaParameterTypeName);
     }
     return javaParameterTypeName;

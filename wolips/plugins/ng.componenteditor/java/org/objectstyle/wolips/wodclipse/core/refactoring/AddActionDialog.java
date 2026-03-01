@@ -73,8 +73,6 @@ public class AddActionDialog extends Dialog {
     if (_addActionInfo.getTypeName() != null) {
       _typeCombo.setText(_addActionInfo.getTypeName());
     }
-    //_typeCombo.setItems(_addActionInfo.getEntityNames());
-
     return container;
   }
 

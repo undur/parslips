@@ -146,8 +146,6 @@ public class AddKeyDialog extends Dialog {
     }
     _nameField.setText(name);
 
-    _typeCombo.setItems(_addKeyInfo.getEntityNames());
-
     if (_addKeyInfo.getParameterTypeName() != null) {
       _typeCombo.setText(_addKeyInfo.getParameterTypeName());
       if (_addKeyInfo.getTypeName() != null) {

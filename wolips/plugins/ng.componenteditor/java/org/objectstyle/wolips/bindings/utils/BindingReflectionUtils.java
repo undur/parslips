@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.ui.search.JavaSearchScopeFactory;
+import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -80,10 +81,10 @@ public class BindingReflectionUtils {
           expandedClassName = typeNames.iterator().next();
         }
         else if (typeNames.size() == 0) {
-          System.out.println("BindingReflectionUtils.getFullClassName: Unknown type name " + shortClassName);
+          Activator.getDefault().log("BindingReflectionUtils.getFullClassName: Unknown type name " + shortClassName);
         }
         else {
-          System.out.println("BindingReflectionUtils.getFullClassName: Ambiguous type name " + shortClassName + " (" + typeNames + ")");
+          Activator.getDefault().log("BindingReflectionUtils.getFullClassName: Ambiguous type name " + shortClassName + " (" + typeNames + ")");
         }
       }
     }

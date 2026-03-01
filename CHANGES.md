@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dead code removal and final System.out.println cleanup
+
+- **Deleted `WodQuickAssistAssistant`** — dead class with zero references anywhere in the codebase. Subclassed `QuickAssistAssistant` but was never instantiated.
+- **Removed `WooModel(URL)` constructor** — empty body with a `TODO: Fix me` comment, zero callers. Also removed the now-unused `java.net.URL` import.
+- **Removed `AddKeyInfo.getEntityNames()`** — always returned an empty array (entity support was removed with eomodeler). Removed the sole caller in `AddKeyDialog` (which was a no-op: `setItems(new String[0])`). Also removed a commented-out call in `AddActionDialog`, cleaned up eomodeler FIXME comments and unused imports (`Set`, `WodParserCache`), and added class javadoc.
+- **Converted last 3 active `System.out.println` calls to Eclipse logging**: `BindingReflectionUtils.getFullClassName()` unknown/ambiguous type warnings → `Activator.getDefault().log()`, `HTMLOutlinePage.RootNode.getChildren()` reentrance guard → `HTMLPlugin.logDebug()`. The only remaining `System.out.println` calls are in `ConsoleLogger` (intentional — it's a console logger by design).
+
 ### Replace e.printStackTrace() with Eclipse logging
 
 - **Replaced all ~119 active `e.printStackTrace()` calls with proper Eclipse logging** across ~60 files. Each package uses its appropriate activator: `ComponenteditorPlugin.getDefault().log()` for `componenteditor.*` (22 files), `WodclipsePlugin.getDefault().log()` for `wodclipse.*` (16 files), `HTMLPlugin.logException()` for `templateeditor.*`, `htmleditor.*`, `fuzzyxml.*`, and `xmleditor.*` (19 files), `WooeditorPlugin.getDefault().log()` for `wooeditor.*`, `Activator.getDefault().log()` for `bindings.*`, `baseforplugins.*`, `baseforuiplugins.*`, `templateengine.*`, and `variables.*`, `CorePlugin.getDefault().log()` for `core.resources.*`, `LocatePlugin.getDefault().log()` for `locate.*`, and `WizardsPlugin.getDefault().log()` for `wizards.*`. Also removed the redundant `ex.printStackTrace()` from `HTMLPlugin.logException()` (which already logged via `ILog`), removed several duplicate log-then-print patterns where both `Activator.getDefault().log(e)` and `e.printStackTrace()` were called, and rewrote `WizardsPlugin.log()` to use `Platform.getLog()` with `IStatus` instead of printing to stderr.
