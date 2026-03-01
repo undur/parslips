@@ -203,17 +203,40 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
   }
 
   private void renderTextBlock(FuzzyXMLText node, RenderContext renderContext, StringBuffer xmlBuffer) {
-    FuzzyXMLFormatComposite _node = new FuzzyXMLFormatComposite(node);
     StringBuffer indent = new StringBuffer();
     renderContext.appendIndent(indent);
-    xmlBuffer.append(node.getValue().trim().replaceAll("\n\\s*", "\n" + indent.toString()));
-    if (_node.hasBreakingEnd()) {
-      if (_node.hasLineBreaks()) {
+    String value = node.getValue();
+    xmlBuffer.append(value.trim().replaceAll("\n\\s*", "\n" + indent.toString()));
+    // If the original value ended with whitespace containing a newline,
+    // emit a newline so the close tag lands on its own line. A trailing
+    // space is only needed when the original whitespace was flat (no
+    // newlines) — e.g. inline text followed by a space before a sibling.
+    if (FuzzyXMLFormatComposite.hasBreakingEnd(node)) {
+      if (value.length() > 0 && trailingWhitespaceContainsNewline(value)) {
         xmlBuffer.append("\n");
       } else {
         xmlBuffer.append(" ");
       }
     }
+  }
+
+  /**
+   * Returns true if the trailing whitespace of the given string contains
+   * a newline. This checks the actual characters at the end rather than
+   * the trimmed content, so "text\n\t\t" returns true but "text " returns
+   * false.
+   */
+  private static boolean trailingWhitespaceContainsNewline(String value) {
+    for (int i = value.length() - 1; i >= 0; i--) {
+      char ch = value.charAt(i);
+      if (ch == '\n' || ch == '\r') {
+        return true;
+      }
+      if (!Character.isWhitespace(ch)) {
+        return false;
+      }
+    }
+    return false;
   }
   
   private static boolean hasTagEnd(StringBuffer xmlBuffer) {
