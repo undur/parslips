@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Formatter: preserve blank lines between elements
+
+- **Fixed blank lines between top-level elements being lost** — `FormatRefactoring` iterated document children directly, calling `toXMLString()` without going through `delegate.renderNode()`. This caused hidden text nodes (whitespace between top-level elements) to be skipped entirely when trim was enabled, losing all blank lines between elements like `</style>` and `<div>`. Fixed by calling `delegate.renderNode()` for each child, matching the rendering path used by `FuzzyXMLElementImpl.getValue()`.
+- **Updated formatter tests to match actual rendering path** — the test `format()` helper now iterates children of the document element (matching `FormatRefactoring`), rather than rendering the `<document>` wrapper tag. Added 10 new tests covering blank line preservation patterns: between top-level elements, inside nested structures, with indented blank lines, and between scripts.
+
 ### Formatter: preserve `&nbsp;` entities in output
 
 - **Fixed `&nbsp;` being lost during formatting** — the earlier fix that stopped converting printable characters to entities (ó, ð, ú) also prevented `&nbsp;` (char 160) from being re-encoded. The parser decodes `&nbsp;` to char 160 on input; without re-encoding, it became a literal non-breaking space indistinguishable from a regular space. `escape()` now uses `Character.getType()` to distinguish printable characters (letters, digits, symbols — left as UTF-8) from non-printable ones (`&nbsp;`, `&shy;`, etc. — re-encoded to their HTML entity names).
