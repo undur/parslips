@@ -169,6 +169,12 @@ public class InlineWodTagInfo extends TagInfo {
   }
 
   @Override
+  public AttributeInfo[] getRequiredAttributeInfo() {
+    loadAttributeInfo();
+    return super.getRequiredAttributeInfo();
+  }
+
+  @Override
   public AttributeInfo getAttributeInfo(String name) {
     loadAttributeInfo();
     return super.getAttributeInfo(name);
