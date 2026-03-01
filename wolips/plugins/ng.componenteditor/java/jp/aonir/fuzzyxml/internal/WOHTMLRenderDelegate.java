@@ -176,7 +176,9 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
         // placed this content on a single line intentionally.
       } else
       if (bufferHasBreakingEnd && _node.parentNode().isBreaking()) {
-        if (lastNode.isHidden()) {
+        // Element node after hidden whitespace — only break if the
+        // original whitespace contained a newline.
+        if (lastHiddenTextHadNewline()) {
           append_newline = true;
         }
       }

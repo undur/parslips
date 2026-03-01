@@ -371,39 +371,94 @@ public class FuzzyXMLUtil {
   }
 
   /**
-   * Escapes characters that are structurally significant in XML/HTML:
-   * {@code &}, {@code <}, {@code >}, {@code "}, and {@code '}.
+   * Escapes characters that need entity representation in HTML output.
    * <p>
-   * Non-ASCII characters (accented letters, Icelandic characters, etc.) are
-   * left as-is — they are valid UTF-8 and should not be converted to HTML
-   * entities like {@code &oacute;} or {@code &eth;}. Previously the HTML mode
-   * used the full HTML 4.0 entity table, which mangled any non-ASCII text in
-   * template body content.
+   * Three categories of characters are escaped:
+   * <ol>
+   *   <li><b>XML-structural characters</b> ({@code &}, {@code <}, {@code >},
+   *       {@code "}, {@code '}) — always escaped, required for well-formed
+   *       markup.</li>
+   *   <li><b>Non-printable HTML entities</b> ({@code &nbsp;}, {@code &shy;},
+   *       etc.) — characters that have semantic meaning as entities and would
+   *       lose that meaning if left as literal Unicode characters. These are
+   *       re-encoded so a roundtrip through the parser preserves them.</li>
+   * </ol>
+   * <p>
+   * Printable non-ASCII characters (accented letters, Icelandic characters,
+   * etc.) are left as-is — they are valid UTF-8 and should not be converted
+   * to HTML entities like {@code &oacute;} or {@code &eth;}.
    *
    * @param value  the text to escape
-   * @param isHTML ignored (kept for API compatibility); only XML-structural
-   *               characters are escaped regardless of mode
+   * @param isHTML when true, non-printable HTML entities like {@code &nbsp;}
+   *               are also escaped; when false, only XML-structural
+   *               characters are escaped
    */
   public static String escape(String value, boolean isHTML) {
-    // Only escape the five XML-structural characters. Non-ASCII characters
-    // are valid in UTF-8 documents and must not be converted to entities.
-    Entities entities = Entities.XML;
+    Entities xmlEntities = Entities.XML;
+    // HTML40 is used only to look up entity names for non-printable
+    // characters — we never bulk-encode the full table.
+    Entities htmlEntities = isHTML ? Entities.HTML40 : null;
 
     StringBuffer buf = new StringBuffer(value.length() * 2);
     int i;
     for (i = 0; i < value.length(); ++i) {
       char ch = value.charAt(i);
-      String entityName = entities.entityName(ch);
-      if (entityName == null) {
-        buf.append(ch);
-      }
-      else {
+
+      // Always escape XML-structural characters.
+      String entityName = xmlEntities.entityName(ch);
+      if (entityName != null) {
         buf.append('&');
         buf.append(entityName);
         buf.append(';');
+        continue;
       }
+
+      // In HTML mode, re-encode non-printable characters that have HTML
+      // entity names (e.g. &nbsp; = char 160). These have semantic
+      // meaning that would be lost as literal characters. Printable
+      // characters (letters, digits, symbols) are left as-is.
+      if (htmlEntities != null && ch > 127 && !isPrintableCharacter(ch)) {
+        entityName = htmlEntities.entityName(ch);
+        if (entityName != null) {
+          buf.append('&');
+          buf.append(entityName);
+          buf.append(';');
+          continue;
+        }
+      }
+
+      buf.append(ch);
     }
     return buf.toString();
+  }
+
+  /**
+   * Returns true if a character is a printable letter, digit, or symbol
+   * that should be preserved as a literal UTF-8 character rather than
+   * converted to an HTML entity. Non-printable characters like the
+   * non-breaking space (char 160) return false.
+   */
+  private static boolean isPrintableCharacter(char ch) {
+    int type = Character.getType(ch);
+    return type == Character.UPPERCASE_LETTER
+        || type == Character.LOWERCASE_LETTER
+        || type == Character.TITLECASE_LETTER
+        || type == Character.MODIFIER_LETTER
+        || type == Character.OTHER_LETTER
+        || type == Character.DECIMAL_DIGIT_NUMBER
+        || type == Character.LETTER_NUMBER
+        || type == Character.OTHER_NUMBER
+        || type == Character.DASH_PUNCTUATION
+        || type == Character.START_PUNCTUATION
+        || type == Character.END_PUNCTUATION
+        || type == Character.CONNECTOR_PUNCTUATION
+        || type == Character.OTHER_PUNCTUATION
+        || type == Character.MATH_SYMBOL
+        || type == Character.CURRENCY_SYMBOL
+        || type == Character.MODIFIER_SYMBOL
+        || type == Character.OTHER_SYMBOL
+        || type == Character.INITIAL_QUOTE_PUNCTUATION
+        || type == Character.FINAL_QUOTE_PUNCTUATION;
   }
 
   public static String decode(String value, boolean isHTML) {

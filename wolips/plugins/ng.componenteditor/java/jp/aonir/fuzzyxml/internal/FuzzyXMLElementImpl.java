@@ -776,6 +776,19 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
           if (text.getValue().contains("\n")) {
             originalHadNewlines = true;
           }
+        } else {
+          // Visible text node — when there's no separate whitespace node
+          // (e.g. the parser creates a single text node for
+          // "\n\t\tHello\n\t"), check whether it starts or ends with a
+          // newline. This catches cases like <wo:if>\n  text\n</wo:if>.
+          String value = text.getValue();
+          if (value.length() > 0) {
+            char first = value.charAt(0);
+            char last = value.charAt(value.length() - 1);
+            if (first == '\n' || first == '\r' || last == '\n' || last == '\r') {
+              originalHadNewlines = true;
+            }
+          }
         }
       }
     }
