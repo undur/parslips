@@ -1,9 +1,11 @@
 package org.objectstyle.wolips.templateeditor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +47,42 @@ import tk.eclipse.plugin.htmleditor.editors.HTMLSourceEditor;
 public class TemplateAssistProcessor extends HTMLAssistProcessor {
   private static final int SCOPE = 100;
   private static final int CLASS = 101;
+
+  // Cache of InlineWodTagInfo instances per project, keyed by element type
+  // name (e.g. "WOString", "str"). Avoids re-running loadAttributeInfo()
+  // (which triggers JDT type resolution) on every autocomplete invocation.
+  // Cleared when Java files change (see clearTagInfoCacheForProject).
+  private static Map<IProject, Map<String, InlineWodTagInfo>> _tagInfoCache = new HashMap<>();
+
+  /**
+   * Clears the cached InlineWodTagInfo instances for the given project.
+   * Called from {@link org.objectstyle.wolips.wodclipse.core.completion.WodParserCacheInvalidator}
+   * when Java files are added, removed, or changed.
+   */
+  public static synchronized void clearTagInfoCacheForProject(IProject project) {
+    _tagInfoCache.remove(project);
+  }
+
+  /**
+   * Returns a cached InlineWodTagInfo for the given element type name and
+   * project, creating and caching a new one if none exists.
+   */
+  private static synchronized InlineWodTagInfo getCachedTagInfo(String elementTypeName, IJavaProject javaProject) {
+    IProject project = javaProject.getProject();
+    Map<String, InlineWodTagInfo> projectCache = _tagInfoCache.get(project);
+    if (projectCache == null) {
+      projectCache = new HashMap<>();
+      _tagInfoCache.put(project, projectCache);
+    }
+    InlineWodTagInfo tagInfo = projectCache.get(elementTypeName);
+    if (tagInfo == null) {
+      tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());
+      tagInfo.setJavaProject(javaProject);
+      projectCache.put(elementTypeName, tagInfo);
+    }
+    return tagInfo;
+  }
+
   private List<TagInfo> _tagList;
   private WodParserCache _cache;
   //private ClassNameAssistProcessor classNameProcessor = new ClassNameAssistProcessor();
@@ -140,9 +178,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         if (!proposals.isEmpty()) {
           tagInfos = new LinkedList<TagInfo>();
           for (WodCompletionProposal proposal : proposals) {
-            InlineWodTagInfo tagInfo = new InlineWodTagInfo(proposal.getProposal(), WodParserCache.getTypeCache());
-            tagInfo.setJavaProject(javaProject);
-            tagInfos.add(tagInfo);
+            tagInfos.add(getCachedTagInfo(proposal.getProposal(), javaProject));
           }
         }
       }
@@ -295,8 +331,12 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
   protected TagInfo getTagInfo(String name) {
     if (name.startsWith("wo:")) {
       String elementTypeName = name.substring("wo:".length());
+      IJavaProject javaProject = getJavaProject();
+      if (javaProject != null) {
+        return getCachedTagInfo(elementTypeName, javaProject);
+      }
+      // No Java project available (shouldn't happen in practice)
       InlineWodTagInfo tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());
-      tagInfo.setJavaProject(getJavaProject());
       return tagInfo;
     }
     // Parser directive tags — p:raw and p:comment

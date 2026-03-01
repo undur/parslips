@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.swt.widgets.Display;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.templateeditor.TemplateAssistProcessor;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 
 public class WodParserCacheInvalidator implements IResourceChangeListener, IResourceDeltaVisitor {
@@ -45,10 +46,12 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
       if (name.endsWith(".java")) {
         if (delta.getKind() == IResourceDelta.ADDED) {
           WodCompletionUtils.clearElementTypeCacheForProject(file.getProject());
+          TemplateAssistProcessor.clearTagInfoCacheForProject(file.getProject());
         }
         else if (delta.getKind() == IResourceDelta.REMOVED) {
           WodParserCache.getTypeCache().clearCacheForResource(resource);
           WodCompletionUtils.clearElementTypeCacheForProject(file.getProject());
+          TemplateAssistProcessor.clearTagInfoCacheForProject(file.getProject());
         }
         else if (delta.getKind() == IResourceDelta.CHANGED) {
           IJavaElement javaElement = JavaCore.create(file);
@@ -68,6 +71,7 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
             }
           }
           WodCompletionUtils.clearElementTypeCacheForProject(file.getProject());
+          TemplateAssistProcessor.clearTagInfoCacheForProject(file.getProject());
         }
       }
       else if (name.endsWith(".api")) {
@@ -76,6 +80,8 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
           String elementName = file.getName().substring(0, file.getName().lastIndexOf('.'));
           WodParserCache.getTypeCache().getApiCache(javaProject).clearCacheForElementNamed(elementName);
         }
+        // API changes affect hasBody and required bindings in cached tag infos
+        TemplateAssistProcessor.clearTagInfoCacheForProject(file.getProject());
       }
       else if (file.getParent() != null && file.getParent().getName().endsWith(".wo")) {
         if (delta.getKind() == IResourceDelta.ADDED) {
