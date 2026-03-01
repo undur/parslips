@@ -64,16 +64,26 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormEditor;
+import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.apieditor.ApieditorPlugin;
-import org.objectstyle.wolips.bindings.api.ApiModel;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.MutableApiModel;
 
+/**
+ * Multi-page form editor for {@code .api} files.
+ *
+ * <p>Uses {@link MutableApiModel} to parse the file into a mutable
+ * {@link org.objectstyle.wolips.bindings.api.ApiSnapshot}, which the editor's
+ * detail pages mutate directly. On save, the snapshot is serialized back
+ * to XML via {@link org.objectstyle.wolips.bindings.api.ApiSerializer}.
+ */
 public class ApiEditor extends FormEditor {
 
-	private ApiModel model;
+	private MutableApiModel _model;
 
 	public ApiEditor() {
 		super();
@@ -90,9 +100,6 @@ public class ApiEditor extends FormEditor {
 					addPage(new CreatePage(this, "Create"));
 				} else {
 					addPage(new BindingsPage(this, "Bindings"));
-					// addPage(new ValidationPage(this, "Validation"));
-					// addPage(new DisplayPage(this, "Display"));
-					//addPage(new DeletePage(this, "Delete"));
 				}
 			} catch (final ApiModelException e) {
 				ApieditorPlugin.getDefault().debug(e);
@@ -110,18 +117,16 @@ public class ApiEditor extends FormEditor {
 	}
 
 	/**
-	 * Saves the in-memory DOM to the backing file. {@link ApiModel#saveChanges()}
-	 * handles writing, refreshing the Eclipse resource, and updating its internal
-	 * modification stamp so that {@link ApiModel#parseIfNecessary()} will not
-	 * unnecessarily reparse the file. This is critical because reparsing would
-	 * create a new DOM tree, orphaning any {@link Binding} or {@link Wo} references
-	 * held by the editor's detail pages and causing DOM operations to fail with
-	 * {@code NOT_FOUND_ERR}.
+	 * Saves the in-memory snapshot to the backing file via
+	 * {@link MutableApiModel#saveChanges()}, which serializes the
+	 * {@link org.objectstyle.wolips.bindings.api.ApiSnapshot} to XML.
+	 *
+	 * <p>Unlike the old DOM-based save, there are no orphaned references —
+	 * the editor holds POJOs directly, and serialization is a clean one-shot write.
 	 */
 	public void doSave(IProgressMonitor monitor) {
 		try {
 			this.getModel().saveChanges();
-			editorDirtyStateChanged();
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to save .api file.", t);
 		}
@@ -131,6 +136,20 @@ public class ApiEditor extends FormEditor {
 				((ApiFormPage)formPage).reloadModel();
 			}
 		}
+
+		// After save, tell each page's managed form to re-poll its parts'
+		// dirty state. Without this, the ManagedForm retains its cached
+		// "dirty" flag even though model.isDirty() now returns false.
+		for (Object formPage : pages) {
+			if (formPage instanceof FormPage) {
+				IManagedForm mf = ((FormPage) formPage).getManagedForm();
+				if (mf != null) {
+					mf.dirtyStateChanged();
+				}
+			}
+		}
+
+		editorDirtyStateChanged();
 	}
 
 	public void doSaveAs() {
@@ -152,21 +171,25 @@ public class ApiEditor extends FormEditor {
 		});
 	}
 
-	public ApiModel getModel() throws ApiModelException {
-		if (model == null) {
+	/**
+	 * Returns the mutable API model for this editor, lazily loading it from the
+	 * file on first access. Returns null if the file does not exist.
+	 */
+	public MutableApiModel getModel() throws ApiModelException {
+		if (_model == null) {
 			FileEditorInput editorInput = ((FileEditorInput) this.getEditorInput());
 			if (editorInput != null) {
 				IFile apiFile = editorInput.getFile();
 				if (apiFile != null && apiFile.exists()) {
-					model = new ApiModel(((FileEditorInput) this.getEditorInput()).getFile().getLocation().toFile());
+					_model = new MutableApiModel(apiFile.getLocation().toFile());
 				}
 			}
 		}
-		return model;
+		return _model;
 	}
 
 	public void dropModel() {
-		model = null;
+		_model = null;
 	}
 
 	public void activateFirstPage() {

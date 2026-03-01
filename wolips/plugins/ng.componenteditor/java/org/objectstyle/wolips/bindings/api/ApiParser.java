@@ -210,7 +210,7 @@ public final class ApiParser {
 
 	/**
 	 * Parses the {@code wocomponentcontent} attribute. Accepts "true" or "yes"
-	 * (case-insensitive), matching the behavior of {@link Wo#isComponentContent()}.
+	 * (case-insensitive).
 	 */
 	private static boolean parseComponentContent(Element woElement) {
 		String value = woElement.getAttribute("wocomponentcontent");
@@ -256,6 +256,7 @@ public final class ApiParser {
 
 			// Effective willSet: explicit settable="YES" OR single-unsettable validation pattern
 			boolean explicitlySettable = "YES".equalsIgnoreCase(bindingElement.getAttribute("settable"));
+			binding.setExplicitlySettable(explicitlySettable);
 			boolean willSet = explicitlySettable || hasImplicitUnsettableValidation(name, validations);
 			binding.setWillSet(willSet);
 
@@ -270,7 +271,7 @@ public final class ApiParser {
 	 * validation referencing the given binding name. This is the implicit
 	 * "required" pattern used in {@code .api} files.
 	 *
-	 * <p>Matches the logic in {@link Binding#isRequired()}: a validation with
+	 * <p>A validation with
 	 * exactly one UNBOUND child whose binding name matches is treated as
 	 * an implicit required marker.
 	 */
@@ -292,7 +293,7 @@ public final class ApiParser {
 	 * validation referencing the given binding name. This is the implicit
 	 * "will set" pattern.
 	 *
-	 * <p>Matches the logic in {@link Binding#isWillSet()}.
+	 * <p>Mirrors the implicit "will set" pattern.
 	 */
 	private static boolean hasImplicitUnsettableValidation(String bindingName, List<ApiValidation> validations) {
 		for (ApiValidation validation : validations) {
@@ -388,7 +389,7 @@ public final class ApiParser {
 
 	/**
 	 * Serializes the content of the {@code <preview>} element to a string.
-	 * Replicates the logic from {@link Wo#getPreview()}: child elements are
+	 * Child elements are
 	 * serialized via an XML Transformer, text nodes are appended directly.
 	 *
 	 * @return the preview string, or null if no {@code <preview>} element exists

@@ -56,7 +56,6 @@
 package org.objectstyle.wolips.apieditor.editor;
 
 import java.util.Iterator;
-import java.util.List;
 
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -66,6 +65,7 @@ import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
@@ -93,10 +93,19 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.objectstyle.wolips.baseforplugins.util.StringUtils;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
-import org.objectstyle.wolips.bindings.api.Binding;
-import org.objectstyle.wolips.bindings.api.Binding.BindingChangedListener;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
+import org.objectstyle.wolips.bindings.api.IApiBinding;
+import org.objectstyle.wolips.bindings.api.MutableApiModel;
+import org.objectstyle.wolips.bindings.api.SimpleApiBinding;
 
-public class BindingsPageBlock extends MasterDetailsBlock implements BindingChangedListener {
+/**
+ * Master-details block for the bindings page of the {@code .api} editor.
+ *
+ * <p>The master list shows all bindings from the component's {@link ApiSnapshot}.
+ * Adding/removing bindings mutates the snapshot directly, and changes are
+ * serialized to disk on save via {@link MutableApiModel#saveChanges()}.
+ */
+public class BindingsPageBlock extends MasterDetailsBlock {
 	FormPage page;
 
 	TableViewer viewer;
@@ -104,30 +113,29 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 	public BindingsPageBlock(FormPage page) {
 		this.page = page;
 	}
-	
+
 	/**
-	 * Reloads the binding list from the model after a save. Preserves the
-	 * current selection by matching binding name, so the details page gets
-	 * a fresh {@link Binding} reference rather than a stale orphaned one.
+	 * Reloads the binding list from the model. Since we mutate POJOs directly
+	 * (no DOM reparse), the binding objects are stable across saves — but we
+	 * still refresh the viewer to pick up any changes.
 	 */
 	public void reload() {
 		// Remember which binding was selected before reload
 		String selectedBindingName = null;
 		IStructuredSelection oldSelection = (IStructuredSelection) viewer.getSelection();
-		if (!oldSelection.isEmpty() && oldSelection.getFirstElement() instanceof Binding) {
-			selectedBindingName = ((Binding) oldSelection.getFirstElement()).getName();
+		if (!oldSelection.isEmpty() && oldSelection.getFirstElement() instanceof IApiBinding) {
+			selectedBindingName = ((IApiBinding) oldSelection.getFirstElement()).getName();
 		}
 
 		viewer.setInput(page.getEditor().getEditorInput());
 
-		// Restore selection by name — the Binding objects were recreated by
-		// the reparse, so we need to find the new instance with the same name.
+		// Restore selection by name
 		if (selectedBindingName != null) {
 			try {
 				ApiEditor apiEditor = (ApiEditor) page.getEditor();
-				Binding freshBinding = apiEditor.getModel().getWo().getBinding(selectedBindingName);
+				IApiBinding freshBinding = apiEditor.getModel().getSnapshot().getBinding(selectedBindingName);
 				if (freshBinding != null) {
-					viewer.setSelection(new org.eclipse.jface.viewers.StructuredSelection(freshBinding), true);
+					viewer.setSelection(new StructuredSelection(freshBinding), true);
 				}
 			} catch (Throwable t) {
 				// Selection restoration is best-effort; ignore failures
@@ -136,19 +144,14 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 	}
 
 	/**
-	 * @param id
-	 * @param title
+	 * Content provider that returns the binding list from the model's snapshot.
 	 */
 	class MasterContentProvider implements IStructuredContentProvider {
 		public Object[] getElements(Object inputElement) {
 			try {
 				if (inputElement instanceof IEditorInput) {
 					ApiEditor apiEditor = (ApiEditor) page.getEditor();
-					List<Binding> bindings = apiEditor.getModel().getWODefinitions().getWo().getBindings();
-					for (Binding binding : bindings) {
-						binding.setBindingChangedListener(BindingsPageBlock.this);
-					}
-					return bindings.toArray();
+					return apiEditor.getModel().getSnapshot().getBindings().toArray();
 				}
 				return new Object[0];
 			} catch (Throwable t) {
@@ -157,15 +160,7 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		}
 
 		public void dispose() {
-			try {
-				ApiEditor apiEditor = (ApiEditor) page.getEditor();
-				List<Binding> bindings = apiEditor.getModel().getWODefinitions().getWo().getBindings();
-				for (Binding binding : bindings) {
-					binding.setBindingChangedListener(null);
-				}
-			} catch (Throwable t) {
-				throw new RuntimeException("Failed to dispose api file.", t);
-			}
+			// No listener cleanup needed — POJOs don't have listeners
 		}
 
 		public void inputChanged(Viewer inViewer, Object oldInput, Object newInput) {
@@ -173,6 +168,9 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		}
 	}
 
+	/**
+	 * Label provider that displays binding names and bolds required bindings.
+	 */
 	class MasterLabelProvider extends LabelProvider implements ITableLabelProvider, ITableFontProvider {
 		@Override
 		public String getText(Object element) {
@@ -186,8 +184,8 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 
 		public Font getFont(Object element, int columnIndex) {
 			Font font = null;
-			if (element instanceof Binding) {
-				Binding binding = (Binding) element;
+			if (element instanceof IApiBinding) {
+				IApiBinding binding = (IApiBinding) element;
 				if (binding.isRequired()) {
 					font = JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT);
 				}
@@ -200,10 +198,6 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		}
 
 		public Image getColumnImage(Object obj, int index) {
-			// if (obj instanceof Binding) {
-			// return
-			// PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
-			// }
 			return null;
 		}
 	}
@@ -215,10 +209,8 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 
 		Section apiSection = toolkit.createSection(form.getBody(), ExpandableComposite.TITLE_BAR);
 		apiSection.setText("Component API");
-		// apiSection.setDescription("Yep");
 		apiSection.marginWidth = 10;
 		apiSection.marginHeight = 10;
-		// toolkit.createCompositeSeparator(apiSection);
 
 		Composite apiClient = toolkit.createComposite(apiSection, SWT.WRAP);
 		GridLayout apiClientLayout = new GridLayout();
@@ -231,7 +223,7 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		Button componentContentButton = toolkit.createButton(apiClient, "Component Content", SWT.CHECK);
 		ApiEditor apiEditor = (ApiEditor) page.getEditor();
 		try {
-			componentContentButton.setSelection(apiEditor.getModel().getWo().isComponentContent());
+			componentContentButton.setSelection(apiEditor.getModel().getSnapshot().isComponentContent());
 		} catch (ApiModelException e) {
 			throw new RuntimeException("Failed to open .api file.", e);
 		}
@@ -245,8 +237,10 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 				try {
 					@SuppressWarnings("hiding")
 					ApiEditor apiEditor = (ApiEditor) page.getEditor();
-					apiEditor.getModel().getWo().setComponentContent(button.getSelection());
+					apiEditor.getModel().getSnapshot().setComponentContent(button.getSelection());
+					apiEditor.getModel().markAsDirty();
 					managedForm.dirtyStateChanged();
+					apiEditor.editorDirtyStateChanged();
 				} catch (ApiModelException e) {
 					throw new RuntimeException("Failed to open .api file.", e);
 				}
@@ -261,7 +255,6 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 	}
 
 	protected void createMasterPart(final IManagedForm managedForm, Composite parent) {
-		// final ScrolledForm form = managedForm.getForm();
 		FormToolkit toolkit = managedForm.getToolkit();
 
 		Section bindingsSection = toolkit.createSection(parent, ExpandableComposite.TITLE_BAR);
@@ -269,7 +262,6 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		bindingsSection.setDescription("The list contains bindings from the component whose details are editable on the right");
 		bindingsSection.marginWidth = 10;
 		bindingsSection.marginHeight = 5;
-		// toolkit.createCompositeSeparator(bindingsSection);
 		Composite bindingsClient = toolkit.createComposite(bindingsSection, SWT.WRAP);
 		GridLayout bindingsClientLayout = new GridLayout();
 		bindingsClientLayout.numColumns = 2;
@@ -302,13 +294,17 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 			public void widgetSelected(SelectionEvent e) {
 				try {
 					ApiEditor apiEditor = (ApiEditor) page.getEditor();
-					String newBindingName = StringUtils.findUnusedName("newBinding", apiEditor.getModel().getWo(), "getBinding");
-					Binding newBinding = apiEditor.getModel().getWo().createBinding(newBindingName);
+					ApiSnapshot snapshot = apiEditor.getModel().getSnapshot();
+					// findUnusedName uses reflection to call getBinding(String) on the snapshot
+					String newBindingName = StringUtils.findUnusedName("newBinding", snapshot, "getBinding");
+					SimpleApiBinding newBinding = snapshot.addBinding(newBindingName);
+					apiEditor.getModel().markAsDirty();
 					viewer.refresh();
 					viewer.editElement(newBinding, 0);
 					managedForm.dirtyStateChanged();
+					apiEditor.editorDirtyStateChanged();
 				} catch (Throwable tx) {
-					throw new RuntimeException("Failed to open .api file.", tx);
+					throw new RuntimeException("Failed to add binding.", tx);
 				}
 			}
 
@@ -321,21 +317,25 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		Button removeButton = toolkit.createButton(buttonsGroup, "Remove", SWT.PUSH);
 		removeButton.addSelectionListener(new SelectionListener() {
 
+			@SuppressWarnings("rawtypes")
 			public void widgetSelected(SelectionEvent e) {
 				try {
 					IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 					if (!selection.isEmpty()) {
 						Iterator iterator = selection.iterator();
 						ApiEditor apiEditor = (ApiEditor) page.getEditor();
+						ApiSnapshot snapshot = apiEditor.getModel().getSnapshot();
 						while (iterator.hasNext()) {
-							Binding binding = (Binding) iterator.next();
-							apiEditor.getModel().getWo().removeBinding(binding);
+							IApiBinding binding = (IApiBinding) iterator.next();
+							snapshot.removeBinding(binding.getName());
 							viewer.remove(binding);
 						}
+						apiEditor.getModel().markAsDirty();
 						managedForm.dirtyStateChanged();
+						apiEditor.editorDirtyStateChanged();
 					}
 				} catch (Throwable tx) {
-					throw new RuntimeException("Failed to open .api file.", tx);
+					throw new RuntimeException("Failed to remove binding.", tx);
 				}
 			}
 
@@ -368,8 +368,8 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		viewer.setLabelProvider(new MasterLabelProvider() {
 
 			public String getColumnText(Object obj, int index) {
-				if (obj instanceof Binding) {
-					Binding binding = (Binding) obj;
+				if (obj instanceof IApiBinding) {
+					IApiBinding binding = (IApiBinding) obj;
 					return binding.getName();
 				}
 				return super.getColumnText(obj, index);
@@ -388,10 +388,6 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 	}
 
 	protected void registerPages(DetailsPart details) {
-		details.registerPage(Binding.class, new BindingDetailsPage());
-	}
-
-	public void bindingChanged(Binding binding) {
-		viewer.update(binding, null);
+		details.registerPage(SimpleApiBinding.class, new BindingDetailsPage());
 	}
 }

@@ -7,31 +7,36 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Immutable snapshot of a parsed {@code .api} file's component definition.
+ * Parsed representation of a {@code .api} file's component definition.
  *
- * <p>This is the read-path replacement for the mutable DOM-backed
- * {@link Wo}/{@link Wodefinitions} classes. All fields are final and all
- * collections are unmodifiable, making instances inherently thread-safe
- * with no synchronization needed.
+ * <p>On the <b>read path</b> (validation, autocomplete, hover), instances are
+ * produced by {@link ApiParser} and treated as effectively immutable — each
+ * consumer gets its own snapshot, so no synchronization is needed.
  *
- * <p>Produced by {@link ApiParser} from XML. The DOM is not retained —
- * all data is extracted at parse time and stored in typed fields.
+ * <p>On the <b>write path</b> (the {@code .api} editor, {@code GenerateAPIAction}),
+ * the same class is used mutably: bindings are added/removed, component content
+ * is toggled, and the result is serialized back to XML via {@link ApiSerializer}.
  *
- * <p>The {@code .api} editor continues to use the DOM-backed classes for
- * mutation and persistence; this class is used everywhere else (validation,
- * autocomplete, hover documentation, binding inspection).
+ * <p>The mutation methods ({@link #addBinding}, {@link #removeBinding},
+ * {@link #setComponentContent}) rebuild the internal lookup map to keep
+ * {@link #getBinding(String)} consistent.
  */
 public final class ApiSnapshot {
 
 	private final String _className;
-	private final boolean _componentContent;
+	private boolean _componentContent;
+
+	/** Mutable backing list — returned views are unmodifiable. */
 	private final List<IApiBinding> _bindings;
-	private final Map<String, IApiBinding> _bindingsByName;
+
+	/** Mutable backing map — rebuilt after structural changes. */
+	private Map<String, IApiBinding> _bindingsByName;
+
 	private final List<ApiValidation> _validations;
 	private final String _preview;
 
 	/**
-	 * Creates an immutable snapshot of a component's API definition.
+	 * Creates a snapshot of a component's API definition.
 	 *
 	 * @param className the fully-qualified component class name
 	 * @param componentContent whether the component accepts child content
@@ -42,18 +47,21 @@ public final class ApiSnapshot {
 	public ApiSnapshot(String className, boolean componentContent, List<IApiBinding> bindings, List<ApiValidation> validations, String preview) {
 		_className = className;
 		_componentContent = componentContent;
-		_bindings = Collections.unmodifiableList(new ArrayList<>(bindings));
-		_validations = Collections.unmodifiableList(new ArrayList<>(validations));
+		_bindings = new ArrayList<>(bindings);
+		_validations = new ArrayList<>(validations);
 		_preview = preview;
+		rebuildNameMap();
+	}
 
-		// Build the name lookup map, preserving insertion order
+	/** Rebuilds the name→binding lookup map from the current binding list. */
+	private void rebuildNameMap() {
 		Map<String, IApiBinding> byName = new LinkedHashMap<>();
 		for (IApiBinding binding : _bindings) {
 			if (binding.getName() != null) {
 				byName.put(binding.getName(), binding);
 			}
 		}
-		_bindingsByName = Collections.unmodifiableMap(byName);
+		_bindingsByName = byName;
 	}
 
 	/** Returns the fully-qualified class name of the component (from {@code <wo class="...">}). */
@@ -66,9 +74,14 @@ public final class ApiSnapshot {
 		return _componentContent;
 	}
 
+	/** Sets whether the component accepts child content. */
+	public void setComponentContent(boolean componentContent) {
+		_componentContent = componentContent;
+	}
+
 	/** Returns the component's binding definitions. The returned list is unmodifiable. */
 	public List<IApiBinding> getBindings() {
-		return _bindings;
+		return Collections.unmodifiableList(_bindings);
 	}
 
 	/**
@@ -77,6 +90,77 @@ public final class ApiSnapshot {
 	 */
 	public IApiBinding getBinding(String name) {
 		return _bindingsByName.get(name);
+	}
+
+	/**
+	 * Adds a new binding with the given name. If a binding with that name already
+	 * exists, returns the existing one without creating a duplicate.
+	 *
+	 * @param name the binding name
+	 * @return the new (or existing) binding
+	 */
+	public SimpleApiBinding addBinding(String name) {
+		IApiBinding existing = _bindingsByName.get(name);
+		if (existing instanceof SimpleApiBinding) {
+			return (SimpleApiBinding) existing;
+		}
+
+		SimpleApiBinding binding = new SimpleApiBinding(name);
+		_bindings.add(binding);
+		_bindingsByName.put(name, binding);
+		return binding;
+	}
+
+	/**
+	 * Removes the binding with the given name, along with any validation rules
+	 * that reference only that binding (single-child unbound/unsettable patterns).
+	 *
+	 * @param name the binding name to remove
+	 */
+	public void removeBinding(String name) {
+		IApiBinding binding = _bindingsByName.remove(name);
+		if (binding != null) {
+			_bindings.remove(binding);
+			// Remove validation rules that reference only this binding
+			// (single-child <unbound>/<unsettable> patterns)
+			_validations.removeIf(validation -> {
+				List<ApiValidation> children = validation.getChildren();
+				if (children.size() == 1) {
+					ApiValidation child = children.get(0);
+					return name.equals(child.getBindingName());
+				}
+				return false;
+			});
+		}
+	}
+
+	/**
+	 * Notifies the snapshot that a binding's name has changed, so the internal
+	 * lookup map can be rebuilt. Call this after modifying a binding's name via
+	 * {@link SimpleApiBinding#setName(String)}.
+	 */
+	public void bindingNameChanged() {
+		rebuildNameMap();
+	}
+
+	/**
+	 * Removes any single-child validation rule that uses the given predicate kind
+	 * for the given binding name. Used when toggling required/willSet off to clean
+	 * up implicit validation rules (e.g. a single {@code <unbound>} or
+	 * {@code <unsettable>} check).
+	 *
+	 * @param bindingName the binding to remove validations for
+	 * @param kind the validation kind to match (e.g. UNBOUND, UNSETTABLE)
+	 */
+	public void removeImplicitValidation(String bindingName, ApiValidation.Kind kind) {
+		_validations.removeIf(validation -> {
+			List<ApiValidation> children = validation.getChildren();
+			if (children.size() == 1) {
+				ApiValidation child = children.get(0);
+				return child.getKind() == kind && bindingName.equals(child.getBindingName());
+			}
+			return false;
+		});
 	}
 
 	/**
@@ -95,15 +179,13 @@ public final class ApiSnapshot {
 
 	/** Returns the component's validation rules. The returned list is unmodifiable. */
 	public List<ApiValidation> getValidations() {
-		return _validations;
+		return Collections.unmodifiableList(_validations);
 	}
 
 	/**
 	 * Evaluates all validation rules against the given bindings map and returns
 	 * the validations that failed (i.e. whose condition evaluated to true,
 	 * meaning the constraint was violated).
-	 *
-	 * <p>This replicates the logic of {@link Wo#getFailedValidations(Map)}.
 	 *
 	 * @param bindings the current binding name → value map for the component instance
 	 * @return list of failed validations (never null, may be empty)

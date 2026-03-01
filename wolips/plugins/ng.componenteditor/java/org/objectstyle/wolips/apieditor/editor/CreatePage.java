@@ -73,8 +73,8 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.apieditor.ApieditorPlugin;
 import org.objectstyle.wolips.baseforplugins.util.StringUtils;
-import org.objectstyle.wolips.bindings.api.ApiModel;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.MutableApiModel;
 
 public class CreatePage extends ApiFormPage {
 
@@ -114,7 +114,7 @@ public class CreatePage extends ApiFormPage {
 		final ApiEditor apiEditor = (ApiEditor) this.getEditor();
 		boolean brokenApiFile = false;
 		String brokenMessage = null;
-		ApiModel apiModel = null;
+		MutableApiModel apiModel = null;
 		try {
 			apiModel = apiEditor.getModel();
 		} catch (Throwable throwable) {
@@ -148,7 +148,7 @@ public class CreatePage extends ApiFormPage {
 						if (file.exists()) {
 							file.delete(false, null);
 						}
-						new ApiModel(file);
+						new MutableApiModel(file);
 					} catch (ApiModelException coreException) {
 						throw new RuntimeException("Failed to create .api file.", coreException);
 					} catch (CoreException coreException) {

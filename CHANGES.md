@@ -12,6 +12,25 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### API editor rewrite: eliminate DOM classes
+
+- **Rewrote the `.api` editor to use the same POJO model as the read path, then deleted all 19 DOM-only classes.** The editor previously used a parallel Xerces DOM-backed class hierarchy (`ApiModel`, `Wo`, `Binding`, and 14 validation wrapper classes) for mutating and saving `.api` files, while the read path (validation, autocomplete, hover) used the newer `ApiSnapshot`/`SimpleApiBinding`/`ApiValidation` POJOs. This created a "two model" burden: 27 files in the `bindings/api/` package, 19 of which existed only for the editor. Now the editor mutates POJOs directly and serializes them to XML on save, eliminating the DOM layer entirely.
+- **New files:**
+  - `ApiSerializer.java` — serializes an `ApiSnapshot` back to `.api` XML format. Produces well-formed XML matching the existing file format, with bindings, validation trees, and preview content. Handles attribute serialization (`required="YES"`, `settable="YES"`, `defaults`) and recursive validation tree output.
+  - `MutableApiModel.java` — file-backed mutable model replacing the DOM-backed `ApiModel`. Uses `ApiParser` to load and `ApiSerializer` to save. Creates blank `.api` files for new components. Refreshes the Eclipse resource after saving so `JavaChangeRevalidator` can trigger revalidation.
+- **Extended existing POJOs for mutation:**
+  - `IApiBinding` — added `isExplicitlySettable()` default method (mirrors `isExplicitlyRequired()`).
+  - `SimpleApiBinding` — added `_explicitlySettable` field/getter/setter; added `setDefaults(int)` for the editor's defaults combo box.
+  - `ApiSnapshot` — added mutation methods: `setComponentContent()`, `addBinding()`, `removeBinding()`, `bindingNameChanged()`, `removeImplicitValidation()`. Internal collections are mutable but `getBindings()` and `getValidations()` still return unmodifiable views. Read-path consumers get their own snapshot instances from `ApiParser`, so the editor mutating its own instance is safe.
+  - `ApiParser` — now stores the `explicitlySettable` flag when parsing `settable="YES"` attributes (was extracting but not storing).
+- **Rewired editor UI:**
+  - `ApiEditor` — switched from `ApiModel` to `MutableApiModel`.
+  - `BindingsPageBlock` — replaced DOM `Binding` references with `IApiBinding`/`SimpleApiBinding`; removed `BindingChangedListener` (no listener pattern needed with POJOs); add/remove binding buttons and component content checkbox now mutate `ApiSnapshot` directly.
+  - `BindingDetailsPage` — replaced DOM `Binding` with `SimpleApiBinding`; simplified required/willSet toggle logic (set boolean flags + remove implicit validations, instead of manipulating DOM validation elements).
+  - `CreatePage` — switched from `ApiModel` to `MutableApiModel`.
+  - `GenerateAPIAction` — switched from `ApiModel`/`Wo` to `MutableApiModel`/`ApiSnapshot`.
+- **Deleted 19 DOM classes:** `ApiModel`, `Wo`, `Binding`, `Wodefinitions`, `AbstractApiModelElement`, `Validation`, `IValidation`, `AbstractNamedValidation`, `AbstractValidationContainer`, `Unbound`, `Unsettable`, `Bound`, `Settable`, `Gettable`, `Ungettable`, `And`, `Or`, `Not`, `Count`. The `bindings/api/` package now contains 10 files (down from 27).
+
 ### API changes revalidate open component editors
 
 - `JavaChangeRevalidator` now also listens for `.api` file changes. When an API file is saved (e.g., marking a binding as required), all open component editors are revalidated immediately, so validation markers reflect the updated API without needing to manually re-save or reopen the component. For `.api` changes, all open editors are revalidated regardless of project, since the API file may belong to a dependency project.

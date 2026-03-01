@@ -29,6 +29,16 @@ public interface IApiBinding extends Comparable<IApiBinding> {
     return false;
   }
 
+  /**
+   * Returns true if this binding has an explicit {@code settable="YES"} attribute,
+   * as opposed to being implicitly settable via a validation rule (single
+   * {@code <unsettable>} check). Most consumers should use {@link #isWillSet()}
+   * which checks both explicit and implicit settable status.
+   */
+  public default boolean isExplicitlySettable() {
+    return false;
+  }
+
   public boolean isWillSet();
 
   public String[] getValidValues(String partialValue, IJavaProject javaProject, IType componentType, TypeCache typeCache) throws JavaModelException;
