@@ -90,6 +90,11 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
         if (append_newline) {
           if (!hasNewLineEnd(xmlBuffer))
             xmlBuffer.append("\n");
+          // Preserve blank lines from the original source.
+          int blankLines = lastHiddenTextBlankLineCount();
+          for (int i = 0; i < blankLines; i++) {
+            xmlBuffer.append("\n");
+          }
           renderContext.appendIndent(xmlBuffer);
         } else
         if (append_space) {
