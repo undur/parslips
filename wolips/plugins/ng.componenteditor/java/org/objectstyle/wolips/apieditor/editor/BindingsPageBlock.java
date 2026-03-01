@@ -105,8 +105,34 @@ public class BindingsPageBlock extends MasterDetailsBlock implements BindingChan
 		this.page = page;
 	}
 	
+	/**
+	 * Reloads the binding list from the model after a save. Preserves the
+	 * current selection by matching binding name, so the details page gets
+	 * a fresh {@link Binding} reference rather than a stale orphaned one.
+	 */
 	public void reload() {
+		// Remember which binding was selected before reload
+		String selectedBindingName = null;
+		IStructuredSelection oldSelection = (IStructuredSelection) viewer.getSelection();
+		if (!oldSelection.isEmpty() && oldSelection.getFirstElement() instanceof Binding) {
+			selectedBindingName = ((Binding) oldSelection.getFirstElement()).getName();
+		}
+
 		viewer.setInput(page.getEditor().getEditorInput());
+
+		// Restore selection by name — the Binding objects were recreated by
+		// the reparse, so we need to find the new instance with the same name.
+		if (selectedBindingName != null) {
+			try {
+				ApiEditor apiEditor = (ApiEditor) page.getEditor();
+				Binding freshBinding = apiEditor.getModel().getWo().getBinding(selectedBindingName);
+				if (freshBinding != null) {
+					viewer.setSelection(new org.eclipse.jface.viewers.StructuredSelection(freshBinding), true);
+				}
+			} catch (Throwable t) {
+				// Selection restoration is best-effort; ignore failures
+			}
+		}
 	}
 
 	/**
