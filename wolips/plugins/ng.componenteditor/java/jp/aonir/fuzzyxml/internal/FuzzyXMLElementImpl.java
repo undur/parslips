@@ -584,6 +584,7 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
       }
 
       if (isSelfClosing()) {
+        // wo: and p: tags — render as <wo:str />
         if (renderSurroundingTags) {
           if (renderContext.isSpaceInEmptyTags()) {
             xmlBuffer.append(" ");
@@ -593,17 +594,24 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
 
         xmlBuffer.append(getValue(renderContext, xmlBuffer));
       }
+      else if (isForbiddenFromHavingChildren()) {
+        // HTML void elements (br, img, hr, etc.) — render as <br> with
+        // no closing tag and no self-closing slash, matching modern HTML.
+        if (renderSurroundingTags) {
+          xmlBuffer.append(">");
+        }
+      }
       else {
         if (renderSurroundingTags) {
           xmlBuffer.append(">");
         }
-        
+
         if (delegate != null) {
           delegate.afterOpenTag(this, renderContext, xmlBuffer);
         }
-        
+
         xmlBuffer.append(getValue(renderContext, xmlBuffer));
-        
+
         if (delegate != null) {
           delegate.beforeCloseTag(this, renderContext, xmlBuffer);
         }
@@ -813,17 +821,11 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
    * Determines whether an element should be rendered as a self-closing tag
    * ({@code <tag />}) rather than an open+close pair ({@code <tag></tag>}).
    * <p>
-   * An element is self-closing if it has no children AND is one of:
-   * <ul>
-   *   <li>An HTML void element ({@code <br>}, {@code <img>}, etc.)</li>
-   *   <li>A {@code wo:} or {@code p:} namespaced tag</li>
-   * </ul>
-   * <p>
-   * Regular HTML elements like {@code <th>}, {@code <td>}, {@code <div>},
-   * {@code <span>} etc. are never self-closed even when empty — browsers
-   * treat {@code <th />} as an unclosed {@code <th>}, which corrupts the
-   * document structure. Previously, this used a small blocklist of tags
-   * that couldn't self-close, which inevitably missed tags (like {@code <th>}).
+   * Only {@code wo:} and {@code p:} namespaced tags self-close when empty.
+   * HTML elements — including void elements like {@code <br>} and
+   * {@code <img>} — are rendered without a closing tag or as open+close
+   * pairs, matching modern HTML conventions where self-closing syntax
+   * ({@code <br />}) is unnecessary.
    */
   public static boolean isSelfClosing(FuzzyXMLElement node) {
     FuzzyXMLNode[] children = node.getChildren();
@@ -833,17 +835,13 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
 
     String tagName = node.getName().toLowerCase();
 
-    // Void elements are always self-closing.
-    if (VOID_ELEMENTS.contains(tagName)) {
-      return true;
-    }
-
     // wo: and p: namespaced tags can self-close when empty.
     if (tagName.startsWith("wo:") || tagName.startsWith("p:")) {
       return true;
     }
 
-    // All other HTML elements must use <tag></tag> even when empty.
+    // HTML elements are never self-closed — void elements get their
+    // close tag suppressed by isForbiddenFromHavingChildren() instead.
     return false;
   }
   
