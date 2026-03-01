@@ -82,7 +82,16 @@ public class WodCompletionUtils {
     return simpleNames;
   }
 
-  public static void openBinding(String bindingValue, IApiBinding binding, IType componentType, boolean onlyIfMissing) throws CoreException {
+  /**
+   * Opens the Java source for the binding's value keypath, or if the key
+   * doesn't exist, offers to create it as a key or action.
+   *
+   * @param bindingValue the binding value string (e.g. "session.user")
+   * @param isAction whether this binding is an action binding
+   * @param componentType the component's Java type
+   * @param onlyIfMissing if true, only opens the dialog if the key is missing
+   */
+  public static void openBinding(String bindingValue, boolean isAction, IType componentType, boolean onlyIfMissing) throws CoreException {
     BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(bindingValue, componentType, componentType.getJavaProject(), WodParserCache.getTypeCache());
     if (bindingValueKeyPath.isValid() && bindingValueKeyPath.exists()) {
       if (!onlyIfMissing) {
@@ -93,13 +102,21 @@ public class WodCompletionUtils {
       }
     }
     else if (!bindingValueKeyPath.exists() && bindingValueKeyPath.isSingleKey()) {
-      WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, binding, componentType);
+      WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, isAction, componentType);
     }
   }
 
-  public static String addKeyOrAction(BindingValueKeyPath bindingValueKeyPath, IApiBinding binding, IType componentType) throws CoreException {
+  /**
+   * Opens a dialog to create a new key or action method on the component type.
+   *
+   * @param bindingValueKeyPath the keypath to create
+   * @param isAction true to create an action method, false to create a property
+   * @param componentType the component's Java type
+   * @return the name chosen in the dialog
+   */
+  public static String addKeyOrAction(BindingValueKeyPath bindingValueKeyPath, boolean isAction, IType componentType) throws CoreException {
     String name = null;
-    if (binding.isAction()) {
+    if (isAction) {
       AddActionInfo info = new AddActionInfo(componentType);
       info.setName(bindingValueKeyPath.getOriginalKeyPath());
       AddActionDialog.open(info, PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());

@@ -56,7 +56,6 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
 
 /**
  * @author mschrag
@@ -102,5 +101,11 @@ public interface IWodElement extends IWodUnit {
 
   public ApiSnapshot getApi(IJavaProject javaProject, TypeCache cache) throws JavaModelException, ApiModelException;
 
-  public IApiBinding[] getApiBindings(ApiSnapshot api);
+  /**
+   * Returns all bindings visible for this element: API-defined bindings first,
+   * then any WOD bindings not defined in the API. Each binding is wrapped in
+   * a {@link VisibleBinding} so consumers can distinguish API-defined bindings
+   * from WOD-only bindings without relying on {@code instanceof} checks.
+   */
+  public VisibleBinding[] getVisibleBindings(ApiSnapshot api);
 }

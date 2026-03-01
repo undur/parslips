@@ -48,11 +48,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 import org.objectstyle.wolips.baseforuiplugins.utils.WOTextCellEditor;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
-import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
+import org.objectstyle.wolips.bindings.wod.VisibleBinding;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionUtils;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
@@ -251,14 +250,19 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 			_bindingsTableViewer.setInput(new Object[0]);
 		}
 
-		IApiBinding selectedBinding = (IApiBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
+		// Restore the previously selected binding by name after refreshing
+		// the table's content. The old code used api.getBinding() which could
+		// miss WOD-only bindings; we now iterate the VisibleBinding[] directly.
+		VisibleBinding selectedBinding = (VisibleBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
 		if (_wodElement != null && selectedBinding != null) {
 			String selectedBindingName = selectedBinding.getName();
-			ApiSnapshot api = _bindingsContentProvider.getApi();
-			if (api != null) {
-				IApiBinding newBinding = api.getBinding(selectedBindingName);
-				if (newBinding != null) {
-					_bindingsTableViewer.setSelection(new StructuredSelection(newBinding));
+			VisibleBinding[] visibleBindings = _wodElement.getVisibleBindings(_bindingsContentProvider.getApi());
+			if (visibleBindings != null) {
+				for (VisibleBinding vb : visibleBindings) {
+					if (vb.getName().equals(selectedBindingName)) {
+						_bindingsTableViewer.setSelection(new StructuredSelection(vb));
+						break;
+					}
 				}
 			}
 		}
@@ -315,7 +319,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 	}
 
 	protected void removeBinding() {
-		IApiBinding binding = (IApiBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
+		VisibleBinding binding = (VisibleBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
 		if (binding != null) {
 			RefactoringWodElement element = getRefactoringElement();
 			if (element != null) {
@@ -330,12 +334,12 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 	}
 
 	protected void addKey() {
-		IApiBinding binding = (IApiBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
+		VisibleBinding binding = (VisibleBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
 		if (binding != null && _cache != null) {
 			try {
 				BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(_wodElement.getBindingValue(binding.getName()), _cache);
 				if (bindingValueKeyPath.canAddKey()) {
-					String name = WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, binding, _cache.getComponentType());
+					String name = WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, binding.isAction(), _cache.getComponentType());
 					getRefactoringElement().setValueForBinding(name, binding.getName());
 					BindingsInspector.this.refresh();
 				}
@@ -352,7 +356,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 			_addKeyActionButton.setEnabled(false);
 		} else {
 			_addBindingButton.setEnabled(true);
-			IApiBinding binding = (IApiBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
+			VisibleBinding binding = (VisibleBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
 			if (binding == null || _cache == null) {
 				_removeBindingButton.setEnabled(false);
 				_addKeyActionButton.setEnabled(false);
@@ -567,7 +571,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		@Override
 		protected Object getValue(Object element) {
 			String value = null;
-			IApiBinding binding = (IApiBinding) element;
+			VisibleBinding binding = (VisibleBinding) element;
 			if (binding != null) {
 				value = binding.getName();
 			}
@@ -579,7 +583,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 
 		@Override
 		protected void setValue(Object element, Object value) {
-			IApiBinding binding = (IApiBinding) element;
+			VisibleBinding binding = (VisibleBinding) element;
 			if (binding != null) {
 				IWodElement wodElement = getWodElement();
 				if (wodElement != null) {
@@ -619,7 +623,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		@Override
 		protected Object getValue(Object element) {
 			String value = null;
-			IApiBinding binding = (IApiBinding) element;
+			VisibleBinding binding = (VisibleBinding) element;
 			if (binding != null) {
 				IWodElement wodElement = getWodElement();
 				if (wodElement != null) {
@@ -637,7 +641,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 
 		@Override
 		protected void setValue(Object element, Object value) {
-			IApiBinding binding = (IApiBinding) element;
+			VisibleBinding binding = (VisibleBinding) element;
 			if (binding != null) {
 				IWodElement wodElement = getWodElement();
 				if (wodElement != null) {

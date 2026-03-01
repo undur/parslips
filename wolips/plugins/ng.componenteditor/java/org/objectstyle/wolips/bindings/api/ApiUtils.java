@@ -52,16 +52,31 @@ public class ApiUtils {
 	 */
 	private static Map<String, ApiSnapshot> _globalApiSnapshots;
 
+	/**
+	 * Returns true if the given binding is an action binding, determined by
+	 * either having "Actions" as its defaults category, or (when no defaults
+	 * are defined) having a name that matches action naming conventions.
+	 */
 	public static boolean isActionBinding(IApiBinding binding) {
 		String defaults = binding.getDefaults();
 		if (IApiBinding.ACTIONS_DEFAULT.equals(defaults)) {
 			return true;
 		}
 		if (defaults == null) {
-			String bindingName = binding.getName();
-			return "action".equals(bindingName) || bindingName.endsWith("Action");
+			return isActionBindingName(binding.getName());
 		}
 		return false;
+	}
+
+	/**
+	 * Returns true if the given binding name follows action naming conventions:
+	 * either exactly "action" or ending with "Action" (e.g. "submitAction").
+	 *
+	 * <p>This is the name-only heuristic used when no {@code .api} metadata
+	 * is available — for example, when a WOD binding is not defined in any API.
+	 */
+	public static boolean isActionBindingName(String name) {
+		return "action".equals(name) || name.endsWith("Action");
 	}
 
 	public static int getSelectedDefaults(IApiBinding binding) {

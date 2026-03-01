@@ -4,9 +4,9 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
-import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
+import org.objectstyle.wolips.bindings.wod.VisibleBinding;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
 public class BindingsContentProvider implements IStructuredContentProvider {
@@ -26,12 +26,12 @@ public class BindingsContentProvider implements IStructuredContentProvider {
 	}
 
 	public Object[] getElements(Object inputElement) {
-		Object[] wodBindings = null;
+		Object[] visibleBindings = null;
 		_api = null;
 		if (inputElement instanceof IWodElement) {
 			IWodElement wodElement = (IWodElement) inputElement;
 			if (wodElement == null) {
-				wodBindings = new IWodBinding[0];
+				visibleBindings = new VisibleBinding[0];
 			} else {
 				if (_cache != null && _api == null) {
 					try {
@@ -41,12 +41,12 @@ public class BindingsContentProvider implements IStructuredContentProvider {
 						ComponenteditorPlugin.getDefault().log("Failed to load API for WO.", e);
 					}
 				}
-				wodBindings = wodElement.getApiBindings(_api);
+				visibleBindings = wodElement.getVisibleBindings(_api);
 			}
 		} else {
-			wodBindings = new IWodBinding[0];
+			visibleBindings = new VisibleBinding[0];
 		}
-		return wodBindings;
+		return visibleBindings;
 	}
 
 	public void dispose() {

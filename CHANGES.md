@@ -12,6 +12,20 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Separate IWodBinding from IApiBinding
+
+- **Removed the incorrect `IWodBinding extends IApiBinding` inheritance.** A WOD binding is a *usage* of a binding (`item = session.cart`), not a *definition* of what bindings a component accepts. The inheritance forced `AbstractWodBinding` to implement stub versions of `getDefaults()`, `isRequired()`, `isWillSet()`, `getValidValues()`, and `getSelectedDefaults()` that returned meaningless values (null, false, empty). It also allowed WOD bindings to be mixed into `IApiBinding[]` arrays in `getApiBindings()`, obscuring the distinction between definitions and usages throughout the inspector UI.
+- **New class: `VisibleBinding`** — a presentation-layer wrapper representing a binding visible in the inspector UI, whether defined in the component's `.api` file or used in the WOD/template but not defined in any API. Provides `getName()`, `isAction()`, `isDefinedInApi()`, and `getApiBinding()`. The `isDefinedInApi()` check replaces the old `instanceof IWodBinding` check used for bold-face font in the inspector.
+- **New method: `IWodElement.getVisibleBindings(ApiSnapshot)`** — returns `VisibleBinding[]` instead of the old `getApiBindings()` which returned a mixed `IApiBinding[]`. Uses `VisibleBinding.fromApi()` for API-defined bindings and `VisibleBinding.fromWod()` for WOD-only bindings. The old `getApiBindings()` method has been removed.
+- **New method: `ApiUtils.isActionBindingName(String)`** — extracted the name-only heuristic (`"action".equals(name) || name.endsWith("Action")`) from `isActionBinding(IApiBinding)` so it can be used without a full `IApiBinding` reference.
+- **Switched all inspector UI consumers to `VisibleBinding`:** `BindingsContentProvider`, `BindingsLabelProvider`, `BindingsInspector` (9 cast sites), `BindingsInspectorPage`, `BindingsInspectorDropHandler`, and `BindingsPopUpMenu` now work with `VisibleBinding` instead of `IApiBinding`.
+- **Simplified `WodCompletionUtils.openBinding()` and `addKeyOrAction()`** — changed from taking an `IApiBinding` parameter (only used for `isAction()`) to taking a `boolean isAction`. Eliminates the last place where a WOD binding was passed where an `IApiBinding` was expected.
+- **Rewrote `WodBindingValueHyperlink`** — stores `boolean _isAction` (computed at construction) and `String _bindingValue` instead of holding `IWodBinding` and `WodParserCache` references.
+- **Simplified `WodBindingProblem` hierarchy** — removed the dead `_binding` field (type `IApiBinding`, with `getBinding()` having zero callers) from `WodBindingProblem`. Simplified constructors of `WodBindingNameProblem`, `WodBindingValueProblem`, and `WodBindingDeprecationProblem` to remove the `IApiBinding` parameter. `ApiBindingValidationProblem` retains its own `_binding` field since it's created from real API bindings.
+- **Removed 7 IApiBinding stub methods from `AbstractWodBinding`:** `compareTo(IApiBinding)`, `isAction()`, `getDefaults()`, `getSelectedDefaults()`, `getValidValues()`, `isRequired()`, `isWillSet()`.
+- **Removed dead `hasValidationProblem(IApiBinding, ...)` overload** from `WodModelUtils` — all callers now use the `String` overload directly.
+- New file: `VisibleBinding.java`.
+
 ### API editor rewrite: eliminate DOM classes
 
 - **Rewrote the `.api` editor to use the same POJO model as the read path, then deleted all 19 DOM-only classes.** The editor previously used a parallel Xerces DOM-backed class hierarchy (`ApiModel`, `Wo`, `Binding`, and 14 validation wrapper classes) for mutating and saving `.api` files, while the read path (validation, autocomplete, hover) used the newer `ApiSnapshot`/`SimpleApiBinding`/`ApiValidation` POJOs. This created a "two model" burden: 27 files in the `bindings/api/` package, 19 of which existed only for the editor. Now the editor mutates POJOs directly and serializes them to XML on save, eliminating the DOM layer entirely.

@@ -13,9 +13,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.part.Page;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
+import org.objectstyle.wolips.bindings.wod.VisibleBinding;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.components.editor.IWebobjectTagListener;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
@@ -185,12 +185,12 @@ public class BindingsInspectorPage extends Page implements ICursorPositionListen
 				if (event.getSource() == _browser) {
 					// IGNORE
 				} else {
-					IApiBinding apiBinding = (IApiBinding) ((IStructuredSelection) event.getSelection()).getFirstElement();
+					VisibleBinding vb = (VisibleBinding) ((IStructuredSelection) event.getSelection()).getFirstElement();
 					boolean keyPathSelected = false;
-					if (apiBinding != null) {
+					if (vb != null) {
 						IWodElement element = _inspector.getWodElement();
 						if (element != null) {
-							IWodBinding wodBinding = element.getBindingNamed(apiBinding.getName());
+							IWodBinding wodBinding = element.getBindingNamed(vb.getName());
 							if (wodBinding != null) {
 								if (wodBinding.isKeyPath()) {
 									String value = wodBinding.getValue();

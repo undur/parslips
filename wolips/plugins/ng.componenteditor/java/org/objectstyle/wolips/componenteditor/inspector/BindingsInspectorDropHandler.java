@@ -5,7 +5,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
+import org.objectstyle.wolips.bindings.wod.VisibleBinding;
 import org.objectstyle.wolips.wodclipse.core.refactoring.RefactoringWodElement;
 
 public class BindingsInspectorDropHandler extends AbstractBindingsDropHandler<BindingsInspector, TableItem, Object, Table> {
@@ -38,7 +38,7 @@ public class BindingsInspectorDropHandler extends AbstractBindingsDropHandler<Bi
 			Point controlDropPoint = getEditorControl().toControl(dropPoint);
 			TableItem selectedItem = getSelectedItemAtPoint(_inspector, controlDropPoint);
 			if (selectedItem != null) {
-				IApiBinding binding = getBindingForItem(selectedItem);
+				VisibleBinding binding = getBindingForItem(selectedItem);
 				if (binding != null) {
 					String droppedKeyPath = column.getSelectedKeyPath();
 					RefactoringWodElement element = _inspector.getRefactoringElement();
@@ -84,8 +84,8 @@ public class BindingsInspectorDropHandler extends AbstractBindingsDropHandler<Bi
 		return oldItem == null || newItem == null || !getBindingForItem(oldItem).getName().equals(getBindingForItem(newItem).getName());
 	}
 
-	protected IApiBinding getBindingForItem(TableItem item) {
-		IApiBinding binding;
+	protected VisibleBinding getBindingForItem(TableItem item) {
+		VisibleBinding binding;
 		if (item == null) {
 			binding = null;
 		} else {
@@ -95,7 +95,7 @@ public class BindingsInspectorDropHandler extends AbstractBindingsDropHandler<Bi
 			if (index == -1) {
 				binding = null;
 			} else {
-				binding = (IApiBinding) tableViewer.getElementAt(index);
+				binding = (VisibleBinding) tableViewer.getElementAt(index);
 			}
 		}
 		return binding;

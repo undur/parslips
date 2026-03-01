@@ -55,9 +55,23 @@ import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
 
 /**
+ * Represents a binding <em>usage</em> in a WOD file or inline template
+ * (e.g. {@code item = session.cart}). This is distinct from an
+ * {@link org.objectstyle.wolips.bindings.api.IApiBinding API binding definition},
+ * which describes what bindings a component <em>accepts</em>.
+ *
+ * <p>Previously this interface extended {@code IApiBinding}, forcing
+ * implementations to provide stub versions of API-specific methods
+ * ({@code getDefaults()}, {@code isRequired()}, etc.) that returned
+ * meaningless values. The inheritance also allowed WOD bindings to be
+ * mixed into {@code IApiBinding[]} arrays, obscuring the distinction
+ * between definitions and usages. That inheritance has been removed;
+ * the inspector UI now uses {@link VisibleBinding} to present both
+ * API-defined and WOD-only bindings in a type-safe way.
+ *
  * @author mschrag
  */
-public interface IWodBinding extends IWodUnit, IApiBinding {
+public interface IWodBinding extends IWodUnit {
   public String getNamespace();
   
   public String getValueNamespace();

@@ -230,39 +230,51 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     return ApiUtils.findApiSnapshot(elementType, cache.getApiCache(javaProject));
   }
 
-  public IApiBinding[] getApiBindings(ApiSnapshot api) {
-    IApiBinding[] wodBindings = null;
-    boolean apiFound = false;
+  /**
+   * Returns all bindings visible for this element: API-defined bindings first,
+   * then any WOD bindings not defined in the API. Each binding is wrapped in
+   * a {@link VisibleBinding} so consumers can distinguish API-defined bindings
+   * from WOD-only bindings without relying on {@code instanceof} checks.
+   *
+   * @param api the API snapshot for this element type, or null if not available
+   * @return array of visible bindings, never null
+   */
+  public VisibleBinding[] getVisibleBindings(ApiSnapshot api) {
     try {
       if (api != null) {
-        apiFound = true;
-        List<IApiBinding> visibleBindings = new LinkedList<IApiBinding>();
+        List<VisibleBinding> result = new LinkedList<VisibleBinding>();
         List<IApiBinding> apiBindings = api.getBindings();
-        visibleBindings.addAll(apiBindings);
+
+        // Add all API-defined bindings
+        for (IApiBinding apiBinding : apiBindings) {
+          result.add(VisibleBinding.fromApi(apiBinding));
+        }
+
+        // Add WOD bindings that are NOT defined in the API
+        Set<String> apiNames = new HashSet<String>();
+        for (IApiBinding apiBinding : apiBindings) {
+          apiNames.add(apiBinding.getName());
+        }
         for (IWodBinding wodBinding : getBindings()) {
-          String bindingName = wodBinding.getName();
-          boolean wodBindingDefinedInApi = false;
-          for (IApiBinding apiBinding : apiBindings) {
-            if (apiBinding.getName().equals(bindingName)) {
-              wodBindingDefinedInApi = true;
-              break;
-            }
-          }
-          if (!wodBindingDefinedInApi) {
-            visibleBindings.add(wodBinding);
+          if (!apiNames.contains(wodBinding.getName())) {
+            result.add(VisibleBinding.fromWod(wodBinding));
           }
         }
-        wodBindings = visibleBindings.toArray(new IApiBinding[visibleBindings.size()]);
+
+        return result.toArray(new VisibleBinding[result.size()]);
       }
     }
     catch (Throwable t) {
       Activator.getDefault().log("Failed to retrieve bindings for " + this + ".", t);
     }
-    if (!apiFound) {
-      List<IWodBinding> currentBindings = getBindings();
-      wodBindings = currentBindings.toArray(new IApiBinding[currentBindings.size()]);
+
+    // No API available — wrap all WOD bindings as WOD-only
+    List<IWodBinding> currentBindings = getBindings();
+    VisibleBinding[] result = new VisibleBinding[currentBindings.size()];
+    for (int i = 0; i < currentBindings.size(); i++) {
+      result[i] = VisibleBinding.fromWod(currentBindings.get(i));
     }
-    return wodBindings;
+    return result;
   }
 
   public abstract int getLineNumber();
@@ -363,7 +375,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
       IWodBinding binding = checkForDuplicateBindingsIter.next();
       String bindingName = binding.getName();
       if (bindingNames.contains(bindingName)) {
-        problems.add(new WodBindingNameProblem(this, binding, bindingName, "Duplicate binding named '" + bindingName + "'", binding.getNamePosition(), binding.getLineNumber(), false));
+        problems.add(new WodBindingNameProblem(this, bindingName, "Duplicate binding named '" + bindingName + "'", binding.getNamePosition(), binding.getLineNumber(), false));
       }
       else {
         bindingNames.add(bindingName);

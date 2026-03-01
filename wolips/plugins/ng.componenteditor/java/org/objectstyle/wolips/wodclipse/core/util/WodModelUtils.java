@@ -58,7 +58,6 @@ import org.eclipse.jface.text.Position;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.wod.ApiBindingValidationProblem;
 import org.objectstyle.wolips.bindings.wod.ApiElementValidationProblem;
 import org.objectstyle.wolips.bindings.wod.HtmlElementCache;
@@ -232,10 +231,6 @@ public class WodModelUtils {
 //      Activator.getDefault().log(e);
 //    }
     return marker;
-  }
-  
-  public static boolean hasValidationProblem(IApiBinding binding, List<WodProblem> problems) {
-    return WodModelUtils.hasValidationProblem(binding.getName(), problems);
   }
   
   public static boolean hasValidationProblem(String bindingName, List<WodProblem> problems) {

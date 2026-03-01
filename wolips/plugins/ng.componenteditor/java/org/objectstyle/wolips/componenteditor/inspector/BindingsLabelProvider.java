@@ -13,9 +13,9 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
+import org.objectstyle.wolips.bindings.wod.VisibleBinding;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.wodclipse.core.util.WodModelUtils;
 
@@ -45,12 +45,12 @@ public class BindingsLabelProvider extends ColumnLabelProvider implements ITable
 	}
 
 	public String getColumnText(Object element, int columnIndex) {
-		IApiBinding apiBinding = (IApiBinding) element;
+		VisibleBinding vb = (VisibleBinding) element;
 		String text = null;
 		if (columnIndex == 0) {
-			text = apiBinding.getName();
+			text = vb.getName();
 		} else if (columnIndex == 1) {
-			IWodBinding wodBinding = _wodElement.getBindingNamed(apiBinding.getName());
+			IWodBinding wodBinding = _wodElement.getBindingNamed(vb.getName());
 			if (wodBinding != null) {
 				text = wodBinding.getValue();
 			}
@@ -85,8 +85,8 @@ public class BindingsLabelProvider extends ColumnLabelProvider implements ITable
 
 	public Color getForeground(Object element, int columnIndex) {
 		Color color = null;
-		IApiBinding apiBinding = (IApiBinding) element;
-		if (WodModelUtils.hasValidationProblem(apiBinding, _problems)) {
+		VisibleBinding vb = (VisibleBinding) element;
+		if (WodModelUtils.hasValidationProblem(vb.getName(), _problems)) {
 			color = Display.getCurrent().getSystemColor(SWT.COLOR_RED);
 		}
 		return color;
@@ -97,10 +97,16 @@ public class BindingsLabelProvider extends ColumnLabelProvider implements ITable
 		return getFont(element, _column);
 	}
 
+	/**
+	 * Returns bold font for bindings not defined in the API (i.e., "extra"
+	 * bindings added by the user in the WOD that have no {@code .api}
+	 * definition).
+	 */
 	public Font getFont(Object element, int columnIndex) {
 		Font font = null;
 		if (columnIndex == 0) {
-			if (element instanceof IWodBinding) {
+			VisibleBinding vb = (VisibleBinding) element;
+			if (!vb.isDefinedInApi()) {
 				font = JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT);
 			}
 		}
