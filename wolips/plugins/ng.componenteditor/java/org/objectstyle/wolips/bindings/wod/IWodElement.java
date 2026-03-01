@@ -55,8 +55,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
-import org.objectstyle.wolips.bindings.api.Wo;
 
 /**
  * @author mschrag
@@ -100,7 +100,7 @@ public interface IWodElement extends IWodUnit {
 
   public boolean isTypeWithin(IRegion region);
 
-  public Wo getApi(IJavaProject javaProject, TypeCache cache) throws JavaModelException, ApiModelException;
+  public ApiSnapshot getApi(IJavaProject javaProject, TypeCache cache) throws JavaModelException, ApiModelException;
 
-  public IApiBinding[] getApiBindings(Wo api);
+  public IApiBinding[] getApiBindings(ApiSnapshot api);
 }

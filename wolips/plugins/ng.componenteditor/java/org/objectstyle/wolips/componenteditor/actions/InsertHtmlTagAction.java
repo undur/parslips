@@ -7,12 +7,12 @@ import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
-import org.objectstyle.wolips.bindings.api.Binding;
+import org.objectstyle.wolips.bindings.api.IApiBinding;
 
 public class InsertHtmlTagAction extends InsertHtmlAndWodAction {
 	@Override
-	public List<Binding> getRequiredBindings(String componentName) {
-		return new LinkedList<Binding>();
+	public List<IApiBinding> getRequiredBindings(String componentName) {
+		return new LinkedList<IApiBinding>();
 	}
 
 	@Override

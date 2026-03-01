@@ -20,7 +20,7 @@ import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.BindingValidationRule;
@@ -295,17 +295,30 @@ public class WodParserCache implements ITypeOwner {
     return WodParserCache.getTypeCache();
   }
 
-  public Wo getWo(String elementName) throws ApiModelException, JavaModelException {
+  /**
+   * Returns the API snapshot for a component identified by element name.
+   * Resolves the name to a type, then looks up the parsed {@code .api} file.
+   *
+   * @param elementName the element type name (e.g. "WOString", "MyComponent")
+   * @return the API snapshot, or null if not found
+   */
+  public ApiSnapshot getApiSnapshot(String elementName) throws ApiModelException, JavaModelException {
     IType elementType = getElementType(elementName);
-    return getWo(elementType);
+    return getApiSnapshot(elementType);
   }
 
   public IType getElementType(String elementName) throws JavaModelException {
     return BindingReflectionUtils.findElementType(_javaProject, elementName, false, WodParserCache.getTypeCache());
   }
 
-  public Wo getWo(IType type) throws ApiModelException {
-    return ApiUtils.findApiModelWo(type, getApiCache());
+  /**
+   * Returns the API snapshot for a given type by looking up its {@code .api} file.
+   *
+   * @param type the JDT type to look up
+   * @return the API snapshot, or null if not found
+   */
+  public ApiSnapshot getApiSnapshot(IType type) throws ApiModelException {
+    return ApiUtils.findApiSnapshot(type, getApiCache());
   }
 
   public synchronized void parse() throws Exception {

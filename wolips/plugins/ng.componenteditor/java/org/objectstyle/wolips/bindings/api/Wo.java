@@ -73,6 +73,17 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
+/**
+ * Mutable DOM-backed representation of a {@code <wo>} element in an {@code .api} file.
+ *
+ * <p><b>Editor-internal class.</b> This class is used only by the {@code .api} file
+ * editor ({@link org.objectstyle.wolips.apieditor.editor.ApiEditor}) which needs to
+ * mutate and persist the DOM. All read-path consumers (validation, autocomplete,
+ * hover, binding inspection) use the immutable {@link ApiSnapshot} instead.
+ *
+ * @see ApiSnapshot
+ * @see ApiParser
+ */
 public class Wo extends AbstractApiModelElement {
 
   private final static String CLASS = "class";

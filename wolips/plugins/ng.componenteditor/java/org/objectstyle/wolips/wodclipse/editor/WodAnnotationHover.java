@@ -19,10 +19,10 @@ import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
-import org.objectstyle.wolips.bindings.api.Binding;
-import org.objectstyle.wolips.bindings.api.Validation;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiValidation;
+import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -260,12 +260,12 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 				}
 			}
 
-			Wo wo = null;
+			ApiSnapshot api = null;
 
 			// Try project/classpath .api file first
 			if (elementType != null) {
 				try {
-					wo = ApiUtils.findApiModelWo(elementType, typeCache.getApiCache(javaProject));
+					api = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
 				}
 				catch (ApiModelException e) {
 					// fall through to global lookup
@@ -274,20 +274,20 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 
 			// Fall back to global WebObjectDefinitions.xml for built-in components.
 			// Try both the resolved class name and the original element name.
-			if (wo == null) {
-				wo = ApiUtils.findGlobalWoByClassName(resolvedClassName);
+			if (api == null) {
+				api = ApiUtils.findGlobalApiSnapshotByClassName(resolvedClassName);
 			}
-			if (wo == null && !resolvedClassName.equals(elementTypeName)) {
-				wo = ApiUtils.findGlobalWoByClassName(elementTypeName);
+			if (api == null && !resolvedClassName.equals(elementTypeName)) {
+				api = ApiUtils.findGlobalApiSnapshotByClassName(elementTypeName);
 			}
 
-			if (wo == null) {
+			if (api == null) {
 				// No API found — just show the resolved name so the user at
 				// least sees what the shortcut maps to
 				return displayName;
 			}
 
-			return formatWoDocumentation(displayName, wo);
+			return formatApiDocumentation(displayName, api);
 		}
 		catch (Exception e) {
 			return null;
@@ -295,7 +295,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	}
 
 	/**
-	 * Formats a {@link Wo} API definition into plain-text hover content
+	 * Formats an {@link ApiSnapshot} definition into plain-text hover content
 	 * using Unicode characters for visual structure.
 	 *
 	 * <p>Layout:
@@ -316,14 +316,14 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	 * Required bindings are marked with ▸, optional with plain indent.
 	 * Validation rules are shown below a separator.
 	 */
-	private String formatWoDocumentation(String elementTypeName, Wo wo) {
-		List<Binding> bindings = wo.getBindings();
+	private String formatApiDocumentation(String elementTypeName, ApiSnapshot api) {
+		List<IApiBinding> bindings = api.getBindings();
 
 		StringBuilder sb = new StringBuilder();
 
 		// Header line
 		sb.append(elementTypeName);
-		if (wo.isComponentContent()) {
+		if (api.isComponentContent()) {
 			sb.append("  (has content)");
 		}
 
@@ -337,10 +337,10 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 		appendSeparator(sb, 40);
 
 		// Separate required from optional bindings
-		List<Binding> required = new ArrayList<>();
-		List<Binding> optional = new ArrayList<>();
+		List<IApiBinding> required = new ArrayList<>();
+		List<IApiBinding> optional = new ArrayList<>();
 
-		for (Binding binding : bindings) {
+		for (IApiBinding binding : bindings) {
 			if (binding.isRequired()) {
 				required.add(binding);
 			}
@@ -351,12 +351,12 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 
 		// Find the longest binding name for alignment
 		int maxNameLen = 0;
-		for (Binding binding : bindings) {
+		for (IApiBinding binding : bindings) {
 			maxNameLen = Math.max(maxNameLen, binding.getName().length());
 		}
 
 		// Required bindings first (marked with ▸)
-		for (Binding binding : required) {
+		for (IApiBinding binding : required) {
 			sb.append('\n');
 			sb.append(" \u25B8 "); // ▸ right-pointing triangle
 			appendBindingLine(sb, binding, maxNameLen);
@@ -368,17 +368,17 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 		}
 
 		// Optional bindings (plain indent)
-		for (Binding binding : optional) {
+		for (IApiBinding binding : optional) {
 			sb.append('\n');
 			sb.append("   ");
 			appendBindingLine(sb, binding, maxNameLen);
 		}
 
 		// Validation rules
-		List<Validation> validations = wo.getValidations();
+		List<ApiValidation> validations = api.getValidations();
 		if (!validations.isEmpty()) {
 			boolean hasMessages = false;
-			for (Validation validation : validations) {
+			for (ApiValidation validation : validations) {
 				String message = validation.getMessage();
 				if (message != null && !message.isEmpty()) {
 					if (!hasMessages) {
@@ -400,7 +400,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	 * Appends a single binding line with the name left-aligned and
 	 * annotations (type info) right-aligned after padding.
 	 */
-	private void appendBindingLine(StringBuilder sb, Binding binding, int maxNameLen) {
+	private void appendBindingLine(StringBuilder sb, IApiBinding binding, int maxNameLen) {
 		String name = binding.getName();
 		sb.append(name);
 
@@ -432,7 +432,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	 * @return annotation like "Actions", "Boolean, settable", or null if
 	 *         no type information is available
 	 */
-	private String getBindingTypeInfo(Binding binding) {
+	private String getBindingTypeInfo(IApiBinding binding) {
 		List<String> parts = new ArrayList<>();
 
 		if (binding.isRequired()) {

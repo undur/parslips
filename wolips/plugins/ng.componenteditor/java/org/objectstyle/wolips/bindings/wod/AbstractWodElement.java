@@ -66,11 +66,10 @@ import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
-import org.objectstyle.wolips.bindings.api.Binding;
+import org.objectstyle.wolips.bindings.api.ApiValidation;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
-import org.objectstyle.wolips.bindings.api.Validation;
-import org.objectstyle.wolips.bindings.api.Wo;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.utils.StringDistance;
@@ -225,21 +224,20 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     return tagName;
   }
 
-  public Wo getApi(IJavaProject javaProject, TypeCache cache) throws JavaModelException, ApiModelException {
+  public ApiSnapshot getApi(IJavaProject javaProject, TypeCache cache) throws JavaModelException, ApiModelException {
     String elementTypeName = getElementType();
     IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, cache);
-    Wo wo = ApiUtils.findApiModelWo(elementType, cache.getApiCache(javaProject));
-    return wo;
+    return ApiUtils.findApiSnapshot(elementType, cache.getApiCache(javaProject));
   }
 
-  public IApiBinding[] getApiBindings(Wo api) {
+  public IApiBinding[] getApiBindings(ApiSnapshot api) {
     IApiBinding[] wodBindings = null;
     boolean apiFound = false;
     try {
       if (api != null) {
         apiFound = true;
         List<IApiBinding> visibleBindings = new LinkedList<IApiBinding>();
-        List<Binding> apiBindings = api.getBindings();
+        List<IApiBinding> apiBindings = api.getBindings();
         visibleBindings.addAll(apiBindings);
         for (IWodBinding wodBinding : getBindings()) {
           String bindingName = wodBinding.getName();
@@ -306,7 +304,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
       }
     }
 
-    Wo wo = null;
+    ApiSnapshot wo = null;
     if (!PreferenceConstants.IGNORE.equals(wodMissingComponentSeverity)) {
     	IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
 	    if (elementType == null || (!elementType.getElementName().equals(elementTypeName) && !elementType.getFullyQualifiedName().equals(elementTypeName))) {
@@ -336,18 +334,18 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 	    	String wodApiProblemSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY);
 	    	if (!PreferenceConstants.IGNORE.equals(wodApiProblemSeverity)) {
 		      try {
-		        wo = ApiUtils.findApiModelWo(elementType, typeCache.getApiCache(javaProject));
+		        wo = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
 		        if (wo != null) {
 		          Map<String, String> bindingsMap = getBindingsMap();
-		          List<Binding> bindings = wo.getBindings();
-		          for (Binding binding : bindings) {
+		          List<IApiBinding> apiBindings = wo.getBindings();
+		          for (IApiBinding binding : apiBindings) {
 		            String bindingName = binding.getName();
 		            if (binding.isExplicitlyRequired() && !bindingsMap.containsKey(bindingName)) {
-		              problems.add(new ApiBindingValidationProblem(this, binding, getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodApiProblemSeverity)));
+		              problems.add(new ApiBindingValidationProblem(this, binding, wo.getClassName(), getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodApiProblemSeverity)));
 		            }
 		          }
-		          List<Validation> failedValidations = wo.getFailedValidations(bindingsMap);
-		          for (Validation failedValidation : failedValidations) {
+		          List<ApiValidation> failedValidations = wo.getFailedValidations(bindingsMap);
+		          for (ApiValidation failedValidation : failedValidations) {
 		            problems.add(new ApiElementValidationProblem(this, failedValidation, getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodApiProblemSeverity)));
 		          }
 		        }

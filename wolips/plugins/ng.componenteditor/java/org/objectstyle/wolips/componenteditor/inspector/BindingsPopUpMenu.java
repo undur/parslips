@@ -14,7 +14,7 @@ import org.eclipse.swt.widgets.Decorations;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
@@ -55,7 +55,7 @@ public class BindingsPopUpMenu implements MenuListener {
 
 	public boolean showMenuAtLocation(IWodElement wodElement, String droppedKeyPath, Point location, BindingsDragHandler dragHandler) throws Exception {
 		boolean showMenu = false;
-		Wo api = wodElement.getApi(_cache.getJavaProject(), WodParserCache.getTypeCache());
+		ApiSnapshot api = wodElement.getApi(_cache.getJavaProject(), WodParserCache.getTypeCache());
 		if (api != null) {
 			IApiBinding[] apiBindings = wodElement.getApiBindings(api);
 			if (apiBindings != null && apiBindings.length > 0) {

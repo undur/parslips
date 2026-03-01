@@ -15,8 +15,8 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
-import org.objectstyle.wolips.bindings.api.Binding;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
+import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
@@ -34,24 +34,28 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
  */
 
 public abstract class InsertComponentAction extends InsertHtmlAndWodAction {
-	private Wo _wo;
-	
-	public Wo getWo() {
-		String componentName = getComponentName();
-		if (_wo == null) {
-			_wo = getWo(componentName);
-		}
-		return _wo;
-	}
-	
+	private ApiSnapshot _api;
+
 	/**
-	 * <P>
-	 * This method will return the Wo file from which parsed information can be
-	 * derived about components to be inserted. Otherwise it will reutrn null.
-	 * </P>
+	 * Returns the API snapshot for the component being inserted.
+	 * Cached after first lookup.
 	 */
-	protected Wo getWo(String componentName) {
-		Wo wo = null;
+	public ApiSnapshot getApi() {
+		String componentName = getComponentName();
+		if (_api == null) {
+			_api = getApi(componentName);
+		}
+		return _api;
+	}
+
+	/**
+	 * Looks up the API snapshot for the named component from the parser cache.
+	 *
+	 * @param componentName the component name to look up
+	 * @return the API snapshot, or null if not found
+	 */
+	protected ApiSnapshot getApi(String componentName) {
+		ApiSnapshot api = null;
 		if (componentName != null) {
 			TemplateEditor te = getTemplateEditor();
 			if (null != te) {
@@ -60,17 +64,17 @@ public abstract class InsertComponentAction extends InsertHtmlAndWodAction {
 
 				try {
 					WodParserCache cache = WodParserCache.parser(file);
-					wo = cache.getWo(componentName);
+					api = cache.getApiSnapshot(componentName);
 				} catch (LocateException le) {
-					ComponenteditorPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, ComponenteditorPlugin.PLUGIN_ID, IStatus.OK, "unable to get the Wo for an edited component", le));
+					ComponenteditorPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, ComponenteditorPlugin.PLUGIN_ID, IStatus.OK, "Unable to look up API for component.", le));
 				} catch (CoreException ce) {
-					ComponenteditorPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, ComponenteditorPlugin.PLUGIN_ID, IStatus.OK, "unable to get the Wo for an edited component", ce));
+					ComponenteditorPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, ComponenteditorPlugin.PLUGIN_ID, IStatus.OK, "Unable to look up API for component.", ce));
 				} catch (ApiModelException ame) {
-					ComponenteditorPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, ComponenteditorPlugin.PLUGIN_ID, IStatus.OK, "unable to get the Wo for an edited component", ame));
+					ComponenteditorPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, ComponenteditorPlugin.PLUGIN_ID, IStatus.OK, "Unable to look up API for component.", ame));
 				}
 			}
 		}
-		return wo;
+		return api;
 	}
 
 	protected IJavaProject getJavaProject() {
@@ -86,11 +90,11 @@ public abstract class InsertComponentAction extends InsertHtmlAndWodAction {
 		return javaProject;
 	}
 
-	protected List<Binding> getRequiredBindings(String componentName) {
-		List<Binding> requiredBindings = null;
-		Wo wo = getWo(componentName);
-		if (wo != null) {
-			requiredBindings = wo.getRequiredBindings();
+	protected List<IApiBinding> getRequiredBindings(String componentName) {
+		List<IApiBinding> requiredBindings = null;
+		ApiSnapshot api = getApi(componentName);
+		if (api != null) {
+			requiredBindings = api.getRequiredBindings();
 		}
 		return requiredBindings;
 	}
@@ -138,9 +142,9 @@ public abstract class InsertComponentAction extends InsertHtmlAndWodAction {
 				ics.setAttributes(attributes);
 			}
 
-			Wo wo = getWo(ics.getComponentName());
-			if (wo != null) {
-				ics.setComponentContent(wo.isComponentContent());
+			ApiSnapshot api = getApi(ics.getComponentName());
+			if (api != null) {
+				ics.setComponentContent(api.isComponentContent());
 			}
 		} else {
 			ics = null;

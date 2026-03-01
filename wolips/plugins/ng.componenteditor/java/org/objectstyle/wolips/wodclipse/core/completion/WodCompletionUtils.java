@@ -17,10 +17,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.ui.PlatformUI;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
-import org.objectstyle.wolips.bindings.api.Binding;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
-import org.objectstyle.wolips.bindings.api.Wo;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
@@ -179,11 +178,11 @@ public class WodCompletionUtils {
 
     // API files:
     try {
-      Wo wo = ApiUtils.findApiModelWo(elementType, cache.getApiCache(project));
-      if (wo != null) {
+      ApiSnapshot api = ApiUtils.findApiSnapshot(elementType, cache.getApiCache(project));
+      if (api != null) {
         String lowercasePartialToken = partialToken.toLowerCase();
-        List<Binding> bindings = wo.getBindings();
-        for (Binding binding : bindings) {
+        List<IApiBinding> bindings = api.getBindings();
+        for (IApiBinding binding : bindings) {
           String bindingName = binding.getName();
           String lowercaseBindingName = bindingName.toLowerCase();
           if (lowercaseBindingName.startsWith(lowercasePartialToken)) {

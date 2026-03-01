@@ -3,7 +3,7 @@ package org.objectstyle.wolips.componenteditor.actions;
 import java.util.List;
 import java.util.Map;
 
-import org.objectstyle.wolips.bindings.api.Binding;
+import org.objectstyle.wolips.bindings.api.IApiBinding;
 
 /**
  * <P>
@@ -27,7 +27,7 @@ public class InsertComponentSpecification {
 
 	private String _componentInstanceNameSuffix;
 
-	private List<Binding> _requiredBindings;
+	private List<IApiBinding> _requiredBindings;
 
 	private Map<String, String> _attributes;
 
@@ -87,11 +87,11 @@ public class InsertComponentSpecification {
 		_componentInstanceNameSuffix = componentInstanceNameSuffix;
 	}
 
-	public List<Binding> getRequiredBindings() {
+	public List<IApiBinding> getRequiredBindings() {
 		return _requiredBindings;
 	}
 
-	public void setRequiredBindings(List<Binding> requiredBindings) {
+	public void setRequiredBindings(List<IApiBinding> requiredBindings) {
 		_requiredBindings = requiredBindings;
 	}
 

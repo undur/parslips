@@ -49,7 +49,7 @@ import org.eclipse.ui.editors.text.TextEditor;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 import org.objectstyle.wolips.baseforuiplugins.utils.WOTextCellEditor;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
@@ -254,7 +254,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		IApiBinding selectedBinding = (IApiBinding) ((IStructuredSelection) _bindingsTableViewer.getSelection()).getFirstElement();
 		if (_wodElement != null && selectedBinding != null) {
 			String selectedBindingName = selectedBinding.getName();
-			Wo api = _bindingsContentProvider.getApi();
+			ApiSnapshot api = _bindingsContentProvider.getApi();
 			if (api != null) {
 				IApiBinding newBinding = api.getBinding(selectedBindingName);
 				if (newBinding != null) {

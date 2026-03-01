@@ -84,6 +84,18 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+/**
+ * Mutable DOM-backed model of an {@code .api} file, supporting read, edit, and save.
+ *
+ * <p><b>Editor-internal class.</b> This class is used only by the {@code .api} file
+ * editor ({@link org.objectstyle.wolips.apieditor.editor.ApiEditor}) which needs
+ * full DOM access for creating, removing, and modifying bindings and validations.
+ * All read-path consumers use the immutable {@link ApiSnapshot} produced by
+ * {@link ApiParser} instead.
+ *
+ * @see ApiParser
+ * @see ApiSnapshot
+ */
 public class ApiModel {
   private Document _document;
 

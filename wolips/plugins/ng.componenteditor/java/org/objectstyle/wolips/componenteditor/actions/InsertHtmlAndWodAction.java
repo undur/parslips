@@ -12,7 +12,7 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.ITextViewerExtension;
 import org.eclipse.jface.text.Region;
 import org.eclipse.ui.actions.ActionDelegate;
-import org.objectstyle.wolips.bindings.api.Binding;
+import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.wod.SimpleWodBinding;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
@@ -43,7 +43,7 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 	 * have and so we may as well shove these in at the same time.
 	 * </P>
 	 */
-	protected abstract List<Binding> getRequiredBindings(String componentName);
+	protected abstract List<IApiBinding> getRequiredBindings(String componentName);
 
 	/**
 	 * Returns the InsertComponentSpecification for this component. This may
@@ -109,9 +109,9 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 		System.out.println("InsertHtmlAndWodAction.insert: " + te + ", " + we + ", " + ics);
 		if (te != null && we != null && ics != null) {
 			SimpleWodElement wodElement = new SimpleWodElement(ics.getComponentInstanceName(), ics.getComponentName());
-			List<Binding> bindings = ics.getRequiredBindings();
+			List<IApiBinding> bindings = ics.getRequiredBindings();
 			if (bindings != null) {
-				for (Binding binding : bindings) {
+				for (IApiBinding binding : bindings) {
 					wodElement.addBinding(new SimpleWodBinding(null, binding.getName(), "", true));
 				}
 			}

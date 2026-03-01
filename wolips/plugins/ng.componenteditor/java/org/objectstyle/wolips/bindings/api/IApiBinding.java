@@ -19,6 +19,16 @@ public interface IApiBinding extends Comparable<IApiBinding> {
 
   public boolean isRequired();
 
+  /**
+   * Returns true if this binding has an explicit {@code required="YES"} attribute,
+   * as opposed to being implicitly required via a validation rule (single
+   * {@code <unbound>} check). Most consumers should use {@link #isRequired()}
+   * which checks both explicit and implicit required status.
+   */
+  public default boolean isExplicitlyRequired() {
+    return false;
+  }
+
   public boolean isWillSet();
 
   public String[] getValidValues(String partialValue, IJavaProject javaProject, IType componentType, TypeCache typeCache) throws JavaModelException;

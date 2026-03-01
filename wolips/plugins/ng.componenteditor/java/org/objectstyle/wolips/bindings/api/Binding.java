@@ -64,6 +64,17 @@ import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.w3c.dom.Element;
 
+/**
+ * Mutable DOM-backed representation of a {@code <binding>} element in an {@code .api} file.
+ *
+ * <p><b>Editor-internal class.</b> This class is used only by the {@code .api} file
+ * editor which needs to mutate and persist binding definitions. All read-path
+ * consumers use {@link IApiBinding} (typically {@link SimpleApiBinding}) obtained
+ * from an {@link ApiSnapshot}.
+ *
+ * @see SimpleApiBinding
+ * @see ApiSnapshot
+ */
 public class Binding extends AbstractApiModelElement implements IApiBinding {
 
   private BindingChangedListener bindingChangedListener;

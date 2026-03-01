@@ -62,7 +62,7 @@ import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.utils.StringDistance;
@@ -512,9 +512,9 @@ public abstract class AbstractWodBinding implements IWodBinding {
     IWodElement element = null;
     if (elementType != null) {
       element = new SimpleWodElement("_temp", elementType);
-      Wo wo = element.getApi(javaFileType.getJavaProject(), typeCache);
-      if (wo != null) {
-        apiBinding = wo.getBinding(getName());
+      ApiSnapshot api = element.getApi(javaFileType.getJavaProject(), typeCache);
+      if (api != null) {
+        apiBinding = api.getBinding(getName());
       }
     }
     fillInBindingProblems(element, apiBinding, javaFileType.getJavaProject(), javaFileType, problems, new TypeCache(), htmlCache);

@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -26,7 +27,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
-import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
@@ -34,298 +34,441 @@ import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.osgi.framework.Bundle;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
+
+/**
+ * Static utility methods for looking up component API definitions.
+ *
+ * <p>The read path returns immutable {@link ApiSnapshot} objects. API lookups
+ * are cached in {@link ApiCache} with timestamp-based invalidation for
+ * project-specific {@code .api} files. The global {@code WebObjectDefinitions.xml}
+ * is parsed once and cached for the lifetime of the plugin.
+ */
 public class ApiUtils {
-  private static ApiModel _globalApiModel;
 
-  public static boolean isActionBinding(IApiBinding binding) {
-    String defaults = binding.getDefaults();
-    boolean isActionBinding = false;
-    if (IApiBinding.ACTIONS_DEFAULT.equals(defaults)) {
-      isActionBinding = true;
-    }
-    else if (defaults == null) {
-      String bindingName = binding.getName();
-      isActionBinding = "action".equals(bindingName) || bindingName.endsWith("Action");
-    }
-    return isActionBinding;
-  }
+	/**
+	 * Global API snapshots from WebObjectDefinitions.xml, keyed by fully-qualified
+	 * class name. Parsed lazily on first access; never reparsed (bundled resource).
+	 */
+	private static Map<String, ApiSnapshot> _globalApiSnapshots;
 
-  public static int getSelectedDefaults(IApiBinding binding) {
-    String defaults = binding.getDefaults();
-    if (defaults == null) {
-      return 0;
-    }
-    for (int i = 0; i < IApiBinding.ALL_DEFAULTS.length; i++) {
-      String string = IApiBinding.ALL_DEFAULTS[i];
-      if (string.equals(defaults)) {
-        return i;
-      }
-    }
-    return 0;
-  }
+	public static boolean isActionBinding(IApiBinding binding) {
+		String defaults = binding.getDefaults();
+		if (IApiBinding.ACTIONS_DEFAULT.equals(defaults)) {
+			return true;
+		}
+		if (defaults == null) {
+			String bindingName = binding.getName();
+			return "action".equals(bindingName) || bindingName.endsWith("Action");
+		}
+		return false;
+	}
 
-  /**
-   * Look up a Wo definition by class name from the global WebObjectDefinitions.xml,
-   * without requiring the class to exist in the project classpath.
-   */
-  public static Wo findGlobalWoByClassName(String className) {
-    try {
-      ensureGlobalApiModel();
-      if (_globalApiModel != null) {
-        Wo[] wos = _globalApiModel.getWODefinitions().getWos();
-        for (Wo wo : wos) {
-          if (className.equals(wo.getClassName())) {
-            return wo;
-          }
-        }
-      }
-    }
-    catch (Throwable t) {
-      // ignore
-    }
-    return null;
-  }
+	public static int getSelectedDefaults(IApiBinding binding) {
+		String defaults = binding.getDefaults();
+		if (defaults == null) {
+			return 0;
+		}
+		for (int i = 0; i < IApiBinding.ALL_DEFAULTS.length; i++) {
+			if (IApiBinding.ALL_DEFAULTS[i].equals(defaults)) {
+				return i;
+			}
+		}
+		return 0;
+	}
 
-  private static synchronized void ensureGlobalApiModel() {
-    if (_globalApiModel == null) {
-      try {
-        Bundle bundle = HTMLPlugin.getDefault().getBundle();
-        if (bundle != null) {
-          URL woDefinitionsURL = bundle.getEntry("/WebObjectDefinitions.xml");
-          if (woDefinitionsURL != null) {
-            _globalApiModel = new ApiModel(woDefinitionsURL);
-          }
-        }
-      }
-      catch (Throwable t) {
-        // ignore
-      }
-    }
-  }
+	// ---- Global API lookup (WebObjectDefinitions.xml) ----------------------
 
-  public static Wo findApiModelWo(IType elementType, ApiCache cache) throws ApiModelException {
-    Wo wo;
-    if (elementType == null) {
-      wo = null;
-    }
-    else {
-      wo = cache.getApiForType(elementType);
+	/**
+	 * Looks up a component API definition by class name from the global
+	 * {@code WebObjectDefinitions.xml} bundled in the plugin. This is used
+	 * for framework-provided elements that don't have project-specific
+	 * {@code .api} files.
+	 *
+	 * <p>The lookup tries the given name first, then falls back to the simple
+	 * (unqualified) class name. This is necessary because the global
+	 * {@code WebObjectDefinitions.xml} uses short class names (e.g.
+	 * {@code "WOString"}) while callers may pass fully-qualified names
+	 * (e.g. {@code "com.webobjects.appserver._private.WOString"}).
+	 *
+	 * @param className the class name to look up (fully-qualified or simple)
+	 * @return the matching API snapshot, or null if not found
+	 */
+	public static ApiSnapshot findGlobalApiSnapshotByClassName(String className) {
+		try {
+			ensureGlobalApiSnapshots();
+			if (_globalApiSnapshots != null) {
+				// Try exact match first (handles both FQN-keyed and short-keyed entries)
+				ApiSnapshot snapshot = _globalApiSnapshots.get(className);
+				if (snapshot != null) {
+					return snapshot;
+				}
 
-      if (wo != null) {
-        ApiModel model = wo.getModel();
-        if (model.parseIfNecessary()) {
-          cache.clearApiForElementType(elementType);
-          wo = null;
-        }
-      }
+				// Fall back to simple class name — WebObjectDefinitions.xml uses
+				// short names like "WOString", not FQN like "com.webobjects...WOString"
+				int dotIndex = className.lastIndexOf('.');
+				if (dotIndex >= 0) {
+					return _globalApiSnapshots.get(className.substring(dotIndex + 1));
+				}
+			}
+		} catch (Throwable t) {
+			// ignore
+		}
+		return null;
+	}
 
-      if (wo == null) {
-        Boolean apiMissing = cache.apiMissingForElementType(elementType);
-        if (apiMissing == null || !apiMissing.booleanValue()) {
-          ApiModel apiModel = null;
-          try {
-            String fqn = elementType.getFullyQualifiedName();
-            if (fqn.startsWith("ng.appserver.templating._private.") || fqn.startsWith("com.webobjects.appserver._private.")) {
-              ensureGlobalApiModel();
-              apiModel = _globalApiModel;
-            }
-            else {
-              IOpenable typeContainer = elementType.getOpenable();
-              if (typeContainer instanceof IClassFile) {
-                IClassFile classFile = (IClassFile) typeContainer;
-                IJavaElement parent = classFile.getParent();
-                if (parent instanceof IPackageFragment) {
-                  IPackageFragment parentPackage = (IPackageFragment) parent;
-                  IJavaElement parentParent = parentPackage.getParent();
+	/**
+	 * Lazily parses the global WebObjectDefinitions.xml into immutable
+	 * snapshots. Called once; the result is cached permanently since the
+	 * bundled resource never changes.
+	 */
+	private static synchronized void ensureGlobalApiSnapshots() {
+		if (_globalApiSnapshots == null) {
+			try {
+				Bundle bundle = HTMLPlugin.getDefault().getBundle();
+				if (bundle != null) {
+					URL woDefinitionsURL = bundle.getEntry("/WebObjectDefinitions.xml");
+					if (woDefinitionsURL != null) {
+						_globalApiSnapshots = ApiParser.parseAllFromUrl(woDefinitionsURL);
+					}
+				}
+			} catch (Throwable t) {
+				// ignore
+			}
+		}
+	}
 
-// [apl 25.june.2008]
-// We check to see if in fact the resource is contained
-// within a jar file.  This is the case if the framework
-// has been bundled into "jar style" framework.
-									
-                  if(parentParent instanceof IPackageFragmentRoot && "jar".equalsIgnoreCase(parentParent.getPath().getFileExtension())) {
-                    String jarResourcePath = "Resources/" + elementType.getElementName() + ".api";
-                    String jarOSPath = parentParent.getPath().toOSString();
-                    File jarOSFile = new File(jarOSPath);
-										
-                    if(jarOSFile.exists()) {
-                      JarFile jarFile = new JarFile(jarOSFile);
-                      JarEntry je = jarFile.getJarEntry(jarResourcePath);
-                      if (je != null && je.getSize() != 0) {
-                        apiModel = new ApiModel(new URL("jar:file:"+jarOSPath+"!/"+jarResourcePath));
-                      }
-                    }
-                  }
-                  // SWK replaced else with
-                  if (apiModel == null) {
-                    IPath packagePath = parentPackage.getPath();
-                    IPath apiPath = packagePath.removeLastSegments(2).append(elementType.getElementName()).addFileExtension("api");
-                    File apiFile = apiPath.toFile();
-                    boolean fileExists = apiFile.exists();
-                    if (fileExists) {
-                      apiModel = new ApiModel(apiFile);
-                    }
-                  }
-									
-// [apl] - end change.
+	// ---- Per-type API lookup (project .api files) --------------------------
 
-                }
-              }
-              else if (typeContainer instanceof ICompilationUnit) {
-                // ICompilationUnit cu = (ICompilationUnit)
-                // typeContainer;
-                // IResource resource = cu.getCorrespondingResource();
-                // String name = resource.getName();
-                LocalizedComponentsLocateResult componentsLocateResults = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(elementType.getJavaProject().getProject(), elementType.getElementName());
-                IFile apiFile = componentsLocateResults.getDotApi();
-                if (apiFile != null && apiFile.exists()) {
-                  apiModel = new ApiModel(apiFile);
-                }
-              }
-            }
+	/**
+	 * How long (in milliseconds) before a "no .api file" negative cache entry
+	 * is re-checked. Keeps the negative cache from permanently hiding a newly
+	 * created {@code .api} file.
+	 */
+	private static final long MISSING_API_TTL_MS = 10_000;
 
-            if (apiModel != null) {
-              Wo[] wos = apiModel.getWODefinitions().getWos();
-              if (wos.length == 0) {
-                // leave it alone
-              }
-              else if (wos.length == 1) {
-                wo = wos[0];
-              }
-              else {
-                for (int i = 0; wo == null && i < wos.length; i++) {
-                  if (elementType.getElementName().equals(wos[i].getClassName())) {
-                    wo = wos[i];
-                  }
-                }
-              }
-            }
-          }
-          catch (Throwable t) {
-            wo = null;
-            Activator.getDefault().log("Failed to parse API for " + elementType.getElementName() + ".", t);
-          }
+	/**
+	 * Lightweight holder for a located {@code .api} file and its modification
+	 * timestamp. Used to validate cached snapshots without re-parsing the XML.
+	 *
+	 * <p>Exactly one of {@link #_file}, {@link #_eclipseFile}, or {@link #_url}
+	 * is non-null, depending on how the file was found.
+	 */
+	private static class ApiFileInfo {
+		/** Non-null for plain disk files (e.g. folder-style frameworks). */
+		final File _file;
+		/** Non-null for Eclipse workspace files (source projects). */
+		final IFile _eclipseFile;
+		/** Non-null for jar entries. */
+		final URL _url;
+		/** File modification timestamp ({@code lastModified()} or {@code getModificationStamp()}). */
+		final long _timestamp;
 
-          if (wo == null) {
-            cache.setApiMissingForElementType(true, elementType);
-          }
-          else {
-            cache.setApiForType(wo, elementType);
-          }
-        }
-      }
-    }
+		ApiFileInfo(File file, long timestamp) {
+			_file = file;
+			_eclipseFile = null;
+			_url = null;
+			_timestamp = timestamp;
+		}
 
-    return wo;
-  }
+		ApiFileInfo(IFile eclipseFile) {
+			_file = null;
+			_eclipseFile = eclipseFile;
+			_url = null;
+			_timestamp = eclipseFile.getModificationStamp();
+		}
 
-  public static String[] getValidValues(String partialValue, IJavaProject javaProject, IType componentType, IType apiType, String bindingName, TypeCache typeCache) throws JavaModelException, ApiModelException {
-    String[] validValues = null;
-    Wo wo = ApiUtils.findApiModelWo(apiType, typeCache.getApiCache(javaProject));
-    if (wo != null) {
-      Binding matchingBinding = wo.getBinding(bindingName);
-      if (matchingBinding != null) {
-        validValues = matchingBinding.getValidValues(partialValue, javaProject, componentType, typeCache);
-      }
-    }
-    return validValues;
-  }
+		ApiFileInfo(URL url, long timestamp) {
+			_file = null;
+			_eclipseFile = null;
+			_url = url;
+			_timestamp = timestamp;
+		}
 
-  public static String[] getValidValues(IApiBinding binding, String partialValue, IJavaProject javaProject, IType componentType, TypeCache typeCache) throws JavaModelException {
-    Set<String> validValues = new HashSet<String>();
-    int selectedDefaults = binding.getSelectedDefaults();
-    String defaultsName = IApiBinding.ALL_DEFAULTS[selectedDefaults];
-    if ("Boolean".equals(defaultsName)) {
-      validValues.add("true");
-      validValues.add("false");
-    }
-    else if ("YES/NO".equals(defaultsName)) {
-      validValues.add("yes");
-      validValues.add("no");
-    }
-    else if ("Date Format Strings".equals(defaultsName)) {
-      validValues.add("\"%m/%d/%y\"");
-      validValues.add("\"%B %d, %Y\"");
-      validValues.add("\"%b %d, %Y\"");
-      validValues.add("\"%A, %B %d, %Y\"");
-      validValues.add("\"%A, %b %d, %Y\"");
-      validValues.add("\"%d.%m.%y\"");
-      validValues.add("\"%d %B %y\"");
-      validValues.add("\"%d %b %y\"");
-      validValues.add("\"%A %d %B %Y\"");
-      validValues.add("\"%A %d %b %Y\"");
-      validValues.add("\"%x\"");
-      validValues.add("\"%H:%M:%S\"");
-      validValues.add("\"%I:%M:%S %p\"");
-      validValues.add("\"%H:%M\"");
-      validValues.add("\"%I:%M %p\"");
-      validValues.add("\"%X\"");
-    }
-    else if ("Number Format Strings".equals(defaultsName)) {
-      validValues.add("\"0\"");
-      validValues.add("\"0.00\"");
-      validValues.add("\"0.##\"");
-      validValues.add("\"#,##0\"");
-      validValues.add("\"_,__0\"");
-      validValues.add("\"#,##0.00\"");
-      validValues.add("\"$#,##0\"");
-      validValues.add("\"$#,##0.00\"");
-      validValues.add("\"$#,##0.##\"");
-    }
-    else if ("MIME Types".equals(defaultsName)) {
-      validValues.add("\"image/gif\"");
-      validValues.add("\"image/jpeg\"");
-      validValues.add("\"image/png\"");
-    }
-    else if ("Direct Actions".equals(defaultsName)) {
-    	// ng-objects does not have WODirectAction; direct action completion disabled
-    }
-    else if ("Direct Action Classes".equals(defaultsName)) {
-    	// ng-objects does not have WODirectAction; direct action class completion disabled
-    }
-    else if ("Page Names".equals(defaultsName)) {
-    	if (partialValue != null && partialValue.startsWith("\"")) {
-	      TypeNameCollector typeNameCollector = new TypeNameCollector(javaProject, false);
-	      BindingReflectionUtils.findMatchingElementClassNames(partialValue.substring(1), SearchPattern.R_PREFIX_MATCH, typeNameCollector, new NullProgressMonitor());
-	      for (String typeName : typeNameCollector.getTypeNames()) {
-	        int dotIndex = typeName.lastIndexOf('.');
-	        if (dotIndex != -1) {
-	          typeName = typeName.substring(dotIndex + 1);
-	        }
-	        validValues.add("\"" + typeName + "\"");
-	      }
-    	}
-    }
-    else if ("Frameworks".equals(defaultsName)) {
-    	if (partialValue != null && partialValue.startsWith("\"")) {
-	      validValues.add("\"app\"");
-	      // ProjectFrameworkAdapter from jdt plugin not available
-    	}
-    }
-    else if ("Actions".equals(defaultsName)) {
-      List<BindingValueKey> bindingKeysList = BindingReflectionUtils.getBindingKeys(javaProject, componentType, "", false, BindingReflectionUtils.VOID_ONLY, false, typeCache);
-      for (BindingValueKey key : bindingKeysList) {
-        validValues.add(key.getBindingName());
-      }
-    }
-    String[] validValueStrings = validValues.toArray(new String[validValues.size()]);
-    return validValueStrings;
-  }
+		/**
+		 * Parses the located {@code .api} file into an {@link ApiSnapshot}.
+		 */
+		ApiSnapshot parse() throws Exception {
+			if (_eclipseFile != null) {
+				return ApiParser.parseFile(_eclipseFile.getLocation().toFile());
+			} else if (_file != null) {
+				return ApiParser.parseFile(_file);
+			} else {
+				return ApiParser.parseUrl(_url);
+			}
+		}
+	}
 
-  protected static void acceptResources(IResource resource, String basePath, Set<String> paths) throws CoreException {
-    if (resource instanceof IFolder) {
-      IResource[] members = ((IFolder) resource).members();
-      for (IResource childResource : members) {
-        if (childResource instanceof IFolder) {
-          ApiUtils.acceptResources(childResource, basePath + "/" + childResource.getName() + "/", paths);
-        }
-        else {
-          ApiUtils.acceptResources(childResource, basePath, paths);
-        }
-      }
-    }
-    else if (resource instanceof IFile) {
-      paths.add("\"" + basePath + resource.getName() + "\"");
-    }
-  }
+	/**
+	 * Finds the API snapshot for a given element type by searching for its
+	 * {@code .api} file in the project classpath (jar files, source folders,
+	 * or component bundles).
+	 *
+	 * <p>Results are cached in the provided {@link ApiCache} with timestamp-based
+	 * invalidation: on every cache hit, the {@code .api} file's current
+	 * modification timestamp is compared with the cached timestamp. If the file
+	 * has been modified, the snapshot is reparsed. This ensures changes in
+	 * dependency projects are picked up immediately without requiring an Eclipse
+	 * restart.
+	 *
+	 * <p>For framework-private classes (in {@code ng.appserver.templating._private}
+	 * or {@code com.webobjects.appserver._private}), the global
+	 * {@code WebObjectDefinitions.xml} is consulted instead.
+	 *
+	 * @param elementType the JDT type to look up
+	 * @param cache the API cache to use
+	 * @return the matching API snapshot, or null if no {@code .api} file was found
+	 */
+	public static ApiSnapshot findApiSnapshot(IType elementType, ApiCache cache) throws ApiModelException {
+		if (elementType == null) {
+			return null;
+		}
+
+		String fqn = elementType.getFullyQualifiedName();
+
+		// Framework-private classes use the global WebObjectDefinitions.xml,
+		// which is a bundled resource that never changes at runtime.
+		if (fqn.startsWith("ng.appserver.templating._private.") || fqn.startsWith("com.webobjects.appserver._private.")) {
+			ApiSnapshot snapshot = cache.getApiSnapshotForType(elementType);
+			if (snapshot != null) {
+				return snapshot;
+			}
+			snapshot = findGlobalApiSnapshotByClassName(fqn);
+			if (snapshot != null) {
+				cache.setApiSnapshotForType(snapshot, elementType);
+			}
+			return snapshot;
+		}
+
+		// For project/classpath .api files: validate cached entries against
+		// the file's current modification timestamp.
+		try {
+			// Check positive cache — validate timestamp if present
+			ApiSnapshot snapshot = cache.getApiSnapshotForType(elementType);
+			if (snapshot != null) {
+				Long cachedTimestamp = cache.getApiTimestampForType(elementType);
+				if (cachedTimestamp != null) {
+					ApiFileInfo fileInfo = findApiFile(elementType);
+					if (fileInfo != null && fileInfo._timestamp == cachedTimestamp.longValue()) {
+						// File hasn't changed — cache hit
+						return snapshot;
+					}
+				}
+				// Timestamp missing, mismatched, or file disappeared — invalidate
+				cache.clearApiForElementType(elementType);
+				snapshot = null;
+			}
+
+			// Check negative cache — re-check after TTL expires
+			Boolean apiMissing = cache.apiMissingForElementType(elementType);
+			if (apiMissing != null && apiMissing.booleanValue()) {
+				Long missingTimestamp = cache.getApiMissingTimestampForType(elementType);
+				if (missingTimestamp != null) {
+					long age = System.currentTimeMillis() - missingTimestamp.longValue();
+					if (age < MISSING_API_TTL_MS) {
+						// Still within TTL — trust the negative cache
+						return null;
+					}
+				}
+				// TTL expired — clear and re-check
+				cache.clearApiForElementType(elementType);
+			}
+
+			// Full lookup: locate the .api file and parse it
+			ApiFileInfo fileInfo = findApiFile(elementType);
+			if (fileInfo != null) {
+				snapshot = fileInfo.parse();
+			}
+
+			// Update cache with result and timestamp
+			if (snapshot == null) {
+				cache.setApiMissingForElementType(true, elementType);
+			} else {
+				cache.setApiSnapshotForType(snapshot, elementType);
+				if (fileInfo != null) {
+					cache.setApiTimestampForType(fileInfo._timestamp, elementType);
+				}
+			}
+
+			return snapshot;
+		} catch (Throwable t) {
+			Activator.getDefault().log("Failed to parse API for " + elementType.getElementName() + ".", t);
+			return null;
+		}
+	}
+
+	/**
+	 * Locates the {@code .api} file for the given type on the classpath without
+	 * parsing it. Returns file metadata (location + timestamp) for cache
+	 * validation, or null if no {@code .api} file was found.
+	 *
+	 * <p>This is intentionally cheap — it only stats the file system, without
+	 * reading or parsing XML.
+	 *
+	 * <p>Handles three cases:
+	 * <ol>
+	 *   <li>Class file in a jar — looks for {@code Resources/TypeName.api} in the jar</li>
+	 *   <li>Class file on disk — looks for {@code TypeName.api} as a sibling resource</li>
+	 *   <li>Source file — uses the component locate infrastructure to find the {@code .api} file</li>
+	 * </ol>
+	 */
+	private static ApiFileInfo findApiFile(IType elementType) throws Exception {
+		IOpenable typeContainer = elementType.getOpenable();
+
+		if (typeContainer instanceof IClassFile) {
+			IClassFile classFile = (IClassFile) typeContainer;
+			IJavaElement parent = classFile.getParent();
+			if (parent instanceof IPackageFragment) {
+				IPackageFragment parentPackage = (IPackageFragment) parent;
+				IJavaElement parentParent = parentPackage.getParent();
+
+				// Check for jar-style framework: look inside the jar for Resources/TypeName.api
+				if (parentParent instanceof IPackageFragmentRoot && "jar".equalsIgnoreCase(parentParent.getPath().getFileExtension())) {
+					String jarResourcePath = "Resources/" + elementType.getElementName() + ".api";
+					String jarOSPath = parentParent.getPath().toOSString();
+					File jarOSFile = new File(jarOSPath);
+
+					if (jarOSFile.exists()) {
+						JarFile jarFile = new JarFile(jarOSFile);
+						try {
+							JarEntry je = jarFile.getJarEntry(jarResourcePath);
+							if (je != null && je.getSize() != 0) {
+								// Use the JAR file's own modification time — when the JAR is
+								// rebuilt, this changes even if the entry timestamp doesn't.
+								long timestamp = jarOSFile.lastModified();
+								URL url = new URL("jar:file:" + jarOSPath + "!/" + jarResourcePath);
+								return new ApiFileInfo(url, timestamp);
+							}
+						} finally {
+							jarFile.close();
+						}
+					}
+				}
+
+				// Check for folder-style: look for TypeName.api as a sibling file
+				IPath packagePath = parentPackage.getPath();
+				IPath apiPath = packagePath.removeLastSegments(2).append(elementType.getElementName()).addFileExtension("api");
+				File apiFile = apiPath.toFile();
+				if (apiFile.exists()) {
+					return new ApiFileInfo(apiFile, apiFile.lastModified());
+				}
+			}
+		} else if (typeContainer instanceof ICompilationUnit) {
+			// Source file — use the component locate infrastructure
+			LocalizedComponentsLocateResult componentsLocateResults = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(elementType.getJavaProject().getProject(), elementType.getElementName());
+			IFile apiFile = componentsLocateResults.getDotApi();
+			if (apiFile != null && apiFile.exists()) {
+				return new ApiFileInfo(apiFile);
+			}
+		}
+
+		return null;
+	}
+
+	// ---- Valid values lookup ------------------------------------------------
+
+	/**
+	 * Looks up valid values for a binding by name, resolving the API type and
+	 * finding the matching binding definition.
+	 */
+	public static String[] getValidValues(String partialValue, IJavaProject javaProject, IType componentType, IType apiType, String bindingName, TypeCache typeCache) throws JavaModelException, ApiModelException {
+		String[] validValues = null;
+		ApiSnapshot snapshot = ApiUtils.findApiSnapshot(apiType, typeCache.getApiCache(javaProject));
+		if (snapshot != null) {
+			IApiBinding matchingBinding = snapshot.getBinding(bindingName);
+			if (matchingBinding != null) {
+				validValues = matchingBinding.getValidValues(partialValue, javaProject, componentType, typeCache);
+			}
+		}
+		return validValues;
+	}
+
+	/**
+	 * Returns valid values for a binding based on its defaults type (Boolean,
+	 * Actions, Date Format Strings, etc.).
+	 */
+	public static String[] getValidValues(IApiBinding binding, String partialValue, IJavaProject javaProject, IType componentType, TypeCache typeCache) throws JavaModelException {
+		Set<String> validValues = new HashSet<>();
+		int selectedDefaults = binding.getSelectedDefaults();
+		String defaultsName = IApiBinding.ALL_DEFAULTS[selectedDefaults];
+		if ("Boolean".equals(defaultsName)) {
+			validValues.add("true");
+			validValues.add("false");
+		} else if ("YES/NO".equals(defaultsName)) {
+			validValues.add("yes");
+			validValues.add("no");
+		} else if ("Date Format Strings".equals(defaultsName)) {
+			validValues.add("\"%m/%d/%y\"");
+			validValues.add("\"%B %d, %Y\"");
+			validValues.add("\"%b %d, %Y\"");
+			validValues.add("\"%A, %B %d, %Y\"");
+			validValues.add("\"%A, %b %d, %Y\"");
+			validValues.add("\"%d.%m.%y\"");
+			validValues.add("\"%d %B %y\"");
+			validValues.add("\"%d %b %y\"");
+			validValues.add("\"%A %d %B %Y\"");
+			validValues.add("\"%A %d %b %Y\"");
+			validValues.add("\"%x\"");
+			validValues.add("\"%H:%M:%S\"");
+			validValues.add("\"%I:%M:%S %p\"");
+			validValues.add("\"%H:%M\"");
+			validValues.add("\"%I:%M %p\"");
+			validValues.add("\"%X\"");
+		} else if ("Number Format Strings".equals(defaultsName)) {
+			validValues.add("\"0\"");
+			validValues.add("\"0.00\"");
+			validValues.add("\"0.##\"");
+			validValues.add("\"#,##0\"");
+			validValues.add("\"_,__0\"");
+			validValues.add("\"#,##0.00\"");
+			validValues.add("\"$#,##0\"");
+			validValues.add("\"$#,##0.00\"");
+			validValues.add("\"$#,##0.##\"");
+		} else if ("MIME Types".equals(defaultsName)) {
+			validValues.add("\"image/gif\"");
+			validValues.add("\"image/jpeg\"");
+			validValues.add("\"image/png\"");
+		} else if ("Direct Actions".equals(defaultsName)) {
+			// ng-objects does not have WODirectAction; direct action completion disabled
+		} else if ("Direct Action Classes".equals(defaultsName)) {
+			// ng-objects does not have WODirectAction; direct action class completion disabled
+		} else if ("Page Names".equals(defaultsName)) {
+			if (partialValue != null && partialValue.startsWith("\"")) {
+				TypeNameCollector typeNameCollector = new TypeNameCollector(javaProject, false);
+				BindingReflectionUtils.findMatchingElementClassNames(partialValue.substring(1), SearchPattern.R_PREFIX_MATCH, typeNameCollector, new NullProgressMonitor());
+				for (String typeName : typeNameCollector.getTypeNames()) {
+					int dotIndex = typeName.lastIndexOf('.');
+					if (dotIndex != -1) {
+						typeName = typeName.substring(dotIndex + 1);
+					}
+					validValues.add("\"" + typeName + "\"");
+				}
+			}
+		} else if ("Frameworks".equals(defaultsName)) {
+			if (partialValue != null && partialValue.startsWith("\"")) {
+				validValues.add("\"app\"");
+			}
+		} else if ("Actions".equals(defaultsName)) {
+			List<BindingValueKey> bindingKeysList = BindingReflectionUtils.getBindingKeys(javaProject, componentType, "", false, BindingReflectionUtils.VOID_ONLY, false, typeCache);
+			for (BindingValueKey key : bindingKeysList) {
+				validValues.add(key.getBindingName());
+			}
+		}
+		return validValues.toArray(new String[validValues.size()]);
+	}
+
+	protected static void acceptResources(IResource resource, String basePath, Set<String> paths) throws CoreException {
+		if (resource instanceof IFolder) {
+			IResource[] members = ((IFolder) resource).members();
+			for (IResource childResource : members) {
+				if (childResource instanceof IFolder) {
+					ApiUtils.acceptResources(childResource, basePath + "/" + childResource.getName() + "/", paths);
+				} else {
+					ApiUtils.acceptResources(childResource, basePath, paths);
+				}
+			}
+		} else if (resource instanceof IFile) {
+			paths.add("\"" + basePath + resource.getName() + "\"");
+		}
+	}
 }

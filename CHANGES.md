@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Immutable API model for the read path
+
+- **Replaced the mutable Xerces DOM-backed `.api` model with immutable POJOs for all read-path consumers.** The old model used `Wo`, `Binding`, and a 14-class validation hierarchy (`Validation`, `And`, `Or`, `Not`, `Count`, `Bound`, `Unbound`, `Settable`, `Unsettable`, `Gettable`, `Ungettable`, etc.) as thin wrappers around a shared Xerces DOM. Thread safety was attempted via ~31 `synchronized(this.apiModel)` blocks, but Xerces DOM isn't thread-safe even for reads, and several callers accessed returned objects outside the lock (TOCTOU bugs).
+- **New types:** `ApiSnapshot` (immutable component definition), `ApiValidation` (single class replacing the 14-class validation hierarchy, using a `Kind` enum discriminator), and `ApiParser` (static factory that parses XML into `ApiSnapshot` and discards the DOM).
+- **All read-path consumers migrated:** validation (`AbstractWodElement.fillInProblems()`), autocomplete (`WodCompletionUtils`), hover documentation (`WodAnnotationHover`), tag info (`InlineWodTagInfo`), binding inspection (`BindingsContentProvider`, `BindingsInspector`, `BindingsPopUpMenu`), component insertion (`InsertComponentAction`, `InsertHtmlAndWodAction`), and drag-drop (`ComponentDropTargetAdaptor`).
+- **The `.api` editor write path is unchanged** — `ApiModel`, `Wo`, `Binding`, and the validation DOM classes remain for the editor UI that needs to mutate and save XML.
+- **`ApiCache` updated** with timestamp-based invalidation: every cache read compares the `.api` file's current modification timestamp against the cached timestamp; if the file has changed (even in a dependency project), the snapshot is automatically reparsed. The negative cache ("no `.api` file found") also expires after a 10-second TTL so newly created `.api` files are picked up without restart. The file lookup logic was extracted into `ApiFileInfo`/`findApiFile()` so timestamp checks are cheap (one stat call, no XML parsing).
+- **`WodParserCache`** renamed `getWo()` methods to `getApiSnapshot()`, returning `ApiSnapshot` instead of `Wo`.
+- New files: `ApiSnapshot.java`, `ApiValidation.java`, `ApiParser.java`.
+- Modified interfaces: `IApiBinding` (added `isExplicitlyRequired()`), `SimpleApiBinding` (added `_explicitlyRequired` field), `IWodElement` (changed `getApi()` and `getApiBindings()` signatures).
+
 ### Auto-delete empty .wo folders
 
 - Empty `.wo` folders left behind by git (which removes files but not directories) are now automatically deleted. A lightweight resource change listener watches for changes to `.wo` folders and removes them when they become empty, preventing ghost components from blocking the New Component wizard.

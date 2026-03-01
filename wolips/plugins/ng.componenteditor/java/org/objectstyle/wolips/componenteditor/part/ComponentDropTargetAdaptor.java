@@ -12,7 +12,7 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.graphics.Point;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.componenteditor.actions.ComponentInserter;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 
@@ -89,9 +89,9 @@ public class ComponentDropTargetAdaptor extends DropTargetAdapter {
 					String componentName = name.substring(0, name.lastIndexOf('.'));
 					boolean inline = true;
 					inserter = new ComponentInserter(_componentEditor, componentName, inline);
-					Wo wo = inserter.getWo();
-					if (wo != null) {
-						selectRange = wo.isComponentContent();
+					ApiSnapshot api = inserter.getApi();
+					if (api != null) {
+						selectRange = api.isComponentContent();
 					}
 				}
 			}

@@ -6,43 +6,53 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 
+/**
+ * Simple in-memory implementation of {@link IApiBinding} that is not backed
+ * by a DOM element. Used as the standard binding representation on the read
+ * path (via {@link ApiSnapshot}) and also as a fallback when no .api file
+ * is available.
+ *
+ * <p>Instances are mutable for construction convenience but should be treated
+ * as effectively immutable once stored in an {@link ApiSnapshot}.
+ */
 public class SimpleApiBinding implements IApiBinding {
 	private String _name;
 	private String _defaults;
 	private boolean _required;
+	private boolean _explicitlyRequired;
 	private boolean _willSet;
 
 	public SimpleApiBinding(String name) {
 		_name = name;
 	}
-  
-  public int compareTo(IApiBinding o) {
-    return (o == null) ? -1 : getName() == null ? -1 : getName().compareTo(o.getName());
-  }
 
-  @Override
-  public boolean equals(Object o) {
-    return o instanceof SimpleApiBinding && ComparisonUtils.equals(((SimpleApiBinding) o).getName(), getName());
-  }
+	public int compareTo(IApiBinding o) {
+		return (o == null) ? -1 : getName() == null ? -1 : getName().compareTo(o.getName());
+	}
 
-  @Override
-  public int hashCode() {
-    String name = getName();
-    return name == null ? 0 : name.hashCode();
-  }
+	@Override
+	public boolean equals(Object o) {
+		return o instanceof SimpleApiBinding && ComparisonUtils.equals(((SimpleApiBinding) o).getName(), getName());
+	}
+
+	@Override
+	public int hashCode() {
+		String name = getName();
+		return name == null ? 0 : name.hashCode();
+	}
 
 	public boolean isAction() {
-	  return ApiUtils.isActionBinding(this);
+		return ApiUtils.isActionBinding(this);
 	}
-	
+
 	public void setDefaults(String defaults) {
 		_defaults = defaults;
 	}
-	
+
 	public String getDefaults() {
 		return _defaults;
 	}
-	
+
 	public int getSelectedDefaults() {
 		return ApiUtils.getSelectedDefaults(this);
 	}
@@ -50,7 +60,7 @@ public class SimpleApiBinding implements IApiBinding {
 	public String getName() {
 		return _name;
 	}
-	
+
 	public void setName(String name) {
 		_name = name;
 	}
@@ -58,15 +68,24 @@ public class SimpleApiBinding implements IApiBinding {
 	public boolean isRequired() {
 		return _required;
 	}
-	
+
 	public void setRequired(boolean required) {
 		_required = required;
+	}
+
+	@Override
+	public boolean isExplicitlyRequired() {
+		return _explicitlyRequired;
+	}
+
+	public void setExplicitlyRequired(boolean explicitlyRequired) {
+		_explicitlyRequired = explicitlyRequired;
 	}
 
 	public boolean isWillSet() {
 		return _willSet;
 	}
-	
+
 	public void setWillSet(boolean willSet) {
 		_willSet = willSet;
 	}

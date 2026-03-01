@@ -3,7 +3,7 @@ package org.objectstyle.wolips.componenteditor.inspector;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -14,14 +14,14 @@ public class BindingsContentProvider implements IStructuredContentProvider {
 
 	private TypeCache _cache;
 
-	private Wo _api;
+	private ApiSnapshot _api;
 
 	public void setContext(IJavaProject javaProject, TypeCache cache) {
 		_javaProject = javaProject;
 		_cache = cache;
 	}
 
-	public Wo getApi() {
+	public ApiSnapshot getApi() {
 		return _api;
 	}
 
