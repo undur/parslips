@@ -58,8 +58,10 @@ public class TagStackAnalyzer {
 			}
 			if (isDelimiter(c)) {
 				temp1 = sb.toString();
-				// skip whitespaces in the attribute value
-				if (temp1.length() > 1 && ((temp1.startsWith("\"") && !temp1.endsWith("\"") && c != '"') || (temp1.startsWith("'") && !temp1.endsWith("'") && c != '\''))) {
+				// Skip whitespace inside a quoted attribute value (e.g. value="hello world").
+				// Only when inside a tag — an apostrophe in body text (e.g. "what's")
+				// must not start quote tracking, or it swallows subsequent content.
+				if (!prevTag.equals("") && temp1.length() > 1 && ((temp1.startsWith("\"") && !temp1.endsWith("\"") && c != '"') || (temp1.startsWith("'") && !temp1.endsWith("'") && c != '\''))) {
 					sb.append(c);
 					continue;
 				}
@@ -91,7 +93,10 @@ public class TagStackAnalyzer {
 				if (c == '<') {
 					sb.append(c);
 				}
-				else if (c == '"' || c == '\'') {
+				else if ((c == '"' || c == '\'') && !prevTag.equals("")) {
+					// Start tracking a quoted attribute value — only when inside
+					// a tag. Apostrophes in body text (e.g. "what's") must not
+					// start quote tracking, or subsequent content gets swallowed.
 					if (temp1.startsWith("\"") || temp1.startsWith("'")) {
 						sb.append(temp1);
 					}

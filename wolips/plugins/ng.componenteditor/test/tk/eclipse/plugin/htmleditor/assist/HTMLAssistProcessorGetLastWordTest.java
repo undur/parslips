@@ -109,4 +109,54 @@ public class HTMLAssistProcessorGetLastWordTest {
 	public void woTag_closedProperly() {
 		assertEquals("div", lastTag("<div><wo:string></wo:string>"));
 	}
+
+	// =========================================================================
+	// Apostrophe in body text — must not break tag tracking
+	// =========================================================================
+
+	/**
+	 * Returns the "word" (index 0) from getLastWord — the partial token at the
+	 * cursor that determines what kind of completion to offer.
+	 */
+	private String word(String html) {
+		return TagStackAnalyzer.getLastWord(html)[0];
+	}
+
+	@Test
+	public void apostropheInText_doesNotBreakTagCompletion() {
+		// An apostrophe in body text must not start quote tracking.
+		// If it does, everything after it gets swallowed — including the '<'
+		// that should trigger tag completion.
+		assertEquals("<", word("<p>what's up</p><"));
+	}
+
+	@Test
+	public void apostropheInText_lastTagStillCorrect() {
+		// The tag stack must survive an apostrophe in body text.
+		assertEquals("div", lastTag("<div><p>what's up</p><"));
+	}
+
+	@Test
+	public void doubleQuoteInText_doesNotBreakTagCompletion() {
+		// Same issue with a stray double-quote in body text.
+		assertEquals("<", word("<p>she said \"hello</p><"));
+	}
+
+	@Test
+	public void apostropheInText_tagAfter() {
+		// Tag completion after body text with an apostrophe.
+		assertEquals("<wo", word("<p>it's fine</p><wo"));
+	}
+
+	@Test
+	public void singleQuotedAttributeStillWorks() {
+		// Single-quoted attribute values must still work correctly.
+		assertEquals("a", lastTag("<a href='/path'>"));
+	}
+
+	@Test
+	public void doubleQuotedAttributeWithSpacesStillWorks() {
+		// Spaces inside double-quoted attribute values must still be preserved.
+		assertEquals("input", lastTag("<input value=\"hello world\">"));
+	}
 }
