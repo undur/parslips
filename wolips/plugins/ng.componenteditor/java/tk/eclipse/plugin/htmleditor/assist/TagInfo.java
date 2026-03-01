@@ -58,6 +58,10 @@ public class TagInfo {
     return this.hasBody;
   }
 
+  public void setHasBody(boolean hasBody) {
+    this.hasBody = hasBody;
+  }
+
   public boolean isEmptyTag() {
     return this.emptyTag;
   }

@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Self-closing tag autocomplete for non-content elements
+
+- **`InlineWodTagInfo` now checks `wocomponentcontent`** to determine whether autocomplete should insert a self-closing tag (`<wo:str />`) or an opening+closing tag pair (`<wo:form></wo:form>`). Previously, all `wo:` tag completions unconditionally inserted opening+closing tags. The `componentContent` flag is resolved from the element's `.api` file (project-local or global `WebObjectDefinitions.xml`).
+- **Added `TagInfo.setHasBody()`** setter so the `hasBody` flag can be updated after construction.
+- **Overrode `hasBody()` in `InlineWodTagInfo`** to trigger lazy API loading before the flag is read — necessary because `HTMLAssistProcessor` calls `hasBody()` before `getAttributeInfo()`.
+
 ### Add SwitchToApiHandler — open .api file via Cmd+Alt+5
 
 - **Created `SwitchToApiHandler`** — new command handler that wires up the existing `Cmd+Alt+5` keybinding (which had a command and keybinding defined in plugin.xml but no handler registered). Three code paths: (1) if already in the ComponentEditor, switches to the API tab via `switchToApi()`; (2) if a component template exists, opens the ComponentEditor with the API tab active (using the `.api` file path, which triggers `displayApiPartOnReveal`); (3) if no template exists but a `.api` file does (common for non-component WOElements), opens the standalone ApiEditor.
