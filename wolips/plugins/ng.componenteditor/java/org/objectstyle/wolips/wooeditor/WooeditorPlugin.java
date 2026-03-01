@@ -161,8 +161,7 @@ public class WooeditorPlugin extends AbstractBaseUIActivator implements IResourc
         delta.accept(visitor);
       }
       catch (CoreException e) {
-        // XXX open error dialog with syncExec or print to log file
-        e.printStackTrace();
+        log(e);
       }
 
       Display.getDefault().asyncExec(new Runnable() {
@@ -188,8 +187,7 @@ public class WooeditorPlugin extends AbstractBaseUIActivator implements IResourc
 
             }
             catch (CoreException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
+              log(e);
             }
           }
         }

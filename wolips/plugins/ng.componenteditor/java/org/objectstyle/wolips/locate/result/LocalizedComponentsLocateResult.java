@@ -344,7 +344,7 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 					valid = false;
 				}
 			} catch (CoreException e) {
-				e.printStackTrace();
+				LocatePlugin.getDefault().log(e);
 			}
 		} else if (!dotApi.exists()) {
 			valid = false;

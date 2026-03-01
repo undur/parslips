@@ -13,6 +13,7 @@ import org.objectstyle.wolips.bindings.wod.WodBindingDeprecationProblem;
 import org.objectstyle.wolips.bindings.wod.WodBindingNameProblem;
 import org.objectstyle.wolips.bindings.wod.WodBindingValueProblem;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
@@ -100,8 +101,7 @@ public class InlineWodProblem {
         }
       }
       catch (CoreException e) {
-        e.printStackTrace();
-        Activator.getDefault().log(e);
+        WodclipsePlugin.getDefault().log(e);
       }
     }
   }

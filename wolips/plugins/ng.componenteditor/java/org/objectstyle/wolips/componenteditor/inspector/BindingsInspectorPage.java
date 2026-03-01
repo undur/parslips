@@ -16,6 +16,7 @@ import org.eclipse.ui.part.Page;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.VisibleBinding;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.components.editor.IWebobjectTagListener;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
@@ -173,7 +174,7 @@ public class BindingsInspectorPage extends Page implements ICursorPositionListen
 					_browser.setRootType(cache.getComponentType());
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
 	}

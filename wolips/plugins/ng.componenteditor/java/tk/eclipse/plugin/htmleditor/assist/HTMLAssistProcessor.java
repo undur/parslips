@@ -260,8 +260,7 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
       }
     }
     catch (BadLocationException e) {
-      // ignore;
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
     String next = document.get().substring(documentOffset);
 
@@ -388,7 +387,7 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
             }
           }
           catch (Exception ex) {
-            ex.printStackTrace();
+            HTMLPlugin.logException(ex);
           }
         }
       }

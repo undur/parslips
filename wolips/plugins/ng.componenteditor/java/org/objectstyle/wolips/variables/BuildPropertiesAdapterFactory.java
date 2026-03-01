@@ -65,6 +65,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
+import org.objectstyle.wolips.bindings.Activator;
 public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 	private Map<IProject, BuildProperties> _cache = new HashMap<IProject, BuildProperties>();
 
@@ -109,7 +110,7 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 					buildPropertiesInitializer.initialize(buildProperties);
 				}
 				catch (CoreException e) {
-					e.printStackTrace();
+					Activator.getDefault().log(e);
 				}
 			}
 		}
@@ -130,7 +131,7 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 					buildPropertiesInitializer.initializeDefaults(buildProperties);
 				}
 				catch (CoreException e) {
-					e.printStackTrace();
+					Activator.getDefault().log(e);
 				}
 			}
 		}

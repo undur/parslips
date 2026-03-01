@@ -13,6 +13,7 @@ import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.graphics.Point;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.actions.ComponentInserter;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 
@@ -38,7 +39,7 @@ public class ComponentDropTargetAdaptor extends DropTargetAdapter {
 		try {
 			getTemplateEditor().getSourceEditor().getParserCache().getHtmlEntry().clear();
 		} catch (Exception e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 		}
 		Point selectionRange = getStyledText().getSelectionRange();
 		if (selectionRange == null) {

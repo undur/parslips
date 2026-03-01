@@ -130,7 +130,7 @@ public class ImageView extends ViewPart implements ISelectionListener {
 			imageList.add(image);
 			iconList.add(i);
 		} catch(Exception ex){
-			ex.printStackTrace();
+			HTMLPlugin.logException(ex);
 		}
 	}
 	

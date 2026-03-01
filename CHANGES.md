@@ -12,6 +12,22 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Replace e.printStackTrace() with Eclipse logging
+
+- **Replaced all ~119 active `e.printStackTrace()` calls with proper Eclipse logging** across ~60 files. Each package uses its appropriate activator: `ComponenteditorPlugin.getDefault().log()` for `componenteditor.*` (22 files), `WodclipsePlugin.getDefault().log()` for `wodclipse.*` (16 files), `HTMLPlugin.logException()` for `templateeditor.*`, `htmleditor.*`, `fuzzyxml.*`, and `xmleditor.*` (19 files), `WooeditorPlugin.getDefault().log()` for `wooeditor.*`, `Activator.getDefault().log()` for `bindings.*`, `baseforplugins.*`, `baseforuiplugins.*`, `templateengine.*`, and `variables.*`, `CorePlugin.getDefault().log()` for `core.resources.*`, `LocatePlugin.getDefault().log()` for `locate.*`, and `WizardsPlugin.getDefault().log()` for `wizards.*`. Also removed the redundant `ex.printStackTrace()` from `HTMLPlugin.logException()` (which already logged via `ILog`), removed several duplicate log-then-print patterns where both `Activator.getDefault().log(e)` and `e.printStackTrace()` were called, and rewrote `WizardsPlugin.log()` to use `Platform.getLog()` with `IStatus` instead of printing to stderr.
+
+### Comprehensive test additions
+
+- **Added 142 new unit tests** in 5 new test files, bringing the total from 178 to 320. Tests cover the pure-functional API model layer and several utility classes:
+  - `ApiParserTest` (25 tests) — XML-to-POJO parsing: bindings, validations, componentContent, preview, parseAll multi-definition, action detection
+  - `ApiSerializerTest` (19 tests) — round-trip fidelity: parse → serialize → re-parse → compare for bindings, validations, XML escaping, mutations
+  - `ApiValidationTest` (34 tests) — `evaluate(Map)` for all leaf predicates (bound/unbound, settable/unsettable, gettable/ungettable), composite operators (and/or/not), COUNT operator (all comparison operators), and `isAffectedByBindingNamed`
+  - `TagShortcutTest` (28 tests) — attribute string parsing/serialization, preference string round-trips, equality, clone, hasChange
+  - `BindingValidationRuleTest` (19 tests) — preference string serialization, equality, clone, hasChange
+  - `WooUtilsTest` (19 tests) — all 16 Objective-C→Java encoding mappings plus edge cases
+  - `WodHtmlUtilsTest` (42 tests) — `isInline`, `isWOTag`, `isParserDirective`, `getLineAtOffset`, `toBindingValue`, `WEBOBJECTS_PATTERN` regex matching
+  - `ApiUtilsTest` (34 tests) — `isActionBindingName`, `isActionBinding`, `getSelectedDefaults`, `SimpleApiBinding` equality/compareTo/defaults/required/willSet
+
 ### Post-refactoring cleanup
 
 - **Fixed TypeCache invalidation bug.** `TypeCacheEntry._resource` was never initialized (the assignment was commented out since the original WOLips import), making `clearCacheForProject()` and `clearCacheForResource()` no-ops — they iterated cache entries looking for matching resources, but every entry had `_resource == null` so nothing ever matched. The `CHANGED` path in `WodParserCacheInvalidator` worked by key (`clearCacheForType(IType)`), but file deletion and full-project invalidation were silently broken. Fixed by uncommenting the initialization.

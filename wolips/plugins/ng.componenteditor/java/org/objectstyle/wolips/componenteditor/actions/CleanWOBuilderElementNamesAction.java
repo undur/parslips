@@ -2,6 +2,7 @@ package org.objectstyle.wolips.componenteditor.actions;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.action.IAction;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.refactoring.CleanWOBuilderRefactoring;
@@ -18,7 +19,7 @@ public class CleanWOBuilderElementNamesAction extends AbstractTemplateAction {
 				CleanWOBuilderRefactoring.run(cache, false, new NullProgressMonitor());
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 		}
 	}
 

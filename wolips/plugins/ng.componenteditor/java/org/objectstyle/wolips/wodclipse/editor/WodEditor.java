@@ -253,7 +253,7 @@ public class WodEditor extends TextEditor implements IEmbeddedEditor, IWebobject
 		try {
 			getParserCache().getWodEntry().setDocument(document);
 		} catch (Exception e) {
-			e.printStackTrace();
+			WodclipsePlugin.getDefault().log(e);
 		}
 
 		_wodOutlineUpdateThrottle.start();
@@ -263,7 +263,7 @@ public class WodEditor extends TextEditor implements IEmbeddedEditor, IWebobject
 		try {
 			getParserCache().getWodEntry().setDocument(null);
 		} catch (Exception e) {
-			e.printStackTrace();
+			WodclipsePlugin.getDefault().log(e);
 		}
 		_wodOutlineUpdateThrottle.stop();
 		super.dispose();

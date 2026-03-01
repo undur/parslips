@@ -59,6 +59,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.objectstyle.wolips.core.CorePlugin;
 import org.objectstyle.wolips.variables.BuildProperties;
 
 /**
@@ -174,7 +175,7 @@ public class TypeNameCollector extends TypeNameRequestor {
 			}
 		} catch (Throwable t) {
 			// ignore
-			t.printStackTrace();
+			CorePlugin.getDefault().log(t);
 		}
 	}
 }

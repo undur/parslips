@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionProposal;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionUtils;
 
@@ -198,7 +199,7 @@ public class ComponentLiveSearch implements ModifyListener, SelectionListener {
 													}
 												}
 											} catch (Throwable ex) {
-												ex.printStackTrace();
+												WodclipsePlugin.getDefault().log(ex);
 											}
 										}
 									}
@@ -207,7 +208,7 @@ public class ComponentLiveSearch implements ModifyListener, SelectionListener {
 						} catch (OperationCanceledException t) {
 							// ignore
 						} catch (Throwable t) {
-							t.printStackTrace();
+							WodclipsePlugin.getDefault().log(t);
 						}
 						return Status.OK_STATUS;
 					}

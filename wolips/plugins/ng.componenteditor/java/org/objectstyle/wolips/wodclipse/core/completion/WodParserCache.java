@@ -32,6 +32,7 @@ import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.builder.WodBuilder;
 public class WodParserCache implements ITypeOwner {
   private static TypeCache _typeCache;
@@ -110,10 +111,10 @@ public class WodParserCache implements ITypeOwner {
       }
     }
     catch (CoreException e) {
-      e.printStackTrace();
+      WodclipsePlugin.getDefault().log(e);
     }
     catch (LocateException e) {
-      e.printStackTrace();
+      WodclipsePlugin.getDefault().log(e);
     }
   }
 
@@ -380,11 +381,7 @@ public class WodParserCache implements ITypeOwner {
             WodParserCache.this._validate();
           }
           catch (Exception e) {
-            e.printStackTrace();
-            Activator activator = Activator.getDefault();
-            if (activator != null) {
-              activator.log(e);
-            }
+            WodclipsePlugin.getDefault().log(e);
           }
         }
       }

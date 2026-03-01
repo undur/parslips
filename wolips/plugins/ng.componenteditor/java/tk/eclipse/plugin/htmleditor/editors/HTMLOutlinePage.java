@@ -95,7 +95,7 @@ public class HTMLOutlinePage extends ContentOutlinePage implements IHTMLOutlineP
       }
     }
     catch (Exception e) {
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
   }
 

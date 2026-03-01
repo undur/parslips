@@ -282,14 +282,12 @@ public class WodCompletionProcessor implements IContentAssistProcessor {
 								}
 							}
 						} catch (Throwable t) {
-							t.printStackTrace();
 							WodclipsePlugin.getDefault().log(t);
 						}
 					}
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			WodclipsePlugin.getDefault().log(e);
 		}
 

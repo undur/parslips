@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.objectstyle.wolips.baseforuiplugins.utils.ListContentProvider;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 public class WOBrowserColumn extends Composite implements ISelectionProvider, ISelectionChangedListener, IElementChangedListener {
@@ -122,7 +123,7 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 								try {
 									reload();
 								} catch (JavaModelException e) {
-									e.printStackTrace();
+									ComponenteditorPlugin.getDefault().log(e);
 								}
 							}
 						});

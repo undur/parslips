@@ -75,6 +75,7 @@ import org.objectstyle.wolips.core.resources.types.WOHierarchyScope;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodModelUtils;
 
@@ -324,7 +325,7 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 				cache.validate(true, false);
 			}
 			catch (Throwable t) {
-				t.printStackTrace();
+				WodclipsePlugin.getDefault().log(t);
 			}
 			// System.out.println("WodBuilder._validateComponent: done with " +
 			// resource);
@@ -378,7 +379,7 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 							_lock.wait();
 						}
 						catch (InterruptedException e) {
-							e.printStackTrace();
+							WodclipsePlugin.getDefault().log(e);
 						}
 					}
 				}

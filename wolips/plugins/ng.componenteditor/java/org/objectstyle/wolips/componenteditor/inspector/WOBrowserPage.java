@@ -6,6 +6,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.eclipse.ui.part.Page;
 
 public class WOBrowserPage extends Page {
@@ -24,7 +25,7 @@ public class WOBrowserPage extends Page {
 		try {
 			_browser.setRootType(_initialType);
 		} catch (JavaModelException e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 		}
 	}
 	

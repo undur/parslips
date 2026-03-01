@@ -67,6 +67,7 @@ import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodBindingProblem;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.DocumentWodModel;
@@ -224,8 +225,7 @@ public class WodModelUtils {
       }
     }
     catch (CoreException e) {
-      e.printStackTrace();
-      Activator.getDefault().log(e);
+      WodclipsePlugin.getDefault().log(e);
     }
 //    catch (BadLocationException e) {
 //      Activator.getDefault().log(e);

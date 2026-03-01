@@ -161,7 +161,7 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
       cache.getHtmlEntry().setDocument(null);
     }
     catch (Exception e) {
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
     super.dispose();
 
@@ -174,7 +174,7 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
       cache.getHtmlEntry().setDocument(getDocumentProvider().getDocument(getEditorInput()));
     }
     catch (Exception e) {
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
     super.update();
   }
@@ -426,7 +426,7 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
         }
       }
       catch (Exception e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
       }
     }
   }
@@ -450,7 +450,7 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
         }
       }
       catch (Exception e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
       }
     }
   }

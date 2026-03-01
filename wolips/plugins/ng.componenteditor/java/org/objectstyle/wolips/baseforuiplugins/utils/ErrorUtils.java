@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.objectstyle.wolips.baseforplugins.util.StringUtils;
+import org.objectstyle.wolips.bindings.Activator;
 
 public class ErrorUtils {
 	public static void openErrorDialog(Shell _parent, String _title, String _message) {
@@ -30,7 +31,7 @@ public class ErrorUtils {
 		if (_throwable == null) {
 			throwable = null;
 		} else {
-			_throwable.printStackTrace();
+			Activator.getDefault().log(_throwable);
 			if (_throwable instanceof InvocationTargetException) {
 				throwable = ((InvocationTargetException) _throwable).getCause();
 			} else {

@@ -6,6 +6,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.objectstyle.wolips.bindings.wod.VisibleBinding;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.wodclipse.core.refactoring.RefactoringWodElement;
 
 public class BindingsInspectorDropHandler extends AbstractBindingsDropHandler<BindingsInspector, TableItem, Object, Table> {
@@ -46,7 +47,7 @@ public class BindingsInspectorDropHandler extends AbstractBindingsDropHandler<Bi
 						try {
 							element.setValueForBinding(droppedKeyPath, binding.getName());
 						} catch (Exception e) {
-							e.printStackTrace();
+							ComponenteditorPlugin.getDefault().log(e);
 						}
 					}
 				}

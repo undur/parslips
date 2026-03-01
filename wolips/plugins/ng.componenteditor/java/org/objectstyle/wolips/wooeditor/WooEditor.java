@@ -113,7 +113,7 @@ public class WooEditor extends FormEditor {
 			// that can be replaced with real content in the future.
 			addPage(new FormPage(this, "placeholder", "Settings") {});
 		} catch (PartInitException e) {
-			e.printStackTrace();
+			WooeditorPlugin.getDefault().log(e);
 		}
 
 		CTabFolder ctf = (CTabFolder)getContainer();
@@ -130,7 +130,7 @@ public class WooEditor extends FormEditor {
 			model.doSave();
 			this.editorDirtyStateChanged();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			WooeditorPlugin.getDefault().log(e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -176,7 +176,7 @@ public class WooEditor extends FormEditor {
 				try {
 					model.setEncoding(folder.getDefaultCharset());
 				} catch (CoreException e) {
-					e.printStackTrace();
+					WooeditorPlugin.getDefault().log(e);
 				}
 			}
 		};
@@ -227,7 +227,7 @@ public class WooEditor extends FormEditor {
 		try {
 			encoding = file.getParent().getDefaultCharset();
 		} catch (CoreException e) {
-			e.printStackTrace();
+			WooeditorPlugin.getDefault().log(e);
 		}
 		encoding = CharSetUtils.encodingNameFromObjectiveC(encoding);
 		return encoding;

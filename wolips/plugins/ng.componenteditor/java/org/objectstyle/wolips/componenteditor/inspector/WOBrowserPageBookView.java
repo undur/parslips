@@ -5,6 +5,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.IPage;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.PageBookView;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
@@ -35,7 +36,7 @@ public class WOBrowserPageBookView extends PageBookView {
 				page.createControl(getPageBook());
 				pageRec = new PageRec(part, page);
 			} catch (Exception e) {
-				e.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(e);
 				pageRec = null;
 			}
 		} else {

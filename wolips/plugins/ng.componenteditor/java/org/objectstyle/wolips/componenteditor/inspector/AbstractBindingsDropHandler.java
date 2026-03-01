@@ -1,6 +1,7 @@
 package org.objectstyle.wolips.componenteditor.inspector;
 
 import org.eclipse.swt.graphics.Point;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 
@@ -133,7 +134,7 @@ public abstract class AbstractBindingsDropHandler<T, U, V, W extends Control> im
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 		}
 	}
 
@@ -160,7 +161,7 @@ public abstract class AbstractBindingsDropHandler<T, U, V, W extends Control> im
 				removeHoverAnnotation();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 		}
 		return dropFinished;
 	}

@@ -19,6 +19,7 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.bindings.wod.IWodUnit;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
@@ -143,7 +144,7 @@ public class QuickRenameRefactoring {
             cache.clearCache();
           }
           catch (Exception e) {
-            e.printStackTrace();
+            WodclipsePlugin.getDefault().log(e);
           }
         }
       });

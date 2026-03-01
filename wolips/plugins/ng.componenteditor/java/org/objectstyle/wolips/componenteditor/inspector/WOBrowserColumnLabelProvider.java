@@ -68,7 +68,7 @@ public class WOBrowserColumnLabelProvider extends BaseLabelProvider implements I
 							image = ComponenteditorPlugin.getDefault().getImage(ComponenteditorPlugin.TO_ONE_ICON);
 						}
 					} catch (JavaModelException e) {
-						e.printStackTrace();
+						ComponenteditorPlugin.getDefault().log(e);
 					}
 				}
 			}

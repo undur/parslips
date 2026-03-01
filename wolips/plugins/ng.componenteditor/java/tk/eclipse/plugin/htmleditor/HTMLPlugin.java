@@ -388,9 +388,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 			status = new Status(IStatus.ERROR,getDefault().getPluginId(),0,ex.toString(),ex);
 		}
 		log.log(status);
-		
-		// TODO debug
-		ex.printStackTrace();
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////////

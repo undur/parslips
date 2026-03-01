@@ -115,6 +115,7 @@ import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.wizards.WizardsPlugin;
 
 /**
  * Second page of the New WO Component wizard. Handles choosing the destination
@@ -469,7 +470,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		}
 
 		// Prevent creating a component inside another component's .wo folder
@@ -872,9 +873,9 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				return javaType.getPackageFragment().getElementName();
 			}
 		} catch (CoreException e) {
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		} catch (LocateException e) {
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		}
 		return null;
 	}
@@ -895,11 +896,11 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				}
 			}
 		} catch (CoreException e) {
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Searches for a folder named "components" under src/main/ in the given project.
 	 * Returns the full path of the first match, or null if none found.
@@ -959,13 +960,13 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				}
 			}
 		} catch (CoreException e) {
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		} catch (LocateException e) {
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Opens a dialog for the user to browse and select a Java package.
 	 * Lists all packages from source folders in the project.
@@ -989,8 +990,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				}
 			}
 		} catch (JavaModelException e) {
-			// JTourBusPlugin.log(e);
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		}
 		IJavaElement[] packages = packagesList.toArray(new IJavaElement[packagesList.size()]);
 
@@ -1027,8 +1027,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				superclasses.add(typeName);
 			}
 		} catch (JavaModelException e) {
-			// JTourBusPlugin.log(e);
-			e.printStackTrace();
+			WizardsPlugin.getDefault().log(e);
 		}
 
 		ElementListSelectionDialog dialog = new ElementListSelectionDialog(getShell(), new LabelProvider());

@@ -142,7 +142,6 @@ public class BindingsPopUpMenu implements MenuListener {
 			try {
 				refactoringWodElement.setValueForBinding(_droppedKeyPath, vb.getName());
 			} catch (Exception e) {
-				e.printStackTrace();
 				ComponenteditorPlugin.getDefault().log("Failed to add binding.", e);
 			}
 		}

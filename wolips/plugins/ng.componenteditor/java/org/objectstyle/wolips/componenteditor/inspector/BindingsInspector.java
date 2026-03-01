@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.baseforuiplugins.utils.WOTextCellEditor;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
@@ -228,7 +229,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 			try {
 				_wodProblems = WodModelUtils.getProblems(wodElement, cache);
 			} catch (Throwable t) {
-				t.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(t);
 			}
 		}
 		_nameLabelProvider.setContext(_wodElement, _wodProblems);
@@ -238,7 +239,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 			try {
 				_bindingsContentProvider.setContext(cache.getJavaProject(), WodParserCache.getTypeCache());
 			} catch (Exception e) {
-				e.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(e);
 			}
 		} else {
 			_bindingsContentProvider.setContext(null, null);
@@ -313,7 +314,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 				element.addBindingValueNamed("\"\"", null, newBindingName);
 				BindingsInspector.this.refresh();
 			} catch (Exception e) {
-				e.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
 	}
@@ -327,7 +328,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 					element.removeBindingNamed(binding.getName());
 					BindingsInspector.this.refresh();
 				} catch (Exception e) {
-					e.printStackTrace();
+					ComponenteditorPlugin.getDefault().log(e);
 				}
 			}
 		}
@@ -344,7 +345,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 					BindingsInspector.this.refresh();
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
 	}
@@ -370,7 +371,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 						_addKeyActionButton.setEnabled(false);
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					ComponenteditorPlugin.getDefault().log(e);
 					_addKeyActionButton.setEnabled(false);
 				}
 			}
@@ -419,7 +420,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 						BindingsInspector.this.refresh();
 					}
 				} catch (Throwable t) {
-					t.printStackTrace();
+					ComponenteditorPlugin.getDefault().log(t);
 				}
 			}
 		});
@@ -542,7 +543,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 				cache = woEditor.getParserCache();
 				wodElement = woEditor.getSelectedElement(true, true);
 			} catch (Throwable t) {
-				t.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(t);
 			}
 		}
 
@@ -592,7 +593,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 							wodBinding.setName((String) value);
 						}
 					} catch (Exception e) {
-						e.printStackTrace();
+						ComponenteditorPlugin.getDefault().log(e);
 					}
 					BindingsInspector.this.refresh();
 				}
@@ -648,7 +649,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 						getRefactoringElement().setValueForBinding((String) value, binding.getName());
 						BindingsInspector.this.refresh();
 					} catch (Exception e) {
-						e.printStackTrace();
+						ComponenteditorPlugin.getDefault().log(e);
 					}
 				}
 			}

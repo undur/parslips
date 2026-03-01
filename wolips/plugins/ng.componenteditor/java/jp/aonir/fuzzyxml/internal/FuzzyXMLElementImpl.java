@@ -19,6 +19,8 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
+
 public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXMLElement {
 
   private static final Set<String> FORBIDDEN_SELF_CLOSING = new HashSet<String>(
@@ -606,7 +608,7 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
         }
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
     finally {
       if (delegate != null) {

@@ -34,6 +34,7 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodDeprecatedCompletionP
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.assist.AssistInfo;
 import tk.eclipse.plugin.htmleditor.assist.AttributeInfo;
 import tk.eclipse.plugin.htmleditor.assist.HTMLAssistProcessor;
@@ -146,7 +147,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         }
       }
       catch (JavaModelException e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
       }
     }
     return tagInfos;
@@ -222,7 +223,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
             }
           }
           catch (Exception e) {
-            e.printStackTrace();
+            HTMLPlugin.logException(e);
           }
         }
         for (WodCompletionProposal proposal : proposals) {
@@ -244,7 +245,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         }
       }
       catch (JavaModelException e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
       }
       attributeValues = attributeValuesList.toArray(new AssistInfo[attributeValuesList.size()]);
     }
@@ -263,7 +264,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         }
       }
       catch (Exception e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
       }
       attributeValues = attributeValuesList.toArray(new AssistInfo[attributeValuesList.size()]);
     }

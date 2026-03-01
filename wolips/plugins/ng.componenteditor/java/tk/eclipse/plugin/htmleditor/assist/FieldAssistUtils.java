@@ -11,6 +11,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.swt.layout.GridLayout;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
+
 /**
  * Provides utility methods about the field assist.
  * 
@@ -37,7 +39,7 @@ public class FieldAssistUtils {
 				buffer = unit.getBuffer();
 			}
 			catch (JavaModelException e) {
-				e.printStackTrace();
+				HTMLPlugin.logException(e);
 				buffer = null;
 			}
 

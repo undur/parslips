@@ -20,6 +20,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
@@ -139,7 +140,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 					}
 				}
 			} catch (JavaModelException e) {
-				e.printStackTrace();
+				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
 
@@ -248,7 +249,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 						}
 					}
 				} catch (JavaModelException e) {
-					e.printStackTrace();
+					ComponenteditorPlugin.getDefault().log(e);
 				}
 			}
 		}

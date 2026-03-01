@@ -158,7 +158,7 @@ public class TemplateOutlinePage extends Page implements IContentOutlinePage, IH
         _lastPageOffset = Integer.parseInt(target);
       }
       catch (NumberFormatException e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
         _lastPageOffset = 0;
       }
     }
@@ -316,7 +316,7 @@ public class TemplateOutlinePage extends Page implements IContentOutlinePage, IH
       _doc = createParser(_editor.getParserCache().getProject()).parse(_editor.getHTMLSource());
     }
     catch (Exception e) {
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
 
     _counter = 0;
@@ -358,7 +358,7 @@ public class TemplateOutlinePage extends Page implements IContentOutlinePage, IH
       }
     }
     catch (Exception e) {
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
   }
 
@@ -564,7 +564,7 @@ public class TemplateOutlinePage extends Page implements IContentOutlinePage, IH
         }
         catch (Throwable t) {
           // IGNORE
-          t.printStackTrace();
+          HTMLPlugin.logException(t);
         }
         if (wodElement != null) {
           className = className + " " + wodElement.getElementType();

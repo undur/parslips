@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.swt.widgets.Display;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 
 public class WodParserCacheInvalidator implements IResourceChangeListener, IResourceDeltaVisitor {
   public void resourceChanged(IResourceChangeEvent event) {
@@ -91,7 +92,7 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
                 		oldFile.move(newPath, false, null);
                 	}
                 } catch (CoreException e) {
-                  e.printStackTrace();
+                  WodclipsePlugin.getDefault().log(e);
                 }
               }
             });

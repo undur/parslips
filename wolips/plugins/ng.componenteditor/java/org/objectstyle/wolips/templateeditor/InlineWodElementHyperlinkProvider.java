@@ -15,6 +15,7 @@ import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
 import org.objectstyle.wolips.wodclipse.core.util.FuzzyXMLWodElement;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.IHyperlinkProvider;
 import tk.eclipse.plugin.htmleditor.editors.HTMLHyperlinkInfo;
 
@@ -52,7 +53,7 @@ public class InlineWodElementHyperlinkProvider implements IHyperlinkProvider {
       }
     }
     catch (Exception e) {
-      e.printStackTrace();
+      HTMLPlugin.logException(e);
     }
     return hyperlinkInfo;
   }

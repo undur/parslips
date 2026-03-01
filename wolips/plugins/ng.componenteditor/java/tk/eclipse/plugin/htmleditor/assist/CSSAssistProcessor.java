@@ -17,6 +17,7 @@ import jp.aonir.fuzzyxml.FuzzyXMLDocument;
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
 import jp.aonir.fuzzyxml.FuzzyXMLNode;
 import jp.aonir.fuzzyxml.FuzzyXMLParser;
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.HTMLUtil;
 
 /**
@@ -53,7 +54,7 @@ public class CSSAssistProcessor {
         doc = WodParserCache.parser(file).getHtmlEntry().getModel();
       }
       catch (Exception e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
         doc = null;
       }
     }

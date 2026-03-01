@@ -26,6 +26,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.SelectionDialog;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
@@ -123,7 +124,7 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 				}
 			}
 		} catch (Throwable e1) {
-			e1.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e1);
 		}
 	}
 }

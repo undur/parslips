@@ -13,6 +13,7 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.assist.FieldAssistUtils.ContentProposalImpl;
 
 /**
@@ -69,9 +70,9 @@ public class PackageNameContentProposalProvider implements IContentProposalProvi
 			return result.toArray(new IContentProposal[result.size()]);
 			
 		} catch(Exception ex){
-			ex.printStackTrace();
+			HTMLPlugin.logException(ex);
 		}
-		
+
 		return null;
 	}
 	

@@ -43,6 +43,8 @@
  */
 package org.objectstyle.wolips.baseforplugins.util;
 
+import org.objectstyle.wolips.bindings.Activator;
+
 /**
  * Throttle provides a mechanism for throttling back the execution of 
  * recurring events.  Construct a Throttle with a Runnble to execute, .start() 
@@ -90,7 +92,7 @@ public class Throttle implements Runnable {
 				try {
 					wait();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					Activator.getDefault().log(e);
 				}
 			}
 		}
@@ -104,7 +106,7 @@ public class Throttle implements Runnable {
 				try {
 					wait();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					Activator.getDefault().log(e);
 				}
 			}
 			_stopRequested = false;
@@ -123,7 +125,7 @@ public class Throttle implements Runnable {
 				try {
 					wait();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					Activator.getDefault().log(e);
 				}
 			}
 			while (_pingCount > 0) {
@@ -141,7 +143,7 @@ public class Throttle implements Runnable {
 						try {
 							_runnable.run();
 						} catch (Throwable t) {
-							t.printStackTrace();
+							Activator.getDefault().log(t);
 						}
 						_pingCount = 0;
 					}

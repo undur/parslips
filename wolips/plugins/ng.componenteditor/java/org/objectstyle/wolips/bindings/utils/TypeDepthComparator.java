@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.jdt.core.IType;
+import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 
 public class TypeDepthComparator implements Comparator<IType> {
@@ -42,7 +43,7 @@ public class TypeDepthComparator implements Comparator<IType> {
       }
     }
     catch (Throwable t) {
-      t.printStackTrace();
+      Activator.getDefault().log(t);
     }
     return comparison;
   }

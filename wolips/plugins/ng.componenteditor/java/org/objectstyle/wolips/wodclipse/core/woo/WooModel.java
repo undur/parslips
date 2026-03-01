@@ -26,6 +26,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.objectstyle.wolips.baseforplugins.util.CharSetUtils;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
@@ -140,7 +141,7 @@ public class WooModel {
           _encoding = _file.getParent().getDefaultCharset();
           return _encoding;
         } catch (CoreException e) {
-          e.printStackTrace();
+          WodclipsePlugin.getDefault().log(e);
         }
       }
       _encoding = DEFAULT_ENCODING;
@@ -197,7 +198,7 @@ public class WooModel {
       _file.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
     }
     catch (CoreException e) {
-      e.printStackTrace();
+      WodclipsePlugin.getDefault().log(e);
     }
     finally {
       writer.close();
@@ -267,7 +268,7 @@ public class WooModel {
       this.parseModel();
     }
     catch (Throwable e) {
-      e.printStackTrace();
+      WodclipsePlugin.getDefault().log(e);
       problems.add(new WodProblem(e.getMessage(), null, 0, true));
       return problems;
     }
@@ -297,7 +298,7 @@ public class WooModel {
 
 	    }
 	    catch (CoreException e1) {
-	      e1.printStackTrace();
+	      WodclipsePlugin.getDefault().log(e1);
 	    }
     }
 
@@ -334,7 +335,7 @@ public class WooModel {
         }
       }
       catch (Throwable e) {
-      	e.printStackTrace();
+      	WodclipsePlugin.getDefault().log(e);
       }
     }
   }

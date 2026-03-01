@@ -16,6 +16,7 @@ import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionProposal;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionUtils;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.assist.AttributeInfo;
 import tk.eclipse.plugin.htmleditor.assist.TagInfo;
 
@@ -92,7 +93,7 @@ public class InlineWodTagInfo extends TagInfo {
         _attributeInfoCached = true;
       }
       catch (JavaModelException e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
       }
     }
   }

@@ -21,6 +21,7 @@ import org.objectstyle.wolips.bindings.wod.WodBindingValueProblem;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.HtmlCacheEntry;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCacheEntry;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
@@ -106,7 +107,7 @@ public class TemplateValidator {
               WodParserCache.getTypeCache().clearCacheForType(_cache.getComponentType());
             }
             catch (LocateException e1) {
-              e1.printStackTrace();
+              WodclipsePlugin.getDefault().log(e1);
             }
           }
           catch (Throwable t) {

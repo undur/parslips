@@ -22,6 +22,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.variables.BuildProperties;
+
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
 import org.objectstyle.wolips.wodclipse.core.util.ICursorPositionListener;
@@ -150,7 +152,7 @@ public class TemplateBreadcrumb extends Composite implements ICursorPositionList
       }
     }
     catch (Throwable t) {
-      t.printStackTrace();
+      HTMLPlugin.logException(t);
     }
   }
 
@@ -162,7 +164,7 @@ public class TemplateBreadcrumb extends Composite implements ICursorPositionList
         WodElementTypeHyperlink.toElementTypeHyperlink(data.getWodElement(), _editor.getParserCache()).open();
       }
       catch (Exception e) {
-        e.printStackTrace();
+        HTMLPlugin.logException(e);
       }
     }
   }

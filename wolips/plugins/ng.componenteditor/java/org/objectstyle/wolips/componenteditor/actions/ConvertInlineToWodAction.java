@@ -5,6 +5,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.ui.IEditorPart;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
@@ -29,7 +30,7 @@ public class ConvertInlineToWodAction extends AbstractTemplateAction {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 		}
 	}
 }

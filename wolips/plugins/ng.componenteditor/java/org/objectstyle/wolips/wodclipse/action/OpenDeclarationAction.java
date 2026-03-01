@@ -18,6 +18,7 @@ import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.locate.Locate;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.locate.scope.ComponentLocateScope;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.parser.ElementTypeRule;
 import org.objectstyle.wolips.wodclipse.core.parser.RulePosition;
 import org.objectstyle.wolips.wodclipse.core.parser.WodScanner;
@@ -59,7 +60,7 @@ public class OpenDeclarationAction extends Action implements IEditorActionDelega
 					}
 				}
 			} catch (Throwable e) {
-				e.printStackTrace();
+				WodclipsePlugin.getDefault().log(e);
 			}
 		}
 	}

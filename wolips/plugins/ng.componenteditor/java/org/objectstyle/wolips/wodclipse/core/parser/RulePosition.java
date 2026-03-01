@@ -5,6 +5,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IWordDetector;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 
 public class RulePosition {
 	private IDocument myDocument;
@@ -60,7 +61,7 @@ public class RulePosition {
 		try {
 			text = getText();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			WodclipsePlugin.getDefault().log(e);
 			text = "<<failed>>";
 		}
 		return text;

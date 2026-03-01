@@ -2,6 +2,10 @@ package org.objectstyle.wolips.wizards;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.DialogSettings;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -41,7 +45,8 @@ public class WizardsPlugin {
 
 	public void log(Throwable t) {
 		if (t != null) {
-			t.printStackTrace();
+			ILog log = Platform.getLog(WizardsPlugin.class);
+			log.log(new Status(IStatus.ERROR, "ng.componenteditor", t.toString(), t));
 		}
 	}
 

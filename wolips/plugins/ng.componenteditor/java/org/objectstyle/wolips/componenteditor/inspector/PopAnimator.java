@@ -8,6 +8,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
 public class PopAnimator implements PaintListener {
 	private static final int minBorderWidth = 2;
@@ -166,7 +167,7 @@ public class PopAnimator implements PaintListener {
 				}
 			}
 		} catch (Throwable t) {
-			t.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(t);
 		}
 	}
 

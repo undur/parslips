@@ -29,6 +29,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.variables.BuildProperties;
@@ -156,7 +157,7 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 			MessageDialog.openError(getShell(),
 					"Extract Component",
 					"Failed to extract component: " + e.getMessage());

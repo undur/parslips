@@ -48,7 +48,7 @@ public class WOElementSelectionDialog extends ElementListSelectionDialog {
 					try {
 						BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, typeNameCollector, monitor);
 					} catch (Exception e) {
-						e.printStackTrace();
+						ComponenteditorPlugin.getDefault().log(e);
 						throw new InvocationTargetException(e);
 					}
 					if (monitor.isCanceled()) {

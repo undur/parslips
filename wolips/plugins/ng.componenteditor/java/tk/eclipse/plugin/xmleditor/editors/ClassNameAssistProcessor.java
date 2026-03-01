@@ -16,6 +16,7 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.swt.graphics.Image;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.HTMLUtil;
 import tk.eclipse.plugin.htmleditor.assist.AssistInfo;
 
@@ -66,9 +67,9 @@ public class ClassNameAssistProcessor {
 			return result.toArray(new AssistInfo[result.size()]);
 			
 		} catch(Exception ex){
-			ex.printStackTrace();
+			HTMLPlugin.logException(ex);
 		}
-		
+
 		return new AssistInfo[0];
 	}
 	

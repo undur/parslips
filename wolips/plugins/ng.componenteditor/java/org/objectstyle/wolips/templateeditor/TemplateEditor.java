@@ -363,7 +363,7 @@ public class TemplateEditor extends HTMLEditor implements IEmbeddedEditor, IHtml
 	      }
       }
     	catch (Throwable t) {
-    		t.printStackTrace();
+    		HTMLPlugin.logException(t);
     	}
     }
   }

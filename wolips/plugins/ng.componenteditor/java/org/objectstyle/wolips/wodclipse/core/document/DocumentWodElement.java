@@ -51,6 +51,7 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.wod.AbstractWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.parser.RulePosition;
 
@@ -107,7 +108,7 @@ public class DocumentWodElement extends AbstractWodElement {
           indent = startOffset - lineInformation.getOffset();
         }
         catch (BadLocationException e) {
-          e.printStackTrace();
+          WodclipsePlugin.getDefault().log(e);
         }
       }
       

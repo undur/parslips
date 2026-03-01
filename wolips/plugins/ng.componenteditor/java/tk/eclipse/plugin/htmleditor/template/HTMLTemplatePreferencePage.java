@@ -21,7 +21,7 @@ public class HTMLTemplatePreferencePage extends TemplatePreferencePage  implemen
 			setTemplateStore(HTMLTemplateManager.getInstance().getTemplateStore());
 			setContextTypeRegistry(HTMLTemplateManager.getInstance().getContextTypeRegistry());
 		} catch(Exception ex){
-			ex.printStackTrace();
+			HTMLPlugin.logException(ex);
 		}
 	}
 

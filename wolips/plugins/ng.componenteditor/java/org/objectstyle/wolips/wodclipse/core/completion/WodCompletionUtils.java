@@ -26,6 +26,7 @@ import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.HtmlElementCache;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddActionDialog;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddActionInfo;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyDialog;
@@ -221,7 +222,7 @@ public class WodCompletionUtils {
     }
     catch (Throwable t) {
       // It's not that big a deal ... give up on api files
-      t.printStackTrace();
+      WodclipsePlugin.getDefault().log(t);
     }
 
     if (showReflectionBindings) {

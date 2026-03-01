@@ -2,6 +2,7 @@ package org.objectstyle.wolips.componenteditor.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ui.IEditorPart;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.editor.WodEditor;
@@ -22,7 +23,7 @@ public class DeleteTagAction extends AbstractTemplateAction {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			ComponenteditorPlugin.getDefault().log(e);
 		}
 	}
 

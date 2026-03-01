@@ -249,7 +249,6 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
 				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}

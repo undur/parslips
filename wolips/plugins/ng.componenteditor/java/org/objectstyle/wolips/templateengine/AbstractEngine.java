@@ -81,6 +81,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.objectstyle.wolips.bindings.Activator;
 
 /**
  * @author ulrich
@@ -210,7 +211,7 @@ public abstract class AbstractEngine implements IRunnableWithProgress {
 						new OutputStreamWriter(new FileOutputStream(file), encoding));
 			template.merge(this.context, writer);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Activator.getDefault().log(e);
 		} finally {
 			if (writer != null) {
 				try {
@@ -223,7 +224,7 @@ public abstract class AbstractEngine implements IRunnableWithProgress {
 					}
 
 				} catch (Exception ee) {
-					ee.printStackTrace();
+					Activator.getDefault().log(ee);
 				}
 			}
 			this.setPropertyForKey(null, WOLipsContext.Key);
