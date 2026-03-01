@@ -87,6 +87,16 @@
 			</div>
 
 			<div class="card">
+				<h2 class="section-header">Long-term direction</h2>
+
+				<div class="roadmap-entry">
+					<h3>IDE-independent core for LSP</h3>
+					<p>Extract the core editor intelligence &mdash; parsing, validation, completion, refactoring &mdash; into a standalone library with no Eclipse dependencies, then wrap it in an LSP server. This makes Parsley&rsquo;s template tooling available in VS Code, IntelliJ, Emacs, and any editor that speaks LSP.</p>
+					<p>The current codebase is coupled to Eclipse APIs (JDT for type resolution, <code>IResource</code> for file access, LTK for refactoring). Decoupling requires abstraction layers for type lookup, file system access, and project model queries. The recent move to immutable POJOs (<code>ApiSnapshot</code>, <code>VisibleBinding</code>) is a step in this direction.</p>
+				</div>
+			</div>
+
+			<div class="card">
 				<h2 class="section-header">Technical debt</h2>
 				<p style="color: #8a9e8a; margin-bottom: 1.5em;">Internal modernization. Not user-visible, but improves maintainability and long-term health of the codebase.</p>
 

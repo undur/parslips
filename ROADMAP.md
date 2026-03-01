@@ -100,6 +100,14 @@ The ng-template-parser supports tag namespaces beyond `wo:`. Two namespaces are 
 
 General arbitrary namespace support is probably not worth the complexity — each namespace needs the full tooling chain (parser, validation, autocomplete, highlighting) to understand it. Better to support specific, well-defined namespaces as needed.
 
+## IDE-independent core for LSP
+
+The long-term goal for Parsley's editor intelligence is to make it available outside Eclipse — in VS Code, IntelliJ, Emacs, or any editor that speaks LSP (Language Server Protocol). This means extracting the core logic (parsing, validation, completion, refactoring) into a standalone, IDE-independent library with no Eclipse dependencies, then wrapping it in an LSP server.
+
+The current codebase is tightly coupled to Eclipse APIs (JDT for type resolution, IResource for file access, LTK for refactoring). Decoupling will require introducing abstraction layers for type lookup, file system access, and project model queries. The recent move to immutable POJOs (ApiSnapshot, VisibleBinding) is a step in this direction — the fewer mutable platform objects the core holds, the easier the extraction.
+
+This is the direction the project is actually heading. Improving the Eclipse editor is valuable in its own right (and a good way to iterate on the feature set), but the real payoff is making template tooling available everywhere.
+
 ## Live preview
 
 Side-by-side rendering of the template as you edit. Challenging for WO components since they render server-side with dynamic bindings, but even a static structural preview (showing component nesting and placeholder content) could be valuable.
