@@ -71,7 +71,7 @@
             icon="icons/ComponentEditor.png"
             id="ng.componenteditor.ComponentEditor"
             matchingStrategy="org.objectstyle.wolips.componenteditor.part.ComponentEditorMatchingStrategy"
-            name="NG Component Editor">
+            name="Parsley Component Editor">
          <contentTypeBinding contentTypeId="ng.componenteditor.html"/>
          <contentTypeBinding contentTypeId="ng.componenteditor.api"/>
          <contentTypeBinding contentTypeId="ng.componenteditor.wod"/>
@@ -154,8 +154,8 @@
 <!-- =================================================================================== -->
    <extension point="org.eclipse.ui.commands">
       <category
-            name="NG Component Editor"
-            description="NG Component Editor"
+            name="Parsley"
+            description="Parsley Component Editor"
             id="ng.componenteditor.commands"/>
       <command name="Switch to Java Editor" description="Switch to Java Editor"
             categoryId="ng.componenteditor.commands"
@@ -273,7 +273,7 @@
             id="ng.componenteditor.editorActionsContribution"
             targetID="ng.componenteditor.ComponentEditor">
          <menu id="ng.componenteditor.navigateMenuContribution"
-               label="&amp;NG Component Editor"
+               label="&amp;Parsley"
                path="navigate/additions">
             <separator name="group1"/>
             <separator name="group2"/>
@@ -443,7 +443,7 @@
 <!-- Views                                                                               -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.ui.views">
-      <category name="NG Component Editor" id="ng.componenteditor.views"/>
+      <category name="Parsley" id="ng.componenteditor.views"/>
       <view name="Bindings Inspector"
             category="ng.componenteditor.views"
             class="org.objectstyle.wolips.componenteditor.inspector.BindingsInspectorPageBookView"
@@ -461,7 +461,7 @@
 <!-- =================================================================================== -->
    <extension point="org.eclipse.ui.actionSets">
       <actionSet id="ng.componenteditor.actionSet"
-            label="NG Component Action Sets"
+            label="Parsley Action Sets"
             visible="true">
          <action class="org.objectstyle.wolips.componenteditor.actions.OpenComponentAction"
                definitionId="ng.componenteditor.openComponent"
@@ -477,7 +477,7 @@
    <extension point="org.eclipse.ui.newWizards">
       <category
             id="ng.componenteditor.newWizards"
-            name="NG Objects"/>
+            name="Parsley"/>
       <wizard
             category="ng.componenteditor.newWizards"
             class="org.objectstyle.wolips.wizards.WOProjectCreationWizard"
@@ -490,9 +490,9 @@
       <wizard
             category="ng.componenteditor.newWizards"
             class="org.objectstyle.wolips.wizards.WOComponentCreationWizard"
-            icon="icons/wobuilder/WOComponentBundle.png"
+            icon="icons/WOComponentBundle.png"
             id="ng.componenteditor.newWOComponentWizard"
-            name="NG Component">
+            name="Parsley Component">
          <description>Create a new NG component</description>
       </wizard>
    </extension>
@@ -546,7 +546,7 @@
    <extension point="org.eclipse.ui.preferencePages">
       <page class="tk.eclipse.plugin.htmleditor.HTMLEditorPreferencePage"
             id="ng.componenteditor.preferences"
-            name="NG Component Editor"/>
+            name="Parsley"/>
       <page class="tk.eclipse.plugin.htmleditor.XMLPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.XML"
@@ -855,7 +855,7 @@
       <decorator
             class="ng.componenteditor.explorer.WOComponentDecorator"
             id="ng.componenteditor.decorator.WOComponentDecorator"
-            label="NG Component Decorator"
+            label="Parsley Component Decorator"
             lightweight="false"
             state="true">
          <enablement>
