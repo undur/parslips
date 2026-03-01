@@ -90,11 +90,6 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
         if (append_newline) {
           if (!hasNewLineEnd(xmlBuffer))
             xmlBuffer.append("\n");
-          // Preserve blank lines from the original source.
-          int blankLines = lastHiddenTextBlankLineCount();
-          for (int i = 0; i < blankLines; i++) {
-            xmlBuffer.append("\n");
-          }
           renderContext.appendIndent(xmlBuffer);
         } else
         if (append_space) {
@@ -140,11 +135,6 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
       if (append_newline) {
         if (!hasNewLineEnd(xmlBuffer))
           xmlBuffer.append("\n");
-        // Preserve blank lines from the original source.
-        int blankLines = lastHiddenTextBlankLineCount();
-        for (int i = 0; i < blankLines; i++) {
-          xmlBuffer.append("\n");
-        }
         renderContext.appendIndent(xmlBuffer);
       } else
       if (append_space) {
@@ -165,6 +155,22 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
     boolean append_space = false;
     boolean bufferHasBreakingEnd = (hasWhiteSpaceEnd(xmlBuffer) || hasTagEnd(xmlBuffer));
     if (_node.isHidden()) {
+      // Preserve blank lines (extra newlines beyond the first) from the
+      // original source. The first newline is handled by beforeOpenTag
+      // when the next element renders; extra newlines need to be emitted
+      // here so they aren't lost.
+      if (renderContext.shouldFormat() && renderContext.isShowNewlines()) {
+        String value = _node.getValue();
+        int newlineCount = 0;
+        for (int i = 0; i < value.length(); i++) {
+          if (value.charAt(i) == '\n') {
+            newlineCount++;
+          }
+        }
+        for (int i = 1; i < newlineCount; i++) {
+          xmlBuffer.append("\n");
+        }
+      }
       lastNode = _node;
       return false;
     }
@@ -195,11 +201,6 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
       if (append_newline) {
         if (!hasNewLineEnd(xmlBuffer))
           xmlBuffer.append("\n");
-        // Preserve blank lines from the original source.
-        int blankLines = lastHiddenTextBlankLineCount();
-        for (int i = 0; i < blankLines; i++) {
-          xmlBuffer.append("\n");
-        }
         renderContext.appendIndent(xmlBuffer);
       } else
       if (append_space) {
@@ -294,27 +295,6 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
     return false;
   }
 
-  /**
-   * Returns the number of blank lines (extra newlines beyond the first)
-   * in the last hidden text node. A value of 0 means there was at most
-   * one newline (a simple line break); 1 means one blank line, etc.
-   * This preserves intentional blank lines the author placed between
-   * elements.
-   */
-  private int lastHiddenTextBlankLineCount() {
-    if (lastNode == null || !lastNode.isText() || !lastNode.isHidden()) {
-      return 0;
-    }
-    String value = lastNode.getValue();
-    int newlineCount = 0;
-    for (int i = 0; i < value.length(); i++) {
-      if (value.charAt(i) == '\n') {
-        newlineCount++;
-      }
-    }
-    // First newline is the normal line break; extras are blank lines.
-    return Math.max(0, newlineCount - 1);
-  }
 
   private boolean _isStickyTag(FuzzyXMLFormatComposite node) {
     return STICKY_TAGS.contains(node.getName().toLowerCase()) || (useStickyWOTags && node.isWOTag());
