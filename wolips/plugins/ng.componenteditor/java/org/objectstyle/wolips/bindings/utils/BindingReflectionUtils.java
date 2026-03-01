@@ -130,30 +130,17 @@ public class BindingReflectionUtils {
     return type;
   }
 
+  /**
+   * Searches for element class names matching the given name and match type.
+   *
+   * <p>For exact-match lookups ({@code matchType == R_EXACT_MATCH}), uses a
+   * simple project-scoped search instead of building the expensive
+   * {@link WOHierarchyScope} (which requires computing the full type
+   * hierarchy). The hierarchy scope is only needed for prefix/pattern
+   * matching (e.g. the "find all element types" query for autocomplete).
+   */
   public static void findMatchingElementClassNames(String elementTypeName, int matchType, TypeNameCollector typeNameCollector, IProgressMonitor progressMonitor) throws JavaModelException {
     if (elementTypeName != null) {
-      IType superclassType = typeNameCollector.getSuperclassType();
-      if (superclassType == null) {
-        // Superclass type (e.g. NGElement) not found in project classpath; fall back to workspace-wide search
-        SearchEngine searchEngine = new SearchEngine();
-        IJavaSearchScope searchScope = SearchEngine.createJavaSearchScope(new IJavaElement[] { typeNameCollector.getProject() }, true);
-        int lastDotIndex = elementTypeName.lastIndexOf('.');
-        char[] packageName;
-        char[] typeName;
-        if (lastDotIndex == -1) {
-          packageName = null;
-          typeName = elementTypeName.toCharArray();
-        }
-        else {
-          packageName = elementTypeName.substring(0, lastDotIndex).toCharArray();
-          typeName = elementTypeName.substring(lastDotIndex + 1).toCharArray();
-        }
-        searchEngine.searchAllTypeNames(packageName, SearchPattern.R_EXACT_MATCH, typeName, matchType, IJavaSearchConstants.CLASS, searchScope, typeNameCollector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, progressMonitor);
-        return;
-      }
-      SearchEngine searchEngine = new SearchEngine();
-      //IJavaSearchScope searchScope = new WOHierarchyScope(typeNameCollector.getSuperclassType(), typeNameCollector.getProject());
-      IJavaSearchScope searchScope = WOHierarchyScope.hierarchyScope(superclassType, typeNameCollector.getProject().getProject());
       int lastDotIndex = elementTypeName.lastIndexOf('.');
       char[] packageName;
       char[] typeName;
@@ -165,6 +152,24 @@ public class BindingReflectionUtils {
         packageName = elementTypeName.substring(0, lastDotIndex).toCharArray();
         typeName = elementTypeName.substring(lastDotIndex + 1).toCharArray();
       }
+
+      IType superclassType = typeNameCollector.getSuperclassType();
+
+      // For exact-match lookups, a project-scoped search is sufficient and
+      // much faster than building a WOHierarchyScope (which computes the
+      // full type hierarchy). The hierarchy scope is only valuable for
+      // prefix/pattern searches where we need to enumerate all subtypes.
+      if (superclassType == null || matchType == SearchPattern.R_EXACT_MATCH) {
+        SearchEngine searchEngine = new SearchEngine();
+        IJavaSearchScope searchScope = SearchEngine.createJavaSearchScope(new IJavaElement[] { typeNameCollector.getProject() }, true);
+        searchEngine.searchAllTypeNames(packageName, SearchPattern.R_EXACT_MATCH, typeName, matchType, IJavaSearchConstants.CLASS, searchScope, typeNameCollector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, progressMonitor);
+        return;
+      }
+
+      // Prefix/pattern match: use the hierarchy scope to restrict results
+      // to subtypes of the element superclass (WOElement/NGElement).
+      SearchEngine searchEngine = new SearchEngine();
+      IJavaSearchScope searchScope = WOHierarchyScope.hierarchyScope(superclassType, typeNameCollector.getProject().getProject());
       searchEngine.searchAllTypeNames(packageName, SearchPattern.R_EXACT_MATCH, typeName, matchType, IJavaSearchConstants.CLASS, searchScope, typeNameCollector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, progressMonitor);
     }
   }
