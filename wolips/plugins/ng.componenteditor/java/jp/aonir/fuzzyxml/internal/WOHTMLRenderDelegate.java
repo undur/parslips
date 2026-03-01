@@ -205,7 +205,8 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
   private void renderTextBlock(FuzzyXMLText node, RenderContext renderContext, StringBuffer xmlBuffer) {
     StringBuffer indent = new StringBuffer();
     renderContext.appendIndent(indent);
-    String value = node.getValue();
+    // Use raw value to preserve entities exactly as the author wrote them.
+    String value = node.getRawValue();
     xmlBuffer.append(value.trim().replaceAll("\n\\s*", "\n" + indent.toString()));
     // If the original value ended with whitespace containing a newline,
     // emit a newline so the close tag lands on its own line. A trailing

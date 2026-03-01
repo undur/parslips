@@ -477,11 +477,12 @@ public class FuzzyXMLParser {
 		return closeTagEnd;
 	}
 
-	/** �e�L�X�g�m�[�h���������܂��B */
+	/** Creates a text node from the source range [offset, end). */
 	private void handleText(int offset, int end, boolean escape) {
 		String text = _originalSource.substring(offset, end);
 		closeAutocloseTags();
 		FuzzyXMLTextImpl textNode = new FuzzyXMLTextImpl(getParent(), FuzzyXMLUtil.decode(text, _isHTML), offset, end - offset);
+		textNode.setRawValue(text);
 		textNode.setEscape(escape);
 		if (getParent() != null) {
 			((FuzzyXMLElement) getParent()).appendChild(textNode);

@@ -5,7 +5,15 @@ import jp.aonir.fuzzyxml.FuzzyXMLText;
 
 public class FuzzyXMLTextImpl extends AbstractFuzzyXMLNode implements FuzzyXMLText {
 
+  /** The decoded text value (entities resolved to characters). */
   private String _value;
+  /**
+   * The raw text exactly as it appeared in the source, with entities
+   * intact. Used by {@link #toXMLString} so the formatter preserves
+   * the author's entity choices (e.g. {@code &nbsp;} stays as
+   * {@code &nbsp;}, single quotes in script blocks stay as {@code '}).
+   */
+  private String _rawValue;
   private boolean _escape = true;
 
   public FuzzyXMLTextImpl(String value) {
@@ -15,6 +23,20 @@ public class FuzzyXMLTextImpl extends AbstractFuzzyXMLNode implements FuzzyXMLTe
   public FuzzyXMLTextImpl(FuzzyXMLNode parent, String value, int offset, int length) {
     super(parent, offset, length);
     this._value = value;
+    this._rawValue = value;
+  }
+
+  /**
+   * Sets the raw (un-decoded) source text. Called by the parser after
+   * construction so the formatter can output text without an
+   * encode/decode roundtrip that changes entities.
+   */
+  public void setRawValue(String rawValue) {
+    this._rawValue = rawValue;
+  }
+
+  public String getRawValue() {
+    return _rawValue;
   }
 
   public String getValue() {
@@ -37,8 +59,15 @@ public class FuzzyXMLTextImpl extends AbstractFuzzyXMLNode implements FuzzyXMLTe
     buffer.append("text: '" + _value + "'\n");
   }
 
+  /**
+   * Renders this text node to the output buffer. Uses the raw source text
+   * (with original entities intact) so the formatter never converts to or
+   * from entities. Whitespace trimming is applied when formatting is
+   * enabled, but entity content is always preserved as-is.
+   */
   public void toXMLString(RenderContext renderContext, StringBuffer xmlBuffer) {
-    String value = _value;
+    // Use the raw source text so entities pass through unchanged.
+    String value = _rawValue;
     if (renderContext.isTrim()) {
       if (value.trim().length() == 0) {
         return;
@@ -53,10 +82,6 @@ public class FuzzyXMLTextImpl extends AbstractFuzzyXMLNode implements FuzzyXMLTe
         replace = " ";
       }
       value = value.replaceFirst("^[\r\n\t ]+", replace);
-    }
-    if (_escape) {
-      boolean isHTML = renderContext.isHtml();
-      value = FuzzyXMLUtil.escape(value, isHTML);
     }
     xmlBuffer.append(value);
   }
