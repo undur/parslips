@@ -155,10 +155,10 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
     boolean append_space = false;
     boolean bufferHasBreakingEnd = (hasWhiteSpaceEnd(xmlBuffer) || hasTagEnd(xmlBuffer));
     if (_node.isHidden()) {
-      // Preserve blank lines (extra newlines beyond the first) from the
-      // original source. The first newline is handled by beforeOpenTag
-      // when the next element renders; extra newlines need to be emitted
-      // here so they aren't lost.
+      // Preserve blank lines from the original source. We emit all
+      // newlines from the hidden text node here — the subsequent
+      // beforeOpenTag/renderNode will see the buffer already ends with
+      // "\n" and skip adding a redundant one, then just append indent.
       if (renderContext.shouldFormat() && renderContext.isShowNewlines()) {
         String value = _node.getValue();
         int newlineCount = 0;
@@ -167,8 +167,19 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
             newlineCount++;
           }
         }
-        for (int i = 1; i < newlineCount; i++) {
-          xmlBuffer.append("\n");
+        // Only emit extra newlines beyond the first — the first newline
+        // is the normal separator that beforeOpenTag would emit anyway.
+        // By emitting extras here plus skipping the hasNewLineEnd check
+        // in beforeOpenTag, the blank lines survive.
+        if (newlineCount > 1) {
+          // Ensure buffer ends with "\n" first (the normal line break).
+          if (!hasNewLineEnd(xmlBuffer)) {
+            xmlBuffer.append("\n");
+          }
+          // Now add the extra blank lines.
+          for (int i = 1; i < newlineCount; i++) {
+            xmlBuffer.append("\n");
+          }
         }
       }
       lastNode = _node;
