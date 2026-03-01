@@ -12,6 +12,22 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Type resolution performance — three-part optimization
+
+- **Cached resolved `IType` in `InlineWodTagInfo`** — `loadAttributeInfo()` now stores the resolved element type in a `_resolvedElementType` field, and `getElementType()` returns the cached value when attribute info has already been loaded. Previously, `HTMLAssistProcessor` called `getElementType()` on every completion proposal to check `memberIsDeprecated()`, which triggered a full `findElementType()` → `WOHierarchyScope` lookup for each tag in the list. The deprecation check now reuses the already-resolved type at zero cost.
+- **Skip `WOHierarchyScope` for exact-match lookups** — `findMatchingElementClassNames()` now uses a project-scoped `IJavaSearchScope` (via `SearchEngine.createJavaSearchScope()`) for `R_EXACT_MATCH` queries instead of building a `WOHierarchyScope`. The hierarchy scope constructs a full type hierarchy and resource vector (200-500ms per invocation), which is only needed for prefix/pattern matching. Exact-match lookups (the common case during validation) now bypass this entirely.
+- **Cached `InlineWodTagInfo` instances per project** — `TemplateAssistProcessor` maintains a static `Map<IProject, Map<String, InlineWodTagInfo>>` cache. `getCachedTagInfo()` returns existing instances, and `clearTagInfoCacheForProject()` invalidates the cache when Java or `.api` files change (wired through `WodParserCacheInvalidator`). Repeat autocomplete invocations reuse cached instances instead of creating new ones and re-running `loadAttributeInfo()` each time.
+
+### Fix race conditions in `WOHierarchyScope`
+
+- **Fixed NPE in `encloses(String)`** — concurrent `initialize()` calls from multiple JDT search threads could reset the `elements` array while `encloses()` was iterating with an old `elementCount`, causing null pointer dereferences. Fixed by snapshotting both the array reference and count into local variables, adding a bounds check (`i < elts.length`), and a null guard on individual elements.
+- **Synchronized `initialize()`** — concurrent calls to `initialize()` could corrupt the `elements` array (one thread resizing while another was mid-copy), causing `ArrayIndexOutOfBoundsException` in `add()`. Made `initialize()` synchronized to prevent concurrent execution.
+
+### Space before `/>` in self-closing tag autocomplete
+
+- Self-closing tag completions now insert `<wo:str value="" />` instead of `<wo:str value=""/>` — added a space before the closing `/>` for readability.
+- Fixed cursor positioning for non-void self-closing tags — the `forceAttributePosition` logic was missing the `else` branch for self-closing wo: tags (as opposed to HTML void elements like `<br>`), so the cursor ended up after the `/>` instead of before the attributes.
+
 ### Self-closing tag autocomplete and required binding pre-insertion
 
 - **`InlineWodTagInfo` now checks `wocomponentcontent`** to determine whether autocomplete should insert a self-closing tag (`<wo:str />`) or an opening+closing tag pair (`<wo:form></wo:form>`). Previously, all `wo:` tag completions unconditionally inserted opening+closing tags. The `componentContent` flag is resolved from the element's `.api` file (project-local or global `WebObjectDefinitions.xml`).
