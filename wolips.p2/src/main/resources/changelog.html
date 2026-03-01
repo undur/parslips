@@ -29,6 +29,11 @@
 				<h2 class="date-header">March 1, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Fix: apostrophes in template text breaking autocompletion</h3>
+					<p>Fixed a long-standing bug (inherited from WOLips) where an apostrophe in body text &mdash; e.g. <code>&lt;p&gt;what&rsquo;s up&lt;/p&gt;</code> &mdash; would break tag autocompletion for the rest of the file. The tag-stack scanner mistakenly treated the apostrophe as the start of a quoted attribute value, swallowing all subsequent content (including <code>&lt;</code> characters) so Ctrl+Space could never see a tag prefix.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Type resolution performance</h3>
 					<p>Three optimizations that together eliminate the multi-second delay when opening components or triggering tag autocomplete in large projects. Resolved element types are now cached so deprecation checks don&rsquo;t re-trigger JDT lookups; exact-match type lookups skip the expensive hierarchy scope entirely; and autocomplete tag info is cached per project so repeat invocations reuse pre-loaded attribute info instead of rebuilding it each time.</p>
 				</div>
