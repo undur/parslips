@@ -370,14 +370,24 @@ public class FuzzyXMLUtil {
     return result;
   }
 
+  /**
+   * Escapes characters that are structurally significant in XML/HTML:
+   * {@code &}, {@code <}, {@code >}, {@code "}, and {@code '}.
+   * <p>
+   * Non-ASCII characters (accented letters, Icelandic characters, etc.) are
+   * left as-is — they are valid UTF-8 and should not be converted to HTML
+   * entities like {@code &oacute;} or {@code &eth;}. Previously the HTML mode
+   * used the full HTML 4.0 entity table, which mangled any non-ASCII text in
+   * template body content.
+   *
+   * @param value  the text to escape
+   * @param isHTML ignored (kept for API compatibility); only XML-structural
+   *               characters are escaped regardless of mode
+   */
   public static String escape(String value, boolean isHTML) {
-    Entities entities = null;
-    if (isHTML) {
-      entities = Entities.HTML40;
-    }
-    else {
-      entities = Entities.XML;
-    }
+    // Only escape the five XML-structural characters. Non-ASCII characters
+    // are valid in UTF-8 documents and must not be converted to entities.
+    Entities entities = Entities.XML;
 
     StringBuffer buf = new StringBuffer(value.length() * 2);
     int i;
