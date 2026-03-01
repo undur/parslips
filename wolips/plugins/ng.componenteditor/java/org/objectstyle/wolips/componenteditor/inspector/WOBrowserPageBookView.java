@@ -12,7 +12,6 @@ public class WOBrowserPageBookView extends PageBookView {
 	private ComponentEditor _componentEditor;
 
 	public WOBrowserPageBookView() {
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -48,7 +47,6 @@ public class WOBrowserPageBookView extends PageBookView {
 	
 	@Override
 	protected void doDestroyPage(IWorkbenchPart part, PageRec pageRecord) {
-		System.out.println("WOBrowserPageBookView.doDestroyPage: " + part);
 		if (pageRecord != null) {
 			WOBrowserPage page = (WOBrowserPage) pageRecord.page;
 			page.dispose();
@@ -63,7 +61,6 @@ public class WOBrowserPageBookView extends PageBookView {
 
 	@Override
 	protected boolean isImportant(IWorkbenchPart part) {
-		System.out.println("WOBrowserPageBookView.isImportant: " + part);
 		return part instanceof ComponentEditor;
 	}
 }

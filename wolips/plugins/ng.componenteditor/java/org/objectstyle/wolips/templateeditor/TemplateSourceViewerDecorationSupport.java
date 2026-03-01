@@ -24,7 +24,6 @@ public class TemplateSourceViewerDecorationSupport extends SourceViewerDecoratio
   @Override
   protected AnnotationPainter createAnnotationPainter() {
     AnnotationPainter annotationPainter = super.createAnnotationPainter();
-    //annotationPainter.addDrawingStrategy(AnnotationPreference.STYLE_BOX, _roundBoxStrategy);
     return annotationPainter;
   }
 
@@ -33,7 +32,6 @@ public class TemplateSourceViewerDecorationSupport extends SourceViewerDecoratio
      * @see org.eclipse.jface.text.source.AnnotationPainter.IDrawingStrategy#draw(org.eclipse.jface.text.source.Annotation, org.eclipse.swt.graphics.GC, org.eclipse.swt.custom.StyledText, int, int, org.eclipse.swt.graphics.Color)
      */
     public void draw(Annotation annotation, GC gc, StyledText textWidget, int offset, int length, Color color) {
-      System.out.println("DragOverDrawingStrategy.draw: " + offset + ", " + length);
       if (length == 0) {
         return;
       }

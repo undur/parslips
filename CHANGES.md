@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Post-refactoring cleanup
+
+- **Fixed TypeCache invalidation bug.** `TypeCacheEntry._resource` was never initialized (the assignment was commented out since the original WOLips import), making `clearCacheForProject()` and `clearCacheForResource()` no-ops — they iterated cache entries looking for matching resources, but every entry had `_resource == null` so nothing ever matched. The `CHANGED` path in `WodParserCacheInvalidator` worked by key (`clearCacheForType(IType)`), but file deletion and full-project invalidation were silently broken. Fixed by uncommenting the initialization.
+- **Removed dead classes:** `SimpleWodModel` (never instantiated), `DisplayPage` and `ValidationPage` (empty API editor page subclasses, never instantiated — leftovers from the API editor rewrite).
+- **Removed `updateWebObjectsTagNames` no-op chain.** `WodEditor.updateWebObjectsTagNames()` had its body entirely commented out since the original WOLips import (with a "MS: Come back to this" comment). `WodclipsePlugin.updateWebObjectsTagNames(WodEditor)` called it and tracked a `lastWodEditor` field (also pointless). `HtmlWodTab` registered selection listeners and called the chain from 4 sites, all producing no visible effect. Removed the methods, the field, the listeners, and the call sites.
+- **Removed `ApiUtils.acceptResources()`** — a recursive method that only called itself and had no external callers.
+- **Removed active `System.out.println` debug statements** from `BindingsInspector`, `WOBrowserPageBookView`, `InsertHtmlAndWodAction`, `QuickRenameElementAction`, `TemplateSourceViewerDecorationSupport`, `AbstractEngine`, `WooeditorPlugin`. Also removed dead `WOComponentCreationPage.logPreferences()` method (zero callers, body was all `System.out.println`).
+- **Removed commented-out code blocks** in `AbstractWodBinding.fillInBindingProblems()` (three no-op `isWillSet()` validation blocks), `TemplateAssistProcessor.computeCompletionProposals()` (JSP scriptlet completion code), `ComponentEditor.close()`, `HtmlWodTab.close()`, `WodEditor.createActions()`, `WodEditor.webObjectTagSelected()`, and `TemplateSourceViewerDecorationSupport.createAnnotationPainter()`.
+- **Removed duplicate `"neq"` entry** in `AbstractWodBinding.VALID_OGNL_VALUES` static initializer.
+- **Removed dead `previewPageId` field** from `ComponentEditorPart` (declared but never read or assigned).
+
 ### Separate IWodBinding from IApiBinding
 
 - **Removed the incorrect `IWodBinding extends IApiBinding` inheritance.** A WOD binding is a *usage* of a binding (`item = session.cart`), not a *definition* of what bindings a component accepts. The inheritance forced `AbstractWodBinding` to implement stub versions of `getDefaults()`, `isRequired()`, `isWillSet()`, `getValidValues()`, and `getSelectedDefaults()` that returned meaningless values (null, false, empty). It also allowed WOD bindings to be mixed into `IApiBinding[]` arrays in `getApiBindings()`, obscuring the distinction between definitions and usages throughout the inspector UI.

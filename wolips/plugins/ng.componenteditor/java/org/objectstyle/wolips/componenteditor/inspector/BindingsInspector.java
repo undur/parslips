@@ -382,7 +382,6 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		elementTypeUpdateStrategy.setBeforeSetValidator(new IValidator() {
 			public IStatus validate(Object value) {
 				String newName = (String) value;
-				System.out.println(".validate: " + newName);
 				IStatus status = Status.OK_STATUS;
 				try {
 					if (newName == null || newName.length() == 0) {

@@ -85,7 +85,6 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 	private int htmlPageId;
 	private int wodPageId;
 	private int wooPageId;
-	private int previewPageId;
 	private int apiPageId;
 	
 	ComponentEditorInput componentEditorInput;

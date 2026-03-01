@@ -10,9 +10,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClassFile;
@@ -472,18 +469,4 @@ public class ApiUtils {
 		return validValues.toArray(new String[validValues.size()]);
 	}
 
-	protected static void acceptResources(IResource resource, String basePath, Set<String> paths) throws CoreException {
-		if (resource instanceof IFolder) {
-			IResource[] members = ((IFolder) resource).members();
-			for (IResource childResource : members) {
-				if (childResource instanceof IFolder) {
-					ApiUtils.acceptResources(childResource, basePath + "/" + childResource.getName() + "/", paths);
-				} else {
-					ApiUtils.acceptResources(childResource, basePath, paths);
-				}
-			}
-		} else if (resource instanceof IFile) {
-			paths.add("\"" + basePath + resource.getName() + "\"");
-		}
-	}
 }

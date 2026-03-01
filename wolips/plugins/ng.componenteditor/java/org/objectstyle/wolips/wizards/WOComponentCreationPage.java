@@ -704,17 +704,6 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		return createResourceOperation(op);
 	}
 
-	/*
-	 * Debugging
-	 */
-	public void logPreferences() {
-		System.out.println("BODY_CHECKBOX_KEY: " + this.getDialogSettings().get(BODY_CHECKBOX_KEY));
-		System.out.println("HTML_DOCTYPE_KEY: " + this.getDialogSettings().get(HTML_DOCTYPE_KEY));
-		System.out.println("NSSTRING_ENCODING_KEY: " + this.getDialogSettings().get(NSSTRING_ENCODING_KEY));
-		System.out.println("API_CHECKBOX_KEY: " + this.getDialogSettings().get(API_CHECKBOX_KEY));
-		System.out.println("SUPERCLASS_KEY: " + this.getDialogSettings().get(WOComponentCreationPage.SUPERCLASS_KEY));
-	}
-
 	/**
 	 * Populate a SWT Combo with HTML doctypes
 	 * 

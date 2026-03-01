@@ -85,7 +85,6 @@ public abstract class AbstractWodBinding implements IWodBinding {
     AbstractWodBinding.VALID_OGNL_VALUES.add("neq");
     AbstractWodBinding.VALID_OGNL_VALUES.add("not");
     AbstractWodBinding.VALID_OGNL_VALUES.add("null");
-    AbstractWodBinding.VALID_OGNL_VALUES.add("neq");
     AbstractWodBinding.VALID_OGNL_VALUES.add("new");
     AbstractWodBinding.VALID_OGNL_VALUES.add("or");
     AbstractWodBinding.VALID_OGNL_VALUES.add("shl");
@@ -342,28 +341,7 @@ public abstract class AbstractWodBinding implements IWodBinding {
             if (!PreferenceConstants.IGNORE.equals(helperFunctionSeverity) && helperFunction != null) {
               problems.add(new WodBindingValueProblem(element, bindingName, "Unable to verify helper function '" + helperFunction + "'", getValuePosition(), lineNumber, PreferenceConstants.WARNING.equals(helperFunctionSeverity)));
             }
-            
-            // else {
-            // String[] validApiValues = WodBindingUtils.getValidValues(elementType, getName(), typeToApiModelWoCache);
-            // if (validApiValues != null &&
-            // !Arrays.asList(validApiValues).contains(bindingValue))
-            // {
-            // problems.add(new WodProblem(wodModel, "The .api file for " + wodJavaType.getElementName() + " declares '" + bindingValue + "' to be an invalid value.", getValuePosition(), false));
-            // }
-            // }
-  
-            if (apiBinding != null) {
-              if (apiBinding.isWillSet()) {
-                if (!bindingValueKeyPath.isSettable()) {
-                  // problems.add(new WodBindingValueProblem(bindingName, "The key '" + getName() + "' must have a 'set' method.", getValuePosition(), lineNumber, false));
-                }
-              }
-            }
-          }
-        }
-        else if (apiBinding != null) {
-          if (apiBinding.isWillSet() && !isCaret()) {
-            // problems.add(new WodBindingValueProblem(bindingName, "The key '" + getName() + "' cannot be a constant value.", getValuePosition(), lineNumber, false));
+
           }
         }
         String deprecationSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY);

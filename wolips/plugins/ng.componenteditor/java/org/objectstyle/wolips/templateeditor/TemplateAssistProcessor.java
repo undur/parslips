@@ -154,18 +154,6 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
 
   @Override
   public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int documentOffset) {
-    // Java code completion for partitions which are not parted as HTMLPartitionScanner#HTML_SCRIPT.
-    //String rawText = viewer.getDocument().get();
-    //System.out.println("TemplateAssistProcessor.computeCompletionProposals: " + rawText);
-    //    rawText = HTMLUtil.comment2space(rawText, false);
-    //    String text = rawText.substring(0, documentOffset);
-    //    int begin = text.lastIndexOf("<%");
-    //    if (begin >= 0) {
-    //      int end = rawText.indexOf("%>", begin);
-    //      if (end >= 0 && documentOffset < end) {
-    //        return scriptletProcessor.computeCompletionProposals(viewer, documentOffset);
-    //      }
-    //    }
     return super.computeCompletionProposals(viewer, documentOffset);
   }
 

@@ -213,29 +213,11 @@ public class WodEditor extends TextEditor implements IEmbeddedEditor, IWebobject
 
 		String BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.jdt.internal.ui.javaeditor.ConstructedJavaEditorMessages";//$NON-NLS-1$
 		ResourceBundle fgBundleForConstructedKeys = ResourceBundle.getBundle(BUNDLE_FOR_CONSTRUCTED_KEYS);
-		// WodclipsePlugin.getDefault().getResourceBundle()
 		ContentAssistAction action = new ContentAssistAction(fgBundleForConstructedKeys, "ContentAssistProposal.", this); //$NON-NLS-1$
 		action.setActionDefinitionId(ITextEditorActionDefinitionIds.CONTENT_ASSIST_PROPOSALS);
 		setAction("ContentAssistProposal", action);
 		markAsStateDependentAction("ContentAssistProposal", true);
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(action, IAbstractTextEditorHelpContextIds.CONTENT_ASSIST_ACTION);
-	}
-
-	public void updateWebObjectsTagNames() {
-		// MS: Come back to this
-		// try {
-		// IDocument document =
-		// getDocumentProvider().getDocument(getEditorInput());
-		// Set elementNamesSet = WodScanner.getTextForRulesOfType(document,
-		// ElementNameRule.class);
-		// String[] elementNames = (String[]) elementNamesSet.toArray(new
-		// String[elementNamesSet.size()]);
-		// HtmleditorPlugin.getDefault().setWebObjectsTagNames(elementNames);
-		// } catch (BadLocationException t) {
-		// // null means no tags
-		// // the user has to enter the name manually
-		// HtmleditorPlugin.getDefault().setWebObjectsTagNames(null);
-		// }
 	}
 
 	public Object getAdapter(Class adapter) {
@@ -326,7 +308,6 @@ public class WodEditor extends TextEditor implements IEmbeddedEditor, IWebobject
 				Position namePosition = docWodElement.getElementNamePosition();
 				getSourceViewer().setSelectedRange(namePosition.getOffset(), namePosition.getLength());
 				getSourceViewer().revealRange(namePosition.getOffset(), namePosition.getLength());
-				//setHighlightRange(namePosition.getOffset(), namePosition.getLength(), true);
 			}
 		} catch (BadLocationException e) {
 			WodclipsePlugin.getDefault().log(e);

@@ -210,13 +210,6 @@ public class ComponentEditor extends ComponentEditorPart implements IGotoMarker,
 	}
 
 	public void close(boolean save) {
-		// IEditorPart editorPart = this.getActiveEditor();
-		// if (editorPart == null || !(this.getActiveEditor() instanceof
-		// ITextEditor)) {
-		// return;
-		// }
-		// ITextEditor textEditor = (ITextEditor) editorPart;
-		// textEditor.close(save);
 		super.close(save);
 	}
 

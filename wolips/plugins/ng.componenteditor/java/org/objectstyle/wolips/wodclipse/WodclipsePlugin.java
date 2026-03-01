@@ -47,7 +47,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.objectstyle.wolips.baseforuiplugins.AbstractBaseUIActivator;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -58,8 +57,6 @@ import org.osgi.framework.BundleContext;
 public class WodclipsePlugin extends AbstractBaseUIActivator {
 	// The shared instance.
 	private static WodclipsePlugin plugin;
-
-	private WodEditor lastWodEditor;
 
 	/**
 	 * The constructor.
@@ -82,7 +79,6 @@ public class WodclipsePlugin extends AbstractBaseUIActivator {
 	public void stop(BundleContext context) throws Exception {
 		super.stop(context);
 		plugin = null;
-		lastWodEditor = null;
 	}
 
 	/**
@@ -111,16 +107,4 @@ public class WodclipsePlugin extends AbstractBaseUIActivator {
 		return getImageRegistry().get(key);
 	}
 
-	public void updateWebObjectsTagNames(WodEditor wodEditor) {
-		if (lastWodEditor == wodEditor) {
-			return;
-		}
-		if (wodEditor != null) {
-			wodEditor.updateWebObjectsTagNames();
-		} else {
-			// MS: Come back to this
-			//HtmleditorPlugin.getDefault().setWebObjectsTagNames(null);
-		}
-		lastWodEditor = wodEditor;
-	}
 }

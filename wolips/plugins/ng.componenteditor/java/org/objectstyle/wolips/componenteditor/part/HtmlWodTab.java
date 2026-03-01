@@ -44,8 +44,6 @@
 package org.objectstyle.wolips.componenteditor.part;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
@@ -61,7 +59,6 @@ import org.eclipse.ui.PartInitException;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.components.input.ComponentEditorFileEditorInput;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
-import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.editor.WodEditor;
 
@@ -126,12 +123,6 @@ public class HtmlWodTab extends ComponentEditorTab {
 					HtmlWodTab.this.getComponentEditorPart().publicHandlePropertyChange(propertyId);
 				}
 			});
-			wodEditor.getSelectionProvider().addSelectionChangedListener(new ISelectionChangedListener() {
-				public void selectionChanged(SelectionChangedEvent event) {
-					WodclipsePlugin.getDefault().updateWebObjectsTagNames(null);
-				}
-			});
-			WodclipsePlugin.getDefault().updateWebObjectsTagNames(wodEditor);
 			_templateContainer.addListener(SWT.Activate, new Listener() {
 				public void handleEvent(Event event) {
 					setHtmlActive(true);
@@ -166,8 +157,6 @@ public class HtmlWodTab extends ComponentEditorTab {
 		if (wodEditor != null) {
 			wodEditor.initEditorInteraction(this.getComponentEditorPart().getEditorInteraction());
 		}
-
-		this.addWebObjectsTagNamesListener();
 	}
 
 	public boolean isHtmlActive() {
@@ -272,7 +261,6 @@ public class HtmlWodTab extends ComponentEditorTab {
 		if (wodEditor != null) {
 			wodEditor.close(save);
 		}
-		// templateEditor.close(save);
 	}
 
 	@Override
@@ -286,28 +274,6 @@ public class HtmlWodTab extends ComponentEditorTab {
 
 	public boolean isDirty() {
 		return (wodEditor != null && wodEditor.isDirty()) || templateEditor.isDirty();
-	}
-
-	private void addWebObjectsTagNamesListener() {
-		// templateEditor.getSelectionProvider().addSelectionChangedListener(new
-		// ISelectionChangedListener() {
-		// public void selectionChanged(SelectionChangedEvent event) {
-		// WodclipsePlugin.getDefault().updateWebObjectsTagNames(null);
-		// }
-		// });
-		if (wodEditor == null) {
-			return;
-		}
-		
-		final WodEditor finalWodEditor = wodEditor;
-		wodEditor.getSelectionProvider().addSelectionChangedListener(new ISelectionChangedListener() {
-
-			public void selectionChanged(SelectionChangedEvent event) {
-				WodclipsePlugin.getDefault().updateWebObjectsTagNames(finalWodEditor);
-			}
-
-		});
-		WodclipsePlugin.getDefault().updateWebObjectsTagNames(wodEditor);
 	}
 
 	public void setHtmlActive() {

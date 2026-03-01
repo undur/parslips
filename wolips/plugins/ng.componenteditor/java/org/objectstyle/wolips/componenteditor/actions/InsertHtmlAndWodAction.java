@@ -106,7 +106,6 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 		TemplateEditor te = getTemplateEditor();
 		WodEditor we = getWodEditor();
 		InsertComponentSpecification ics = getComponentSpecification();
-		System.out.println("InsertHtmlAndWodAction.insert: " + te + ", " + we + ", " + ics);
 		if (te != null && we != null && ics != null) {
 			SimpleWodElement wodElement = new SimpleWodElement(ics.getComponentInstanceName(), ics.getComponentName());
 			List<IApiBinding> bindings = ics.getRequiredBindings();
