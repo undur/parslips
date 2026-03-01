@@ -255,8 +255,13 @@ public class WOHierarchyScope extends AbstractSearchScope implements SuffixConst
 		if (separatorIndex != -1) {
 			return this.resourcePaths.contains(resourcePath);
 		} else {
-			for (int i = 0; i < this.elementCount; i++) {
-				if (resourcePath.startsWith(this.elements[i].getFullPath().toString())) {
+			// Snapshot count and array reference to avoid races with
+			// concurrent initialize()/refresh() calls that reset the array.
+			int count = this.elementCount;
+			IResource[] elts = this.elements;
+			for (int i = 0; i < count && i < elts.length; i++) {
+				IResource elt = elts[i];
+				if (elt != null && resourcePath.startsWith(elt.getFullPath().toString())) {
 					return true;
 				}
 			}
