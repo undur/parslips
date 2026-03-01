@@ -79,6 +79,13 @@ public class Unbound extends AbstractNamedValidation {
     }
   }
 
+  /**
+   * Removes any {@code <unbound>} validation rules for the given binding from the
+   * {@code <wo>} element. Iterates validations in reverse order since
+   * {@link Validation#removeChild(AbstractApiModelElement)} may remove the
+   * validation element from the DOM if it becomes empty (no remaining children),
+   * so we must not also attempt to remove it here.
+   */
   public static void removeFromWoWithBinding(Wo wo, Binding binding) {
     synchronized (wo.apiModel) {
       List<Validation> validations = wo.getValidations();
@@ -87,11 +94,11 @@ public class Unbound extends AbstractNamedValidation {
         List<Unbound> unbounds = validation.getUnbounds();
         for (Unbound unbound : unbounds) {
           if (unbound.isAffectedByBindingNamed(binding.getName())) {
+            // Validation.removeChild() removes the unbound element and also
+            // removes the validation element itself from the DOM if it has
+            // no remaining children — no need to remove it again here.
             validation.removeChild(unbound);
           }
-        }
-        if (validation.getValidationChildren().size() == 0) {
-          wo.element.removeChild(validation.element);
         }
       }
     }
