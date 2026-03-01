@@ -26,6 +26,7 @@ public class InlineWodTagInfo extends TagInfo {
   private TagShortcut _tagShortcut;
   private IJavaProject _javaProject;
   private boolean _attributeInfoCached;
+  private IType _resolvedElementType;
   private TypeCache _cache;
 
   public InlineWodTagInfo(String elementTypeName, TypeCache cache) {
@@ -47,14 +48,23 @@ public class InlineWodTagInfo extends TagInfo {
     return _javaProject;
   }
   
+  /**
+   * Returns the resolved element type. If {@link #loadAttributeInfo()} has
+   * already been triggered (by {@code hasBody()}, {@code getAttributeInfo()},
+   * etc.), the cached result is returned immediately — no JDT lookup.
+   */
   public IType getElementType() {
-    IType elementType = null;
-    try {
-      elementType = BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache);
-    } catch (JavaModelException e) {
-      // ignore;
+    if (_attributeInfoCached) {
+      return _resolvedElementType;
     }
-    return elementType;
+    // Attribute info hasn't been loaded yet; resolve the type directly.
+    // This path is rare — HTMLAssistProcessor normally calls hasBody() or
+    // getRequiredAttributeInfo() before getElementType().
+    try {
+      return BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache);
+    } catch (JavaModelException e) {
+      return null;
+    }
   }
 
   public String getElementTypeName() {
@@ -85,9 +95,9 @@ public class InlineWodTagInfo extends TagInfo {
 
   protected void loadAttributeInfo() {
     if (!_attributeInfoCached) {
-      IType elementType;
       try {
-        elementType = BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache);
+        IType elementType = BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache);
+        _resolvedElementType = elementType;
         if (elementType != null) {
           Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();
           WodCompletionUtils.fillInBindingNameCompletionProposals(_javaProject, elementType, "", 0, 0, proposals, false, _cache);
