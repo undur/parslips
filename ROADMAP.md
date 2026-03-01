@@ -101,14 +101,14 @@ This feeds into almost every other roadmap item: hover documentation, validation
 
 Implemented. Select HTML in the template, press `Cmd+2, E`, enter a name — the selected HTML is extracted into a new component (`.wo` folder + all files), the selection is replaced with a `<wo:NewComponentName/>` tag, and the new component opens for editing. Uses the same package and superclass as the parent component. The extracted HTML is automatically dedented to start at column 0.
 
-## Formatter: indentation settings
+## ~~Formatter: indentation settings~~ ✓
 
-The formatter backend already supports tabs vs. spaces (`INDENT_TABS`) and configurable indent size (`INDENT_SIZE`) via `PreferenceConstants`, but neither setting was ever exposed in the preference page UI. The `XMLPreferencePage` ("Template Formatting") only shows "Spaces Around Equals". Need to add controls for:
+Implemented. The `XMLPreferencePage` ("Template Formatting") now exposes:
 
-- **Tabs vs. spaces** — checkbox, defaults to spaces
-- **Indent size** — spinner or text field, defaults to 2
+- **Indent with tabs** — checkbox (defaults to spaces). When checked, the indent size spinner is disabled since it's irrelevant.
+- **Indent size (spaces)** — spinner, 1–8, defaults to 2.
 
-These are wired through `FormatRefactoring` → `RenderContext`, which already reads both preferences. The fix is purely UI.
+Both settings were already supported by the formatter backend (`FormatRefactoring` → `RenderContext`) via `PreferenceConstants.INDENT_TABS` and `INDENT_SIZE` — they just weren't wired to the UI. Also fixed the existing `spacesAroundEquals` checkbox to save via `performOk()` instead of on every click.
 
 ## Tag namespace support
 

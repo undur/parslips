@@ -29,6 +29,11 @@
 				<h2 class="date-header">March 1, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Formatter: indentation settings</h3>
+					<p>The template formatting preferences now let you choose between tabs and spaces for indentation, and set the number of spaces per indent level (1&ndash;8, default 2). These settings existed in the formatter backend since the WOLips era but were never exposed in the UI &mdash; now they&rsquo;re in <strong>Preferences &gt; Parsley &gt; Template Formatting</strong>.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Fix: apostrophes in template text breaking autocompletion</h3>
 					<p>Fixed a long-standing bug (inherited from WOLips) where an apostrophe in body text &mdash; e.g. <code>&lt;p&gt;what&rsquo;s up&lt;/p&gt;</code> &mdash; would break tag autocompletion for the rest of the file. The tag-stack scanner mistakenly treated the apostrophe as the start of a quoted attribute value, swallowing all subsequent content (including <code>&lt;</code> characters) so Ctrl+Space could never see a tag prefix.</p>
 				</div>

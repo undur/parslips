@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Formatter: indentation settings in preferences
+
+- **Added "Indent with tabs" checkbox** to `XMLPreferencePage` — wired to `PreferenceConstants.INDENT_TABS`, which `FormatRefactoring` and `XMLEditor` already read. When checked, the indent size spinner is disabled.
+- **Added "Indent size" spinner** (1–8 spaces) — wired to `PreferenceConstants.INDENT_SIZE`. Both preferences existed since WOLips but were never exposed in the UI.
+- **Fixed `spacesAroundEquals` save behavior** — previously saved on every checkbox click via `widgetSelected()`; now saves properly in `performOk()` like all other preferences on the page.
+
 ### Type resolution performance — three-part optimization
 
 - **Cached resolved `IType` in `InlineWodTagInfo`** — `loadAttributeInfo()` now stores the resolved element type in a `_resolvedElementType` field, and `getElementType()` returns the cached value when attribute info has already been loaded. Previously, `HTMLAssistProcessor` called `getElementType()` on every completion proposal to check `memberIsDeprecated()`, which triggered a full `findElementType()` → `WOHierarchyScope` lookup for each tag in the list. The deprecation check now reuses the already-resolved type at zero cost.
