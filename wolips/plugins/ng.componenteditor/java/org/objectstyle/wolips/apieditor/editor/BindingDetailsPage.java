@@ -57,7 +57,6 @@ package org.objectstyle.wolips.apieditor.editor;
 
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -74,53 +73,59 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.IDetailsPage;
 import org.eclipse.ui.forms.IFormPart;
 import org.eclipse.ui.forms.IManagedForm;
+import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
-import org.objectstyle.wolips.bindings.api.ApiModel;
-import org.objectstyle.wolips.bindings.api.Binding;
+import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.ApiValidation;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
+import org.objectstyle.wolips.bindings.api.SimpleApiBinding;
 
 /**
- * @author uli
+ * Details page for editing the properties of a selected binding in the
+ * {@code .api} editor.
+ *
+ * <p>Displays and edits:
+ * <ul>
+ *   <li>Binding name (text field)
+ *   <li>Value set / defaults (dropdown)
+ *   <li>Required flag (checkbox)
+ *   <li>Will Set flag (checkbox)
+ * </ul>
+ *
+ * <p>Mutations go directly to the {@link SimpleApiBinding} POJO. The model
+ * is marked as dirty so the editor knows to enable Save.
  */
 public class BindingDetailsPage implements IDetailsPage {
-	IManagedForm managedForm;
+	IManagedForm _managedForm;
 
-	TableViewer viewer;
+	/** The currently-selected binding, or null if nothing is selected. */
+	SimpleApiBinding _binding;
 
-	Binding binding;
+	/**
+	 * Guard flag to suppress listener-driven dirty marking during programmatic
+	 * widget updates. Without this, {@link #update()} → {@code _name.setText()}
+	 * fires the {@code ModifyListener}, which calls {@link #markDirty()},
+	 * re-dirtying the model immediately after save.
+	 */
+	boolean _updating;
 
-	Text name;
-
-	Button requiredFlag;
-
-	Button willSetFlag;
-
-	Combo valueSetCombo;
-
-	ApiModel apiModel;
+	Text _name;
+	Button _requiredFlag;
+	Button _willSetFlag;
+	Combo _valueSetCombo;
 
 	public BindingDetailsPage() {
 		super();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#initialize(org.eclipse.ui.forms.IManagedForm)
-	 */
 	public void initialize(IManagedForm form) {
-		this.managedForm = form;
+		this._managedForm = form;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
 	public void createContents(Composite parent) {
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.topMargin = 5;
@@ -129,7 +134,7 @@ public class BindingDetailsPage implements IDetailsPage {
 		layout.bottomMargin = 2;
 		parent.setLayout(layout);
 
-		FormToolkit toolkit = managedForm.getToolkit();
+		FormToolkit toolkit = _managedForm.getToolkit();
 		Section s1 = toolkit.createSection(parent, ExpandableComposite.TITLE_BAR);
 		s1.marginWidth = 10;
 		s1.setText("Binding Details");
@@ -137,7 +142,6 @@ public class BindingDetailsPage implements IDetailsPage {
 		TableWrapData td = new TableWrapData(TableWrapData.FILL, TableWrapData.TOP);
 		td.grabHorizontal = true;
 		s1.setLayoutData(td);
-		//toolkit.createCompositeSeparator(s1);
 		Composite client = toolkit.createComposite(s1);
 		GridLayout glayout = new GridLayout();
 		glayout.marginWidth = glayout.marginHeight = 0;
@@ -146,69 +150,100 @@ public class BindingDetailsPage implements IDetailsPage {
 
 		SelectionListener choiceListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				if (binding != null) {
+				if (_binding != null && !_updating) {
 					int selectedIndex = ((Combo)e.widget).getSelectionIndex();
-					binding.setDefaults(selectedIndex);
-					managedForm.dirtyStateChanged();
+					_binding.setDefaults(selectedIndex);
+					markDirty();
 				}
 			}
 		};
 
 		GridData gd;
 		toolkit.createLabel(client, "Name:");
-		name = toolkit.createText(client, "", SWT.SINGLE);
-		name.addModifyListener(new ModifyListener() {
+		_name = toolkit.createText(client, "", SWT.SINGLE);
+		_name.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				if (binding != null) {
+				if (_binding != null && !_updating) {
 					try {
-						binding.setName(name.getText());
+						_binding.setName(_name.getText());
 					}
 					catch (Throwable t) {
-						binding.setName(name.getText() + System.currentTimeMillis());
+						// Name conflict — append timestamp to make unique
+						_binding.setName(_name.getText() + System.currentTimeMillis());
 					}
-					managedForm.dirtyStateChanged();
+					// Notify snapshot that the name map needs rebuilding
+					try {
+						getApiEditor().getModel().getSnapshot().bindingNameChanged();
+					} catch (ApiModelException ex) {
+						// Best effort
+					}
+					markDirty();
 				}
 			}
 		});
 		gd = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_BEGINNING);
 		gd.widthHint = 10;
-		name.setLayoutData(gd);
+		_name.setLayoutData(gd);
 
 		toolkit.createLabel(client, "Value Set:");
-		this.valueSetCombo = new Combo(client, SWT.READ_ONLY);
-		valueSetCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		this._valueSetCombo = new Combo(client, SWT.READ_ONLY);
+		_valueSetCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		for (int i = 0; i < IApiBinding.ALL_DEFAULTS.length; i++) {
-			valueSetCombo.add(IApiBinding.ALL_DEFAULTS[i]);
+			_valueSetCombo.add(IApiBinding.ALL_DEFAULTS[i]);
 		}
-		valueSetCombo.addSelectionListener(choiceListener);
+		_valueSetCombo.addSelectionListener(choiceListener);
 
 		createSpacer(toolkit, client, 2);
-		requiredFlag = toolkit.createButton(client, "Required", SWT.CHECK);
-		requiredFlag.addSelectionListener(new SelectionAdapter() {
+
+		_requiredFlag = toolkit.createButton(client, "Required", SWT.CHECK);
+		_requiredFlag.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				if (binding != null) {
-					binding.setIsRequired(requiredFlag.getSelection());
-					managedForm.dirtyStateChanged();
+				if (_binding != null) {
+					boolean isRequired = _requiredFlag.getSelection();
+					_binding.setRequired(isRequired);
+					_binding.setExplicitlyRequired(isRequired);
+					// When unchecking required, also remove any implicit
+					// <unbound> validation rule for this binding
+					if (!isRequired) {
+						try {
+							getApiEditor().getModel().getSnapshot()
+								.removeImplicitValidation(_binding.getName(), ApiValidation.Kind.UNBOUND);
+						} catch (ApiModelException ex) {
+							// Best effort
+						}
+					}
+					markDirty();
 				}
 			}
 		});
 		gd = new GridData();
 		gd.horizontalSpan = 2;
+		_requiredFlag.setLayoutData(gd);
 
-		requiredFlag.setLayoutData(gd);
-
-		willSetFlag = toolkit.createButton(client, "Will Set", SWT.CHECK);
-		willSetFlag.addSelectionListener(new SelectionAdapter() {
+		_willSetFlag = toolkit.createButton(client, "Will Set", SWT.CHECK);
+		_willSetFlag.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				if (binding != null) {
-					binding.setIsWillSet(willSetFlag.getSelection());
-					managedForm.dirtyStateChanged();
+				if (_binding != null) {
+					boolean isWillSet = _willSetFlag.getSelection();
+					_binding.setWillSet(isWillSet);
+					_binding.setExplicitlySettable(isWillSet);
+					// When unchecking willSet, also remove any implicit
+					// <unsettable> validation rule for this binding
+					if (!isWillSet) {
+						try {
+							getApiEditor().getModel().getSnapshot()
+								.removeImplicitValidation(_binding.getName(), ApiValidation.Kind.UNSETTABLE);
+						} catch (ApiModelException ex) {
+							// Best effort
+						}
+					}
+					markDirty();
 				}
 			}
 		});
 		gd = new GridData();
 		gd.horizontalSpan = 2;
-		willSetFlag.setLayoutData(gd);
+		_willSetFlag.setLayoutData(gd);
 
 		createSpacer(toolkit, client, 2);
 
@@ -223,78 +258,90 @@ public class BindingDetailsPage implements IDetailsPage {
 		spacer.setLayoutData(gd);
 	}
 
+	/**
+	 * Populates the detail widgets from the currently-selected binding.
+	 * Sets {@link #_updating} to suppress listener-driven dirty marking
+	 * during programmatic widget updates.
+	 */
 	private void update() {
-		int selectedDefaults = binding.getSelectedDefaults();
-		this.valueSetCombo.select(selectedDefaults);
-		
-		requiredFlag.setSelection(binding != null && binding.isRequired());
-		willSetFlag.setSelection(binding != null && binding.isWillSet());
-		name.setText(binding != null && binding.getName() != null ? binding.getName() : "");
+		_updating = true;
+		try {
+			int selectedDefaults = _binding.getSelectedDefaults();
+			this._valueSetCombo.select(selectedDefaults);
+
+			_requiredFlag.setSelection(_binding != null && _binding.isRequired());
+			_willSetFlag.setSelection(_binding != null && _binding.isWillSet());
+			_name.setText(_binding != null && _binding.getName() != null ? _binding.getName() : "");
+		} finally {
+			_updating = false;
+		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#inputChanged(org.eclipse.jface.viewers.IStructuredSelection)
+	/**
+	 * Marks the model as dirty and notifies both the managed form and the
+	 * enclosing editor.
+	 *
+	 * <p>{@code dirtyStateChanged()} tells the managed form its parts are dirty,
+	 * but doesn't fire {@code PROP_DIRTY} to the workbench. We must also call
+	 * {@code editorDirtyStateChanged()} so that the {@code ComponentEditorPart}
+	 * (which wraps the {@code ApiEditor}) picks up the change and enables Save.
 	 */
+	private void markDirty() {
+		try {
+			getApiEditor().getModel().markAsDirty();
+		} catch (ApiModelException e) {
+			// Best effort
+		}
+		_managedForm.dirtyStateChanged();
+		getApiEditor().editorDirtyStateChanged();
+	}
+
+	/**
+	 * Returns the enclosing {@link ApiEditor}.
+	 *
+	 * <p>The managed form's container is the {@link BindingsPage} (a FormPage),
+	 * not the editor itself. We must call {@code getEditor()} on the page to
+	 * reach the {@link ApiEditor}.
+	 */
+	private ApiEditor getApiEditor() {
+		FormPage page = (FormPage) _managedForm.getContainer();
+		return (ApiEditor) page.getEditor();
+	}
+
 	public void selectionChanged(IFormPart part, ISelection selection) {
 		IStructuredSelection ssel = (IStructuredSelection) selection;
 		if (ssel.size() == 1) {
-			binding = (Binding) ssel.getFirstElement();
-		} else
-			binding = null;
+			_binding = (SimpleApiBinding) ssel.getFirstElement();
+		} else {
+			_binding = null;
+		}
 		update();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#commit()
-	 */
 	public void commit(boolean onSave) {
-		// nothing to do
+		// nothing to do — mutations go directly to the POJO
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#setFocus()
-	 */
 	public void setFocus() {
-		name.setFocus();
-		// choices[0].setFocus();
+		_name.setFocus();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#dispose()
-	 */
 	public void dispose() {
 		// nothing to dispose
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#isDirty()
-	 */
 	public boolean isDirty() {
-		if (binding == null) {
+		try {
+			return getApiEditor().getModel().isDirty();
+		} catch (ApiModelException e) {
 			return false;
 		}
-		return binding.apiModel.isDirty();
 	}
 
 	public boolean isStale() {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.forms.IDetailsPage#refresh()
-	 */
 	public void refresh() {
 		update();
 	}

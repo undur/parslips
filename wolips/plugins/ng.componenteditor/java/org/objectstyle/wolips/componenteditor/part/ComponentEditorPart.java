@@ -281,10 +281,12 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 					componentEditorTabs[i].doSave(monitor);
 				}
 			}
-			return;
 		}
 		finally {
 			_saving = false;
+			// Re-fire PROP_DIRTY after all tabs have saved so the workbench
+			// re-evaluates the title decoration (asterisk) and Save enablement.
+			firePropertyChange(PROP_DIRTY);
 		}
 	}
 

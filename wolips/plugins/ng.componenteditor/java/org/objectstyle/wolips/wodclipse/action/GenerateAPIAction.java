@@ -58,8 +58,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.objectstyle.wolips.bindings.api.ApiModel;
-import org.objectstyle.wolips.bindings.api.Wo;
+import org.objectstyle.wolips.bindings.api.MutableApiModel;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
@@ -93,14 +92,14 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 					WodParserCache cache = WodParserCache.parser(resource);
 					List<BindingValueKey> bindingKeys = BindingReflectionUtils.getBindingKeys(cache.getJavaProject(), cache.getComponentType(), "", false, BindingReflectionUtils.MUTATORS_ONLY, false, WodParserCache.getTypeCache());
 					IFile apiFile = cache.getApiFile();
-					ApiModel apiModel = new ApiModel(apiFile);
-					Wo wo = apiModel.getWo();
+					MutableApiModel apiModel = new MutableApiModel(apiFile);
 					for (BindingValueKey binding : bindingKeys) {
 						if (!BindingReflectionUtils.isSystemBindingValueKey(binding, true)) {
 							String bindingName = binding.getBindingName();
-							wo.createBinding(bindingName);
+							apiModel.getSnapshot().addBinding(bindingName);
 						}
 					}
+					apiModel.markAsDirty();
 					apiModel.saveChanges();
 				}
 			}

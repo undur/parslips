@@ -12,8 +12,9 @@ import org.objectstyle.wolips.bindings.wod.TypeCache;
  * path (via {@link ApiSnapshot}) and also as a fallback when no .api file
  * is available.
  *
- * <p>Instances are mutable for construction convenience but should be treated
- * as effectively immutable once stored in an {@link ApiSnapshot}.
+ * <p>Instances are mutable — used both for construction by {@link ApiParser}
+ * and for direct editing by the {@code .api} editor (which mutates bindings
+ * in-place and serializes on save via {@link ApiSerializer}).
  */
 public class SimpleApiBinding implements IApiBinding {
 	private String _name;
@@ -21,6 +22,7 @@ public class SimpleApiBinding implements IApiBinding {
 	private boolean _required;
 	private boolean _explicitlyRequired;
 	private boolean _willSet;
+	private boolean _explicitlySettable;
 
 	public SimpleApiBinding(String name) {
 		_name = name;
@@ -88,6 +90,28 @@ public class SimpleApiBinding implements IApiBinding {
 
 	public void setWillSet(boolean willSet) {
 		_willSet = willSet;
+	}
+
+	@Override
+	public boolean isExplicitlySettable() {
+		return _explicitlySettable;
+	}
+
+	public void setExplicitlySettable(boolean explicitlySettable) {
+		_explicitlySettable = explicitlySettable;
+	}
+
+	/**
+	 * Sets the defaults value by index into {@link IApiBinding#ALL_DEFAULTS}.
+	 * Index 0 clears the defaults (sets to null).
+	 */
+	public void setDefaults(int index) {
+		if (index == 0) {
+			_defaults = null;
+		}
+		else if (index > 0 && index < ALL_DEFAULTS.length) {
+			_defaults = ALL_DEFAULTS[index];
+		}
 	}
 
 	public String[] getValidValues(String partialValue, IJavaProject javaProject, IType componentType, TypeCache typeCache) throws JavaModelException {
