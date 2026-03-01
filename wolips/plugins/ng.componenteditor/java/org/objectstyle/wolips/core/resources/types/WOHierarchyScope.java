@@ -359,10 +359,15 @@ public class WOHierarchyScope extends AbstractSearchScope implements SuffixConst
 	}
 
 	/**
-	 * This is annoying, but we have to replace this ONE method, but we can't access our superclass variables, so just slurp the whole damn thing in.
-	 * @throws JavaModelException
+	 * Rebuilds the hierarchy scope from scratch. Synchronized because JDT's
+	 * search infrastructure can call {@link #encloses(String)} from multiple
+	 * threads, each of which may trigger {@code initialize()} via
+	 * {@link #refresh()}. Without synchronization, concurrent calls race on
+	 * the {@code elements} array and {@code elementCount}, causing
+	 * {@link ArrayIndexOutOfBoundsException} in {@link #add(IResource)} and
+	 * {@link NullPointerException} in {@link #encloses(String)}.
 	 */
-	protected void initialize() throws JavaModelException {
+	protected synchronized void initialize() throws JavaModelException {
 		this.resourcePaths = Collections.synchronizedSet(new HashSet<String>());
 		this.elements = new IResource[5];
 		this.elementCount = 0;
