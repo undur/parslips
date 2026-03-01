@@ -212,6 +212,8 @@
             class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToHtmlHandler"/>
       <handler commandId="ng.componenteditor.editors.towod"
             class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToWodHandler"/>
+      <handler commandId="ng.componenteditor.editors.toapi"
+            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToApiHandler"/>
    </extension>
 
    <extension point="org.eclipse.ui.bindings">

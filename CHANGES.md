@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Add SwitchToApiHandler — open .api file via Cmd+Alt+5
+
+- **Created `SwitchToApiHandler`** — new command handler that wires up the existing `Cmd+Alt+5` keybinding (which had a command and keybinding defined in plugin.xml but no handler registered). Three code paths: (1) if already in the ComponentEditor, switches to the API tab via `switchToApi()`; (2) if a component template exists, opens the ComponentEditor with the API tab active (using the `.api` file path, which triggers `displayApiPartOnReveal`); (3) if no template exists but a `.api` file does (common for non-component WOElements), opens the standalone ApiEditor.
+- **Registered handler in plugin.xml** for `ng.componenteditor.editors.toapi`.
+
 ### Remove dead extension point machinery and ConsoleLogger
 
 - **Deleted `ConsoleLogger`** — dead class with zero callers, implementing `ILogger` with `System.out.println`. All logging now goes through Eclipse `ILog`.
