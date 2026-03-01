@@ -106,19 +106,26 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
       boolean append_space = false;
 
       if (isSticky(_node.getParentNode()) && !lastNodeWasHiddenText()) {
-        // Do nothing
+        // Do nothing — sticky parent keeps children inline.
       } else
       if (hasTagEnd(xmlBuffer)) {
-        if (_node.getParentNode().isBreaking())
+        if (_node.getParentNode().isDocumentRoot()) {
+          // Top-level elements always get newlines between them.
           append_newline = true;
-        if (lastNodeWasHiddenText()) {
-          if (_node.isBreaking())
+        } else
+        if (_node.getParentNode().isBreaking()) {
+          if (lastHiddenTextHadNewline()) {
+            // The original source had a newline before this tag — break.
             append_newline = true;
-          else
-            append_space = true;
+          } else if (lastNodeWasHiddenText()) {
+            // Whitespace separator without a newline — keep inline but
+            // ensure a space so tags don't merge.
+            if (_node.isBreaking())
+              append_newline = true;
+            else
+              append_space = true;
+          }
         }
-        if (_node.getParentNode().isDocumentRoot())
-          append_newline = true;
       }
       if (isText(lastNode) && !lastNodeWasHiddenText()) {
         if (_node.getParentNode().isBreaking() && hasWhiteSpaceEnd(xmlBuffer))
@@ -157,11 +164,16 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
       } else
       if (_node.isText()) {
         if (!_node.hasBreakingStart() && !lastNodeWasHiddenText()) {
-          // Do Nothing
+          // Do Nothing — text continues inline from previous content.
         } else
-        if (_node.parentNode().isBreaking() || lineIsTooLong(xmlBuffer)) {
+        if (_node.parentNode().isBreaking()) {
+          // Parent is breaking — wrap text to a new line. The
+          // lineIsTooLong check is not needed here since the parent's
+          // breaking status already decided the layout.
           append_newline = true;
         }
+        // When the parent is non-breaking, never wrap — the author
+        // placed this content on a single line intentionally.
       } else
       if (bufferHasBreakingEnd && _node.parentNode().isBreaking()) {
         if (lastNode.isHidden()) {
@@ -222,6 +234,23 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
  
   private boolean lastNodeWasHiddenText() {
     return lastNode == null || (lastNode.isText() && lastNode.isHidden());
+  }
+
+  /**
+   * Returns true if the last node was a whitespace-only text node that
+   * contained a newline in the original source. This indicates the author
+   * intended a line break at this position. If the whitespace was flat
+   * (spaces/tabs only), the next element should stay inline.
+   */
+  private boolean lastHiddenTextHadNewline() {
+    if (lastNode == null) {
+      return true;
+    }
+    if (lastNode.isText() && lastNode.isHidden()) {
+      return lastNode.getValue().contains("\n");
+    }
+    // Last node wasn't hidden text — no whitespace separator at all.
+    return false;
   }
 
   private boolean _isStickyTag(FuzzyXMLFormatComposite node) {

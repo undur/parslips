@@ -728,46 +728,62 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
     return region;
   }
   
+  /**
+   * Determines whether this element's content should stay on one line
+   * (non-breaking) or be expanded with newlines and indentation (breaking).
+   * <p>
+   * The primary signal is the <b>original source structure</b>: if the
+   * author placed a newline between the open tag and the first child, the
+   * element is treated as breaking and the formatter will indent its
+   * children. If the content was on a single line, it stays that way.
+   * <p>
+   * This respects intentional formatting — {@code <td><a>x</a></td>} stays
+   * inline — while still expanding elements that were already multi-line or
+   * that have complex content (multiple child elements or text blocks).
+   * <p>
+   * <b>Note:</b> This heuristic is a first pass. It may need refinement for
+   * edge cases — e.g. very long single-line content that should wrap, or
+   * minified input where everything is on one line.
+   */
   @Override
   public boolean isNonBreaking() {
     if (_isNonBreaking != null) {
       return _isNonBreaking;
     }
-    
+
+    // The document root always breaks.
+    if (getParentNode() == null) {
+      _isNonBreaking = false;
+      return false;
+    }
+
     FuzzyXMLNode children[] = getChildren();
-    boolean result = false;
-    int textblocks = 0;
-    int elementcount = 0;
+
+    // Check if the original source had newlines in the whitespace between
+    // children. If so, the author intended this element to break — respect
+    // that. If all inter-child whitespace is flat (spaces/tabs only), the
+    // original was inline.
+    boolean originalHadNewlines = false;
+
     for (int i = 0; i < children.length; i++) {
       FuzzyXMLNode child = children[i];
       if (child instanceof FuzzyXMLText) {
-        FuzzyXMLText text = (FuzzyXMLText)child;
-        if (!text.isHidden()) {
-          //result = text.isNonBreaking();
-          textblocks++;
-          if (text.hasLineBreaks())
-            textblocks++;
-        }
-      } else {
-        if (child instanceof FuzzyXMLElement) {
-          FuzzyXMLElement element = (FuzzyXMLElement)child;
-          elementcount++;
-          if (!isSelfClosing(element)) {
-            //result &= element.isNonBreaking();
-            elementcount++;
+        FuzzyXMLText text = (FuzzyXMLText) child;
+        if (text.isHidden()) {
+          // Whitespace-only text node — check if it contains a newline.
+          // getValue() returns the raw whitespace unchanged (no entities
+          // to decode), so contains("\n") reliably detects line breaks.
+          if (text.getValue().contains("\n")) {
+            originalHadNewlines = true;
           }
         }
       }
     }
-    
-    if (elementcount <= 1 && textblocks <= 1)
-      result = true;
-    else
-      result = false;
-    if (getParentNode() == null)
-      result = false;
 
-    _isNonBreaking = result;
+    // If the original source had newlines in the whitespace between
+    // children, the author intended multi-line layout — break it.
+    // Otherwise, the content was inline — keep it that way.
+    _isNonBreaking = !originalHadNewlines;
     return _isNonBreaking;
   }
   
