@@ -56,6 +56,7 @@
 package org.objectstyle.wolips.apieditor.editor;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -149,11 +150,17 @@ public class CreatePage extends ApiFormPage {
 							file.delete(false, null);
 						}
 						new MutableApiModel(file);
+						// Refresh the workspace resource so IFile.exists() returns
+						// true when ApiEditor.getModel() checks it during addPages().
+						// Without this, the file exists on disk but Eclipse's resource
+						// layer doesn't know about it yet.
+						file.refreshLocal(IResource.DEPTH_ZERO, null);
 					} catch (ApiModelException coreException) {
 						throw new RuntimeException("Failed to create .api file.", coreException);
 					} catch (CoreException coreException) {
 						throw new RuntimeException("Failed to delete existing .api file.", coreException);
 					}
+					apiEditor.dropModel();
 					apiEditor.removePage(0);
 					apiEditor.addPages();
 					apiEditor.activateFirstPage();
