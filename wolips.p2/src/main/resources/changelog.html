@@ -29,6 +29,11 @@
 				<h2 class="date-header">March 1, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Navigate to API file from Java editor</h3>
+					<p><kbd>Cmd+Alt+5</kbd> now opens the <code>.api</code> file for the current element, even from a standalone Java editor. For components with templates, this opens the Component Editor with the API tab active. For non-component <code>WOElement</code>s that have a <code>.api</code> file but no template, it opens the standalone API editor. Previously, this shortcut only worked from within the Component Editor.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Live revalidation on API changes</h3>
 					<p>Saving an <code>.api</code> file now immediately revalidates all open component editors. Mark a binding as required, save &mdash; and every open template that uses that component instantly shows (or clears) the corresponding validation markers. Previously, you had to re-save each component or restart Eclipse to see updated validation.</p>
 				</div>
