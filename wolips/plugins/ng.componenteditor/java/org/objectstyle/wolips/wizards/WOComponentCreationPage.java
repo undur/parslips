@@ -469,7 +469,6 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 				return false;
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			WizardsPlugin.getDefault().log(e);
 		}
 

@@ -106,8 +106,7 @@ public class BindingsDragHandler implements DragSourceListener, /* IDropTarget2,
 	}
 
 	public void dragLeave(DropTargetEvent event) {
-		// TODO Auto-generated method stub
-
+		// no-op — nothing to clean up on drag leave
 	}
 
 	public void dragOperationChanged(DropTargetEvent event) {

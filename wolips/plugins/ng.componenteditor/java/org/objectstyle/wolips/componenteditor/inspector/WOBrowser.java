@@ -346,7 +346,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 	}
 
 	public void keyReleased(KeyEvent e) {
-		// TODO
+		// no-op — only keyPressed is handled
 	}
 
 }

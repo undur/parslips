@@ -59,13 +59,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdapterFactory;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.Platform;
-import org.objectstyle.wolips.bindings.Activator;
+/**
+ * Adapter factory that provides {@link BuildProperties} for any {@link IProject}.
+ * Registered via plugin.xml as an {@link IAdapterFactory} for {@code IProject}.
+ *
+ * <p>Caches instances per-project and reloads when the build.properties file's
+ * modification stamp changes. When reloading, workspace-level defaults (inline
+ * binding prefix/suffix, template strictness) are copied from the previous
+ * instance to avoid re-reading preferences.
+ */
 public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 	private Map<IProject, BuildProperties> _cache = new HashMap<IProject, BuildProperties>();
 
@@ -77,13 +80,9 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 			properties = _cache.get(project);
 			BuildProperties newProperties = new BuildProperties((IProject) adaptableObject);
 			if (properties == null || properties.getModificationStamp() != newProperties.getModificationStamp()) {
-				// MS: This MUST be above initializeBuildProperties or you'll infinite loop
 				_cache.put(project, newProperties);
 				if (properties != null) {
 					newProperties._copyDefaultsFrom(properties);
-				}
-				else {
-					BuildPropertiesAdapterFactory.initializeBuildProperties(newProperties);
 				}
 				properties = newProperties;
 			}
@@ -93,47 +92,5 @@ public class BuildPropertiesAdapterFactory implements IAdapterFactory {
 
 	public Class[] getAdapterList() {
 		return new Class[] { BuildProperties.class };
-	}
-
-	public static void initializeBuildProperties(BuildProperties buildProperties) {
-		// FIXME: extension point may not exist when running without WOLips variables plugin
-		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("ng.componenteditor.buildPropertiesInitializer");
-		if (extensionPoint == null) {
-			return;
-		}
-		IExtension[] extensions = extensionPoint.getExtensions();
-		for (IExtension extension : extensions) {
-			IConfigurationElement[] configurationElements = extension.getConfigurationElements();
-			for (IConfigurationElement configurationElement : configurationElements) {
-				try {
-					IBuildPropertiesInitializer buildPropertiesInitializer = (IBuildPropertiesInitializer) configurationElement.createExecutableExtension("class");
-					buildPropertiesInitializer.initialize(buildProperties);
-				}
-				catch (CoreException e) {
-					Activator.getDefault().log(e);
-				}
-			}
-		}
-	}
-
-	public static void initializeBuildPropertiesDefaults(BuildProperties buildProperties) {
-		// FIXME: extension point may not exist when running without WOLips variables plugin
-		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint("ng.componenteditor.buildPropertiesInitializer");
-		if (extensionPoint == null) {
-			return;
-		}
-		IExtension[] extensions = extensionPoint.getExtensions();
-		for (IExtension extension : extensions) {
-			IConfigurationElement[] configurationElements = extension.getConfigurationElements();
-			for (IConfigurationElement configurationElement : configurationElements) {
-				try {
-					IBuildPropertiesInitializer buildPropertiesInitializer = (IBuildPropertiesInitializer) configurationElement.createExecutableExtension("class");
-					buildPropertiesInitializer.initializeDefaults(buildProperties);
-				}
-				catch (CoreException e) {
-					Activator.getDefault().log(e);
-				}
-			}
-		}
 	}
 }

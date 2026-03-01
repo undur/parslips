@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Remove dead extension point machinery and ConsoleLogger
+
+- **Deleted `ConsoleLogger`** — dead class with zero callers, implementing `ILogger` with `System.out.println`. All logging now goes through Eclipse `ILog`.
+- **Deleted `IBuildPropertiesInitializer`** — interface with zero implementations. The extension point `ng.componenteditor.buildPropertiesInitializer` was referenced in `BuildPropertiesAdapterFactory` but never registered in `plugin.xml`, so it was inert code.
+- **Removed `initializeBuildProperties()` and `initializeBuildPropertiesDefaults()`** from `BuildPropertiesAdapterFactory` — these looked up the dead extension point and always returned early. Also removed the call from `BuildProperties.ensureDefaultsInitialized()`.
+- **Cleaned up misleading TODO stubs**: replaced `// TODO Auto-generated method stub` and `// TODO` in intentional no-op interface methods (`BindingsDragHandler.dragLeave()`, `WOBrowser.keyReleased()`) with explanatory comments, and removed stale `// TODO Auto-generated catch block` in `WOComponentCreationPage` where logging was already in place.
+
 ### Commented-out debug println cleanup and BuildProperties dead method removal
 
 - **Removed ~60 commented-out `System.out.println` debug remnants** across 17 files (FuzzyXMLParser, WOHTMLRenderDelegate, FuzzyXMLElementImpl, FuzzyXMLTextImpl, BindingReflectionUtils, BindingValueKey, BindingValueKeyPath, WOBrowserColumn, WOBrowser, WOHierarchyScope, TypeNameCollector, TemplateOutlinePage, WodBuilder, AbstractCacheEntry, WodParserCache, TemplateValidator, AbstractBindingsDropHandler). These were leftover debug print statements from the original WOLips code, all commented out but adding noise.

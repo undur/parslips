@@ -233,7 +233,6 @@ public class BuildProperties {
 			_inlineBindingPrefixDefault = "$";
 			_inlineBindingSuffixDefault = "";
 			_wellFormedTemplateRequiredDefault = "yes".equals(Platform.getPreferencesService().getString("ng.componenteditor", "WellFormedTemplate", null, null));
-			BuildPropertiesAdapterFactory.initializeBuildPropertiesDefaults(this);
 		}
 	}
 
