@@ -9,6 +9,7 @@ import jp.aonir.fuzzyxml.FuzzyXMLNode;
 import jp.aonir.fuzzyxml.FuzzyXMLProcessingInstruction;
 import jp.aonir.fuzzyxml.internal.FuzzyXMLFormatComposite;
 import jp.aonir.fuzzyxml.internal.RenderContext;
+import jp.aonir.fuzzyxml.internal.RenderDelegate;
 import jp.aonir.fuzzyxml.internal.WOHTMLRenderDelegate;
 
 import org.eclipse.core.runtime.CoreException;
@@ -50,6 +51,7 @@ public class FormatRefactoring implements IRunnableWithProgress {
 
       StringBuffer htmlBuffer = new StringBuffer();
       FuzzyXMLDocType docType = htmlModel.getDocumentType();
+      RenderDelegate delegate = renderContext.getDelegate();
       for (FuzzyXMLNode node : documentElement.getChildren()) {
         if (docType != null) {
           if (!(node instanceof FuzzyXMLProcessingInstruction || FuzzyXMLFormatComposite.isHidden(node))) {
@@ -57,7 +59,13 @@ public class FormatRefactoring implements IRunnableWithProgress {
             docType = null;
           }
         }
-        node.toXMLString(renderContext, htmlBuffer);
+        // Use the delegate's renderNode() to handle hidden text nodes
+        // (whitespace between top-level elements). Without this, blank
+        // lines between elements are lost because FuzzyXMLTextImpl.toXMLString()
+        // skips whitespace-only nodes when trim is enabled.
+        if (delegate == null || delegate.renderNode(node, renderContext, htmlBuffer)) {
+          node.toXMLString(renderContext, htmlBuffer);
+        }
       }
       htmlDocument.set(htmlBuffer.toString().trim());
     }

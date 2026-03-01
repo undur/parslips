@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import jp.aonir.fuzzyxml.internal.RenderContext;
+import jp.aonir.fuzzyxml.internal.RenderDelegate;
 import jp.aonir.fuzzyxml.internal.WOHTMLRenderDelegate;
 
 /**
@@ -16,7 +17,9 @@ public class FuzzyXMLFormatterTest {
 
 	/**
 	 * Parses the given HTML and formats it using the standard formatter
-	 * settings (tabs, trim, newlines, HTML mode).
+	 * settings (tabs, trim, newlines, HTML mode). Renders using the same
+	 * approach as FormatRefactoring — iterating children of the document
+	 * element — which is the actual code path used in the editor.
 	 */
 	private String format(String html) {
 		FuzzyXMLDocument doc = new FuzzyXMLParser(false, true).parse(html);
@@ -27,7 +30,16 @@ public class FuzzyXMLFormatterTest {
 		ctx.setSpaceInEmptyTags(true);
 		ctx.setDelegate(new WOHTMLRenderDelegate());
 		StringBuffer buf = new StringBuffer();
-		doc.getDocumentElement().toXMLString(ctx, buf);
+		// Match FormatRefactoring's rendering path: iterate children of the
+		// document element, calling delegate.renderNode() for each child.
+		// This is how the actual editor formats — it skips the <document>
+		// wrapper tag and renders children directly.
+		RenderDelegate delegate = ctx.getDelegate();
+		for (FuzzyXMLNode node : doc.getDocumentElement().getChildren()) {
+			if (delegate == null || delegate.renderNode(node, ctx, buf)) {
+				node.toXMLString(ctx, buf);
+			}
+		}
 		return buf.toString();
 	}
 
@@ -158,8 +170,209 @@ public class FuzzyXMLFormatterTest {
 		String result = format(input);
 		assertTrue("Multi-line content should stay multi-line",
 			result.contains("<div>\n"));
-		assertTrue("Close tag should be on its own line",
-			result.contains("\n\t</div>"));
+		assertTrue("Close tag should be on its own line: " + result,
+			result.contains("\n</div>"));
+	}
+
+	// --- Blank lines in real-world template patterns ---
+
+	@Test
+	public void blankLineBetweenTopLevelElements_preserved() {
+		// Mimics the real template: </style>\n\n<div>
+		String input = "<style>\n\t.a { color: red; }\n</style>\n\n<div>\n\t<p>content</p>\n</div>";
+		String result = format(input);
+		assertTrue("Blank line between </style> and <div> should be preserved: " + result,
+			result.contains("</style>\n\n"));
+	}
+
+	@Test
+	public void doubleBlankLineBetweenTopLevelElements_preserved() {
+		// Mimics the real template: </div>\n\n\n<div>
+		String input = "<div>\n\t<p>one</p>\n</div>\n\n\n<div>\n\t<p>two</p>\n</div>";
+		String result = format(input);
+		assertTrue("Double blank line between top-level elements should be preserved: " + result,
+			result.contains("</div>\n\n\n"));
+	}
+
+	@Test
+	public void blankLineBetweenDivAndScript_preserved() {
+		// Mimics the real template: </div>\n\n<script>
+		String input = "<div>\n\t<p>content</p>\n</div>\n\n<script src=\"app.js\"></script>";
+		String result = format(input);
+		assertTrue("Blank line between </div> and <script> should be preserved: " + result,
+			result.contains("</div>\n\n"));
+	}
+
+	@Test
+	public void blankLineBetweenScripts_preserved() {
+		// Mimics the real template: </script>\n\n<script>
+		String input = "<script src=\"a.js\"></script>\n\n<script src=\"b.js\"></script>";
+		String result = format(input);
+		assertTrue("Blank line between scripts should be preserved: " + result,
+			result.contains("</script>\n\n"));
+	}
+
+	@Test
+	public void realTemplatePattern_blankLinesPreserved() {
+		// This mimics the actual template structure where top-level elements
+		// (children of the document root) are separated by blank lines.
+		String input =
+			"<style>\n" +
+			"\t.a { color: red; }\n" +
+			"</style>\n" +
+			"\n" +
+			"<div class=\"row\">\n" +
+			"\t<div class=\"col\">\n" +
+			"\t\t<h1>title</h1>\n" +
+			"\t</div>\n" +
+			"</div>\n" +
+			"\n" +
+			"\n" +
+			"<div class=\"row\">\n" +
+			"\t<div class=\"col\">\n" +
+			"\t\t<p>content</p>\n" +
+			"\t</div>\n" +
+			"</div>\n" +
+			"\n" +
+			"<script src=\"lib.js\"></script>\n" +
+			"\n" +
+			"<script>\n" +
+			"\tvar x = 'hello';\n" +
+			"</script>";
+		String result = format(input);
+		// With FormatRefactoring-style rendering, top-level elements have
+		// no extra indent from a <document> wrapper.
+		assertTrue("Blank line between </style> and first <div> should be preserved: " + result,
+			result.contains("</style>\n\n"));
+		assertTrue("Double blank line between divs should be preserved: " + result,
+			result.contains("</div>\n\n\n"));
+		assertTrue("Blank line between </div> and <script> should be preserved: " + result,
+			result.contains("</div>\n\n<script src"));
+		assertTrue("Blank line between </script> and <script> should be preserved: " + result,
+			result.contains("</script>\n\n<script"));
+	}
+
+	@Test
+	public void realTemplate_blankLinesCountPreserved() {
+		// The actual template file has blank lines at specific locations.
+		// Read the template and verify they survive formatting.
+		String input =
+			"<style>\n" +
+			"\t.price-up { background-image: url(up.png); }\n" +
+			"</style>\n" +
+			"\n" +
+			"<div class=\"row\">\n" +
+			"\t<div class=\"col-md-12\">\n" +
+			"\t\t<h1>title</h1>\n" +
+			"\t</div>\n" +
+			"</div>\n" +
+			"\n" +
+			"\n" +
+			"<div class=\"row\">\n" +
+			"\t<div class=\"col-md-8\">\n" +
+			"\t\t<div class=\"row\">\n" +
+			"\t\t\t<div class=\"col mb-3\">\n" +
+			"\t\t\t\t<p>content</p>\n" +
+			"\t\t\t</div>\n" +
+			"\t\t</div>\n" +
+			"\t</div>\n" +
+			"\t<div class=\"col-md-4\">\n" +
+			"\t\t<div class=\"row\">\n" +
+			"\t\t\t<div class=\"col mb-3\">\n" +
+			"\t\t\t\t<p>sidebar</p>\n" +
+			"\t\t\t</div>\n" +
+			"\t\t</div>\n" +
+			"\t</div>\n" +
+			"</div>\n" +
+			"\n" +
+			"<script src=\"https://cdn.example.com/lib.js\"></script>\n" +
+			"\n" +
+			"<script>\n" +
+			"\tvar x = 'hello';\n" +
+			"</script>";
+		String result = format(input);
+
+		// Count blank lines (consecutive \n\n) in both input and output.
+		// The formatter should preserve all blank lines from the original.
+		int inputBlankLines = countOccurrences(input, "\n\n");
+		int resultBlankLines = countOccurrences(result, "\n\n");
+		assertEquals("Number of blank line groups should be preserved",
+			inputBlankLines, resultBlankLines);
+	}
+
+	/** Counts non-overlapping occurrences of substring in string. */
+	private int countOccurrences(String str, String sub) {
+		int count = 0;
+		int idx = 0;
+		while ((idx = str.indexOf(sub, idx)) != -1) {
+			count++;
+			idx += sub.length();
+		}
+		return count;
+	}
+
+	@Test
+	public void blankLineInsideNestedStructure_preserved() {
+		// Blank line between sibling div.row blocks that are INSIDE a
+		// parent div — this is a common pattern in Bootstrap layouts.
+		String input =
+			"<div class=\"col-md-8\">\n" +
+			"\t<div class=\"row\">\n" +
+			"\t\t<div class=\"col\">\n" +
+			"\t\t\t<p>first</p>\n" +
+			"\t\t</div>\n" +
+			"\t</div>\n" +
+			"\n" +
+			"\t<div class=\"row\">\n" +
+			"\t\t<div class=\"col\">\n" +
+			"\t\t\t<p>second</p>\n" +
+			"\t\t</div>\n" +
+			"\t</div>\n" +
+			"</div>";
+		String result = format(input);
+		assertTrue("Blank line between sibling .row divs should be preserved: " + result,
+			result.contains("</div>\n\n"));
+	}
+
+	@Test
+	public void blankLineWithIndentBetweenElements_preserved() {
+		// A blank line that contains only whitespace (tabs) — this is common
+		// when authors leave a blank line between blocks with indentation.
+		// The whitespace text node is "\n\t\t\t\n\t\t\t" (newline, indent,
+		// blank line, indent) — it has 2 newlines.
+		String input =
+			"<div>\n" +
+			"\t<div class=\"row\">\n" +
+			"\t\t<p>first</p>\n" +
+			"\t</div>\n" +
+			"\t\n" +
+			"\t<div class=\"row\">\n" +
+			"\t\t<p>second</p>\n" +
+			"\t</div>\n" +
+			"</div>";
+		String result = format(input);
+		assertTrue("Blank line with indent between elements should be preserved: " + result,
+			result.contains("</div>\n\n"));
+	}
+
+	@Test
+	public void blankLineBeforeWoIf_preserved() {
+		// Blank line before a wo:if block inside a parent element.
+		String input =
+			"<div>\n" +
+			"\t<div class=\"row\">\n" +
+			"\t\t<p>content</p>\n" +
+			"\t</div>\n" +
+			"\n" +
+			"\t<wo:if condition=\"$show\">\n" +
+			"\t\t<div class=\"row\">\n" +
+			"\t\t\t<p>conditional</p>\n" +
+			"\t\t</div>\n" +
+			"\t</wo:if>\n" +
+			"</div>";
+		String result = format(input);
+		assertTrue("Blank line before wo:if should be preserved: " + result,
+			result.contains("</div>\n\n"));
 	}
 
 	// --- Trailing space after text ---
