@@ -606,18 +606,28 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
           xmlBuffer.append(">");
         }
 
-        if (delegate != null) {
-          delegate.afterOpenTag(this, renderContext, xmlBuffer);
+        FuzzyXMLNode[] children = getChildren();
+        if (children.length == 0) {
+          // Empty non-void element (e.g. <script src="..."></script>) —
+          // render the close tag immediately with no whitespace inserted.
+          if (renderSurroundingTags) {
+            xmlBuffer.append("</").append(tagName).append(">");
+          }
         }
+        else {
+          if (delegate != null) {
+            delegate.afterOpenTag(this, renderContext, xmlBuffer);
+          }
 
-        xmlBuffer.append(getValue(renderContext, xmlBuffer));
+          xmlBuffer.append(getValue(renderContext, xmlBuffer));
 
-        if (delegate != null) {
-          delegate.beforeCloseTag(this, renderContext, xmlBuffer);
-        }
+          if (delegate != null) {
+            delegate.beforeCloseTag(this, renderContext, xmlBuffer);
+          }
 
-        if (renderSurroundingTags) {
-          xmlBuffer.append("</").append(tagName).append(">");
+          if (renderSurroundingTags) {
+            xmlBuffer.append("</").append(tagName).append(">");
+          }
         }
       }
     } catch (Exception e) {
