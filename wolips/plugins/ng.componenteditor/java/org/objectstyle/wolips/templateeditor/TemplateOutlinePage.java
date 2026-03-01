@@ -288,7 +288,6 @@ public class TemplateOutlinePage extends Page implements IContentOutlinePage, IH
   }
 
   public void setSelection(ISelection selection) {
-    // System.out.println("TemplateOutlinePage.setSelection: " + selection);
   }
 
   @Override

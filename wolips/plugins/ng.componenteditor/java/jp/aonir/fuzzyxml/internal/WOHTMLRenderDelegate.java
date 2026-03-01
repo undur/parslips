@@ -66,8 +66,6 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
   public void beforeCloseTag(FuzzyXMLNode node, RenderContext renderContext,
       StringBuffer xmlBuffer) {
     FuzzyXMLFormatComposite _node = new FuzzyXMLFormatComposite(node);
-//    System.out.println("beforeCloseTag: " + node + " " + isSticky(_node));
-
     if (renderContext.shouldFormat()) {
       renderContext.outdent();
       if (renderContext.isShowNewlines() ) {
@@ -103,8 +101,6 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
 
   public boolean beforeOpenTag(FuzzyXMLNode node, RenderContext renderContext, StringBuffer xmlBuffer) {
     FuzzyXMLFormatComposite _node = new FuzzyXMLFormatComposite(node);
-//    System.out.println("beforeOpenTag: " + node + " " + node.getParentNode());
-
     if (renderContext.isShowNewlines() && renderContext.shouldFormat()) {
       boolean append_newline = false;
       boolean append_space = false;
@@ -151,8 +147,6 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
     boolean append_newline = false;
     boolean append_space = false;
     boolean bufferHasBreakingEnd = (hasWhiteSpaceEnd(xmlBuffer) || hasTagEnd(xmlBuffer));
-
-//    System.out.println("renderNode: " + node + node.getParentNode());
     if (_node.isHidden()) {
       lastNode = _node;
       return false;

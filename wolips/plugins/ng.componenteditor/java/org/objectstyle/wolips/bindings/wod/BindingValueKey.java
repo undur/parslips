@@ -121,8 +121,6 @@ public class BindingValueKey implements Comparable<BindingValueKey> {
       return null;
     }
     String typeSignatureName = Signature.getSignatureSimpleName(Signature.getElementType(nextTypeName));
-    //long a = System.currentTimeMillis();
-
     if (parentBinding != null) {
       _parent = parentBinding;
     } else {
@@ -137,7 +135,6 @@ public class BindingValueKey implements Comparable<BindingValueKey> {
     IType declaringType = getDeclaringType();
     String lastTypeName = null;
     while(isGenericType(nextTypeName, declaringType) && !nextTypeName.equals(lastTypeName)) {
-      //System.out.println("BindingValueKey.resolveNextType.while_isGenericType: " + nextTypeName + " / " + lastTypeName + " " + toString());
       lastTypeName = nextTypeName;
       typeSignatureName = Signature.getSignatureSimpleName(Signature.getElementType(nextTypeName));
 
@@ -198,11 +195,7 @@ public class BindingValueKey implements Comparable<BindingValueKey> {
     }
             
     String nextTypeNameErasure = Signature.getTypeErasure(nextTypeName);
-    //System.out.println("BindingValueKey.resolveNextType: " + nextTypeNameErasure + " / " + _bindingDeclaringType);
     IType nextType = _cache.getTypeForNameInType(nextTypeNameErasure, declaringType);
-    //if (System.currentTimeMillis() - a > 0) {
-    //	System.out.println("BindingValueKey.resolveNextType: " + nextTypeNameErasure + ", " + (System.currentTimeMillis() - a) + ", " + declaringType.getElementName());
-    //}
     return nextType;
   }
 

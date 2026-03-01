@@ -257,7 +257,6 @@ public class WodParserCache implements ITypeOwner {
   }
 
   public void clearCache() throws CoreException, LocateException {
-    //System.out.println("WodParserCache.WodParserCache: Reloading " + _woFolder);
     clearLocateResultsCache();
     clearParserCache();
     clearValidationCache();
@@ -324,17 +323,14 @@ public class WodParserCache implements ITypeOwner {
 
   public synchronized void parse() throws Exception {
 	  if (_htmlEntry.shouldParse()) {
-		  // System.out.println("WodParserCache.parse: html");
 		  _htmlEntry.parse();
 	  }
 
 	  if (_wodEntry.shouldParse()) {
-		  // System.out.println("WodParserCache.parse: wod");
 		  _wodEntry.parse();
 	  }
 
 	  if (_wooEntry.shouldParse()) {
-		  // System.out.println("WodParserCache.parse: woo");
 		  _wooEntry.parse();
 	  }
   }
@@ -403,15 +399,7 @@ public class WodParserCache implements ITypeOwner {
   public void _setValidated(boolean validated) {
     // ignore validated = false if we're validating right now ...
     if (validated || !_validating) {
-      //if (!validated) {
-      //System.out.println("WodParserCache._setValidated: clearing validation cache for " + _woFolder + " (" + Thread.currentThread() + ")");
-      //      Exception ew =  new Exception(");
-      //      ew.fillInStackTrace();
-      //      ew.printStackTrace(System.out);
-      //}
-
       _validated = validated;
-      // System.out.println("WodParserCache._setValidated: " + _validated);
     }
   }
 

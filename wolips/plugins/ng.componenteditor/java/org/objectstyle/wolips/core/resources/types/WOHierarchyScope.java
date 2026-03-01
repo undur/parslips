@@ -383,12 +383,8 @@ public class WOHierarchyScope extends AbstractSearchScope implements SuffixConst
 		public synchronized WOHierarchyScope hierarchyScopeForType(IType type) throws JavaModelException {
 			WOHierarchyScope scope = scopes.get(type);
 			if (scope == null) {
-				// System.out.println("WOHierarchyScope.WOHierarchyScopeCacheEntry.hierarchyScopeForType: cache MISS for " + type.getElementName() + " in " + project.getName());
 				scope = new WOHierarchyScope(type, JavaCore.create(project));
 				scopes.put(type, scope);
-			}
-			else {
-				// System.out.println("WOHierarchyScope.WOHierarchyScopeCacheEntry.hierarchyScopeForType: cache hit for " + type.getElementName() + " in " + project.getName());
 			}
 			return scope;
 		}
@@ -409,7 +405,6 @@ public class WOHierarchyScope extends AbstractSearchScope implements SuffixConst
 	  
 	public static void clearCacheForProject(IProject project) {
 		synchronized (_hierarchyScopeCache) {
-			// System.out.println("WOHierarchyScope.clearCacheForProject: " + project.getName() + " clearing");
 			_hierarchyScopeCache.remove(project);
 		}
 	}
@@ -423,7 +418,6 @@ public class WOHierarchyScope extends AbstractSearchScope implements SuffixConst
 				_hierarchyScopeCache.put(project, scopeCacheEntry);
 			}
 			scopeCacheEntry.referenceCount ++;
-			//System.out.println("WOHierarchyScope.incrementReferenceCountForProject: " + project.getName() + "=>" + scopeCacheEntry.referenceCount);
 		}
 		return scopeCacheEntry;
 	}
@@ -433,7 +427,6 @@ public class WOHierarchyScope extends AbstractSearchScope implements SuffixConst
 	  		WOHierarchyScopeCacheEntry scopeCacheEntry = _hierarchyScopeCache.get(project);
 	  		if (scopeCacheEntry != null) {
 	  			scopeCacheEntry.referenceCount --;
-				//System.out.println("WOHierarchyScope.decrementReferenceCountForProject: " + project.getName() + "=>" + scopeCacheEntry.referenceCount);
 	  			if (scopeCacheEntry.referenceCount <= 0) {
 	  				clearCacheForProject(project);
 	  			}

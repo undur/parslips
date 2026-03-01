@@ -59,19 +59,6 @@ public class BuildProperties {
 		return _version;
 	}
 
-	public synchronized void setProperties(Properties properties) {
-		if (!_properties.equals(properties)) {
-			_properties = properties;
-			_dirty = true;
-		}
-	}
-
-	public synchronized Properties getProperties() {
-		Properties cloneProperties = new Properties();
-		cloneProperties.putAll(_properties);
-		return cloneProperties;
-	}
-
 	public synchronized boolean getBoolean(String key, boolean defaultValue) {
 		String strValue = get(key);
 		boolean value;
@@ -197,146 +184,6 @@ public class BuildProperties {
 		put("project.name.lowercase", name.toLowerCase());
 	}
 
-	public boolean getWebXML() {
-		return getBoolean("webXML", false);
-	}
-
-	public void setWebXML(boolean webXML) {
-		put("webXML", webXML);
-	}
-
-	public boolean isServletDeployment() {
-		return getBoolean("servletDeployment", false);
-	}
-
-	public void setServletDeployment(boolean servletDeployment) {
-		if (servletDeployment) {
-			put("servletDeployment", servletDeployment);
-		}
-		else {
-			remove("servletDeployment");
-		}
-	}
-
-	public String getWebXML_CustomContent(boolean convertNullValueToEmptyString) {
-		return get("webXML_CustomContent", convertNullValueToEmptyString ? "" : null);
-	}
-
-	/**
-	 * @param webXML_CustomContent
-	 *            webxml custom content
-	 */
-	public void setWebXML_CustomContent(String webXML_CustomContent) {
-		put("webXML_CustomContent", webXML_CustomContent);
-	}
-
-	public String getEOGeneratorArgs(boolean convertNullValueToEmptyString) {
-		return get("eogeneratorArgs", convertNullValueToEmptyString ? "" : null);
-	}
-
-	public void setEOGeneratorArgs(String eogeneratorArgs) {
-		put("eogeneratorArgs", eogeneratorArgs);
-	}
-
-	public String getPrincipalClass() {
-		return getPrincipalClass(false);
-	}
-	
-	/**
-	 * @param convertNullValueToEmptyString
-	 * @return principalClass.
-	 */
-	public String getPrincipalClass(boolean convertNullValueToEmptyString) {
-		return get("principalClass", convertNullValueToEmptyString ? "" : null);
-	}
-
-	/**
-	 * @param principalClass
-	 *            the principalClass for the Info.plist
-	 */
-	public void setPrincipalClass(String principalClass) {
-		put("principalClass", (principalClass == null) ? "" : principalClass);
-	}
-
-	public String getCustomInfoPListContent() {
-		return getCustomInfoPListContent(false);
-	}
-
-	/**
-	 * @param convertNullValueToEmptyString
-	 * @return The CustomContent for the Info.plist
-	 */
-	public String getCustomInfoPListContent(boolean convertNullValueToEmptyString) {
-		return get("customInfoPListContent", convertNullValueToEmptyString ? "" : null);
-	}
-
-	/**
-	 * @param customInfoPListContent
-	 *            The CustomContent for the Info.plist
-	 */
-	public void setCustomInfoPListContent(String customInfoPListContent) {
-		put("customInfoPListContent", (customInfoPListContent == null) ? "" : customInfoPListContent);
-	}
-
-	public String getEOAdaptorClassName() {
-		return getEOAdaptorClassName(false);
-	}
-	
-	/**
-	 * @param convertNullValueToEmptyString
-	 * @return The EOAdaptorClassName for the Info.plist
-	 */
-	public String getEOAdaptorClassName(boolean convertNullValueToEmptyString) {
-		return get("eoAdaptorClassName", convertNullValueToEmptyString ? "" : null);
-	}
-
-	/**
-	 * @param eoAdaptorClassName
-	 *            the eoadaptorclassname for the Info.plist
-	 */
-	public void setEOAdaptorClassName(String eoAdaptorClassName) {
-		put("eoAdaptorClassName", (eoAdaptorClassName == null) ? "" : eoAdaptorClassName);
-	}
-
-	public String getProjectFrameworkFolder() {
-		return get("projectFrameworkFolder");
-	}
-
-	public void setProjectFrameworkFolder(String projectFrameworkFolder) {
-		put("projectFrameworkFolder", projectFrameworkFolder);
-	}
-
-	public void setJavaClient(boolean javaClient) {
-		if (javaClient) {
-			put("javaClient", javaClient);
-		}
-		else {
-			remove("javaClient");
-		}
-	}
-
-	public boolean isJavaClient() {
-		return getBoolean("javaClient", false);
-	}
-
-	public void setJavaWebStart(boolean javaWebStart) {
-		if (javaWebStart) {
-			put("javaWebStart", javaWebStart);
-		}
-		else {
-			remove("javaWebStart");
-		}
-	}
-
-	public boolean isJavaWebStart() {
-		return getBoolean("javaWebStart", false);
-	}
-
-	public boolean hasValidProjectType() {
-		String projectType = get("project.type");
-		return "application".equals(projectType) || "framework".equals(projectType);
-	}
-
 	public boolean isFramework() {
 		boolean isFramework = false;
 		String projectType = get("project.type");
@@ -353,24 +200,12 @@ public class BuildProperties {
 		return isFramework;
 	}
 
-	public void setFramework(boolean framework) {
-		if (framework) {
-			put("project.type", "framework");
-		}
-		else {
-			put("project.type", "application");
-		}
-	}
-	
-	public String getBundleType() {
-		return isFramework() ? "FMWK" : "APPL";
-	}
-	
+	// ---- Defaults machinery ----
+	// Workspace-level defaults for inline binding syntax and template strictness.
+	// Initialized lazily via ensureDefaultsInitialized(), and copied between
+	// BuildProperties instances by _copyDefaultsFrom() to avoid redundant I/O.
+
 	private boolean _defaultsInitialized;
-
-	private String _woVersionDefault;
-
-	private String _versionDefault;
 
 	private String _inlineBindingPrefixDefault;
 
@@ -378,9 +213,13 @@ public class BuildProperties {
 
 	private boolean _wellFormedTemplateRequiredDefault;
 
+	/**
+	 * Copies cached defaults from another BuildProperties instance to avoid
+	 * re-reading preferences. Called from {@link BuildPropertiesAdapterFactory}
+	 * when creating a new BuildProperties for a project that shares the same workspace.
+	 */
 	public void _copyDefaultsFrom(BuildProperties props) {
 		if (props._defaultsInitialized) {
-			_woVersionDefault = props._woVersionDefault;
 			_inlineBindingPrefixDefault = props._inlineBindingPrefixDefault;
 			_inlineBindingSuffixDefault = props._inlineBindingSuffixDefault;
 			_wellFormedTemplateRequiredDefault = props._wellFormedTemplateRequiredDefault;
@@ -391,7 +230,6 @@ public class BuildProperties {
 	protected synchronized void ensureDefaultsInitialized() {
 		if (!_defaultsInitialized) {
 			_defaultsInitialized = true;
-			_woVersionDefault = "5.3.3";
 			_inlineBindingPrefixDefault = "$";
 			_inlineBindingSuffixDefault = "";
 			_wellFormedTemplateRequiredDefault = "yes".equals(Platform.getPreferencesService().getString("ng.componenteditor", "WellFormedTemplate", null, null));
@@ -399,117 +237,31 @@ public class BuildProperties {
 		}
 	}
 
-	public void setWOVersionDefault(String woVersionDefault) {
-		_woVersionDefault = woVersionDefault;
-	}
-
-	public String getWOVersionDefault() {
-		ensureDefaultsInitialized();
-		return _woVersionDefault;
-	}
-
-	public void setVersionDefault(String versionDefault) {
-		_versionDefault = versionDefault;
-	}
-
-	public String getVersionDefault() {
-		ensureDefaultsInitialized();
-		return _versionDefault;
-	}
-
-	public void setVersion(String version) {
-		if (version != null) {
-			put("version", version);
-		}
-		else {
-			remove("version");
-		}
-	}
-
-	public String getVersion() {
-		String versionDefault = getVersionDefault();
-		return get("version", versionDefault);
-	}
-
-	public void setWOVersion(String woVersion) {
-		if (woVersion != null) {
-			put("wo.version", woVersion);
-		}
-		else {
-			remove("wo.version");
-		}
-	}
-
-	public String getWOVersion() {
-		String woVersionDefault = getWOVersionDefault();
-		return get("wo.version", woVersionDefault);
-	}
-
-	public void setInlineBindingPrefixDefault(String inlineBindingPrefixDefault) {
-		_inlineBindingPrefixDefault = inlineBindingPrefixDefault;
-	}
-
-	public String getInlineBindingPrefixDefault() {
-		ensureDefaultsInitialized();
-		return _inlineBindingPrefixDefault;
-	}
-
-	public void setInlineBindingPrefix(String inlineBindingPrefix) {
-		if (inlineBindingPrefix != null) {
-			put("component.inlineBindingPrefix", inlineBindingPrefix);
-		}
-		else {
-			remove("component.inlineBindingPrefix");
-		}
-	}
-
+	/**
+	 * Returns the configured inline binding prefix for this project (e.g. "$"),
+	 * falling back to the workspace default.
+	 */
 	public String getInlineBindingPrefix() {
-		return get("component.inlineBindingPrefix", getInlineBindingPrefixDefault());
-	}
-
-	public void setInlineBindingSuffixDefault(String inlineBindingSuffixDefault) {
-		_inlineBindingSuffixDefault = inlineBindingSuffixDefault;
-	}
-
-	public String getInlineBindingSuffixDefault() {
 		ensureDefaultsInitialized();
-		return _inlineBindingSuffixDefault;
+		return get("component.inlineBindingPrefix", _inlineBindingPrefixDefault);
 	}
 
-	public void setInlineBindingSuffix(String inlineBindingSuffix) {
-		if (inlineBindingSuffix != null) {
-			put("component.inlineBindingSuffix", inlineBindingSuffix);
-		}
-		else {
-			remove("component.inlineBindingSuffix");
-		}
-	}
-
+	/**
+	 * Returns the configured inline binding suffix for this project (e.g. ""),
+	 * falling back to the workspace default.
+	 */
 	public String getInlineBindingSuffix() {
-		return get("component.inlineBindingSuffix", getInlineBindingSuffixDefault());
-	}
-
-	public void setWellFormedTemplateRequiredDefault(boolean wellFormedTemplateRequiredDefault) {
-		_wellFormedTemplateRequiredDefault = wellFormedTemplateRequiredDefault;
-	}
-
-	public boolean getWellFormedTemplateRequiredDefault() {
 		ensureDefaultsInitialized();
-		return _wellFormedTemplateRequiredDefault;
+		return get("component.inlineBindingSuffix", _inlineBindingSuffixDefault);
 	}
 
-	public void setWellFormedTemplateRequired(Boolean wellFormedTemplateRequired) {
-		if (wellFormedTemplateRequired == null) {
-			remove("component.wellFormedTemplateRequired");
-		}
-		else {
-			put("component.wellFormedTemplateRequired", wellFormedTemplateRequired.booleanValue());
-		}
-	}
-
+	/**
+	 * Returns whether this project requires well-formed (XHTML-style) templates,
+	 * falling back to the workspace default.
+	 */
 	public boolean isWellFormedTemplateRequired() {
-		boolean wellFormedTemplateRequired = getBoolean("component.wellFormedTemplateRequired", getWellFormedTemplateRequiredDefault());
-		return wellFormedTemplateRequired;
+		ensureDefaultsInitialized();
+		return getBoolean("component.wellFormedTemplateRequired", _wellFormedTemplateRequiredDefault);
 	}
 
 	// ---- Framework detection (ng-objects vs WebObjects) ----

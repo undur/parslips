@@ -480,7 +480,6 @@ public class FuzzyXMLParser {
 	/** �e�L�X�g�m�[�h���������܂��B */
 	private void handleText(int offset, int end, boolean escape) {
 		String text = _originalSource.substring(offset, end);
-		// System.out.println("FuzzyXMLParser.handleText: '" + text + "'");
 		closeAutocloseTags();
 		FuzzyXMLTextImpl textNode = new FuzzyXMLTextImpl(getParent(), FuzzyXMLUtil.decode(text, _isHTML), offset, end - offset);
 		textNode.setEscape(escape);
@@ -588,8 +587,6 @@ public class FuzzyXMLParser {
 		String lowercaseCloseTagName = tagName.toLowerCase();
 
 		boolean closeTagMatches = lowercaseLastOpenElementName.equals(lowercaseCloseTagName);
-		// System.out.println("FuzzyXMLParser.handleCloseTag: lastOpen = " +
-		// lowercaseLastOpenElementName + ", close = " + lowercaseCloseTagName);
 		if (!closeTagMatches) {
 			closeAutocloseTags();
 
@@ -658,8 +655,6 @@ public class FuzzyXMLParser {
 						return;
 					}
 
-					// System.out.println("FuzzyXMLParser.handleCloseTag: mismatched close "
-					// + lastOpenElement.getName());
 					if (showMismatchError) {
 						// fireErrorEvent(offset, end - offset, "Found </" + tagName +
 						// "> before </" + lastOpenElement.getName() + ">", null);
@@ -729,7 +724,6 @@ public class FuzzyXMLParser {
 			if (lastOpenElement.getParentNode() == null) {
 				_roots.add(lastOpenElement);
 				for (FuzzyXMLElement error : _nonCloseElements) {
-					// System.out.println(error.getName() + "�͕��Ă��܂���B");
 					if (showMismatchError) {
 						fireErrorEvent(error.getOffset(), error.getLength(), Messages.getMessage("error.noCloseTag", error.getName()), error);
 					}
@@ -836,7 +830,6 @@ public class FuzzyXMLParser {
 			tagContents = tagContents.substring(0, tagContents.length() - 1);
 		}
 		TagInfo info = parseTagContents(tagContents);
-		// System.out.println("FuzzyXMLParser.handleStartTag: open " + info.name);
 		FuzzyXMLElement element;
 		if (info.name.equalsIgnoreCase("script")) {
 			element = new FuzzyXMLScriptImpl(getParent(), info.name, offset, end - offset, info.nameOffset);
@@ -1049,10 +1042,6 @@ public class FuzzyXMLParser {
 			attr.quote = quoteCharacter;
 			attr.hasNestedTag = hasNestedTag;
 			info.addAttr(attr);
-		}
-		if (state == AttributeParseState.InAttributeValue && quoteCharacter != 0) {
-			// System.out.println("FuzzyXMLParser.parseAttributeContents: " +
-			// info.name);
 		}
 		// Matcher matcher = attr.matcher(text);
 		// while(matcher.find()){

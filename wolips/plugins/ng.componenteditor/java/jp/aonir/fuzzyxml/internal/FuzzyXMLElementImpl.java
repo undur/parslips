@@ -761,9 +761,7 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
       result = false;
     if (getParentNode() == null)
       result = false;
-    
-//    System.out.println("Elements " + elementcount + " Text blocks " + textblocks);
-//    System.out.println(result?"Non breaking "+this:"    Breaking " +this);
+
     _isNonBreaking = result;
     return _isNonBreaking;
   }

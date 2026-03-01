@@ -130,7 +130,6 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 		disposeToColumn(column);
 
 		if (selectedKey == null) {
-			// System.out.println("WOBrowserPage.selectionChanged: none");
 		} else {
 			try {
 				if (!selectedKey.isLeaf()) {

@@ -78,8 +78,6 @@ public class FuzzyXMLTextImpl extends AbstractFuzzyXMLNode implements FuzzyXMLTe
     String value = getValue();//.trim();
     
     boolean result = FuzzyXMLUtil.isAllWhitescape(value) || FuzzyXMLUtil.getSpaceIndex(value) == -1;
-//    System.out.println(result?"Non breaking " +this:"    Breaking " +this);
-
     return result;
   }
   

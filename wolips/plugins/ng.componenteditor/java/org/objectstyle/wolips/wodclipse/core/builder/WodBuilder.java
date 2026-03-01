@@ -291,7 +291,6 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 	}
 
 	protected void validateWodFile(IResource resource, IProgressMonitor progressMonitor) {
-		// System.out.println("WodBuilder.validateWodFile: " + resource);
 		WodBuilder.validateComponent(resource, _threadedBuild, progressMonitor);
 	}
 
@@ -306,7 +305,6 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 
 	public static void _validateComponent(IResource resource, IProgressMonitor progressMonitor, boolean showProgress) {
 		if (resource != null) {
-			// System.out.println("WodBuilder._validateComponent: " + resource);
 			String resourceName = resource.getName();
 			if (progressMonitor != null) {
 				if (showProgress) {
@@ -327,8 +325,6 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 			catch (Throwable t) {
 				WodclipsePlugin.getDefault().log(t);
 			}
-			// System.out.println("WodBuilder._validateComponent: done with " +
-			// resource);
 		}
 	}
 
@@ -432,7 +428,6 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 				}
 			}
 			else {
-				// System.out.println("BuildingComponent.run: cancelled " + _resource);
 			}
 		}
 	}

@@ -134,7 +134,6 @@ public class TemplateValidator {
       }
     }
     else {
-      // System.out.println("TemplateValidator.validateElement: " + elementName);
     }
 
     // p:raw and p:comment — don't validate children (p:raw content is

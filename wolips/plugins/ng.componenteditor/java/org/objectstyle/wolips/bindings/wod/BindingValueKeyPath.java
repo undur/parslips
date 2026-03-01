@@ -136,14 +136,12 @@ public class BindingValueKeyPath {
         _nsCollection = false;
       }
       else {
-        //System.out.println("BindingValueKeyPath.BindingValueKeyPath: KEYPATH = " + _originalKeyPath);
         int invalidKeyNum = -1;
         IType currentType = _contextType;
         BindingValueKey currentBinding = null;
         List<BindingValueKey> bindingKeysList = new LinkedList<BindingValueKey>();
         for (int keyNum = 0; currentType != null && keyNum < _bindingKeyNames.length; keyNum++) {
           // we can't verify helper functions or @arrayOps
-          //System.out.println("BindingValueKeyPath.BindingValueKeyPath: checking " + currentType.getFullyQualifiedName() + " " + _bindingKeyNames[keyNum]);
           
           boolean keyAccessible = false;
           List<BindingValueKey> bindingAccessorKeys = cache.getBindingValueAccessorKeys(javaProject, currentType, _bindingKeyNames[keyNum]);

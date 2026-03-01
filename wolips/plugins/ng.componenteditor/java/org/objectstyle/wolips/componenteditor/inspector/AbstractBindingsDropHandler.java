@@ -167,13 +167,9 @@ public abstract class AbstractBindingsDropHandler<T, U, V, W extends Control> im
 	}
 
 	public void browserColumnAdded(WOBrowserColumn column) {
-		// System.out.println("WOBrowserPageBookView.browserColumnAdded: " +
-		// column);
 	}
 
 	public void browserColumnRemoved(WOBrowserColumn column) {
-		// System.out.println("BindingsInspectorPage.browserColumnRemoved: " +
-		// column);
 	}
 
 	protected abstract IAutoscroller createAutoscroller(W editorControl);

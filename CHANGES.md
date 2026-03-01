@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Commented-out debug println cleanup and BuildProperties dead method removal
+
+- **Removed ~60 commented-out `System.out.println` debug remnants** across 17 files (FuzzyXMLParser, WOHTMLRenderDelegate, FuzzyXMLElementImpl, FuzzyXMLTextImpl, BindingReflectionUtils, BindingValueKey, BindingValueKeyPath, WOBrowserColumn, WOBrowser, WOHierarchyScope, TypeNameCollector, TemplateOutlinePage, WodBuilder, AbstractCacheEntry, WodParserCache, TemplateValidator, AbstractBindingsDropHandler). These were leftover debug print statements from the original WOLips code, all commented out but adding noise.
+- **Removed ~35 unused WOLips-era methods from `BuildProperties`**: `getWebXML`/`setWebXML`, `isServletDeployment`/`setServletDeployment`, `getWebXML_CustomContent`/`setWebXML_CustomContent`, `getEOGeneratorArgs`/`setEOGeneratorArgs`, `getPrincipalClass`/`setPrincipalClass`, `getCustomInfoPListContent`/`setCustomInfoPListContent`, `getEOAdaptorClassName`/`setEOAdaptorClassName`, `getProjectFrameworkFolder`/`setProjectFrameworkFolder`, `setJavaClient`/`isJavaClient`, `setJavaWebStart`/`isJavaWebStart`, `hasValidProjectType`, `setFramework`, `getBundleType`, `getVersion`/`setVersion`/`getVersionDefault`/`setVersionDefault`, `getWOVersion`/`setWOVersion`/`getWOVersionDefault`/`setWOVersionDefault`, `setInlineBindingPrefix`/`setInlineBindingSuffix`, `setInlineBindingPrefixDefault`/`setInlineBindingSuffixDefault`, `setWellFormedTemplateRequired`/`setWellFormedTemplateRequiredDefault`, `setProperties`/`getProperties`, `getInlineBindingPrefixDefault`/`getInlineBindingSuffixDefault`/`getWellFormedTemplateRequiredDefault`. Also removed unused `_woVersionDefault` and `_versionDefault` fields. Inlined the remaining default lookups directly into the property getters.
+
 ### Dead code removal and final System.out.println cleanup
 
 - **Deleted `WodQuickAssistAssistant`** — dead class with zero references anywhere in the codebase. Subclassed `QuickAssistAssistant` but was never instantiated.

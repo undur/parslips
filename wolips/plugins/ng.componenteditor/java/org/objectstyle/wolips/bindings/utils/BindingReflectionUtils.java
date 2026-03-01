@@ -111,12 +111,9 @@ public class BindingReflectionUtils {
       type = javaProject.findType(typeName);
     }
     else {
-      //long a = System.currentTimeMillis();
     	NullProgressMonitor progressMonitor = new NullProgressMonitor();
       TypeNameCollector typeNameCollector = new TypeNameCollector(javaProject, requireTypeInProject);
-      //System.out.println("BindingReflectionUtils.findElementType: start " + System.currentTimeMillis());
       BindingReflectionUtils.findMatchingElementClassNames(elementTypeName, SearchPattern.R_EXACT_MATCH, typeNameCollector, progressMonitor);
-      //System.out.println("BindingReflectionUtils.findElementType: " + (System.currentTimeMillis() - a));
       if (typeNameCollector.isExactMatch()) {
         String matchingElementClassName = typeNameCollector.firstTypeName();
         type = typeNameCollector.getTypeForClassName(matchingElementClassName);
@@ -215,11 +212,6 @@ public class BindingReflectionUtils {
 
   public static List<BindingValueKey> getBindingKeys(IJavaProject javaProject, IType type, String nameStartingWith, boolean requireExactNameMatch, int accessorsOrMutators, boolean allowInheritanceDuplicates, TypeCache cache) throws JavaModelException {
     List<BindingValueKey> bindingKeys = new LinkedList<BindingValueKey>();
-//    if (_requireExactNameMatch && BindingReflectionUtils.isBooleanValue(_nameStartingWith)) {
-//      return bindingKeys;
-//    }
-
-    //System.out.println("BindingReflectionUtils.getBindingKeys: " + _type.getElementName() + ", " + _nameStartingWith + ", " + _requireExactNameMatch + ", " + _accessorsOrMutators);
     if (type != null) {
       String lowercaseNameStartingWith = nameStartingWith.toLowerCase();
 
@@ -291,7 +283,6 @@ public class BindingReflectionUtils {
   }
 
   protected static void fillInBindingKeys(IType declaringType, IType type, String lowercaseNameStartingWith, boolean requireExactNameMatch, int accessorsOrMutators, boolean allowInheritanceDuplicates, IJavaProject javaProject, List<BindingValueKey> bindingKeys, TypeCache cache) throws JavaModelException {
-    //System.out.println("BindingReflectionUtils.getBindingKeys: a " + type.getFullyQualifiedName());
 
     IField[] fields = type.getFields();
     for (int fieldNum = 0; (!requireExactNameMatch || bindingKeys.size() == 0) && fieldNum < fields.length; fieldNum++) {
@@ -322,7 +313,6 @@ public class BindingReflectionUtils {
 
       for (int methodNum = 0; (!requireExactNameMatch || bindingKeys.size() == 0) && methodNum < methods.length; methodNum++) {
         for (String prefix : prefixes) {
-          //System.out.println("BindingReflectionUtils.getBindingKeys: checking for " + prefix + methods[methodNum].getElementName());
           BindingValueKey bindingKey = BindingReflectionUtils.getBindingKeyIfMatches(javaProject, declaringType, methods[methodNum], prefix + lowercaseNameStartingWith, prefix, requireExactNameMatch, accessorsOrMutators, cache);
           if (bindingKey != null) {
             if (allowInheritanceDuplicates || !bindingKeys.contains(bindingKey)) {
@@ -348,7 +338,6 @@ public class BindingReflectionUtils {
   }
   
   public static BindingValueKey getBindingKeyIfMatches(IJavaProject javaProject, IType type, IMember member, String nameStartingWith, String prefix, boolean requireExactNameMatch, int accessorsOrMutators, TypeCache cache) throws JavaModelException {
-    //System.out.println("BindingReflectionUtils.getBindingKeyIfMatches: " + member.getElementName() + " starts with " + nameStartingWith);
     BindingValueKey bindingKey = null;
 
     int flags = member.getFlags();
@@ -417,7 +406,6 @@ public class BindingReflectionUtils {
         	} else {
                 bindingName = BindingReflectionUtils.toLowercaseFirstLetter(memberName.substring(prefixLength));
         	}
-          //System.out.println("BindingReflectionUtils.getBindingKeyIfMatches:   bindingName = " + bindingName);
           if (nameStartingWith.length() > 0 || !bindingName.startsWith("_")) {
           	if (visible == Visibility.MaybeVisible) {
           		String packageName = type.getPackageFragment().getElementName();
@@ -547,13 +535,9 @@ public class BindingReflectionUtils {
     else {
       filteredBindingValueKeys = new LinkedList<BindingValueKey>();
       for (BindingValueKey bindingKey : bindingKeys) {
-//        System.out.println("BindingReflectionUtils.filterSystemBindingValueKeys: FILTERING? " + bindingKey.getBindingName());
         if (!systemBindingValueKeys.contains(bindingKey)) {
           filteredBindingValueKeys.add(bindingKey);
         }
-//        else {
-//          System.out.println("BindingReflectionUtils.filterSystemBindingValueKeys:   SKIPPED");
-//        }
       }
     }
 

@@ -143,7 +143,6 @@ public class TypeNameCollector extends TypeNameRequestor {
 
 	@Override
 	public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path) {
-		// System.out.println("TypeNameCollector.acceptType: " + System.currentTimeMillis() + " " + new String(simpleTypeName));
 		String className;
 		String simpleClassName = new String(simpleTypeName);
 		if (packageName == null || packageName.length == 0) {
