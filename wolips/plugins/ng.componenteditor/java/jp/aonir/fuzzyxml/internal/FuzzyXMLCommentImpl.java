@@ -26,34 +26,26 @@ public class FuzzyXMLCommentImpl extends FuzzyXMLElementImpl implements FuzzyXML
     return _value;
   }
   
+  /**
+   * Renders the comment preserving its content exactly as written.
+   * The formatter should not modify whitespace or text inside comments
+   * — the author's formatting is intentional.
+   */
   @Override
   public void toXMLString(RenderContext renderContext, StringBuffer xmlBuffer) {
     boolean renderSurroundingTags = true;
-    
+
     RenderDelegate delegate = renderContext.getDelegate();
     if (delegate != null) {
       renderSurroundingTags = delegate.beforeOpenTag(this, renderContext, xmlBuffer);
     }
     if (renderSurroundingTags) {
       xmlBuffer.append("<!--");
-
-      String commentString = getValue();//FuzzyXMLUtil.decode(getValue(), renderContext.isHtml());
-      if (renderContext.shouldFormat()) {
-//        commentString = commentString.replaceFirst(" *$", "");
-      }
+      String commentString = getValue();
       if (commentString != null) {
-        if (!commentString.startsWith(" ")) {
-          xmlBuffer.append(" ");
-        }
         xmlBuffer.append(commentString);
       }
       if (_hasCloseTag) {
-        if (xmlBuffer.charAt(xmlBuffer.length() - 1) == '\n') {
-          renderContext.appendIndent(xmlBuffer);
-        } else
-        if (!commentString.endsWith(" ")) {
-          xmlBuffer.append(" ");
-        }
         xmlBuffer.append("-->");
       }
       if (delegate != null) {
