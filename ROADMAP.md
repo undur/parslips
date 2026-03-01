@@ -2,6 +2,20 @@
 
 Ideas and planned features for the Parsley template editor. Items are roughly ordered by perceived impact, not by implementation order.
 
+## Type resolution performance
+
+Opening a component editor or triggering tag autocomplete for the first time in a large project takes 4-5 seconds. The bottleneck is JDT type resolution — every `<wo:SomeElement>` tag triggers `BindingReflectionUtils.findElementType()`, which on cache miss builds a full `WOHierarchyScope` (type hierarchy + resource vector) just to resolve a single element name.
+
+Analysis identified three concrete improvements:
+
+1. **Don't check deprecation status eagerly** — `HTMLAssistProcessor` calls `getElementType()` on *every* completion proposal to check `memberIsDeprecated()`. This triggers `loadAttributeInfo()` → `findElementType()` for each tag in the list. Deferring or caching this would eliminate redundant type resolution on every autocomplete invocation.
+
+2. **Skip `WOHierarchyScope` for exact-match lookups** — When `findMatchingElementClassNames()` is called with `R_EXACT_MATCH`, a simple `javaProject.findType()` or workspace-scoped search suffices. Building the expensive hierarchy scope is only needed for prefix/pattern matching (the "find all element types" query). This is the single biggest win for validation speed.
+
+3. **Cache `InlineWodTagInfo` instances per project** — Currently, fresh instances are created on every autocomplete invocation. Each one re-runs `loadAttributeInfo()` on first access. Reusing cached instances (invalidated when Java files change, same as `_elementTypeCache`) would make repeat autocomplete instant.
+
+The caching infrastructure is already in place (`TypeCache.ApiCache` for name→FQN, `WodCompletionUtils._elementTypeCache` for the full type list, `SubTypeHierarchyCache` for hierarchies). The issue is that the fast paths aren't used in several hot code paths.
+
 ## ~~Inline validation quick-fixes~~ ✓
 
 Implemented. Keypath validation errors ("There is no key 'nme'") now include "Did you mean 'name'?" suggestions computed via Damerau–Levenshtein string distance. Quick-fixes are available via Cmd+1 (anywhere on the line) and the Problems view. Hover over the error to see the suggestion inline.
