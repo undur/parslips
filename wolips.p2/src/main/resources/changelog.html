@@ -29,6 +29,16 @@
 				<h2 class="date-header">March 1, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Type resolution performance</h3>
+					<p>Three optimizations that together eliminate the multi-second delay when opening components or triggering tag autocomplete in large projects. Resolved element types are now cached so deprecation checks don&rsquo;t re-trigger JDT lookups; exact-match type lookups skip the expensive hierarchy scope entirely; and autocomplete tag info is cached per project so repeat invocations reuse pre-loaded attribute info instead of rebuilding it each time.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: startup crashes from concurrent type searches</h3>
+					<p>Fixed two race conditions in <code>WOHierarchyScope</code> that caused intermittent <code>NullPointerException</code> and <code>ArrayIndexOutOfBoundsException</code> during Eclipse startup. Multiple JDT search threads could corrupt the shared element array by running <code>initialize()</code> concurrently.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Smarter tag autocomplete</h3>
 					<p>Tag autocomplete now inserts self-closing tags (<code>&lt;wo:str /&gt;</code>) for elements that don&rsquo;t accept child content, and opening+closing tag pairs (<code>&lt;wo:form&gt;&lt;/wo:form&gt;</code>) for content components. Required bindings are pre-inserted with the cursor inside the quotes &mdash; e.g. completing <code>wo:str</code> inserts <code>&lt;wo:str value=&quot;&quot; /&gt;</code> so you can start typing immediately. Both behaviors are driven by the element&rsquo;s <code>.api</code> file.</p>
 				</div>

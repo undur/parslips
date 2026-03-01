@@ -27,6 +27,10 @@
 			<div class="card">
 				<h2 class="section-header">Planned</h2>
 
+				<!-- Type resolution performance: implemented. Three optimizations
+				     (cached element types, exact-match scope bypass, per-project tag
+				     info cache) eliminated the multi-second delay on large projects. -->
+
 				<div class="roadmap-entry">
 					<h3>Rename component: undo support</h3>
 					<p>Component renaming works but undo fails. The undo entry recorded by Eclipse's refactoring framework conflicts with the resource-level renames added by our LTK participant. Needs investigation into LTK's undo/redo machinery.</p>
