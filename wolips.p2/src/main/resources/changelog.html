@@ -34,11 +34,6 @@
 				</div>
 
 				<div class="changelog-entry">
-					<h3>Fix: startup crashes from concurrent type searches</h3>
-					<p>Fixed two race conditions in <code>WOHierarchyScope</code> that caused intermittent <code>NullPointerException</code> and <code>ArrayIndexOutOfBoundsException</code> during Eclipse startup. Multiple JDT search threads could corrupt the shared element array by running <code>initialize()</code> concurrently.</p>
-				</div>
-
-				<div class="changelog-entry">
 					<h3>Smarter tag autocomplete</h3>
 					<p>Tag autocomplete now inserts self-closing tags (<code>&lt;wo:str /&gt;</code>) for elements that don&rsquo;t accept child content, and opening+closing tag pairs (<code>&lt;wo:form&gt;&lt;/wo:form&gt;</code>) for content components. Required bindings are pre-inserted with the cursor inside the quotes &mdash; e.g. completing <code>wo:str</code> inserts <code>&lt;wo:str value=&quot;&quot; /&gt;</code> so you can start typing immediately. Both behaviors are driven by the element&rsquo;s <code>.api</code> file.</p>
 				</div>
