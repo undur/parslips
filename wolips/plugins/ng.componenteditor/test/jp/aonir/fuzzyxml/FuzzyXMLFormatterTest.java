@@ -174,6 +174,27 @@ public class FuzzyXMLFormatterTest {
 			result.contains("\n</div>"));
 	}
 
+	// --- Space between inline tags ---
+
+	@Test
+	public void spaceBetweenInlineTags_preserved() {
+		// A space between </strong> and <wo:str> inside a non-breaking
+		// parent must be preserved so the rendered text doesn't merge.
+		String input = "<wo:if condition=\"$c\"><strong>bt</strong> <wo:str value=\"$v\" /><br></wo:if>";
+		String result = format(input);
+		assertTrue("Space between </strong> and <wo:str> should be preserved: " + result,
+			result.contains("</strong> <wo:str"));
+	}
+
+	@Test
+	public void spaceBetweenInlineElements_preserved() {
+		// Same pattern with plain HTML elements.
+		String input = "<p><strong>bold</strong> <em>italic</em></p>";
+		String result = format(input);
+		assertTrue("Space between </strong> and <em> should be preserved: " + result,
+			result.contains("</strong> <em>"));
+	}
+
 	// --- Blank lines in real-world template patterns ---
 
 	@Test

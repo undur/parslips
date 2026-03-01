@@ -125,6 +125,11 @@ public class WOHTMLRenderDelegate implements RenderDelegate {
             else
               append_space = true;
           }
+        } else if (lastNodeWasHiddenText()) {
+          // Non-breaking parent with a whitespace-only separator between
+          // tags (e.g. <strong>bt</strong> <wo:str .../>). The space
+          // must be preserved so the tags don't merge.
+          append_space = true;
         }
       }
       if (isText(lastNode) && !lastNodeWasHiddenText()) {
