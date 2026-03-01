@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### API changes revalidate open component editors
+
+- `JavaChangeRevalidator` now also listens for `.api` file changes. When an API file is saved (e.g., marking a binding as required), all open component editors are revalidated immediately, so validation markers reflect the updated API without needing to manually re-save or reopen the component. For `.api` changes, all open editors are revalidated regardless of project, since the API file may belong to a dependency project.
+
+### API editor: fix required/will-set checkbox
+
+- Fixed a bug where unchecking "Required" on a binding in the API editor would throw `DOMException: NOT_FOUND_ERR`. Two root causes:
+  1. **Double removal in `Unbound.removeFromWoWithBinding()`**: `Validation.removeChild()` already removes the `<validation>` element from its parent when the validation has no remaining children. But `removeFromWoWithBinding()` had a redundant `wo.element.removeChild(validation.element)` call that tried to remove it a second time, causing the NOT_FOUND_ERR. Removed the redundant removal.
+  2. **Stale DOM after save**: `ApiModel.saveChanges()` did not update `_lastModified` after writing, so the next `parseIfNecessary()` call (triggered by `doSave()` → `reloadModel()`) would reparse the DOM from disk, orphaning any `Binding`/`Wo` references held by the editor. `saveChanges()` now updates `_lastModified` after writing and refreshing, preventing unnecessary reparses.
+- Removed redundant `refreshLocal()` call from `ApiEditor.doSave()` — `ApiModel.saveChanges()` already handles it.
+
 ### Auto-delete empty .wo folders
 
 - Empty `.wo` folders left behind by git (which removes files but not directories) are now automatically deleted. A lightweight resource change listener watches for changes to `.wo` folders and removes them when they become empty, preventing ghost components from blocking the New Component wizard.

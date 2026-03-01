@@ -278,6 +278,14 @@ public class ApiModel {
     return wodefinitions.getWo();
   }
 
+  /**
+   * Writes the in-memory DOM to the backing file, then updates {@code _lastModified}
+   * to match the file's new modification stamp. This prevents {@link #parseIfNecessary()}
+   * from unnecessarily re-reading and reparsing the file we just wrote — the in-memory
+   * DOM already contains all current changes. Without this update, a subsequent
+   * {@code parseIfNecessary()} call would discard the live DOM and build a new one,
+   * orphaning any {@link Binding} or {@link Wo} references held by the editor UI.
+   */
   public void saveChanges() throws ApiModelException {
     if (_file == null) {
       throw new ApiModelException("You can not saveChanges to an ApiModel that is not backed by a file.");
@@ -297,6 +305,12 @@ public class ApiModel {
         catch (CoreException e) {
           // ignore
         }
+        // Update _lastModified to the new stamp so parseIfNecessary() won't reparse
+        _lastModified = _eclipseFile.getModificationStamp();
+      }
+      else {
+        // For plain File-backed models, sync with the file's new lastModified time
+        _lastModified = _file.lastModified();
       }
     }
     catch (IOException ioe) {

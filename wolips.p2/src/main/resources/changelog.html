@@ -24,6 +24,21 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- March 1, 2026 -->
+			<div class="card">
+				<h2 class="date-header">March 1, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Live revalidation on API changes</h3>
+					<p>Saving an <code>.api</code> file now immediately revalidates all open component editors. Mark a binding as required, save &mdash; and every open template that uses that component instantly shows (or clears) the corresponding validation markers. Previously, you had to re-save each component or restart Eclipse to see updated validation.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: required/will-set checkbox in API editor</h3>
+					<p>Fixed a bug where unchecking &ldquo;Required&rdquo; or &ldquo;Will Set&rdquo; on a binding in the API editor would fail silently or throw an error. The root cause was a double-removal in the DOM &mdash; the validation element was removed twice, once automatically when it became empty and once explicitly. Also fixed a stale-timestamp issue that could cause the editor to unnecessarily reparse the file after saving.</p>
+				</div>
+			</div>
+
 			<!-- February 28, 2026 -->
 			<div class="card">
 				<h2 class="date-header">February 28, 2026</h2>

@@ -56,10 +56,7 @@
 package org.objectstyle.wolips.apieditor.editor;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -112,27 +109,23 @@ public class ApiEditor extends FormEditor {
 		}
 	}
 
+	/**
+	 * Saves the in-memory DOM to the backing file. {@link ApiModel#saveChanges()}
+	 * handles writing, refreshing the Eclipse resource, and updating its internal
+	 * modification stamp so that {@link ApiModel#parseIfNecessary()} will not
+	 * unnecessarily reparse the file. This is critical because reparsing would
+	 * create a new DOM tree, orphaning any {@link Binding} or {@link Wo} references
+	 * held by the editor's detail pages and causing DOM operations to fail with
+	 * {@code NOT_FOUND_ERR}.
+	 */
 	public void doSave(IProgressMonitor monitor) {
 		try {
 			this.getModel().saveChanges();
 			editorDirtyStateChanged();
-			IFile file = this.getModel().getEclipseFile();
-			if (file != null && file.exists()) {
-				file.refreshLocal(IResource.DEPTH_INFINITE, null);
-			}
-			else {
-				String location = this.getModel().getLocation();
-				if (location != null) {
-					file = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(location));
-					if (file != null) {
-						file.refreshLocal(IResource.DEPTH_INFINITE, null);
-					}
-				}
-			}
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to save .api file.", t);
 		}
-		
+
 		for (Object formPage : pages) {
 			if (formPage != null && formPage instanceof ApiFormPage) {
 				((ApiFormPage)formPage).reloadModel();
