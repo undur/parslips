@@ -29,7 +29,10 @@ public class InlineWodTagInfo extends TagInfo {
   private TypeCache _cache;
 
   public InlineWodTagInfo(String elementTypeName, TypeCache cache) {
-    super("wo:" + elementTypeName, true, true);
+    // hasBody=true (default until API is loaded), emptyTag=false so that
+    // non-content elements get <wo:foo /> instead of <wo:foo> (the emptyTag
+    // flag is for HTML void elements like <br> and <hr>, not wo: tags).
+    super("wo:" + elementTypeName, true, false);
     setRequiresAttributes(true);
     _cache = cache;
     _elementTypeName = elementTypeName;
