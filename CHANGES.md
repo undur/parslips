@@ -16,6 +16,7 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 - **Created `SwitchToApiHandler`** — new command handler that wires up the existing `Cmd+Alt+5` keybinding (which had a command and keybinding defined in plugin.xml but no handler registered). Three code paths: (1) if already in the ComponentEditor, switches to the API tab via `switchToApi()`; (2) if a component template exists, opens the ComponentEditor with the API tab active (using the `.api` file path, which triggers `displayApiPartOnReveal`); (3) if no template exists but a `.api` file does (common for non-component WOElements), opens the standalone ApiEditor.
 - **Registered handler in plugin.xml** for `ng.componenteditor.editors.toapi`.
+- **Auto-create `.api` file**: when no `.api` file exists, the handler creates a blank one automatically. For the location, it uses the same `findComponentsFolder()` heuristic as the New Component wizard (first folder named "components" under `src/main/`), falling back to the Java file's directory if no components folder exists. Uses `MutableApiModel.blankContent()` for the blank file content.
 
 ### Remove dead extension point machinery and ConsoleLogger
 

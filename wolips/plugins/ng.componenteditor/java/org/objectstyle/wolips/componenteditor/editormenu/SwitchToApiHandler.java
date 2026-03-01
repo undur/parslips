@@ -1,15 +1,24 @@
 package org.objectstyle.wolips.componenteditor.editormenu;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
+import org.objectstyle.wolips.bindings.api.MutableApiModel;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.editors.EditorsPlugin;
@@ -24,6 +33,10 @@ import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
  * a template exists (so the user gets the full multi-tab component editor
  * with the API tab active), or in the standalone ApiEditor if only a .api
  * file exists (common for non-component WOElements that have no template).
+ *
+ * <p>If no .api file exists at all, one is created automatically: in the
+ * project's {@code components} folder if one exists under {@code src/main/},
+ * otherwise next to the Java file.
  */
 public class SwitchToApiHandler extends AbstractHandler {
 
@@ -65,13 +78,65 @@ public class SwitchToApiHandler extends AbstractHandler {
 			}
 
 			// No template — this is likely a non-component WOElement.
-			// Open the standalone ApiEditor if a .api file exists.
+			// Open the standalone ApiEditor, creating the .api file if needed.
 			IFile apiFile = result.getDotApi();
-			if (apiFile != null && apiFile.exists()) {
-				WorkbenchUtilities.open(apiFile, EditorsPlugin.ApiEditorID);
+
+			if (apiFile == null) {
+				// No .api file found by the locate system — derive a path.
+				// Prefer the project's "components" folder (same heuristic as
+				// the New Component wizard); fall back to placing it next to
+				// the Java file if no components folder exists.
+				String baseName = LocatePlugin.getDefault().fileNameWithoutExtension(file);
+				IContainer apiFolder = findComponentsFolder(file.getProject());
+				if (apiFolder == null) {
+					apiFolder = file.getParent();
+				}
+				apiFile = apiFolder.getFile(new Path(baseName + ".api"));
 			}
+
+			if (!apiFile.exists()) {
+				String name = LocatePlugin.getDefault().fileNameWithoutExtension(apiFile);
+				String content = MutableApiModel.blankContent(name);
+				apiFile.create(
+					new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)),
+					true, null);
+			}
+
+			WorkbenchUtilities.open(apiFile, EditorsPlugin.ApiEditorID);
 		} catch (CoreException | LocateException e) {
 			ComponenteditorPlugin.getDefault().log(e);
+		}
+		return null;
+	}
+
+	/**
+	 * Searches for a folder named "components" under {@code src/main/} in the
+	 * given project. Returns the first match, or {@code null} if none found.
+	 * Same heuristic as {@link org.objectstyle.wolips.wizards.WOComponentCreationPage#findComponentsFolder}.
+	 */
+	private static IContainer findComponentsFolder(IProject project) {
+		try {
+			IFolder srcMain = project.getFolder("src/main");
+			if (srcMain.exists()) {
+				return findComponentsFolderIn(srcMain);
+			}
+		} catch (CoreException e) {
+			// fall through
+		}
+		return null;
+	}
+
+	private static IFolder findComponentsFolderIn(IContainer container) throws CoreException {
+		for (IResource member : container.members()) {
+			if (member.getType() == IResource.FOLDER) {
+				if ("components".equals(member.getName())) {
+					return (IFolder) member;
+				}
+				IFolder found = findComponentsFolderIn((IFolder) member);
+				if (found != null) {
+					return found;
+				}
+			}
 		}
 		return null;
 	}
