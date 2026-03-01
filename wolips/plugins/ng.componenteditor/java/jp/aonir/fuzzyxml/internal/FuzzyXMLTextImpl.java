@@ -43,7 +43,11 @@ public class FuzzyXMLTextImpl extends AbstractFuzzyXMLNode implements FuzzyXMLTe
       if (value.trim().length() == 0) {
         return;
       }
-      value = value.replaceFirst("[\r\n\t ]+$", " ");
+      // Collapse trailing whitespace. If it contained a newline, keep a
+      // newline so the following close tag can land on its own line.
+      // Otherwise collapse to a single space.
+      String trailingReplace = value.matches("(?s).*[\r\n][\\s]*$") ? "\n" : " ";
+      value = value.replaceFirst("[\r\n\t ]+$", trailingReplace);
       String replace = "";
       if (xmlBuffer.length() >= 1 && !Character.isWhitespace(xmlBuffer.charAt(xmlBuffer.length()-1))) {
         replace = " ";
