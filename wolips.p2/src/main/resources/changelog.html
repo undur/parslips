@@ -29,8 +29,8 @@
 				<h2 class="date-header">March 1, 2026</h2>
 
 				<div class="changelog-entry">
-					<h3>Self-closing tag autocomplete</h3>
-					<p>Tag autocomplete now inserts self-closing tags (<code>&lt;wo:str /&gt;</code>) for elements that don&rsquo;t accept child content, and opening+closing tag pairs (<code>&lt;wo:form&gt;&lt;/wo:form&gt;</code>) for content components. The decision is based on the <code>wocomponentcontent</code> attribute in the element&rsquo;s <code>.api</code> file. Previously, all <code>wo:</code> completions inserted opening+closing tags regardless.</p>
+					<h3>Smarter tag autocomplete</h3>
+					<p>Tag autocomplete now inserts self-closing tags (<code>&lt;wo:str /&gt;</code>) for elements that don&rsquo;t accept child content, and opening+closing tag pairs (<code>&lt;wo:form&gt;&lt;/wo:form&gt;</code>) for content components. Required bindings are pre-inserted with the cursor inside the quotes &mdash; e.g. completing <code>wo:str</code> inserts <code>&lt;wo:str value=&quot;&quot; /&gt;</code> so you can start typing immediately. Both behaviors are driven by the element&rsquo;s <code>.api</code> file.</p>
 				</div>
 
 				<div class="changelog-entry">

@@ -96,23 +96,22 @@ public class InlineWodTagInfo extends TagInfo {
             addAttributeInfo(attrInfo);
           }
 
-          // Check the element's API for componentContent to determine
-          // whether autocomplete should insert a self-closing tag or
-          // an opening+closing tag pair.
-          updateHasBodyFromApi(elementType);
+          // Look up the element's API for componentContent and required
+          // binding flags. componentContent controls self-closing vs
+          // opening+closing tags; required flags cause the binding name
+          // to be pre-inserted in the completion (with cursor inside the
+          // quotes) so the user can start typing the value immediately.
+          applyApiMetadata(elementType);
         }
         else {
           // Element type not found in classpath; fall back to global WebObjectDefinitions.xml
           String expandedName = getExpandedElementTypeName();
           ApiSnapshot api = ApiUtils.findGlobalApiSnapshotByClassName(expandedName);
           if (api != null) {
-            java.util.List<IApiBinding> bindings = api.getBindings();
-            for (IApiBinding binding : bindings) {
-              AttributeInfo attrInfo = new AttributeInfo(binding.getName(), true);
+            for (IApiBinding binding : api.getBindings()) {
+              AttributeInfo attrInfo = new AttributeInfo(binding.getName(), true, AttributeInfo.NONE, binding.isRequired());
               addAttributeInfo(attrInfo);
             }
-
-            // Use the global API's componentContent flag
             setHasBody(api.isComponentContent());
           }
         }
@@ -126,19 +125,40 @@ public class InlineWodTagInfo extends TagInfo {
 
   /**
    * Looks up the element's {@code .api} file (project-local or global) and
-   * sets {@link #setHasBody(boolean)} based on the {@code wocomponentcontent}
-   * attribute. Elements that don't accept child content (e.g. WOString,
-   * WOImage) get self-closing tags; content components (e.g. WOForm,
-   * WOConditional) get opening+closing tag pairs.
+   * applies metadata from it:
+   * <ul>
+   *   <li>{@code wocomponentcontent} &rarr; {@link #setHasBody(boolean)} (controls
+   *       self-closing vs opening+closing tag in autocomplete)</li>
+   *   <li>{@code required} bindings &rarr; marks corresponding {@link AttributeInfo}
+   *       entries so they are pre-inserted in the completion with cursor
+   *       positioned inside the quotes</li>
+   * </ul>
    */
-  private void updateHasBodyFromApi(IType elementType) {
+  private void applyApiMetadata(IType elementType) {
     try {
       ApiSnapshot api = ApiUtils.findApiSnapshot(elementType, _cache.getApiCache(_javaProject));
       if (api != null) {
         setHasBody(api.isComponentContent());
+
+        // Build a set of required binding names from the API
+        Set<String> requiredBindings = new HashSet<String>();
+        for (IApiBinding binding : api.getBindings()) {
+          if (binding.isRequired()) {
+            requiredBindings.add(binding.getName());
+          }
+        }
+
+        // Mark matching AttributeInfo entries as required
+        if (!requiredBindings.isEmpty()) {
+          for (AttributeInfo attr : super.getAttributeInfo()) {
+            if (requiredBindings.contains(attr.getAttributeName())) {
+              attr.setRequired(true);
+            }
+          }
+        }
       }
     } catch (ApiModelException e) {
-      // Non-fatal — fall back to default (hasBody=true)
+      // Non-fatal — fall back to defaults
     }
   }
 

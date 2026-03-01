@@ -12,11 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
-### Self-closing tag autocomplete for non-content elements
+### Self-closing tag autocomplete and required binding pre-insertion
 
 - **`InlineWodTagInfo` now checks `wocomponentcontent`** to determine whether autocomplete should insert a self-closing tag (`<wo:str />`) or an opening+closing tag pair (`<wo:form></wo:form>`). Previously, all `wo:` tag completions unconditionally inserted opening+closing tags. The `componentContent` flag is resolved from the element's `.api` file (project-local or global `WebObjectDefinitions.xml`).
-- **Added `TagInfo.setHasBody()`** setter so the `hasBody` flag can be updated after construction.
+- **Required bindings are pre-inserted in tag completions.** When an element has required bindings (per its `.api` file), those binding names are included in the autocomplete insertion with the cursor positioned inside the first required binding's quotes — e.g. completing `wo:str` inserts `<wo:str value="⎸" />` so you can start typing the value immediately.
+- **Added `TagInfo.setHasBody()`** and **`AttributeInfo.setRequired()`** setters so these flags can be updated after construction.
 - **Overrode `hasBody()` in `InlineWodTagInfo`** to trigger lazy API loading before the flag is read — necessary because `HTMLAssistProcessor` calls `hasBody()` before `getAttributeInfo()`.
+- **Changed `emptyTag` to `false`** in `InlineWodTagInfo` constructor — the `emptyTag` flag is for HTML void elements like `<br>`, not `wo:` tags.
 
 ### Add SwitchToApiHandler — open .api file via Cmd+Alt+5
 

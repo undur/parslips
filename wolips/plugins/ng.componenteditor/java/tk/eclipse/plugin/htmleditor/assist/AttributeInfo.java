@@ -77,6 +77,10 @@ public class AttributeInfo {
 	public boolean isRequired(){
 		return this.required;
 	}
+
+	public void setRequired(boolean required){
+		this.required = required;
+	}
 	
 	public void addValue(String value){
 	    this.values.add(value);
