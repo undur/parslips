@@ -16,6 +16,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -26,9 +30,18 @@ import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 public class WOBrowser extends ScrolledComposite implements ISelectionChangedListener, ISelectionProvider, KeyListener {
+	/** Default width (in pixels) for each browser column. */
+	static final int DEFAULT_COLUMN_WIDTH = 280;
+
+	/** Minimum width a column can be resized to. */
+	private static final int MIN_COLUMN_WIDTH = 120;
+
 	private Composite _browserComposite;
 
 	private List<WOBrowserColumn> _columns;
+
+	/** Resize handles between adjacent columns. One fewer than _columns. */
+	private List<Composite> _resizeHandles = new LinkedList<Composite>();
 
 	private List<ISelectionChangedListener> _listeners = new LinkedList<ISelectionChangedListener>();
 
@@ -82,14 +95,22 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 			newColumn.setDelegate(_browserDelegate);
 			newColumn.addSelectionChangedListener(this);
 			GridData columnLayoutData = new GridData(GridData.FILL_BOTH);
+			columnLayoutData.widthHint = DEFAULT_COLUMN_WIDTH;
 			newColumn.setLayoutData(columnLayoutData);
 			_columns.add(newColumn);
 			if (_browserDelegate != null) {
 				_browserDelegate.browserColumnAdded(newColumn);
 			}
-			((GridLayout) _browserComposite.getLayout()).numColumns = _columns.size();
 
-			_browserComposite.pack();
+			// Add a trailing resize handle after the column so every column
+			// (including the last one) can be resized by dragging its right edge.
+			Composite handle = createResizeHandle(_browserComposite);
+			_resizeHandles.add(handle);
+
+			// Grid cells = browser columns + one resize handle per column
+			((GridLayout) _browserComposite.getLayout()).numColumns = _columns.size() + _resizeHandles.size();
+
+			resizeBrowserComposite();
 
 			for (WOBrowserColumn column : _columns) {
 				Object selectedElement = ((IStructuredSelection) column.getSelection()).getFirstElement();
@@ -119,9 +140,45 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 			}
 			column.dispose();
 			_columns.remove(columnNum);
+
+			// Remove the trailing resize handle that belongs to this column
+			if (columnNum < _resizeHandles.size()) {
+				_resizeHandles.get(columnNum).dispose();
+				_resizeHandles.remove(columnNum);
+			}
 		}
 
-		_browserComposite.pack();
+		resizeBrowserComposite();
+	}
+
+	/**
+	 * Sizes the browser composite to fit its columns and handles based on
+	 * their widthHint values, then triggers a layout pass. Unlike pack(),
+	 * this does not ask children for preferred sizes, so inner
+	 * TableColumnLayouts size their columns to fit within the widthHint
+	 * rather than expanding to fit content.
+	 */
+	private void resizeBrowserComposite() {
+		GridLayout gl = (GridLayout) _browserComposite.getLayout();
+		int totalWidth = gl.marginWidth * 2;
+		int numGaps = Math.max(0, _columns.size() + _resizeHandles.size() - 1);
+		totalWidth += numGaps * gl.horizontalSpacing;
+
+		for (WOBrowserColumn column : _columns) {
+			GridData gd = (GridData) column.getLayoutData();
+			totalWidth += gd.widthHint;
+		}
+		for (Composite handle : _resizeHandles) {
+			GridData gd = (GridData) handle.getLayoutData();
+			totalWidth += gd.widthHint;
+		}
+
+		int height = _browserComposite.getParent().getClientArea().height;
+		if (height <= 0) {
+			height = SWT.DEFAULT;
+		}
+		_browserComposite.setSize(totalWidth, height);
+		_browserComposite.layout(true, true);
 	}
 
 	public WOBrowserColumn selectKeyInColumn(BindingValueKey selectedKey, WOBrowserColumn column) {
@@ -347,6 +404,74 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 
 	public void keyReleased(KeyEvent e) {
 		// no-op — only keyPressed is handled
+	}
+
+	/**
+	 * Creates a thin vertical resize handle placed after a browser column.
+	 * Dragging resizes the column at the same index. Uses a 4px-wide
+	 * composite with a SIZEWE cursor. Double-click resets to default width.
+	 */
+	private Composite createResizeHandle(Composite parent) {
+		Composite handle = new Composite(parent, SWT.NONE);
+		GridData handleData = new GridData(GridData.FILL_VERTICAL);
+		handleData.widthHint = 4;
+		handle.setLayoutData(handleData);
+		handle.setBackground(parent.getBackground());
+
+		Cursor resizeCursor = new Cursor(getDisplay(), SWT.CURSOR_SIZEWE);
+		handle.setCursor(resizeCursor);
+		handle.addDisposeListener(e -> resizeCursor.dispose());
+
+		handle.addMouseListener(new MouseListener() {
+			private int _startX;
+
+			public void mouseDown(MouseEvent e) {
+				_startX = handle.toDisplay(e.x, 0).x;
+				handle.setData("_startX", _startX);
+			}
+
+			public void mouseUp(MouseEvent e) {
+				handle.setData("_startX", null);
+			}
+
+			public void mouseDoubleClick(MouseEvent e) {
+				// Double-click resets to default width
+				int handleIndex = _resizeHandles.indexOf(handle);
+				if (handleIndex >= 0 && handleIndex < _columns.size()) {
+					WOBrowserColumn column = _columns.get(handleIndex);
+					GridData gd = (GridData) column.getLayoutData();
+					gd.widthHint = DEFAULT_COLUMN_WIDTH;
+					resizeBrowserComposite();
+					layout();
+				}
+			}
+		});
+
+		handle.addMouseMoveListener(new MouseMoveListener() {
+			public void mouseMove(MouseEvent e) {
+				Object startXObj = handle.getData("_startX");
+				if (startXObj == null) {
+					return;
+				}
+				int startX = (Integer) startXObj;
+				int currentX = handle.toDisplay(e.x, 0).x;
+				int delta = currentX - startX;
+				handle.setData("_startX", currentX);
+
+				// Resize the column at this handle's index
+				int handleIndex = _resizeHandles.indexOf(handle);
+				if (handleIndex >= 0 && handleIndex < _columns.size()) {
+					WOBrowserColumn column = _columns.get(handleIndex);
+					GridData gd = (GridData) column.getLayoutData();
+					int newWidth = Math.max(MIN_COLUMN_WIDTH, gd.widthHint + delta);
+					gd.widthHint = newWidth;
+					resizeBrowserComposite();
+					layout();
+				}
+			}
+		});
+
+		return handle;
 	}
 
 }

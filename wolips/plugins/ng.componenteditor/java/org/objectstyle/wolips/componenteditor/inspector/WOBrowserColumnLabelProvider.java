@@ -51,7 +51,7 @@ public class WOBrowserColumnLabelProvider extends StyledCellLabelProvider {
 			// Key name, left-aligned
 			cell.setText(key.getBindingName());
 		} else if (column == 1) {
-			// Declaring type for inherited keys, right-aligned in gray
+			// Declaring type for inherited keys, left-aligned in gray
 			IType declaringType = key.getDeclaringType();
 			if (declaringType != null && _type != null && !_type.equals(declaringType)) {
 				StyledString styled = new StyledString(declaringType.getElementName(), QUALIFIER_STYLER);
@@ -76,4 +76,5 @@ public class WOBrowserColumnLabelProvider extends StyledCellLabelProvider {
 
 		super.update(cell);
 	}
+
 }

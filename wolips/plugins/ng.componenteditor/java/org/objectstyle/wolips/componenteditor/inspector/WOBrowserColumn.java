@@ -15,6 +15,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.layout.TableColumnLayout;
+import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -25,6 +26,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -54,6 +56,10 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 
 	private List<Object> _bindingValueKeys;
 
+	private TableColumnLayout _tableColumnLayout;
+
+	private TableColumn _nameColumn;
+
 	public WOBrowserColumn(WOBrowser browser, IType type, Composite parent, int style) throws JavaModelException {
 		super(parent, style);
 		setBackground(parent.getBackground());
@@ -77,7 +83,6 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 		typeNameData.horizontalIndent = 3;
 		typeName.setLayoutData(typeNameData);
 
-		// typeName.setFont(typeName.getFont().)
 		typeName.setText(type.getElementName());
 
 		Composite tableContainer = new Composite(this, SWT.NONE);
@@ -90,20 +95,23 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 		_keysViewer.setContentProvider(new ListContentProvider());
 		_keysViewer.setLabelProvider(new WOBrowserColumnLabelProvider(_type));
 
-		TableColumnLayout keysLayout = new TableColumnLayout();
-		tableContainer.setLayout(keysLayout);
+		_tableColumnLayout = new TableColumnLayout();
+		tableContainer.setLayout(_tableColumnLayout);
 
-		TableColumn nameColumn = new TableColumn(_keysViewer.getTable(), SWT.NONE);
-		keysLayout.setColumnData(nameColumn, new ColumnWeightData(3, 120));
+		// Name column: sized to fit the widest key name (updated in reload())
+		_nameColumn = new TableColumn(_keysViewer.getTable(), SWT.NONE);
+		_tableColumnLayout.setColumnData(_nameColumn, new ColumnPixelData(100, false));
 
-		TableColumn originColumn = new TableColumn(_keysViewer.getTable(), SWT.RIGHT);
-		keysLayout.setColumnData(originColumn, new ColumnWeightData(2, 60));
+		// Origin column: takes remaining space, left-aligned. Shows the
+		// declaring type for inherited keys.
+		TableColumn originColumn = new TableColumn(_keysViewer.getTable(), SWT.NONE);
+		_tableColumnLayout.setColumnData(originColumn, new ColumnWeightData(1, 0));
 
+		// Fixed-width icon column for navigation arrows.
 		TableColumn iconColumn = new TableColumn(_keysViewer.getTable(), SWT.NONE);
-		keysLayout.setColumnData(iconColumn, new ColumnWeightData(0, 20));
+		_tableColumnLayout.setColumnData(iconColumn, new ColumnPixelData(20, false));
 
 		reload();
-		tableContainer.pack();
 
 		_lineDragHandler = new BindingsDragHandler(this);
 
@@ -152,6 +160,28 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 
 		if (_keysViewer.getContentProvider() != null) {
 			_keysViewer.setInput(_bindingValueKeys);
+		}
+
+		// Size the name column to exactly fit the widest key name, so the
+		// origin column gets maximum space for the declaring type text.
+		if (_nameColumn != null && !_nameColumn.isDisposed()) {
+			int maxWidth = 0;
+			GC gc = new GC(_keysViewer.getTable());
+			try {
+				gc.setFont(_keysViewer.getTable().getFont());
+				for (Object keyObj : _bindingValueKeys) {
+					if (keyObj instanceof BindingValueKey) {
+						int w = gc.textExtent(((BindingValueKey) keyObj).getBindingName()).x;
+						if (w > maxWidth) {
+							maxWidth = w;
+						}
+					}
+				}
+			} finally {
+				gc.dispose();
+			}
+			// Add a small margin for cell padding
+			_tableColumnLayout.setColumnData(_nameColumn, new ColumnPixelData(maxWidth + 10, false));
 		}
 	}
 	
