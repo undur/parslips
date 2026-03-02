@@ -264,7 +264,7 @@ public class BindingsPageBlock extends MasterDetailsBlock {
 		// "Refactor on rename" checkbox — right-aligned in the Component API
 		// header row. When checked, saving the .api file after renaming a
 		// binding triggers a cross-file refactoring preview.
-		Button refactorOnRenameButton = toolkit.createButton(apiClient, "Refactor on rename", SWT.CHECK);
+		Button refactorOnRenameButton = toolkit.createButton(apiClient, "Refactor templates on binding rename", SWT.CHECK);
 		GridData refactorGd = new GridData(SWT.END, SWT.CENTER, true, false);
 		refactorOnRenameButton.setLayoutData(refactorGd);
 		refactorOnRenameButton.addSelectionListener(new SelectionListener() {
