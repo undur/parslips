@@ -102,12 +102,12 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		setLayout(new GridLayout(2, false));
 
 		Label elementNameLabel = new Label(this, SWT.NONE);
-		elementNameLabel.setText("Component Name");
+		elementNameLabel.setText("Element Name");
 		_elementNameField = new Text(this, SWT.BORDER);
 		_elementNameField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		Label elementTypeLabel = new Label(this, SWT.NONE);
-		elementTypeLabel.setText("Component Type");
+		elementTypeLabel.setText("Element Type");
 		_elementTypeField = new Combo(this, SWT.BORDER);
 		_elementTypeField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		_elementTypeField.setVisibleItemCount(5);
@@ -181,7 +181,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 			}
 
 		});
-		_addBindingButton.setText("New Binding");
+		_addBindingButton.setText("Add Binding");
 
 		_removeBindingButton = new Button(buttonContainer, SWT.PUSH);
 		_removeBindingButton.addSelectionListener(new SelectionListener() {
@@ -338,7 +338,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		if (binding != null && _cache != null) {
 			try {
 				BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(_wodElement.getBindingValue(binding.getName()), _cache);
-				if (bindingValueKeyPath.canAddKey()) {
+				if (!bindingValueKeyPath.exists() && bindingValueKeyPath.isSingleKey()) {
 					String name = WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, binding.isAction(), _cache.getComponentType());
 					getRefactoringElement().setValueForBinding(name, binding.getName());
 					BindingsInspector.this.refresh();
@@ -364,7 +364,12 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 				_removeBindingButton.setEnabled(true);
 				try {
 					BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(_wodElement.getBindingValue(binding.getName()), _cache);
-					if (bindingValueKeyPath.canAddKey()) {
+					// Use the same condition as the template editor's Cmd+click
+					// "Add Key" action (WodCompletionUtils line 105). canAddKey()
+					// additionally requires isValid(), which is false for non-existent
+					// keys on types that don't implement NSKeyValueCoding (e.g.
+					// ng-objects components).
+					if (!bindingValueKeyPath.exists() && bindingValueKeyPath.isSingleKey()) {
 						_addKeyActionButton.setEnabled(true);
 					} else {
 						_addKeyActionButton.setEnabled(false);
