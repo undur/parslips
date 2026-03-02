@@ -9,6 +9,8 @@ public class FuzzyXMLDocTypeImpl extends AbstractFuzzyXMLNode implements FuzzyXM
   private String _publicId;
   private String _systemId;
   private String _internalSubset;
+  /** The original doctype text from the source, used for exact reproduction. */
+  private String _rawValue;
 
   public FuzzyXMLDocTypeImpl(FuzzyXMLNode parent, String name, String publicId, String systemId, String internalSubset, int offset, int length) {
     super(parent, offset, length);
@@ -16,6 +18,10 @@ public class FuzzyXMLDocTypeImpl extends AbstractFuzzyXMLNode implements FuzzyXM
     this._publicId = publicId;
     this._systemId = systemId;
     this._internalSubset = internalSubset;
+  }
+
+  public void setRawValue(String rawValue) {
+    _rawValue = rawValue;
   }
 
   public String getName() {
@@ -47,24 +53,29 @@ public class FuzzyXMLDocTypeImpl extends AbstractFuzzyXMLNode implements FuzzyXM
     buffer.append("doctype: " + _name + ", " + _publicId + ", " + _systemId + ", " + _internalSubset + "\n");
   }
 
-  public void toXMLString(RenderContext renderContext, StringBuffer xmlBuffer) {   
-    xmlBuffer.append("<!DOCTYPE ").append(_name);
-    if (_publicId != null && !_publicId.equals("")) {
-      xmlBuffer.append(" PUBLIC ");
-      xmlBuffer.append("\"").append(_publicId).append("\"");
-      if (_systemId != null && !_systemId.equals("")) {
+  public void toXMLString(RenderContext renderContext, StringBuffer xmlBuffer) {
+    if (_rawValue != null) {
+      // Preserve the doctype exactly as the author wrote it.
+      xmlBuffer.append(_rawValue);
+    } else {
+      xmlBuffer.append("<!DOCTYPE ").append(_name);
+      if (_publicId != null && !_publicId.equals("")) {
+        xmlBuffer.append(" PUBLIC ");
+        xmlBuffer.append("\"").append(_publicId).append("\"");
+        if (_systemId != null && !_systemId.equals("")) {
+          xmlBuffer.append(" \"").append(_systemId).append("\"");
+        }
+      }
+      else if (_systemId != null && !_systemId.equals("")) {
+        xmlBuffer.append(" SYSTEM ");
         xmlBuffer.append(" \"").append(_systemId).append("\"");
       }
-    }
-    else if (_systemId != null && !_systemId.equals("")) {
-      xmlBuffer.append(" SYSTEM ");
-      xmlBuffer.append(" \"").append(_systemId).append("\"");
-    }
 
-    if (_internalSubset != null && !_internalSubset.equals("")) {
-      xmlBuffer.append("[").append(_internalSubset).append("]");
+      if (_internalSubset != null && !_internalSubset.equals("")) {
+        xmlBuffer.append("[").append(_internalSubset).append("]");
+      }
+      xmlBuffer.append(">");
     }
-    xmlBuffer.append(">");
     if (renderContext.isShowNewlines()) {
       xmlBuffer.append("\n");
     }

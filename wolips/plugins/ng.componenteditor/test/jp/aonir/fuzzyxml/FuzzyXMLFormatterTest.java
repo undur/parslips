@@ -409,15 +409,28 @@ public class FuzzyXMLFormatterTest {
 	}
 
 	@Test
-	public void lowercaseDoctype_rendersCorrectly() {
+	public void lowercaseDoctype_casePreserved() {
+		// The original casing should be preserved exactly.
 		String input = "<!doctype html>\n<div>content</div>";
 		FuzzyXMLDocument doc = new FuzzyXMLParser(false, true).parse(input);
 		RenderContext ctx = new RenderContext(true);
 		ctx.setDelegate(new WOHTMLRenderDelegate());
 		StringBuffer buf = new StringBuffer();
 		doc.getDocumentType().toXMLString(ctx, buf);
-		assertTrue("Rendered doctype should contain 'html': " + buf,
-			buf.toString().contains("DOCTYPE html"));
+		assertTrue("Lowercase doctype should stay lowercase: " + buf,
+			buf.toString().startsWith("<!doctype html>"));
+	}
+
+	@Test
+	public void uppercaseDoctype_casePreserved() {
+		String input = "<!DOCTYPE html>\n<div>content</div>";
+		FuzzyXMLDocument doc = new FuzzyXMLParser(false, true).parse(input);
+		RenderContext ctx = new RenderContext(true);
+		ctx.setDelegate(new WOHTMLRenderDelegate());
+		StringBuffer buf = new StringBuffer();
+		doc.getDocumentType().toXMLString(ctx, buf);
+		assertTrue("Uppercase DOCTYPE should stay uppercase: " + buf,
+			buf.toString().startsWith("<!DOCTYPE html>"));
 	}
 
 	// --- Trailing space after text ---

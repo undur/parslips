@@ -548,7 +548,9 @@ public class FuzzyXMLParser {
 			if (matcher.find()) {
 				internalSubset = matcher.group(1);
 			}
-			_docType = new FuzzyXMLDocTypeImpl(null, name, publicId, systemId, internalSubset, offset, end - offset);
+			FuzzyXMLDocTypeImpl impl = new FuzzyXMLDocTypeImpl(null, name, publicId, systemId, internalSubset, offset, end - offset);
+			impl.setRawValue(text);
+			_docType = impl;
 		}
 	}
 
