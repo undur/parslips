@@ -40,29 +40,8 @@
 				<h2 class="date-header">March 1, 2026</h2>
 
 				<div class="changelog-entry">
-					<h3>Template formatting improvements</h3>
-					<p>The formatting preferences (<strong>Preferences &gt; Parsley &gt; Template Formatting</strong>) now let you choose between tabs and spaces for indentation, and set the number of spaces per indent level (1&ndash;8, default 2). These settings existed in the formatter backend since the WOLips era but were never exposed in the UI.</p>
-					<p>Also fixed the formatter converting non-ASCII characters to HTML entities &mdash; accented letters, Icelandic characters, and other valid UTF-8 text (e.g. <code>&oacute;</code>, <code>&eth;</code>) would be replaced with entity references like <code>&amp;oacute;</code> and <code>&amp;eth;</code>. They are now preserved as-is.</p>
-					<p>Fixed empty HTML elements like <code>&lt;th&gt;&lt;/th&gt;</code> being collapsed to self-closing tags (<code>&lt;th /&gt;</code>), which browsers treat as unclosed tags. Now only HTML void elements (<code>&lt;br&gt;</code>, <code>&lt;img&gt;</code>, etc.) and <code>wo:</code> tags are rendered as self-closing when empty.</p>
-					<p>The formatter now respects the original line structure of your template &mdash; if you wrote content on a single line (e.g. <code>&lt;a&gt;&lt;wo:str .../&gt; text&lt;/a&gt;</code>), it stays on one line. Multi-line content is properly indented. <code>&amp;nbsp;</code> entities are also preserved instead of being silently replaced with regular spaces.</p>
-					<p>Blank lines between elements are now preserved exactly as written. Whether you separate <code>&lt;/style&gt;</code> from <code>&lt;div&gt;</code> with one blank line or two, the formatter keeps them. This works at all nesting levels &mdash; between top-level blocks, inside nested structures, and around <code>wo:</code> control tags.</p>
-					<p>Spaces between inline tags are preserved &mdash; e.g. <code>&lt;strong&gt;text&lt;/strong&gt; &lt;wo:str .../&gt;</code> keeps the space so rendered words don&rsquo;t merge together.</p>
-					<p>HTML void elements (<code>&lt;br&gt;</code>, <code>&lt;hr&gt;</code>, <code>&lt;img&gt;</code>, etc.) are now rendered without a trailing slash &mdash; <code>&lt;br&gt;</code> instead of <code>&lt;br /&gt;</code> &mdash; matching standard HTML practice. Comment content and text entities (including single quotes in <code>&lt;script&gt;</code> blocks) are preserved exactly as written, with no unwanted escaping or whitespace normalization.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Fix: apostrophes in template text breaking autocompletion</h3>
-					<p>Fixed a long-standing bug (inherited from WOLips) where an apostrophe in body text &mdash; e.g. <code>&lt;p&gt;what&rsquo;s up&lt;/p&gt;</code> &mdash; would break tag autocompletion for the rest of the file. The tag-stack scanner mistakenly treated the apostrophe as the start of a quoted attribute value, swallowing all subsequent content (including <code>&lt;</code> characters) so Ctrl+Space could never see a tag prefix.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Type resolution performance</h3>
-					<p>Three optimizations that together eliminate the multi-second delay when opening components or triggering tag autocomplete in large projects. Resolved element types are now cached so deprecation checks don&rsquo;t re-trigger JDT lookups; exact-match type lookups skip the expensive hierarchy scope entirely; and autocomplete tag info is cached per project so repeat invocations reuse pre-loaded attribute info instead of rebuilding it each time.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Smarter tag autocomplete</h3>
-					<p>Tag autocomplete now inserts self-closing tags (<code>&lt;wo:str /&gt;</code>) for elements that don&rsquo;t accept child content, and opening+closing tag pairs (<code>&lt;wo:form&gt;&lt;/wo:form&gt;</code>) for content components. Required bindings are pre-inserted with the cursor inside the quotes &mdash; e.g. completing <code>wo:str</code> inserts <code>&lt;wo:str value=&quot;&quot; /&gt;</code> so you can start typing immediately. Both behaviors are driven by the element&rsquo;s <code>.api</code> file.</p>
+					<h3>Live revalidation on API changes</h3>
+					<p>Saving an <code>.api</code> file now immediately revalidates all open component editors. Mark a binding as required, save &mdash; and every open template that uses that component instantly shows (or clears) the corresponding validation markers. Previously, you had to re-save each component or restart Eclipse to see updated validation.</p>
 				</div>
 
 				<div class="changelog-entry">
@@ -71,13 +50,34 @@
 				</div>
 
 				<div class="changelog-entry">
-					<h3>Live revalidation on API changes</h3>
-					<p>Saving an <code>.api</code> file now immediately revalidates all open component editors. Mark a binding as required, save &mdash; and every open template that uses that component instantly shows (or clears) the corresponding validation markers. Previously, you had to re-save each component or restart Eclipse to see updated validation.</p>
+					<h3>Fix: required/will-set checkbox in API editor</h3>
+					<p>Fixed a bug where unchecking &ldquo;Required&rdquo; or &ldquo;Will Set&rdquo; on a binding in the API editor would fail silently or throw an error. The root cause was a double-removal in the DOM &mdash; the validation element was removed twice, once automatically when it became empty and once explicitly. Also fixed a stale-timestamp issue that could cause the editor to unnecessarily reparse the file after saving.</p>
 				</div>
 
 				<div class="changelog-entry">
-					<h3>Fix: required/will-set checkbox in API editor</h3>
-					<p>Fixed a bug where unchecking &ldquo;Required&rdquo; or &ldquo;Will Set&rdquo; on a binding in the API editor would fail silently or throw an error. The root cause was a double-removal in the DOM &mdash; the validation element was removed twice, once automatically when it became empty and once explicitly. Also fixed a stale-timestamp issue that could cause the editor to unnecessarily reparse the file after saving.</p>
+					<h3>Fix: apostrophes in template text breaking autocompletion</h3>
+					<p>Fixed a long-standing bug (inherited from WOLips) where an apostrophe in body text &mdash; e.g. <code>&lt;p&gt;what&rsquo;s up&lt;/p&gt;</code> &mdash; would break tag autocompletion for the rest of the file. The tag-stack scanner mistakenly treated the apostrophe as the start of a quoted attribute value, swallowing all subsequent content (including <code>&lt;</code> characters) so Ctrl+Space could never see a tag prefix.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Smarter tag autocomplete</h3>
+					<p>Tag autocomplete now inserts self-closing tags (<code>&lt;wo:str /&gt;</code>) for elements that don&rsquo;t accept child content, and opening+closing tag pairs (<code>&lt;wo:form&gt;&lt;/wo:form&gt;</code>) for content components. Required bindings are pre-inserted with the cursor inside the quotes &mdash; e.g. completing <code>wo:str</code> inserts <code>&lt;wo:str value=&quot;&quot; /&gt;</code> so you can start typing immediately. Both behaviors are driven by the element&rsquo;s <code>.api</code> file.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Type resolution performance</h3>
+					<p>Three optimizations that together eliminate the multi-second delay when opening components or triggering tag autocomplete in large projects. Resolved element types are now cached so deprecation checks don&rsquo;t re-trigger JDT lookups; exact-match type lookups skip the expensive hierarchy scope entirely; and autocomplete tag info is cached per project so repeat invocations reuse pre-loaded attribute info instead of rebuilding it each time.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Template formatting improvements</h3>
+					<p>The formatting preferences (<strong>Preferences &gt; Parsley &gt; Template Formatting</strong>) now let you choose between tabs and spaces for indentation, and set the number of spaces per indent level (1&ndash;8, default 2). These settings existed in the formatter backend since the WOLips era but were never exposed in the UI.</p>
+					<p>Also fixed the formatter converting non-ASCII characters to HTML entities &mdash; accented letters, Icelandic characters, and other valid UTF-8 text (e.g. <code>&oacute;</code>, <code>&eth;</code>) would be replaced with entity references like <code>&amp;oacute;</code> and <code>&amp;eth;</code>. They are now preserved as-is.</p>
+					<p>Fixed empty HTML elements like <code>&lt;th&gt;&lt;/th&gt;</code> being collapsed to self-closing tags (<code>&lt;th /&gt;</code>), which browsers treat as unclosed tags. Now only HTML void elements (<code>&lt;br&gt;</code>, <code>&lt;img&gt;</code>, etc.) and <code>wo:</code> tags are rendered as self-closing when empty.</p>
+					<p>The formatter now respects the original line structure of your template &mdash; if you wrote content on a single line (e.g. <code>&lt;a&gt;&lt;wo:str .../&gt; text&lt;/a&gt;</code>), it stays on one line. Multi-line content is properly indented. <code>&amp;nbsp;</code> entities are also preserved instead of being silently replaced with regular spaces.</p>
+					<p>Blank lines between elements are now preserved exactly as written. Whether you separate <code>&lt;/style&gt;</code> from <code>&lt;div&gt;</code> with one blank line or two, the formatter keeps them. This works at all nesting levels &mdash; between top-level blocks, inside nested structures, and around <code>wo:</code> control tags.</p>
+					<p>Spaces between inline tags are preserved &mdash; e.g. <code>&lt;strong&gt;text&lt;/strong&gt; &lt;wo:str .../&gt;</code> keeps the space so rendered words don&rsquo;t merge together.</p>
+					<p>HTML void elements (<code>&lt;br&gt;</code>, <code>&lt;hr&gt;</code>, <code>&lt;img&gt;</code>, etc.) are now rendered without a trailing slash &mdash; <code>&lt;br&gt;</code> instead of <code>&lt;br /&gt;</code> &mdash; matching standard HTML practice. Comment content and text entities (including single quotes in <code>&lt;script&gt;</code> blocks) are preserved exactly as written, with no unwanted escaping or whitespace normalization.</p>
 				</div>
 			</div>
 
