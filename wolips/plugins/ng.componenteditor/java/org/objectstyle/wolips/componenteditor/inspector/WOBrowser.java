@@ -31,7 +31,7 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 public class WOBrowser extends ScrolledComposite implements ISelectionChangedListener, ISelectionProvider, KeyListener {
 	/** Default width (in pixels) for each browser column. */
-	static final int DEFAULT_COLUMN_WIDTH = 280;
+	static final int DEFAULT_COLUMN_WIDTH = 420;
 
 	/** Minimum width a column can be resized to. */
 	private static final int MIN_COLUMN_WIDTH = 120;

@@ -10,7 +10,9 @@ import org.eclipse.jdt.core.ElementChangedEvent;
 import org.eclipse.jdt.core.IElementChangedListener;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaElementDelta;
+import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -40,6 +42,21 @@ import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 public class WOBrowserColumn extends Composite implements ISelectionProvider, ISelectionChangedListener, IElementChangedListener {
+	/** Section header for action methods (return WOActionResults/NGActionResults). */
+	static final String ACTIONS_HEADER = "\u26A1 Actions";
+
+	/** Section header for regular keys (fields, getters, non-action methods). */
+	static final String KEYS_HEADER = "\uD83D\uDD11 Keys";
+
+	/** Empty row used as visual spacer before section headers. */
+	static final String SPACER = "";
+
+	/** Types whose return value marks a method as an action method. */
+	private static final String[] ACTION_RESULTS_TYPES = {
+		"com.webobjects.appserver.WOActionResults",
+		"ng.appserver.NGActionResults"
+	};
+
 	private WOBrowser _browser;
 
 	private List<ISelectionChangedListener> _listeners = new LinkedList<ISelectionChangedListener>();
@@ -143,20 +160,43 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 	/**
 	 * Reloads the column's key list by introspecting the type. All keys from
 	 * the type hierarchy are collected into a single flat alphabetized list
-	 * (BindingValueKey implements Comparable). Inherited keys are distinguished
-	 * from local keys by the label provider (gray suffix showing origin class).
+	 * (BindingValueKey implements Comparable), then partitioned into action
+	 * methods and regular keys with section headers. Inherited keys are
+	 * distinguished from local keys by the label provider (gray suffix
+	 * showing origin class).
 	 */
 	public void reload() throws JavaModelException {
 		Map<IType, Set<BindingValueKey>> typeKeys = BindingReflectionUtils.getGroupedBindingValueKeys("", _type, WodParserCache.getTypeCache());
-		List<Object> sortedBindingValueKeys = new LinkedList<Object>();
-		for (Set<BindingValueKey> keys : typeKeys.values()) {
-			sortedBindingValueKeys.addAll(keys);
+
+		// Collect all keys and partition into actions vs. regular keys
+		List<BindingValueKey> actions = new LinkedList<BindingValueKey>();
+		List<BindingValueKey> keys = new LinkedList<BindingValueKey>();
+		for (Set<BindingValueKey> keySet : typeKeys.values()) {
+			for (BindingValueKey key : keySet) {
+				if (isActionMethod(key)) {
+					actions.add(key);
+				} else {
+					keys.add(key);
+				}
+			}
 		}
-		// BindingValueKey implements Comparable (sorts by name), but the keys
-		// arrive pre-sorted within each group. Re-sort to get a single
-		// alphabetized list across all declaring types.
-		sortedBindingValueKeys.sort(null);
-		_bindingValueKeys = sortedBindingValueKeys;
+		actions.sort(null);
+		keys.sort(null);
+
+		// Build the combined list with section headers. A blank spacer row
+		// before each header adds a bit of vertical breathing room.
+		_bindingValueKeys = new LinkedList<Object>();
+		if (!actions.isEmpty()) {
+			_bindingValueKeys.add(ACTIONS_HEADER);
+			_bindingValueKeys.addAll(actions);
+		}
+		if (!keys.isEmpty()) {
+			if (!_bindingValueKeys.isEmpty()) {
+				_bindingValueKeys.add(SPACER);
+			}
+			_bindingValueKeys.add(KEYS_HEADER);
+			_bindingValueKeys.addAll(keys);
+		}
 
 		if (_keysViewer.getContentProvider() != null) {
 			_keysViewer.setInput(_bindingValueKeys);
@@ -175,6 +215,11 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 						if (w > maxWidth) {
 							maxWidth = w;
 						}
+					} else if (keyObj instanceof String) {
+						int w = gc.textExtent((String) keyObj).x;
+						if (w > maxWidth) {
+							maxWidth = w;
+						}
 					}
 				}
 			} finally {
@@ -182,6 +227,27 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 			}
 			// Add a small margin for cell padding
 			_tableColumnLayout.setColumnData(_nameColumn, new ColumnPixelData(maxWidth + 10, false));
+		}
+	}
+
+	/**
+	 * Checks if a binding value key is an action method — a no-argument method
+	 * whose return type implements WOActionResults or NGActionResults.
+	 */
+	private boolean isActionMethod(BindingValueKey key) {
+		IMember member = key.getBindingMember();
+		if (!(member instanceof IMethod)) {
+			return false;
+		}
+		try {
+			IType returnType = key.getNextType();
+			if (returnType == null) {
+				return false;
+			}
+			return BindingReflectionUtils.isType(returnType, ACTION_RESULTS_TYPES, WodParserCache.getTypeCache());
+		} catch (JavaModelException e) {
+			ComponenteditorPlugin.getDefault().log(e);
+			return false;
 		}
 	}
 	
