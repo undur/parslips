@@ -322,4 +322,77 @@ public class ApiValidationTest {
 		assertTrue(tree.isAffectedByBindingNamed("deep"));
 		assertFalse(tree.isAffectedByBindingNamed("missing"));
 	}
+
+	// ---- withRenamedBinding -------------------------------------------------
+
+	@Test
+	public void withRenamedBinding_leafRename() {
+		ApiValidation bound = new ApiValidation(ApiValidation.Kind.BOUND, "item");
+		ApiValidation renamed = bound.withRenamedBinding("item", "selectedItem");
+		assertEquals("selectedItem", renamed.getBindingName());
+		assertEquals(ApiValidation.Kind.BOUND, renamed.getKind());
+	}
+
+	@Test
+	public void withRenamedBinding_leafNoMatch_returnsSameInstance() {
+		ApiValidation bound = new ApiValidation(ApiValidation.Kind.BOUND, "item");
+		ApiValidation result = bound.withRenamedBinding("other", "renamed");
+		assertSame("Should return same instance when name doesn't match", bound, result);
+	}
+
+	@Test
+	public void withRenamedBinding_nestedRename() {
+		ApiValidation tree = new ApiValidation(ApiValidation.Kind.VALIDATION,
+			"'item' is required.", null, List.of(
+				new ApiValidation(ApiValidation.Kind.UNBOUND, "item")
+			));
+		ApiValidation renamed = tree.withRenamedBinding("item", "selectedItem");
+		assertNotSame("Should return new instance", tree, renamed);
+		assertEquals("selectedItem", renamed.getChildren().get(0).getBindingName());
+		assertEquals("'item' is required.", renamed.getMessage());
+	}
+
+	@Test
+	public void withRenamedBinding_deeplyNestedRename() {
+		ApiValidation tree = new ApiValidation(ApiValidation.Kind.AND, null, null, List.of(
+			new ApiValidation(ApiValidation.Kind.OR, null, null, List.of(
+				new ApiValidation(ApiValidation.Kind.BOUND, "deep"),
+				new ApiValidation(ApiValidation.Kind.UNBOUND, "other")
+			))
+		));
+		ApiValidation renamed = tree.withRenamedBinding("deep", "deeper");
+		// The "deep" leaf should be renamed
+		assertEquals("deeper",
+			renamed.getChildren().get(0).getChildren().get(0).getBindingName());
+		// The "other" leaf should be unchanged
+		assertEquals("other",
+			renamed.getChildren().get(0).getChildren().get(1).getBindingName());
+	}
+
+	@Test
+	public void withRenamedBinding_multipleOccurrences() {
+		// A validation tree where the same binding is referenced twice
+		ApiValidation tree = new ApiValidation(ApiValidation.Kind.OR, null, null, List.of(
+			new ApiValidation(ApiValidation.Kind.BOUND, "item"),
+			new ApiValidation(ApiValidation.Kind.SETTABLE, "item")
+		));
+		ApiValidation renamed = tree.withRenamedBinding("item", "newItem");
+		assertEquals("newItem", renamed.getChildren().get(0).getBindingName());
+		assertEquals("newItem", renamed.getChildren().get(1).getBindingName());
+	}
+
+	@Test
+	public void withRenamedBinding_preservesEvaluation() {
+		// After renaming, the validation should evaluate correctly with the new name
+		ApiValidation tree = new ApiValidation(ApiValidation.Kind.VALIDATION,
+			"'item' must be bound.", null, List.of(
+				new ApiValidation(ApiValidation.Kind.UNBOUND, "item")
+			));
+		ApiValidation renamed = tree.withRenamedBinding("item", "selectedItem");
+
+		// The renamed validation should fire when "selectedItem" is missing
+		assertTrue(renamed.evaluate(Collections.emptyMap()));
+		// And should NOT fire when "selectedItem" is present
+		assertFalse(renamed.evaluate(Map.of("selectedItem", "value")));
+	}
 }

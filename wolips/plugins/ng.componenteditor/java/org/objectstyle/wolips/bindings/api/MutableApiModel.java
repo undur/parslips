@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -34,6 +37,13 @@ public class MutableApiModel {
 	private boolean _isDirty;
 
 	/**
+	 * Original binding names captured at load time, keyed by binding object
+	 * identity (not equals/hashCode, since the name field changes on rename).
+	 * Used to detect which bindings were renamed since the file was loaded.
+	 */
+	private IdentityHashMap<IApiBinding, String> _originalBindingNames;
+
+	/**
 	 * Creates a model backed by a plain {@link File}. If the file does not
 	 * exist or is empty, a blank {@code .api} file is created with the
 	 * component name derived from the filename.
@@ -47,6 +57,7 @@ public class MutableApiModel {
 			createBlankFile(file);
 		}
 		_snapshot = ApiParser.parseFile(file);
+		captureOriginalBindingNames();
 	}
 
 	/**
@@ -63,6 +74,46 @@ public class MutableApiModel {
 			createBlankFile(_file);
 		}
 		_snapshot = ApiParser.parseFile(_file);
+		captureOriginalBindingNames();
+	}
+
+	/**
+	 * Captures the current binding names so we can detect renames later.
+	 * Uses an {@link IdentityHashMap} because the binding objects' equals/hashCode
+	 * are based on the name field, which changes when the user renames a binding.
+	 */
+	private void captureOriginalBindingNames() {
+		_originalBindingNames = new IdentityHashMap<>();
+		for (IApiBinding binding : _snapshot.getBindings()) {
+			_originalBindingNames.put(binding, binding.getName());
+		}
+	}
+
+	/**
+	 * Returns a map of old→new binding name for any bindings that were renamed
+	 * since the model was loaded (or since the last {@link #resetBindingRenames()}).
+	 *
+	 * @return a map where keys are old names and values are new names, or an
+	 *         empty map if no bindings were renamed
+	 */
+	public Map<String, String> getBindingRenames() {
+		Map<String, String> renames = new LinkedHashMap<>();
+		for (IApiBinding binding : _snapshot.getBindings()) {
+			String originalName = _originalBindingNames.get(binding);
+			if (originalName != null && !originalName.equals(binding.getName())) {
+				renames.put(originalName, binding.getName());
+			}
+		}
+		return renames;
+	}
+
+	/**
+	 * Resets the baseline for rename detection to the current binding names.
+	 * Called after a successful save so that subsequent saves don't re-trigger
+	 * the same renames.
+	 */
+	public void resetBindingRenames() {
+		captureOriginalBindingNames();
 	}
 
 	/**
@@ -119,6 +170,11 @@ public class MutableApiModel {
 		} catch (IOException e) {
 			throw new ApiModelException("Failed to save .api file.", e);
 		}
+	}
+
+	/** Returns the Eclipse workspace file backing this model, or null if file-backed only. */
+	public IFile getEclipseFile() {
+		return _eclipseFile;
 	}
 
 	/**

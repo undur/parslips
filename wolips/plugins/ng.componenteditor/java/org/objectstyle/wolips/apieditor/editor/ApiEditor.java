@@ -55,12 +55,19 @@
  */
 package org.objectstyle.wolips.apieditor.editor;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.PartInitException;
@@ -72,6 +79,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.apieditor.ApieditorPlugin;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.MutableApiModel;
+import org.objectstyle.wolips.wodclipse.core.refactoring.RenameBindingRefactoring;
 
 /**
  * Multi-page form editor for {@code .api} files.
@@ -85,8 +93,25 @@ public class ApiEditor extends FormEditor {
 
 	private MutableApiModel _model;
 
+	/**
+	 * When true, saving the editor after renaming a binding will trigger
+	 * a cross-file refactoring preview to update all template references.
+	 * Controlled by the "Refactor on rename" checkbox in BindingDetailsPage.
+	 */
+	private boolean _refactorOnRename;
+
 	public ApiEditor() {
 		super();
+	}
+
+	/** Returns whether cross-file binding rename refactoring is enabled. */
+	public boolean isRefactorOnRename() {
+		return _refactorOnRename;
+	}
+
+	/** Sets whether cross-file binding rename refactoring is enabled. */
+	public void setRefactorOnRename(boolean refactorOnRename) {
+		_refactorOnRename = refactorOnRename;
 	}
 
 	protected FormToolkit createToolkit(Display display) {
@@ -121,10 +146,34 @@ public class ApiEditor extends FormEditor {
 	 * {@link MutableApiModel#saveChanges()}, which serializes the
 	 * {@link org.objectstyle.wolips.bindings.api.ApiSnapshot} to XML.
 	 *
+	 * <p>If "Refactor on rename" is enabled and any bindings were renamed,
+	 * also updates validation binding references in the snapshot and triggers
+	 * a cross-file refactoring preview to update all template references.
+	 *
 	 * <p>Unlike the old DOM-based save, there are no orphaned references —
 	 * the editor holds POJOs directly, and serialization is a clean one-shot write.
 	 */
 	public void doSave(IProgressMonitor monitor) {
+		// Capture renames BEFORE saving, so we know what changed
+		Map<String, String> renames = Collections.emptyMap();
+		try {
+			MutableApiModel model = this.getModel();
+			if (_refactorOnRename && model != null) {
+				renames = model.getBindingRenames();
+
+				// Update validation binding references in the snapshot before
+				// serializing, so the .api file's validation rules stay consistent
+				if (!renames.isEmpty()) {
+					for (Map.Entry<String, String> entry : renames.entrySet()) {
+						model.getSnapshot().renameBindingInValidations(
+								entry.getKey(), entry.getValue());
+					}
+				}
+			}
+		} catch (ApiModelException e) {
+			// Best effort — proceed with save even if rename detection fails
+		}
+
 		try {
 			this.getModel().saveChanges();
 		} catch (Throwable t) {
@@ -150,6 +199,54 @@ public class ApiEditor extends FormEditor {
 		}
 
 		editorDirtyStateChanged();
+
+		// Trigger cross-file binding rename refactoring after saving
+		if (!renames.isEmpty()) {
+			triggerBindingRenameRefactoring(renames);
+		}
+
+		// Reset the rename baseline so subsequent saves don't re-trigger
+		try {
+			MutableApiModel model = this.getModel();
+			if (model != null) {
+				model.resetBindingRenames();
+			}
+		} catch (ApiModelException e) {
+			// Best effort
+		}
+	}
+
+	/**
+	 * Shows an LTK refactoring preview dialog for the given binding renames,
+	 * allowing the user to review and confirm cross-file updates.
+	 */
+	private void triggerBindingRenameRefactoring(Map<String, String> renames) {
+		try {
+			FileEditorInput editorInput = (FileEditorInput) this.getEditorInput();
+			IFile apiFile = editorInput.getFile();
+			IProject project = apiFile.getProject();
+
+			// Derive component name from the .api filename (e.g. "MyComponent.api" → "MyComponent")
+			String fileName = apiFile.getName();
+			String componentName = fileName.substring(0, fileName.lastIndexOf('.'));
+
+			RenameBindingRefactoring refactoring = new RenameBindingRefactoring(
+					project, componentName, renames);
+
+			RefactoringWizard wizard = new RefactoringWizard(refactoring,
+					RefactoringWizard.DIALOG_BASED_USER_INTERFACE) {
+				@Override
+				protected void addUserInputPages() {
+					// No user input pages needed — the preview is sufficient
+				}
+			};
+
+			Shell shell = getSite().getShell();
+			RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
+			op.run(shell, refactoring.getName());
+		} catch (Exception e) {
+			ApieditorPlugin.getDefault().debug(e);
+		}
 	}
 
 	public void doSaveAs() {

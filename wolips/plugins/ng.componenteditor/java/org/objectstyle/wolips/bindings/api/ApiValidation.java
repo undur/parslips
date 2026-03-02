@@ -1,5 +1,6 @@
 package org.objectstyle.wolips.bindings.api;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -139,6 +140,39 @@ public final class ApiValidation {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Returns a copy of this validation tree with all references to
+	 * {@code oldName} replaced by {@code newName}. If this node (or any
+	 * descendant) does not reference {@code oldName}, returns {@code this}
+	 * unchanged — no unnecessary copies are created.
+	 *
+	 * <p>Since {@code ApiValidation} is immutable, this produces a new tree
+	 * where only the affected path is rebuilt. Unaffected subtrees are shared.
+	 *
+	 * @param oldName the binding name to replace
+	 * @param newName the new binding name
+	 * @return a new tree with the binding name substituted, or {@code this}
+	 *         if no references to {@code oldName} were found
+	 */
+	public ApiValidation withRenamedBinding(String oldName, String newName) {
+		if (!isAffectedByBindingNamed(oldName)) {
+			return this;
+		}
+
+		// Leaf predicate — substitute the binding name directly
+		if (_bindingName != null) {
+			String renamed = _bindingName.equals(oldName) ? newName : _bindingName;
+			return new ApiValidation(_kind, _message, renamed, _countTest, _children);
+		}
+
+		// Composite node — rebuild children, sharing unaffected subtrees
+		List<ApiValidation> newChildren = new ArrayList<>(_children.size());
+		for (ApiValidation child : _children) {
+			newChildren.add(child.withRenamedBinding(oldName, newName));
+		}
+		return new ApiValidation(_kind, _message, null, _countTest, newChildren);
 	}
 
 	/**

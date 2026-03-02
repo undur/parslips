@@ -164,6 +164,25 @@ public final class ApiSnapshot {
 	}
 
 	/**
+	 * Updates all validation rules that reference {@code oldName} to use
+	 * {@code newName} instead. Since {@link ApiValidation} nodes are immutable,
+	 * affected validations are replaced with rebuilt copies; unaffected
+	 * validations are left in place.
+	 *
+	 * @param oldName the old binding name
+	 * @param newName the new binding name
+	 */
+	public void renameBindingInValidations(String oldName, String newName) {
+		for (int i = 0; i < _validations.size(); i++) {
+			ApiValidation original = _validations.get(i);
+			ApiValidation renamed = original.withRenamedBinding(oldName, newName);
+			if (renamed != original) {
+				_validations.set(i, renamed);
+			}
+		}
+	}
+
+	/**
 	 * Returns only the bindings that are marked as required.
 	 * Convenience filter over {@link #getBindings()}.
 	 */

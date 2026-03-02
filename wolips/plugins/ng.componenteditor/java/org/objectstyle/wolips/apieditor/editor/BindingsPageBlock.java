@@ -214,7 +214,7 @@ public class BindingsPageBlock extends MasterDetailsBlock {
 
 		Composite apiClient = toolkit.createComposite(apiSection, SWT.WRAP);
 		GridLayout apiClientLayout = new GridLayout();
-		apiClientLayout.numColumns = 1;
+		apiClientLayout.numColumns = 2;
 		apiClientLayout.marginWidth = 2;
 		apiClientLayout.marginHeight = 0;
 		apiClientLayout.marginBottom = 10;
@@ -244,6 +244,23 @@ public class BindingsPageBlock extends MasterDetailsBlock {
 				} catch (ApiModelException e) {
 					throw new RuntimeException("Failed to open .api file.", e);
 				}
+			}
+		});
+
+		// "Refactor on rename" checkbox — right-aligned in the Component API
+		// header row. When checked, saving the .api file after renaming a
+		// binding triggers a cross-file refactoring preview.
+		Button refactorOnRenameButton = toolkit.createButton(apiClient, "Refactor on rename", SWT.CHECK);
+		GridData refactorGd = new GridData(SWT.END, SWT.CENTER, true, false);
+		refactorOnRenameButton.setLayoutData(refactorGd);
+		refactorOnRenameButton.addSelectionListener(new SelectionListener() {
+			public void widgetDefaultSelected(SelectionEvent event) {
+				widgetSelected(event);
+			}
+
+			public void widgetSelected(SelectionEvent event) {
+				ApiEditor editor = (ApiEditor) page.getEditor();
+				editor.setRefactorOnRename(((Button) event.widget).getSelection());
 			}
 		});
 

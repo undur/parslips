@@ -12,6 +12,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Rename binding across files (from .api editor)
+
+- **Cross-file binding rename support.** When a binding is renamed in the `.api` editor and saved with the "Refactor on rename" checkbox enabled, a refactoring preview dialog shows all `.html` and `.wod` files that reference the old binding name on the relevant component, and offers to update them all at once. The scan covers the source project and all projects that transitively depend on it, so components defined in framework/library projects have their references updated in consuming application projects.
+- **New "Refactor on rename" checkbox** in `BindingDetailsPage`, next to the binding name field. Opt-in, unchecked by default. When checked, saving after a rename triggers the cross-file scan; when unchecked, saving works exactly as before.
+- **New class: `RenameBindingProcessor`** — regex-based cross-project scanner that finds binding references in HTML templates (`<wo:ComponentName oldBinding="...">`) and WOD files (`: ComponentName { oldBinding = ...; }`). Scans the source project and all transitively dependent projects via `IProject.getReferencingProjects()`. Follows the same `IResourceVisitor` + regex pattern approach as `RenameComponentProcessor`.
+- **New class: `RenameBindingRefactoring`** — LTK `Refactoring` subclass that wraps `RenameBindingProcessor` and presents changes via `RefactoringWizardOpenOperation` for the standard Eclipse preview-and-confirm dialog.
+- **`MutableApiModel` tracks original binding names** using an `IdentityHashMap` (keyed by object identity, since `equals`/`hashCode` change when the name is mutated). `getBindingRenames()` returns old→new name mappings; `resetBindingRenames()` resets the baseline after save.
+- **`ApiEditor.doSave()` triggers refactoring** when renames are detected and the checkbox is enabled. Also updates binding references in the snapshot's validation trees before saving.
+- **`ApiValidation.withRenamedBinding()`** — returns a new immutable validation tree with the binding name substituted, sharing unaffected subtrees.
+- **`ApiSnapshot.renameBindingInValidations()`** — rebuilds any validation nodes that reference the old binding name.
+- **Added 20 new tests:** 6 for `ApiValidation.withRenamedBinding()` and 14 for `RenameBindingProcessor` HTML/WOD regex scanning patterns.
+
 ### Formatter: preserve blank lines between elements
 
 - **Fixed blank lines between top-level elements being lost** — `FormatRefactoring` iterated document children directly, calling `toXMLString()` without going through `delegate.renderNode()`. This caused hidden text nodes (whitespace between top-level elements) to be skipped entirely when trim was enabled, losing all blank lines between elements like `</style>` and `<div>`. Fixed by calling `delegate.renderNode()` for each child, matching the rendering path used by `FuzzyXMLElementImpl.getValue()`.

@@ -457,10 +457,11 @@ public class RenameComponentProcessor {
 
 	/**
 	 * Reads the full content of an IFile as a String.
+	 * Package-visible so {@link RenameBindingProcessor} can reuse it.
 	 *
 	 * @return the file content, or null if the file can't be read
 	 */
-	private static String readFileContent(IFile file) throws CoreException, IOException {
+	static String readFileContent(IFile file) throws CoreException, IOException {
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(file.getContents(), StandardCharsets.UTF_8))) {
 			StringBuilder sb = new StringBuilder();

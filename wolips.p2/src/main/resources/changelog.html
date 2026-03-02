@@ -24,6 +24,17 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- March 2, 2026 -->
+			<div class="card">
+				<h2 class="date-header">March 2, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Rename binding across files</h3>
+					<p>Rename a binding in the <code>.api</code> editor and update all template references in one step. Check the <strong>&ldquo;Refactor on rename&rdquo;</strong> checkbox (top-right of the API editor), rename one or more bindings, save &mdash; a refactoring preview shows every <code>.html</code> and <code>.wod</code> file that uses the old binding name on that component. Confirm to apply all changes atomically, or cancel to keep only the <code>.api</code> change.</p>
+					<p>The scan covers the source project and all projects that depend on it (transitively), so components defined in framework projects have their references updated in consuming application projects. Multiple bindings renamed in the same session are processed in a single pass per file, ensuring correct results even when several bindings appear in the same tag.</p>
+				</div>
+			</div>
+
 			<!-- March 1, 2026 -->
 			<div class="card">
 				<h2 class="date-header">March 1, 2026</h2>
