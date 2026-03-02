@@ -278,8 +278,12 @@ public class BindingDetailsPage implements IDetailsPage {
 	}
 
 	/**
-	 * Marks the model as dirty and notifies both the managed form and the
-	 * enclosing editor.
+	 * Marks the model as dirty, refreshes the master binding list, and
+	 * notifies both the managed form and the enclosing editor.
+	 *
+	 * <p>The master list refresh ensures that name edits and required/will-set
+	 * toggles are immediately visible in the binding list (bold formatting for
+	 * required bindings, updated names) without waiting for a save.
 	 *
 	 * <p>{@code dirtyStateChanged()} tells the managed form its parts are dirty,
 	 * but doesn't fire {@code PROP_DIRTY} to the workbench. We must also call
@@ -292,6 +296,12 @@ public class BindingDetailsPage implements IDetailsPage {
 		} catch (ApiModelException e) {
 			// Best effort
 		}
+
+		// Refresh the master binding list so it reflects the change
+		// immediately (updated name text, bold/normal for required flag)
+		BindingsPage bindingsPage = (BindingsPage) _managedForm.getContainer();
+		bindingsPage.block.refreshBindingList();
+
 		_managedForm.dirtyStateChanged();
 		getApiEditor().editorDirtyStateChanged();
 	}

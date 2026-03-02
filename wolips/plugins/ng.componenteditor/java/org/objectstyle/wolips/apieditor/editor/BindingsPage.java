@@ -59,7 +59,8 @@ import org.eclipse.ui.forms.IManagedForm;
 
 public class BindingsPage extends ApiFormPage {
 
-	private BindingsPageBlock block;
+	/** Package-visible so {@link BindingDetailsPage} can refresh the list. */
+	BindingsPageBlock block;
 
 	public static String PAGE_ID = "ng.componenteditor.api.BindingsPage";
 

@@ -115,6 +115,20 @@ public class BindingsPageBlock extends MasterDetailsBlock {
 	}
 
 	/**
+	 * Refreshes the master binding list to reflect in-memory changes to the
+	 * binding POJOs (name edits, required/will-set toggles, etc.).
+	 *
+	 * <p>Called by {@link BindingDetailsPage#markDirty()} after mutating a
+	 * binding so the list immediately reflects the new name or bold/normal
+	 * formatting. Without this, the list only updates on save.
+	 */
+	void refreshBindingList() {
+		if (viewer != null && !viewer.getTable().isDisposed()) {
+			viewer.refresh();
+		}
+	}
+
+	/**
 	 * Reloads the binding list from the model. Since we mutate POJOs directly
 	 * (no DOM reparse), the binding objects are stable across saves — but we
 	 * still refresh the viewer to pick up any changes.
