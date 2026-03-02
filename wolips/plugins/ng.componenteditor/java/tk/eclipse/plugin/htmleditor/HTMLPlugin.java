@@ -91,7 +91,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	public static final String ICON_CLASS    = "_icon_class";
 	public static final String ICON_TEMPLATE = "_icon_template";
 	public static final String ICON_JAVASCRIPT = "_icon_javascript";
-	public static final String ICON_XSD      = "_icon_xsd";
 	public static final String ICON_DTD      = "_icon_dtd";
 	public static final String ICON_PALETTE  = "_icon_palette";
 	public static final String ICON_ERROR    = "_icon_error";
@@ -159,15 +158,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 		innerDTD.put("XMLSchema.dtd","/DTD/XMLSchema.dtd");
 		innerDTD.put("datatypes.dtd","/DTD/datatypes.dtd");
 		
-		innerDTD.put("http://java.sun.com/xml/ns/j2ee","/XSD/web-app_2_4.xsd");
-		innerDTD.put("j2ee_1_4.xsd","/XSD/j2ee_1_4.xsd");
-		innerDTD.put("j2ee_web_services_1_1.xsd","/XSD/j2ee_web_services_1_1.xsd");
-		innerDTD.put("j2ee_web_services_client_1_1.xsd","/XSD/j2ee_web_services_client_1_1.xsd");
-		innerDTD.put("jsp_2_0.xsd","/XSD/jsp_2_0.xsd");
-		innerDTD.put("jspxml.xsd","/XSD/jspxml.xsd");
-		innerDTD.put("web-app_2_4.xsd","/XSD/web-app_2_4.xsd");
-		innerDTD.put("web-jsptaglibrary_2_0.xsd","/XSD/web-jsptaglibrary_2_0.xsd");
-		innerDTD.put("xml.xsd","/XSD/xml.xsd");
 	}
 	
 	private static Map<String, String> innerTLD = new LinkedHashMap<String, String>();
@@ -278,7 +268,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 		reg.put(ICON_CLASS, ImageDescriptor.createFromURL(getBundle().getEntry("/icons/class.gif")));
 		reg.put(ICON_TEMPLATE, ImageDescriptor.createFromURL(getBundle().getEntry("/icons/template.gif")));
 		reg.put(ICON_JAVASCRIPT, ImageDescriptor.createFromURL(getBundle().getEntry("/icons/javascript.gif")));
-		reg.put(ICON_XSD, ImageDescriptor.createFromURL(getBundle().getEntry("/icons/xsd.gif")));
 		reg.put(ICON_DTD, ImageDescriptor.createFromURL(getBundle().getEntry("/icons/dtd.gif")));
 		reg.put(ICON_PALETTE, ImageDescriptor.createFromURL(getBundle().getEntry("/icons/palette.gif")));
 		reg.put(ICON_ERROR, ImageDescriptor.createFromURL(getBundle().getEntry("/icons/error.gif")));

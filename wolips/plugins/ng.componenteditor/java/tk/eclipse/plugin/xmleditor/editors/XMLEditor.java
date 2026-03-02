@@ -68,7 +68,6 @@ public class XMLEditor extends HTMLSourceEditor {
 	
 	public static final String GROUP_XML = "_xml";
 	public static final String ACTION_GEN_DTD = "_generate_dtd";
-	public static final String ACTION_GEN_XSD = "_generate_xsd";
 	public static final String ACTION_ESCAPE_XML = "_escape_xml";
 	public static final String ACTION_FORMAT_XML = "_format_xml";
 	
@@ -93,7 +92,6 @@ public class XMLEditor extends HTMLSourceEditor {
 		super(config);
 		
 		setAction(ACTION_GEN_DTD,new GenerateDTDAction());
-		setAction(ACTION_GEN_XSD,new GenerateXSDAction());
 		setAction(ACTION_ESCAPE_XML, new EscapeXMLAction());
 	}
 	
@@ -424,7 +422,6 @@ public class XMLEditor extends HTMLSourceEditor {
 		addAction(menu,GROUP_HTML,ACTION_FORMAT_XML);
 		menu.add(new Separator(GROUP_XML));
 		addAction(menu,GROUP_XML,ACTION_GEN_DTD);
-		addAction(menu,GROUP_XML,ACTION_GEN_XSD);
 	}
 	
 	@Override
@@ -487,28 +484,7 @@ public class XMLEditor extends HTMLSourceEditor {
 		}
 	}
 	
-	/**
-	 * The action to generate XML schema from XML.
-	 */
-	private class GenerateXSDAction extends Action {
-		public GenerateXSDAction(){
-			super(HTMLPlugin.getResourceString("XMLEditor.GenerateXSD"),
-					HTMLPlugin.getDefault().getImageRegistry().getDescriptor(HTMLPlugin.ICON_XSD));
-		}
-		@Override
-    public void run() {
-			FileDialog dialog = new FileDialog(getViewer().getTextWidget().getShell(),SWT.SAVE);
-			dialog.setFilterExtensions(new String[]{"*.xsd"});
-			String file = dialog.open();
-			if(file!=null){
-				try {
-					SchemaGenerator.generateXSDFromXML(getFile(), new File(file));
-				} catch(Exception ex){
-					HTMLPlugin.openAlertDialog(ex.toString());
-				}
-			}
-		}
-	}
+
 	
 	/**
 	 * The action to format (correct indentation) XML.
