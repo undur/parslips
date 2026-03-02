@@ -396,6 +396,30 @@ public class FuzzyXMLFormatterTest {
 			result.contains("</div>\n\n"));
 	}
 
+	// --- Doctype preservation ---
+
+	@Test
+	public void lowercaseDoctype_namePreserved() {
+		// <!doctype html> is the standard HTML5 doctype — the parser must
+		// capture "html" as the name even though "doctype" is lowercase.
+		String input = "<!doctype html>\n<div>content</div>";
+		FuzzyXMLDocument doc = new FuzzyXMLParser(false, true).parse(input);
+		assertNotNull("Doctype should be parsed", doc.getDocumentType());
+		assertEquals("Doctype name should be 'html'", "html", doc.getDocumentType().getName());
+	}
+
+	@Test
+	public void lowercaseDoctype_rendersCorrectly() {
+		String input = "<!doctype html>\n<div>content</div>";
+		FuzzyXMLDocument doc = new FuzzyXMLParser(false, true).parse(input);
+		RenderContext ctx = new RenderContext(true);
+		ctx.setDelegate(new WOHTMLRenderDelegate());
+		StringBuffer buf = new StringBuffer();
+		doc.getDocumentType().toXMLString(ctx, buf);
+		assertTrue("Rendered doctype should contain 'html': " + buf,
+			buf.toString().contains("DOCTYPE html"));
+	}
+
 	// --- Trailing space after text ---
 
 	@Test
