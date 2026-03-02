@@ -120,7 +120,6 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		_bindingsTableViewer = new TableViewer(bindingsTableContainer, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
 		_bindingsContentProvider = new BindingsContentProvider();
 		_bindingsTableViewer.setContentProvider(_bindingsContentProvider);
-		// _bindingsTableViewer.setLabelProvider(_bindingsLabelProvider);
 
 		TableColumnLayout bindingsTableLayout = new TableColumnLayout();
 		bindingsTableContainer.setLayout(bindingsTableLayout);
@@ -378,37 +377,18 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 		}
 	}
 
+	/**
+	 * Binds the element type combo to the refactoring model via a FocusListener.
+	 *
+	 * <p>Unlike {@link #bindElementName}, which uses Eclipse Data Binding, this
+	 * uses a manual FocusListener because the Combo widget's text observable
+	 * didn't work well with the old SWTObservables API. The value is applied on
+	 * focus-out, with blank and whitespace values silently rejected.
+	 */
 	protected void bindElementType() {
-		UpdateValueStrategy elementTypeUpdateStrategy = new UpdateValueStrategy(UpdateValueStrategy.POLICY_UPDATE);
-		elementTypeUpdateStrategy.setBeforeSetValidator(new IValidator() {
-			public IStatus validate(Object value) {
-				String newName = (String) value;
-				IStatus status = Status.OK_STATUS;
-				try {
-					if (newName == null || newName.length() == 0) {
-						status = ValidationStatus.error("Element types cannot be blank.");
-					} else if (newName.contains(" ")) {
-						status = ValidationStatus.error("Element types do not allow spaces.");
-					}
-				} catch (Exception e) {
-					status = ValidationStatus.error("Failed to change element type.", e);
-				}
-
-				// reset the value back on failure
-				if (!status.isOK()) {
-					getElementTypeField().setText(getRefactoringElement().getElementType());
-				}
-				return status;
-			}
-		});
-
-		// _dataBindingContext.bindValue(SWTObservables.observeText(_elementTypeField),
-		// BeansObservables.observeValue(_refactoringElement,
-		// RefactoringElementModel.ELEMENT_TYPE),
-		// elementTypeUpdateStrategy, null);
 		_elementTypeField.addFocusListener(new FocusListener() {
 			public void focusGained(FocusEvent e) {
-				// DO NOTHING
+				// nothing to do
 			}
 
 			public void focusLost(FocusEvent e) {
@@ -416,6 +396,11 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 					String elementTypeFieldText = getElementTypeField().getText();
 					String elementTypeModelText = getRefactoringElement().getElementType();
 					if (!ComparisonUtils.equals(elementTypeModelText, elementTypeFieldText, true)) {
+						// Reject blank or whitespace-containing type names
+						if (elementTypeFieldText == null || elementTypeFieldText.isEmpty() || elementTypeFieldText.contains(" ")) {
+							getElementTypeField().setText(elementTypeModelText);
+							return;
+						}
 						getRefactoringElement().setElementType(elementTypeFieldText);
 						BindingsInspector.this.refresh();
 					}
@@ -452,9 +437,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 			}
 		});
 		_dataBindingContext.bindValue(
-				//SWTObservables.observeText(_elementNameField, SWT.FocusOut),
 				WidgetProperties.text(SWT.FocusOut).observe(_elementNameField),
-				// BeansObservables.observeValue(_refactoringElement, RefactoringWodElement.ELEMENT_NAME), 
 				BeanProperties.value(RefactoringWodElement.ELEMENT_NAME).observe(_refactoringElement),
 				elementNameUpdateStrategy, null);
 	}

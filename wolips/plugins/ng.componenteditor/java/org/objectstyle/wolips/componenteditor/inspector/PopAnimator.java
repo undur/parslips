@@ -83,7 +83,7 @@ public class PopAnimator implements PaintListener {
 		_isAnimating = false;
 		Rectangle animationRect = _animationRect;
 		_animationRect = null;
-		if (animationRect != _animationRect) {
+		if (animationRect != null) {
 			repaint(animationRect);
 		}
 	}
@@ -142,16 +142,14 @@ public class PopAnimator implements PaintListener {
 						selectionRect.height -= minBorderWidth;
 					}
 
-					// Draw the shadow -- we have to cheat some here, because
+					// Draw the shadow — we have to cheat some here, because
 					// the text is rendered underneath us, so we can only render
 					// the bottom of the shadow
-					if (true || lineWidth > minBorderWidth) {
-						int shadowHeight = 2 * margin;
-						int shadowMargin = borderRadius / 2 + 2 * margin;
-						e.gc.setAlpha(80);
-						e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_BLACK));
-						e.gc.drawRoundRectangle(selectionRect.x + shadowMargin, selectionRect.y + selectionRect.height, selectionRect.width - 2 * shadowMargin, shadowHeight, borderRadius, borderRadius);
-					}
+					int shadowHeight = 2 * margin;
+					int shadowMargin = borderRadius / 2 + 2 * margin;
+					e.gc.setAlpha(80);
+					e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_BLACK));
+					e.gc.drawRoundRectangle(selectionRect.x + shadowMargin, selectionRect.y + selectionRect.height, selectionRect.width - 2 * shadowMargin, shadowHeight, borderRadius, borderRadius);
 
 					e.gc.setForeground(_backgroundColor);
 					e.gc.setBackground(_backgroundColor);

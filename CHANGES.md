@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Bindings Inspector cleanup
+
+- **Removed dead `WOBrowserPageBookView` and `WOBrowserPage`** — standalone view/page wrappers for WOBrowser that were never registered in `plugin.xml`. The WOBrowser is always embedded in `BindingsInspectorPage`.
+- **Fixed `PopAnimator.stopAnimation()` null-check bug** — compared a local variable against the field it was just nulled from (`animationRect != _animationRect`, always true after `_animationRect = null`). Changed to `animationRect != null`.
+- **Removed `if (true ||` debug leftover in `PopAnimator.paintControl()`** — the shadow is always drawn; removed the dead `lineWidth > minBorderWidth` condition.
+- **Cleaned up `BindingsInspector.bindElementType()`** — removed dead `UpdateValueStrategy` and commented-out `_dataBindingContext.bindValue()` call that was abandoned in favor of a manual FocusListener. Added input validation (blank/space rejection) to the FocusListener to preserve the safety the dead code was meant to provide.
+- **Removed commented-out code** — old `setLabelProvider()` call and superseded `SWTObservables`/`BeansObservables` API comments in `bindElementName()`.
+
 ### Rename binding across files (from .api editor)
 
 - **Cross-file binding rename support.** When a binding is renamed in the `.api` editor and saved with the "Refactor on rename" checkbox enabled, a refactoring preview dialog shows all `.html` and `.wod` files that reference the old binding name on the relevant component, and offers to update them all at once. The scan covers the source project and all projects that transitively depend on it, so components defined in framework/library projects have their references updated in consuming application projects.
