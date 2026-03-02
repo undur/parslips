@@ -88,20 +88,19 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 		_keysViewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
 		_keysViewer.addSelectionChangedListener(this);
 		_keysViewer.setContentProvider(new ListContentProvider());
-		_keysViewer.setLabelProvider(new WOBrowserColumnLabelProvider(_type, _keysViewer.getTable()));
+		_keysViewer.setLabelProvider(new WOBrowserColumnLabelProvider(_type));
 
 		TableColumnLayout keysLayout = new TableColumnLayout();
 		tableContainer.setLayout(keysLayout);
 
 		TableColumn nameColumn = new TableColumn(_keysViewer.getTable(), SWT.NONE);
-		nameColumn.setText("Column 1");
-		// nameColumn.setMoveable(true);
-		keysLayout.setColumnData(nameColumn, new ColumnWeightData(1, 200));
+		keysLayout.setColumnData(nameColumn, new ColumnWeightData(3, 120));
+
+		TableColumn originColumn = new TableColumn(_keysViewer.getTable(), SWT.RIGHT);
+		keysLayout.setColumnData(originColumn, new ColumnWeightData(2, 60));
 
 		TableColumn iconColumn = new TableColumn(_keysViewer.getTable(), SWT.NONE);
-		iconColumn.setText("Column 2");
-		// iconColumn.setMoveable(true);
-		keysLayout.setColumnData(iconColumn, new ColumnWeightData(1, 20));
+		keysLayout.setColumnData(iconColumn, new ColumnWeightData(0, 20));
 
 		reload();
 		tableContainer.pack();
@@ -133,18 +132,22 @@ public class WOBrowserColumn extends Composite implements ISelectionProvider, IS
 		}
 	}
 
+	/**
+	 * Reloads the column's key list by introspecting the type. All keys from
+	 * the type hierarchy are collected into a single flat alphabetized list
+	 * (BindingValueKey implements Comparable). Inherited keys are distinguished
+	 * from local keys by the label provider (gray suffix showing origin class).
+	 */
 	public void reload() throws JavaModelException {
 		Map<IType, Set<BindingValueKey>> typeKeys = BindingReflectionUtils.getGroupedBindingValueKeys("", _type, WodParserCache.getTypeCache());
 		List<Object> sortedBindingValueKeys = new LinkedList<Object>();
-		for (Map.Entry<IType, Set<BindingValueKey>> typeKeysEntry : typeKeys.entrySet()) {
-			if (!_type.equals(typeKeysEntry.getKey())) {
-				IType groupType = typeKeysEntry.getKey();
-				if (groupType != null) {
-					sortedBindingValueKeys.add(groupType.getElementName());
-				}
-			}
-			sortedBindingValueKeys.addAll(typeKeysEntry.getValue());
+		for (Set<BindingValueKey> keys : typeKeys.values()) {
+			sortedBindingValueKeys.addAll(keys);
 		}
+		// BindingValueKey implements Comparable (sorts by name), but the keys
+		// arrive pre-sorted within each group. Re-sort to get a single
+		// alphabetized list across all declaring types.
+		sortedBindingValueKeys.sort(null);
 		_bindingValueKeys = sortedBindingValueKeys;
 
 		if (_keysViewer.getContentProvider() != null) {

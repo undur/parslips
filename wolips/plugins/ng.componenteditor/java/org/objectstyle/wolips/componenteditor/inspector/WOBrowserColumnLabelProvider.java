@@ -2,117 +2,78 @@ package org.objectstyle.wolips.componenteditor.inspector;
 
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jface.viewers.BaseLabelProvider;
-import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.jface.viewers.ITableFontProvider;
-import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.StyledCellLabelProvider;
+import org.eclipse.jface.viewers.StyledString;
+import org.eclipse.jface.viewers.StyledString.Styler;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.graphics.TextStyle;
+import org.eclipse.swt.widgets.Display;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
-public class WOBrowserColumnLabelProvider extends BaseLabelProvider implements ILabelProvider, ITableLabelProvider, ITableFontProvider {
+/**
+ * Label provider for WOBrowser columns. Three table columns:
+ * <ol>
+ *   <li>Key name (left-aligned)</li>
+ *   <li>Declaring type name for inherited keys (right-aligned, gray)</li>
+ *   <li>Navigation arrow icon for non-leaf types</li>
+ * </ol>
+ */
+public class WOBrowserColumnLabelProvider extends StyledCellLabelProvider {
 	private IType _type;
-	
-	private Control _control;
 
-	private Font _titleFont;
-
-	public WOBrowserColumnLabelProvider(IType type, Control control) {
-		_type = type;
-		_control = control;
-	}
-
-	protected Font getTitleFont() {
-		if (_titleFont == null) {
-			Font originalFont = _control.getFont();
-			FontData[] fontData = _control.getFont().getFontData();
-			_titleFont = new Font(originalFont.getDevice(), fontData[0].getName(), fontData[0].getHeight(), SWT.BOLD);
+	/** Styler for the gray declaring-type text on inherited keys. */
+	private static final Styler QUALIFIER_STYLER = new Styler() {
+		@Override
+		public void applyStyles(TextStyle textStyle) {
+			textStyle.foreground = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY);
 		}
-		return _titleFont;
-	}
+	};
 
-	public Image getImage(Object element) {
-		return getColumnImage(element, 0);
+	public WOBrowserColumnLabelProvider(IType type) {
+		_type = type;
 	}
 
 	@Override
-	public void dispose() {
-		if (_titleFont != null) {
-			_titleFont.dispose();
-			_titleFont = null;
+	public void update(ViewerCell cell) {
+		Object element = cell.getElement();
+		if (!(element instanceof BindingValueKey)) {
+			super.update(cell);
+			return;
 		}
-		super.dispose();
-	}
 
-	public String getText(Object element) {
-		return getColumnText(element, 0);
-	}
+		BindingValueKey key = (BindingValueKey) element;
+		int column = cell.getColumnIndex();
 
-	public Image getColumnImage(Object element, int columnIndex) {
-		Image image = null;
-		if (columnIndex == 0) {
-			if (element instanceof String) {
-				// image = ComponenteditorPlugin.getDefault().getImage(ComponenteditorPlugin.COMPONENT_ICON);
+		if (column == 0) {
+			// Key name, left-aligned
+			cell.setText(key.getBindingName());
+		} else if (column == 1) {
+			// Declaring type for inherited keys, right-aligned in gray
+			IType declaringType = key.getDeclaringType();
+			if (declaringType != null && _type != null && !_type.equals(declaringType)) {
+				StyledString styled = new StyledString(declaringType.getElementName(), QUALIFIER_STYLER);
+				cell.setText(styled.toString());
+				cell.setStyleRanges(styled.getStyleRanges());
+			} else {
+				cell.setText("");
 			}
-		}
-		else if (columnIndex == 1) {
-			if (element instanceof BindingValueKey) {
-				BindingValueKey bindingValueKey = (BindingValueKey) element;
-				if (bindingValueKey != null) {
-					try {
-						if (!bindingValueKey.isLeaf()) {
-							image = ComponenteditorPlugin.getDefault().getImage(ComponenteditorPlugin.TO_ONE_ICON);
-						}
-					} catch (JavaModelException e) {
-						ComponenteditorPlugin.getDefault().log(e);
-					}
+		} else if (column == 2) {
+			// Navigation arrow icon for non-leaf types
+			try {
+				if (!key.isLeaf()) {
+					Image image = ComponenteditorPlugin.getDefault().getImage(ComponenteditorPlugin.TO_ONE_ICON);
+					cell.setImage(image);
+				} else {
+					cell.setImage(null);
 				}
+			} catch (JavaModelException e) {
+				ComponenteditorPlugin.getDefault().log(e);
 			}
 		}
-		return image;
-	}
 
-	public String getColumnText(Object element, int columnIndex) {
-		String text = null;
-		if (columnIndex == 0) {
-			if (element instanceof BindingValueKey) {
-				BindingValueKey bindingValueKey = (BindingValueKey) element;
-				if (bindingValueKey != null) {
-					StringBuffer nameBuffer = new StringBuffer();
-					IType declaringType = bindingValueKey.getDeclaringType();
-					if (declaringType != null && _type != null && !_type.equals(declaringType)) {
-						nameBuffer.append("    ");
-					}
-					nameBuffer.append(bindingValueKey.getBindingName());
-					int minWidth = 40;
-					if (text != null && text.length() < minWidth) {
-						for (int i = text.length(); i < minWidth; i++) {
-							nameBuffer.append(' ');
-						}
-					}
-					text = nameBuffer.toString();
-				}
-			} else if (element instanceof String) {
-				text = (String) element;
-			}
-			if (text == null) {
-				text = "<unknown>";
-			}
-		} else if (columnIndex == 1) {
-			text = null;
-		}
-		return text;
-	}
-
-	public Font getFont(Object element, int columnIndex) {
-		Font font = null;
-		if (element instanceof String) {
-			font = getTitleFont();
-		}
-		return font;
+		super.update(cell);
 	}
 }
