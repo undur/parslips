@@ -31,33 +31,102 @@ import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
 import org.objectstyle.wolips.core.resources.types.WOHierarchyScope;
 
+/**
+ * Utility methods for reflecting on Java types to discover binding keys
+ * (fields, getters, setters) and for resolving element type names. This is
+ * the core of the binding autocomplete and validation system — it figures
+ * out what keys are available on a given type and filters out framework
+ * noise.
+ *
+ * <p>The main entry points are:
+ * <ul>
+ *   <li>{@link #getBindingKeys} — finds matching binding keys for a type,
+ *       used by autocomplete and validation</li>
+ *   <li>{@link #getGroupedBindingValueKeys} — returns all keys grouped by
+ *       declaring type, used by the Bindings Inspector's key browser</li>
+ *   <li>{@link #findElementType} — resolves an element tag name to a Java
+ *       {@link IType}, used during WOD parsing</li>
+ *   <li>{@link #filterSystemBindingValueKeys} — removes framework-internal
+ *       bindings from a key list</li>
+ * </ul>
+ *
+ * <h3>Binding key discovery</h3>
+ * A "binding key" is a property name derived from a field or method on a
+ * component class. The discovery logic strips common prefixes (get/set/is/_)
+ * and lowercases the first letter to produce a KVC-style key name. For
+ * example, {@code getName()} → "name", {@code _title} → "title".
+ *
+ * <h3>System binding filtering</h3>
+ * Bindings declared on framework base types (WOComponent, NGComponent, etc.)
+ * are filtered to reduce noise. See {@link #_systemTypeNames},
+ * {@link #_uselessSystemBindings}, and {@link #_usefulSystemBindings}.
+ */
 public class BindingReflectionUtils {
+  /**
+   * Prefixes stripped from field names to derive binding key names.
+   * A field {@code _name} becomes binding key "name"; a field {@code name}
+   * stays as "name".
+   */
   public static final String[] FIELD_PREFIXES = { "", "_" };
 
+  /**
+   * Prefixes for setter methods. {@code setName()} and {@code _setName()}
+   * both map to binding key "name".
+   */
   public static final String[] SET_METHOD_PREFIXES = { "set", "_set" };
 
+  /**
+   * Prefixes for getter methods, tried in order. {@code getName()},
+   * {@code name()}, {@code _getName()}, {@code isEnabled()},
+   * {@code _isEnabled()}, and {@code _name()} all produce binding keys.
+   */
   public static final String[] GET_METHOD_PREFIXES = { "get", "", "_get", "is", "_is", "_" };
 
+  /** Filter mode: only methods with a non-void return type and no parameters. */
   public static final int ACCESSORS_ONLY = 0;
 
+  /** Filter mode: only void methods with exactly one parameter (setters). */
   public static final int MUTATORS_ONLY = 1;
 
+  /** Filter mode: methods with no parameters, regardless of return type. */
   public static final int ACCESSORS_OR_VOID = 2;
 
+  /** Filter mode: only void methods with no parameters. */
   public static final int VOID_ONLY = 3;
 
+  /**
+   * Returns whether the given type name represents a boolean type
+   * (primitive {@code boolean} or boxed {@code java.lang.Boolean}).
+   */
   public static boolean isBoolean(String typeName) {
     return "boolean".equals(typeName) || "Boolean".equals(typeName) || "java.lang.Boolean".equals(typeName);
   }
 
+  /**
+   * Returns whether the given type name requires an import statement —
+   * i.e. it is not a primitive and not in {@code java.lang}.
+   */
   public static boolean isImportRequired(String typeName) {
     return typeName != null && !isPrimitive(typeName) && !typeName.equals("java.lang." + Signature.getSimpleName(typeName));
   }
 
+  /**
+   * Returns whether the given type name is a Java primitive type.
+   */
   public static boolean isPrimitive(String typeName) {
     return ("boolean".equals(typeName) || "byte".equals(typeName) || "char".equals(typeName) || "int".equals(typeName) || "short".equals(typeName) || "float".equals(typeName) || "double".equals(typeName));
   }
 
+  /**
+   * Resolves a short (unqualified) class name to its fully qualified form
+   * by searching the given project's classpath. Returns the input unchanged
+   * if it is already qualified, a primitive, or a common {@code java.lang}
+   * type. Logs a warning if the name is ambiguous or not found.
+   *
+   * @param javaProject the project to search
+   * @param shortClassName the simple class name (e.g. "String" or "MyComponent")
+   * @return the fully qualified class name, or the original name if resolution fails
+   */
   public static String getFullClassName(IJavaProject javaProject, String shortClassName) throws JavaModelException {
     String expandedClassName = shortClassName;
     if (expandedClassName != null && expandedClassName.indexOf('.') == -1) {
@@ -91,6 +160,11 @@ public class BindingReflectionUtils {
     return expandedClassName;
   }
 
+  /**
+   * Extracts the simple class name from a fully qualified name.
+   * For example, {@code "com.example.MyClass"} → {@code "MyClass"}.
+   * Returns the input unchanged if it contains no dots.
+   */
   public static String getShortClassName(String fullClassName) {
     String shortClassName;
     int lastDotIndex = fullClassName.lastIndexOf('.');
@@ -103,8 +177,21 @@ public class BindingReflectionUtils {
     return shortClassName;
   }
 
+  /**
+   * Resolves an element tag name (e.g. "WOString", "ERXConditional") to
+   * its Java {@link IType}. First checks the API cache for a previously
+   * resolved mapping; if not cached, performs a project-scoped type search.
+   * When multiple types match, uses the first one found (not ideal, but
+   * matches legacy behavior). Caches the result for subsequent lookups.
+   *
+   * @param javaProject the project whose classpath to search
+   * @param elementTypeName the element tag name to resolve
+   * @param requireTypeInProject if true, only matches types defined in the
+   *        project itself (not just on its classpath)
+   * @param cache the shared type cache
+   * @return the resolved type, or null if not found
+   */
   public static IType findElementType(IJavaProject javaProject, String elementTypeName, boolean requireTypeInProject, TypeCache cache) throws JavaModelException {
-    // Search the current project for the given element type name
     String typeName = cache.getApiCache(javaProject).getElementTypeNamed(elementTypeName);
     IType type = null;
     if (typeName != null) {
@@ -119,7 +206,8 @@ public class BindingReflectionUtils {
         type = typeNameCollector.getTypeForClassName(matchingElementClassName);
       }
       else if (!typeNameCollector.isEmpty()) {
-        // there was more than one matching class! crap!
+        // Ambiguous match — multiple classes share this name. Pick the
+        // first one (arbitrary but consistent with legacy behavior).
         String matchingElementClassName = typeNameCollector.firstTypeName();
         type = typeNameCollector.getTypeForClassName(matchingElementClassName);
       }
@@ -174,22 +262,45 @@ public class BindingReflectionUtils {
     }
   }
 
+  /**
+   * Returns whether the given type is a component type — either
+   * {@code NGComponent} (ng-objects) or {@code WOComponent} (WebObjects).
+   */
   public static boolean isWOComponent(IType type, TypeCache cache) throws JavaModelException {
     return BindingReflectionUtils.isType(type, new String[] { "ng.appserver.templating.NGComponent", "com.webobjects.appserver.WOComponent" }, cache);
   }
 
+  /**
+   * Returns whether the given type implements NSKeyValueCoding.
+   * Always returns false — ng-objects does not use NSKeyValueCoding,
+   * and this check is no longer meaningful.
+   *
+   * @deprecated This method is a no-op stub retained for compatibility.
+   */
   public static boolean isNSKeyValueCoding(IType type, TypeCache cache) throws JavaModelException {
-    // ng-objects does not use NSKeyValueCoding; always return false
     return false;
   }
 
+  /**
+   * Returns whether the given type is a Java collection type
+   * (Map, List, Set, or Collection).
+   */
   public static boolean isNSCollection(IType type, TypeCache cache) throws JavaModelException {
     return BindingReflectionUtils.isType(type, new String[] { "java.util.Map", "java.util.List", "java.util.Set", "java.util.Collection" }, cache);
   }
 
+  /**
+   * Checks whether the given type is, or extends/implements, any of the
+   * specified fully qualified type names. Uses the cached type hierarchy
+   * from {@link TypeCache#getSupertypesOf}, which includes the type itself.
+   *
+   * @param type the type to check
+   * @param possibleTypes fully qualified names to match against
+   * @param cache the shared type cache
+   * @return true if the type or any of its supertypes matches
+   */
   public static boolean isType(IType type, String[] possibleTypes, TypeCache cache) throws JavaModelException {
     boolean isType = false;
-    //ITypeHierarchy typeHierarchy = SuperTypeHierarchyCache.getTypeHierarchy(type);
     List<IType> types = cache.getSupertypesOf(type);
     for (int typeNum = 0; !isType && typeNum < types.size(); typeNum++) {
       String name = types.get(typeNum).getFullyQualifiedName();
@@ -202,6 +313,11 @@ public class BindingReflectionUtils {
     return isType;
   }
 
+  /**
+   * Returns the set of KVC array operator names ({@code @count},
+   * {@code @sum}, etc.) that are valid on NSArray/collection types.
+   * The returned names do not include the {@code @} prefix.
+   */
   public static Set<String> getArrayOperators() {
     Set<String> operators = new HashSet<String>();
     operators.add("avg");
@@ -215,6 +331,34 @@ public class BindingReflectionUtils {
     return operators;
   }
 
+  /**
+   * Discovers binding keys on a type by introspecting its fields and methods
+   * (and those of its supertypes). This is the workhorse behind binding
+   * autocomplete and validation.
+   *
+   * <p>The method walks the type hierarchy and collects keys whose names
+   * match the given prefix. Special handling exists for:
+   * <ul>
+   *   <li>WOApplication/WOSession/WODirectAction subtypes — walks the
+   *       subtype hierarchy instead, so user subclass keys are included</li>
+   *   <li>NSArray types — adds KVC array operators ({@code @count}, etc.)</li>
+   *   <li>Java records — includes record component accessors</li>
+   * </ul>
+   *
+   * @param javaProject the project context
+   * @param type the type to introspect
+   * @param nameStartingWith prefix filter, or "" for all keys
+   * @param requireExactNameMatch if true, only exact name matches are returned
+   *        (stops after first match)
+   * @param accessorsOrMutators one of {@link #ACCESSORS_ONLY},
+   *        {@link #MUTATORS_ONLY}, {@link #ACCESSORS_OR_VOID}, or
+   *        {@link #VOID_ONLY}
+   * @param allowInheritanceDuplicates if true, a key can appear multiple
+   *        times when declared at different levels of the hierarchy
+   * @param cache the shared type cache
+   * @return the list of matching binding keys (unfiltered — caller should
+   *         apply {@link #filterSystemBindingValueKeys} if needed)
+   */
   public static List<BindingValueKey> getBindingKeys(IJavaProject javaProject, IType type, String nameStartingWith, boolean requireExactNameMatch, int accessorsOrMutators, boolean allowInheritanceDuplicates, TypeCache cache) throws JavaModelException {
     List<BindingValueKey> bindingKeys = new LinkedList<BindingValueKey>();
     if (type != null) {
@@ -222,9 +366,9 @@ public class BindingReflectionUtils {
 
       Set<String> additionalProposals = new HashSet<String>();
 
-      // We want to show fields from your WOApplication, WOSession, and
-      // WODirectAction subclasses ...
-      //ITypeHierarchy typeHierarchy = SuperTypeHierarchyCache.getTypeHierarchy(_type);
+      // Walk the supertype hierarchy. For commonly-subclassed framework
+      // types (WOApplication, WOSession, WODirectAction), switch to
+      // walking the subtype hierarchy so user subclass keys are found.
       List<IType> types = cache.getSupertypesOf(type);
       if (types != null) {
         IType usuallySubclassedSupertype = null;
@@ -244,28 +388,28 @@ public class BindingReflectionUtils {
 
         for (String additionalProposal : additionalProposals) {
           if (additionalProposal.startsWith(nameStartingWith)) {
+            // Array operators have no declaring type or member — the key's
+            // next type is unknown (would need generic type resolution).
             BindingValueKey additionalKey = new BindingValueKey(additionalProposal, null, null, javaProject, cache);
-            // MS: this is a hack to prevent NPE's because we don't know the next type right now ...
-            //additionalKey.setNextType(nextType);
             bindingKeys.add(additionalKey);
           }
         }
 
         if (usuallySubclassedSupertype != null) {
-          //typeHierarchy = _type.newTypeHierarchy(_javaProject, null);
-          //typeHierarchy = SubTypeHierachyCache.getTypeHierarchy(_type);
           types = cache.getSubtypesOfInProject(usuallySubclassedSupertype, javaProject);
         }
       }
 
       if (types != null) {
         for (int typeNum = 0; (!requireExactNameMatch || bindingKeys.size() == 0) && typeNum < types.size(); typeNum++) {
-          //for (int typeNum = types.length - 1; (!_requireExactNameMatch || bindingKeys.size() == 0) && typeNum >= 0; typeNum --) {
           BindingReflectionUtils.fillInBindingKeys(type, types.get(typeNum), lowercaseNameStartingWith, requireExactNameMatch, accessorsOrMutators, allowInheritanceDuplicates, javaProject, bindingKeys, cache);
         }
       }
 
-      // CHECKME: the fillInBindingKeys() method might possibly be a better location for this logic 
+      // Java record components expose their accessors as plain methods
+      // (e.g. record Foo(String bar) → bar()). These aren't picked up
+      // by fillInBindingKeys() since they lack getter prefixes, so we
+      // handle them separately here.
       if( type.isRecord() ) {
     	  for (IField rc : type.getRecordComponents() ) {
     		  final String rcName = rc.getElementName();
@@ -287,6 +431,25 @@ public class BindingReflectionUtils {
     return bindingKeys;
   }
 
+  /**
+   * Scans a single type's fields and methods to find binding keys matching
+   * the given prefix. Iterates fields first (with {@link #FIELD_PREFIXES}),
+   * then methods (with getter or setter prefixes depending on
+   * {@code accessorsOrMutators}). Each candidate is checked by
+   * {@link #getBindingKeyIfMatches}.
+   *
+   * @param declaringType the original type being introspected (used for
+   *        the key's declaring type reference, which may differ from
+   *        {@code type} when walking supertypes)
+   * @param type the specific type in the hierarchy to scan
+   * @param lowercaseNameStartingWith lowercased prefix filter
+   * @param requireExactNameMatch if true, stop after the first exact match
+   * @param accessorsOrMutators filter mode constant
+   * @param allowInheritanceDuplicates if false, skip keys already in the list
+   * @param javaProject the project context
+   * @param bindingKeys accumulator list (modified in place)
+   * @param cache the shared type cache
+   */
   protected static void fillInBindingKeys(IType declaringType, IType type, String lowercaseNameStartingWith, boolean requireExactNameMatch, int accessorsOrMutators, boolean allowInheritanceDuplicates, IJavaProject javaProject, List<BindingValueKey> bindingKeys, TypeCache cache) throws JavaModelException {
 
     IField[] fields = type.getFields();
@@ -330,38 +493,74 @@ public class BindingReflectionUtils {
     }
   }
 
+  /**
+   * Returns whether the given member's declaring type is in the default
+   * (unnamed) package. Components in the default package can access
+   * protected and package-private members via KVC.
+   */
   public static boolean isDefaultPackage(IMember member) {
     IType declaringType = member.getDeclaringType();
     String declaringTypePackageName = declaringType.getPackageFragment().getElementName();
     return declaringTypePackageName == null || declaringTypePackageName.length() == 0;
   }
 
+  /**
+   * Three-state visibility used during binding key discovery.
+   * {@link #MaybeVisible} means the member is protected/package-private
+   * in a non-default package — it becomes {@link #Visible} only if a
+   * {@code KeyValueCodingProtectedAccessor} class exists in the same package.
+   */
   protected static enum Visibility {
   	Hidden,
   	Visible,
   	MaybeVisible
   }
   
+  /**
+   * Tests whether a single field or method matches the binding key search
+   * criteria and returns a {@link BindingValueKey} if it does.
+   *
+   * <p>The matching logic is:
+   * <ol>
+   *   <li>Visibility check — private and static members are excluded.
+   *       Public members and interface members are always visible.
+   *       Protected/package-private members are visible if the declaring
+   *       type is in the default package, or if a
+   *       {@code KeyValueCodingProtectedAccessor} exists in the same package.</li>
+   *   <li>Signature check — methods must match the expected parameter count
+   *       and return type for the given {@code accessorsOrMutators} mode.
+   *       Constructors are always excluded.</li>
+   *   <li>Name check — the member name (with prefix stripped and first
+   *       letter lowercased for methods) must match or start with the
+   *       search string.</li>
+   * </ol>
+   *
+   * @param javaProject the project context
+   * @param type the declaring type (for the resulting key's type reference)
+   * @param member the field or method to test
+   * @param nameStartingWith the lowercased prefix (including the field/method
+   *        prefix) to match against
+   * @param prefix the field/method prefix being tested (e.g. "get", "_", "set")
+   * @param requireExactNameMatch if true, only exact matches count
+   * @param accessorsOrMutators filter mode constant
+   * @param cache the shared type cache
+   * @return a BindingValueKey if the member matches, or null
+   */
   public static BindingValueKey getBindingKeyIfMatches(IJavaProject javaProject, IType type, IMember member, String nameStartingWith, String prefix, boolean requireExactNameMatch, int accessorsOrMutators, TypeCache cache) throws JavaModelException {
     BindingValueKey bindingKey = null;
 
     int flags = member.getFlags();
     Visibility visible = Visibility.Hidden;
-    
-    // Private is never an option
+
     if (Flags.isPrivate(flags)) {
       visible = Visibility.Hidden;
     }
-    // Don't show static methods and fields
     else if (Flags.isStatic(flags)) {
       visible = Visibility.Hidden;
     }
-    // Public bindings are always visible
     else if (Flags.isPublic(flags) || type.isInterface()) {
       visible = Visibility.Visible;
     }
-    // Components that are not in a package can have bindings to protected fields
-    //else if ((Flags.isProtected(flags) || Flags.isPackageDefault(flags)) && BindingReflectionUtils.isDefaultPackage(member)) {
     else if (Flags.isProtected(flags) || Flags.isPackageDefault(flags)) {
     	if (BindingReflectionUtils.isDefaultPackage(member)) {
     		visible = Visibility.Visible;
@@ -432,6 +631,12 @@ public class BindingReflectionUtils {
     return bindingKey;
   }
 
+  /**
+   * Lowercases the first character of a string. Used to convert method
+   * names to KVC-style key names (e.g. "Name" → "name" after prefix
+   * stripping). Returns the input unchanged if it is empty or already
+   * starts with a lowercase letter.
+   */
   public static String toLowercaseFirstLetter(String _memberName) {
     String lowercaseFirstLetterMemberName;
     if (_memberName.length() > 0) {
@@ -525,6 +730,23 @@ public class BindingReflectionUtils {
     return names;
   }
 
+  /**
+   * Determines whether a binding key should be filtered out as a "system"
+   * binding. A key is considered a system binding if:
+   * <ul>
+   *   <li>Its declaring type is in {@link #_systemTypeNames} and its name
+   *       is in {@link #_uselessSystemBindings} (always filtered)</li>
+   *   <li>Its declaring type is in {@link #_systemTypeNames} and its name
+   *       is in {@link #_usefulSystemBindings} and
+   *       {@code showUsefulSystemBindings} is false</li>
+   *   <li>Its name starts with underscore (private/internal convention)</li>
+   * </ul>
+   *
+   * @param bindingValueKey the key to check
+   * @param showUsefulSystemBindings if true, useful system bindings
+   *        (application, context, session, hasSession) are kept
+   * @return true if the key should be filtered out
+   */
   public static boolean isSystemBindingValueKey(BindingValueKey bindingValueKey, boolean showUsefulSystemBindings) {
     boolean isSystemBinding = false;
     if (bindingValueKey != null && bindingValueKey.getDeclaringType() != null) {
@@ -545,10 +767,24 @@ public class BindingReflectionUtils {
     return isSystemBinding;
   }
 
+  /**
+   * Returns whether the given key path string is a boolean literal value
+   * ("true", "false", "yes", or "no", case-insensitive).
+   */
   public static boolean isBooleanValue(String keyPath) {
     return "true".equalsIgnoreCase(keyPath) || "false".equalsIgnoreCase(keyPath) || "yes".equalsIgnoreCase(keyPath) || "no".equalsIgnoreCase(keyPath);
   }
 
+  /**
+   * Returns a copy of the given binding key list with system bindings
+   * removed (as determined by {@link #isSystemBindingValueKey}). If no
+   * system bindings are found, returns the original list as-is (no copy).
+   *
+   * @param bindingKeys the unfiltered key list
+   * @param showUsefulSystemBindings if true, commonly-used framework
+   *        bindings (application, context, session, hasSession) are kept
+   * @return the filtered list
+   */
   public static List<BindingValueKey> filterSystemBindingValueKeys(List<BindingValueKey> bindingKeys, boolean showUsefulSystemBindings) {
     Set<BindingValueKey> systemBindingValueKeys = new HashSet<BindingValueKey>();
     for (BindingValueKey bindingKey : bindingKeys) {
@@ -574,14 +810,19 @@ public class BindingReflectionUtils {
   }
 
   /**
-   * Returns the BindingValueKeys for the given type grouped by which class the
-   * keys were contributed from.
-   * 
-   * @param startingWith a partial keypath or "" for all
-   * @param type the starting type
-   * @param cache the TypeCache
-   * @return a map of supertypes to keys
-   * @throws JavaModelException if the type information cannot be loaded
+   * Returns all binding keys for a type, grouped by declaring class.
+   * The map is ordered by type depth (deepest subclass first) using
+   * {@link TypeDepthComparator}. System bindings are filtered with
+   * {@code showUsefulSystemBindings=true}, so commonly-used framework
+   * keys (application, context, session, hasSession) are included.
+   *
+   * <p>This is the primary data source for the Bindings Inspector's
+   * key browser (WOBrowserColumn).
+   *
+   * @param startingWith prefix filter, or "" for all keys
+   * @param type the type to introspect
+   * @param cache the shared type cache
+   * @return a map from declaring type to the set of keys it contributes
    */
   public static Map<IType, Set<BindingValueKey>> getGroupedBindingValueKeys(String startingWith, IType type, TypeCache cache) throws JavaModelException {
     BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(startingWith, type, type.getJavaProject(), cache);
