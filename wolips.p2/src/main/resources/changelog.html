@@ -24,6 +24,17 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- March 3, 2026 -->
+			<div class="card">
+				<h2 class="date-header">March 3, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Full ng-objects template editing</h3>
+					<p>Tag shortcuts now work seamlessly in ng-objects projects. Write <code>&lt;wo:if&gt;</code>, <code>&lt;wo:repetition&gt;</code>, <code>&lt;wo:str&gt;</code> &mdash; the editor automatically resolves them to their ng-objects equivalents (<code>NGConditional</code>, <code>NGRepetition</code>, <code>NGString</code>). Binding validation, keypath checking, and error markers all work correctly against the NG class hierarchy.</p>
+					<p>Binding autocomplete is fully functional for all standard dynamic elements &mdash; type <code>&lt;wo:if</code>, press Ctrl+Space, and get <code>condition</code> and <code>negate</code> offered as completions with required-binding markers. This works even though NG elements declare bindings via internal association maps rather than KVC-style accessors &mdash; the editor sources binding metadata from the global API definitions, supplementing Java reflection results.</p>
+				</div>
+			</div>
+
 			<!-- March 2, 2026 -->
 			<div class="card">
 				<h2 class="date-header">March 2, 2026</h2>
