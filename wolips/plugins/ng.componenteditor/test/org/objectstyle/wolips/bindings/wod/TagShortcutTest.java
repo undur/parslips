@@ -280,4 +280,43 @@ public class TagShortcutTest {
 	public void hasChange_emptyLists_false() {
 		assertFalse(TagShortcut.hasChange(new ArrayList<>(), new ArrayList<>()));
 	}
+
+	// ---- WO→NG class name translation ---------------------------------------
+
+	@Test
+	public void woToNGClassName_swapsWOPrefix() {
+		assertEquals("NGConditional", TagShortcut.woToNGClassName("WOConditional"));
+	}
+
+	@Test
+	public void woToNGClassName_swapsWOString() {
+		assertEquals("NGString", TagShortcut.woToNGClassName("WOString"));
+	}
+
+	@Test
+	public void woToNGClassName_nonWOPrefix_unchanged() {
+		assertEquals("ERXLocalizedString", TagShortcut.woToNGClassName("ERXLocalizedString"));
+	}
+
+	@Test
+	public void woToNGClassName_null_unchanged() {
+		assertNull(TagShortcut.woToNGClassName(null));
+	}
+
+	@Test
+	public void woToNGClassName_empty_unchanged() {
+		assertEquals("", TagShortcut.woToNGClassName(""));
+	}
+
+	@Test
+	public void woToNGClassName_justWO_becomesNG() {
+		// Edge case: a class named exactly "WO" (unlikely but handles boundary)
+		assertEquals("NG", TagShortcut.woToNGClassName("WO"));
+	}
+
+	@Test
+	public void getActual_nullBuildProperties_returnsOriginal() {
+		TagShortcut ts = new TagShortcut("if", "WOConditional");
+		assertEquals("WOConditional", ts.getActual(null));
+	}
 }

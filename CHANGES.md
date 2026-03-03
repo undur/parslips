@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Framework-aware tag shortcut resolution
+
+- **Tag shortcuts now resolve to NG class names in ng-objects projects.** Tag shortcuts (e.g. `if` → `WOConditional`) previously always expanded to WO class names, causing expensive failed type lookups in ng-objects projects where those classes don't exist. Now, when the project has `base=ng`, WO-prefixed class names are automatically translated to their NG equivalents (e.g. `WOConditional` → `NGConditional`, `WORepetition` → `NGRepetition`). Non-WO-prefixed shortcuts (like `ERXLocalizedString`) pass through unchanged.
+- **New method: `TagShortcut.getActual(BuildProperties)`** — returns the framework-appropriate class name. The translation is a simple `WO` → `NG` prefix swap, matching ng-objects' naming convention. This is a temporary bridge; the long-term plan is per-project tag shortcut registration.
+- Updated `FuzzyXMLWodElement` (validation path) and `InlineWodTagInfo` (autocomplete path) to use framework-aware shortcut expansion. `BuildProperties` is threaded through `TemplateAssistProcessor` → `InlineWodTagInfo` via a new `setBuildProperties()` setter.
+
 ### Bindings Inspector cleanup
 
 - **Removed dead `WOBrowserPageBookView` and `WOBrowserPage`** — standalone view/page wrappers for WOBrowser that were never registered in `plugin.xml`. The WOBrowser is always embedded in `BindingsInspectorPage`.

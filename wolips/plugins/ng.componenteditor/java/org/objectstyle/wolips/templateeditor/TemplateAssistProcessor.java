@@ -67,7 +67,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
    * Returns a cached InlineWodTagInfo for the given element type name and
    * project, creating and caching a new one if none exists.
    */
-  private static synchronized InlineWodTagInfo getCachedTagInfo(String elementTypeName, IJavaProject javaProject) {
+  private static synchronized InlineWodTagInfo getCachedTagInfo(String elementTypeName, IJavaProject javaProject, BuildProperties buildProperties) {
     IProject project = javaProject.getProject();
     Map<String, InlineWodTagInfo> projectCache = _tagInfoCache.get(project);
     if (projectCache == null) {
@@ -78,6 +78,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
     if (tagInfo == null) {
       tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());
       tagInfo.setJavaProject(javaProject);
+      tagInfo.setBuildProperties(buildProperties);
       projectCache.put(elementTypeName, tagInfo);
     }
     return tagInfo;
@@ -178,7 +179,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         if (!proposals.isEmpty()) {
           tagInfos = new LinkedList<TagInfo>();
           for (WodCompletionProposal proposal : proposals) {
-            tagInfos.add(getCachedTagInfo(proposal.getProposal(), javaProject));
+            tagInfos.add(getCachedTagInfo(proposal.getProposal(), javaProject, _buildProperties));
           }
         }
       }
@@ -333,7 +334,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
       String elementTypeName = name.substring("wo:".length());
       IJavaProject javaProject = getJavaProject();
       if (javaProject != null) {
-        return getCachedTagInfo(elementTypeName, javaProject);
+        return getCachedTagInfo(elementTypeName, javaProject, _buildProperties);
       }
       // No Java project available (shouldn't happen in practice)
       InlineWodTagInfo tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());

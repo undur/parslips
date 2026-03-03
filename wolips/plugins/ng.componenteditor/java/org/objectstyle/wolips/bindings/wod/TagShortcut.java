@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.objectstyle.wolips.variables.BuildProperties;
+
 public class TagShortcut {
   private String _shortcut;
   private String _actual;
@@ -35,6 +37,32 @@ public class TagShortcut {
 
   public String getActual() {
     return _actual;
+  }
+
+  /**
+   * Returns the actual class name for the given project's framework.
+   * For ng-objects projects, translates WO-prefixed class names to their
+   * NG equivalents (e.g. "WOConditional" → "NGConditional"). Returns the
+   * unmodified actual name for WO projects or when buildProperties is null.
+   *
+   * <p>This is a temporary bridge until tag shortcuts become per-project.
+   */
+  public String getActual(BuildProperties buildProperties) {
+    if (buildProperties != null && buildProperties.isNGProject()) {
+      return woToNGClassName(_actual);
+    }
+    return _actual;
+  }
+
+  /**
+   * Translates a WO-prefixed class name to its NG equivalent by swapping
+   * the "WO" prefix for "NG". Non-WO-prefixed names pass through unchanged.
+   */
+  static String woToNGClassName(String className) {
+    if (className != null && className.startsWith("WO")) {
+      return "NG" + className.substring(2);
+    }
+    return className;
   }
 
   public void setActual(String actual) {

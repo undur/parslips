@@ -39,7 +39,7 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
       if (!namespaceElementName.equals(matchingTagShortcut.getShortcut())) {
         setTagShortcutCaseMismatch(namespaceElementName, matchingTagShortcut.getShortcut());
       }
-      namespaceElementName = matchingTagShortcut.getActual();
+      namespaceElementName = matchingTagShortcut.getActual(buildProperties);
     }
 
     _setElementName("_temp");

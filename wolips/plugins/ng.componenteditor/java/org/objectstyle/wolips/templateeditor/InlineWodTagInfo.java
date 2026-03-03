@@ -14,6 +14,7 @@ import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
+import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionProposal;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionUtils;
 
@@ -25,6 +26,7 @@ public class InlineWodTagInfo extends TagInfo {
   private String _elementTypeName;
   private TagShortcut _tagShortcut;
   private IJavaProject _javaProject;
+  private BuildProperties _buildProperties;
   private boolean _attributeInfoCached;
   private IType _resolvedElementType;
   private TypeCache _cache;
@@ -46,6 +48,10 @@ public class InlineWodTagInfo extends TagInfo {
 
   public IJavaProject getJavaProject() {
     return _javaProject;
+  }
+
+  public void setBuildProperties(BuildProperties buildProperties) {
+    _buildProperties = buildProperties;
   }
   
   /**
@@ -74,7 +80,7 @@ public class InlineWodTagInfo extends TagInfo {
   public String getExpandedElementTypeName() {
     String elementTypeName = _elementTypeName;
     if (_tagShortcut != null) {
-      elementTypeName = _tagShortcut.getActual();
+      elementTypeName = _tagShortcut.getActual(_buildProperties);
     }
     return elementTypeName;
   }
