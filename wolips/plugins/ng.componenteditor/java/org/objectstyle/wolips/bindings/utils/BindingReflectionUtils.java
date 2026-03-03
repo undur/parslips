@@ -449,56 +449,80 @@ public class BindingReflectionUtils {
     return lowercaseFirstLetterMemberName;
   }
 
-  public static Set<String> _systemTypeNames;
-  public static Set<String> _uselessSystemBindings;
-  public static Set<String> _usefulSystemBindings;
-  static {
-    _systemTypeNames = new HashSet<String>();
-    _systemTypeNames.add("Object");
+  /**
+   * Simple names of framework base types whose bindings are subject to
+   * filtering. Keys declared on these types are checked against
+   * {@link #_uselessSystemBindings} and {@link #_usefulSystemBindings}.
+   */
+  public static Set<String> _systemTypeNames = createSystemTypeNames();
+
+  /**
+   * Binding names from system types that are <b>always filtered out</b> —
+   * framework internals that are never useful in component bindings.
+   */
+  public static Set<String> _uselessSystemBindings = createUselessSystemBindings();
+
+  /**
+   * Binding names from system types that are <b>conditionally kept</b> —
+   * commonly used framework bindings (application, context, session) that
+   * are shown when {@code showUsefulSystemBindings} is true.
+   */
+  public static Set<String> _usefulSystemBindings = createUsefulSystemBindings();
+
+  private static Set<String> createSystemTypeNames() {
+    Set<String> names = new HashSet<String>();
+    names.add("Object");
     // ng-objects types
-    _systemTypeNames.add("NGElement");
-    _systemTypeNames.add("NGActionResults");
-    _systemTypeNames.add("NGComponent");
+    names.add("NGElement");
+    names.add("NGActionResults");
+    names.add("NGComponent");
     // WebObjects types
-    _systemTypeNames.add("WOElement");
-    _systemTypeNames.add("WOActionResults");
-    _systemTypeNames.add("WOComponent");
+    names.add("WOElement");
+    names.add("WOActionResults");
+    names.add("WOComponent");
+    return names;
+  }
 
-    _uselessSystemBindings = new HashSet<String>();
-    _uselessSystemBindings.add("baseURL");
-    _uselessSystemBindings.add("bindingKeys");
-    _uselessSystemBindings.add("cachingEnabled");
-    _uselessSystemBindings.add("childTemplate");
-    _uselessSystemBindings.add("getClass");
-    _uselessSystemBindings.add("class");
-    _uselessSystemBindings.add("clone");
-    _uselessSystemBindings.add("componentDefinition");
-    _uselessSystemBindings.add("componentUnroll");
-    _uselessSystemBindings.add("frameworkName");
-    _uselessSystemBindings.add("generateResponse");
-    _uselessSystemBindings.add("hashCode");
-    _uselessSystemBindings.add("isCachingEnabled");
-    _uselessSystemBindings.add("eventLoggingEnabled");
-    _uselessSystemBindings.add("isEventLoggingEnabled");
-    _uselessSystemBindings.add("isPage");
-    _uselessSystemBindings.add("isStateless");
-    _uselessSystemBindings.add("stateless");
-    _uselessSystemBindings.add("keyAssociations");
-    _uselessSystemBindings.add("name");
-    _uselessSystemBindings.add("page");
-    _uselessSystemBindings.add("parent");
-    _uselessSystemBindings.add("path");
-    _uselessSystemBindings.add("pathURL");
-    _uselessSystemBindings.add("synchronizesVariablesWithBindings");
-    _uselessSystemBindings.add("template");
-    _uselessSystemBindings.add("toString");
-    _uselessSystemBindings.add("unroll");
+  private static Set<String> createUselessSystemBindings() {
+    Set<String> names = new HashSet<String>();
+    names.add("baseURL");
+    names.add("bindingKeys");
+    names.add("cachingEnabled");
+    names.add("childTemplate");
+    names.add("class");
+    names.add("clone");
+    names.add("componentDefinition");
+    names.add("componentUnroll");
+    names.add("eventLoggingEnabled");
+    names.add("frameworkName");
+    names.add("generateResponse");
+    names.add("getClass");
+    names.add("hashCode");
+    names.add("isCachingEnabled");
+    names.add("isEventLoggingEnabled");
+    names.add("isPage");
+    names.add("isStateless");
+    names.add("keyAssociations");
+    names.add("name");
+    names.add("page");
+    names.add("parent");
+    names.add("path");
+    names.add("pathURL");
+    names.add("stateless");
+    names.add("synchronizesVariablesWithBindings");
+    names.add("template");
+    names.add("toString");
+    names.add("unroll");
+    return names;
+  }
 
-    _usefulSystemBindings = new HashSet<String>();
-    _usefulSystemBindings.add("application");
-    _usefulSystemBindings.add("context");
-    _usefulSystemBindings.add("hasSession");
-    _usefulSystemBindings.add("session");
+  private static Set<String> createUsefulSystemBindings() {
+    Set<String> names = new HashSet<String>();
+    names.add("application");
+    names.add("context");
+    names.add("hasSession");
+    names.add("session");
+    return names;
   }
 
   public static boolean isSystemBindingValueKey(BindingValueKey bindingValueKey, boolean showUsefulSystemBindings) {
