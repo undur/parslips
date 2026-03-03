@@ -118,9 +118,21 @@ public class ApiUtils {
 
 				// Fall back to simple class name — WebObjectDefinitions.xml uses
 				// short names like "WOString", not FQN like "com.webobjects...WOString"
+				String simpleName = className;
 				int dotIndex = className.lastIndexOf('.');
 				if (dotIndex >= 0) {
-					return _globalApiSnapshots.get(className.substring(dotIndex + 1));
+					simpleName = className.substring(dotIndex + 1);
+					snapshot = _globalApiSnapshots.get(simpleName);
+					if (snapshot != null) {
+						return snapshot;
+					}
+				}
+
+				// NG elements share the same bindings as their WO counterparts.
+				// If "NGConditional" isn't found, try "WOConditional". This is a
+				// temporary bridge until NG has its own API definitions.
+				if (simpleName.startsWith("NG")) {
+					return _globalApiSnapshots.get("WO" + simpleName.substring(2));
 				}
 			}
 		} catch (Throwable t) {
@@ -240,7 +252,7 @@ public class ApiUtils {
 
 		// Framework-private classes use the global WebObjectDefinitions.xml,
 		// which is a bundled resource that never changes at runtime.
-		if (fqn.startsWith("ng.appserver.templating._private.") || fqn.startsWith("com.webobjects.appserver._private.")) {
+		if (fqn.startsWith("ng.appserver.templating._private.") || fqn.startsWith("ng.appserver.templating.elements.") || fqn.startsWith("com.webobjects.appserver._private.")) {
 			ApiSnapshot snapshot = cache.getApiSnapshotForType(elementType);
 			if (snapshot != null) {
 				return snapshot;

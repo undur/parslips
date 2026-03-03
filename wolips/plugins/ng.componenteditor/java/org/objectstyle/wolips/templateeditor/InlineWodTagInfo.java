@@ -104,6 +104,14 @@ public class InlineWodTagInfo extends TagInfo {
       try {
         IType elementType = BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache);
         _resolvedElementType = elementType;
+        // Try to get binding info from the global API definitions
+        // (WebObjectDefinitions.xml). This covers both framework elements
+        // whose bindings aren't discoverable via reflection (e.g. NG
+        // elements that use private association fields) and elements
+        // whose type isn't on the classpath at all.
+        String expandedName = getExpandedElementTypeName();
+        ApiSnapshot api = ApiUtils.findGlobalApiSnapshotByClassName(expandedName);
+
         if (elementType != null) {
           Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();
           WodCompletionUtils.fillInBindingNameCompletionProposals(_javaProject, elementType, "", 0, 0, proposals, false, _cache);
@@ -112,24 +120,29 @@ public class InlineWodTagInfo extends TagInfo {
             addAttributeInfo(attrInfo);
           }
 
-          // Look up the element's API for componentContent and required
-          // binding flags. componentContent controls self-closing vs
-          // opening+closing tags; required flags cause the binding name
-          // to be pre-inserted in the completion (with cursor inside the
-          // quotes) so the user can start typing the value immediately.
+          // Supplement with global API bindings if available. This adds
+          // bindings that aren't discoverable via Java reflection (e.g.
+          // NG dynamic elements that declare bindings via association maps).
+          if (api != null) {
+            Set<String> existingNames = new HashSet<String>();
+            for (AttributeInfo existing : super.getAttributeInfo()) {
+              existingNames.add(existing.getAttributeName());
+            }
+            for (IApiBinding binding : api.getBindings()) {
+              if (!existingNames.contains(binding.getName())) {
+                addAttributeInfo(new AttributeInfo(binding.getName(), true, AttributeInfo.NONE, binding.isRequired()));
+              }
+            }
+          }
+
           applyApiMetadata(elementType);
         }
-        else {
-          // Element type not found in classpath; fall back to global WebObjectDefinitions.xml
-          String expandedName = getExpandedElementTypeName();
-          ApiSnapshot api = ApiUtils.findGlobalApiSnapshotByClassName(expandedName);
-          if (api != null) {
-            for (IApiBinding binding : api.getBindings()) {
-              AttributeInfo attrInfo = new AttributeInfo(binding.getName(), true, AttributeInfo.NONE, binding.isRequired());
-              addAttributeInfo(attrInfo);
-            }
-            setHasBody(api.isComponentContent());
+        else if (api != null) {
+          // Element type not found in classpath; use global API only
+          for (IApiBinding binding : api.getBindings()) {
+            addAttributeInfo(new AttributeInfo(binding.getName(), true, AttributeInfo.NONE, binding.isRequired()));
           }
+          setHasBody(api.isComponentContent());
         }
         _attributeInfoCached = true;
       }
