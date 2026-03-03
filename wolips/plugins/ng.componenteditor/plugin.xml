@@ -214,6 +214,8 @@
             class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToWodHandler"/>
       <handler commandId="ng.componenteditor.editors.toapi"
             class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToApiHandler"/>
+      <handler commandId="ng.componenteditor.action.openDeclaration"
+            class="org.objectstyle.wolips.templateeditor.OpenDeclarationHandler"/>
    </extension>
 
    <extension point="org.eclipse.ui.bindings">
@@ -256,6 +258,10 @@
       <key commandId="ng.componenteditor.openComponent"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
            sequence="M1+M2+X"/>
+      <key commandId="ng.componenteditor.action.openDeclaration"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="F3"/>
    </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -431,11 +437,6 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOString Component"/>
-         <action class="org.objectstyle.wolips.wodclipse.action.OpenDeclarationAction"
-               definitionId="ng.componenteditor.action.openDeclaration"
-               id="ng.componenteditor.action.openDeclaration"
-               label="Open WO Declaration"
-               menubarPath="navigate/ng.componenteditor.navigateMenuContribution/group1"/>
       </editorContribution>
    </extension>
 

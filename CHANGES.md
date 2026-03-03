@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### F3 "Open Declaration" for wo: tags
+
+- **F3 now opens the Java class declaration** when the cursor is on a `<wo:ComponentName>` tag's type name in the template editor. This is the same navigation that Cmd+click provides, now available via the standard Eclipse "Open Declaration" shortcut.
+- Replaced the legacy `OpenDeclarationAction` (WOD-only, opened `.wod` files) with a modern `AbstractHandler` that works in the template editor and opens the Java class.
+
 ### Framework-aware tag shortcut resolution
 
 - **Tag shortcuts now resolve to NG class names in ng-objects projects.** Tag shortcuts (e.g. `if` → `WOConditional`) previously always expanded to WO class names, causing expensive failed type lookups in ng-objects projects where those classes don't exist. Now, when the project has `base=ng`, WO-prefixed class names are automatically translated to their NG equivalents (e.g. `WOConditional` → `NGConditional`, `WORepetition` → `NGRepetition`). Non-WO-prefixed shortcuts (like `ERXLocalizedString`) pass through unchanged.
