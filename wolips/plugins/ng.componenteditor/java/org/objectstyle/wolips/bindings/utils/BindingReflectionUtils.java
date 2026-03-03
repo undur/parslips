@@ -450,7 +450,7 @@ public class BindingReflectionUtils {
    * @param bindingKeys accumulator list (modified in place)
    * @param cache the shared type cache
    */
-  protected static void fillInBindingKeys(IType declaringType, IType type, String lowercaseNameStartingWith, boolean requireExactNameMatch, int accessorsOrMutators, boolean allowInheritanceDuplicates, IJavaProject javaProject, List<BindingValueKey> bindingKeys, TypeCache cache) throws JavaModelException {
+  private static void fillInBindingKeys(IType declaringType, IType type, String lowercaseNameStartingWith, boolean requireExactNameMatch, int accessorsOrMutators, boolean allowInheritanceDuplicates, IJavaProject javaProject, List<BindingValueKey> bindingKeys, TypeCache cache) throws JavaModelException {
 
     IField[] fields = type.getFields();
     for (int fieldNum = 0; (!requireExactNameMatch || bindingKeys.size() == 0) && fieldNum < fields.length; fieldNum++) {
@@ -498,7 +498,7 @@ public class BindingReflectionUtils {
    * (unnamed) package. Components in the default package can access
    * protected and package-private members via KVC.
    */
-  public static boolean isDefaultPackage(IMember member) {
+  private static boolean isDefaultPackage(IMember member) {
     IType declaringType = member.getDeclaringType();
     String declaringTypePackageName = declaringType.getPackageFragment().getElementName();
     return declaringTypePackageName == null || declaringTypePackageName.length() == 0;
@@ -510,7 +510,7 @@ public class BindingReflectionUtils {
    * in a non-default package — it becomes {@link #Visible} only if a
    * {@code KeyValueCodingProtectedAccessor} class exists in the same package.
    */
-  protected static enum Visibility {
+  private static enum Visibility {
   	Hidden,
   	Visible,
   	MaybeVisible
@@ -637,7 +637,7 @@ public class BindingReflectionUtils {
    * stripping). Returns the input unchanged if it is empty or already
    * starts with a lowercase letter.
    */
-  public static String toLowercaseFirstLetter(String _memberName) {
+  private static String toLowercaseFirstLetter(String _memberName) {
     String lowercaseFirstLetterMemberName;
     if (_memberName.length() > 0) {
       char firstChar = _memberName.charAt(0);
@@ -659,20 +659,20 @@ public class BindingReflectionUtils {
    * filtering. Keys declared on these types are checked against
    * {@link #_uselessSystemBindings} and {@link #_usefulSystemBindings}.
    */
-  public static Set<String> _systemTypeNames = createSystemTypeNames();
+  private static Set<String> _systemTypeNames = createSystemTypeNames();
 
   /**
    * Binding names from system types that are <b>always filtered out</b> —
    * framework internals that are never useful in component bindings.
    */
-  public static Set<String> _uselessSystemBindings = createUselessSystemBindings();
+  private static Set<String> _uselessSystemBindings = createUselessSystemBindings();
 
   /**
    * Binding names from system types that are <b>conditionally kept</b> —
    * commonly used framework bindings (application, context, session) that
    * are shown when {@code showUsefulSystemBindings} is true.
    */
-  public static Set<String> _usefulSystemBindings = createUsefulSystemBindings();
+  private static Set<String> _usefulSystemBindings = createUsefulSystemBindings();
 
   private static Set<String> createSystemTypeNames() {
     Set<String> names = new HashSet<String>();
