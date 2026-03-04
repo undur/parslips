@@ -62,7 +62,7 @@ public class ParsleyProject {
 	 * Returns {@code true} if this project uses ng-objects (as opposed to WebObjects).
 	 */
 	public boolean isNGProject() {
-		String base = _buildProperties.get(BuildProperties.Key.BASE.key());
+		String base = _buildProperties.get(BuildProperties.Key.BASE);
 		if ("ng".equals(base)) {
 			return true;
 		}
@@ -101,7 +101,7 @@ public class ParsleyProject {
 	}
 
 	private String resolveFrameworkClass(String ngClass, String woClass) {
-		String base = _buildProperties.get(BuildProperties.Key.BASE.key());
+		String base = _buildProperties.get(BuildProperties.Key.BASE);
 		if ("ng".equals(base)) {
 			return ngClass;
 		}

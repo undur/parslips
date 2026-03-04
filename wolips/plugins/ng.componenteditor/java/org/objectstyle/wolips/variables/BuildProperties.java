@@ -125,7 +125,22 @@ public class BuildProperties {
 		return _version;
 	}
 
-	public synchronized boolean getBoolean(String key, boolean defaultValue) {
+	/** Returns the boolean value for the given key, or {@code defaultValue} if absent. */
+	public synchronized boolean getBoolean(Key key, boolean defaultValue) {
+		return getBoolean(key.key(), defaultValue);
+	}
+
+	/** Returns the value for the given key, or {@code null} if absent. */
+	public synchronized String get(Key key) {
+		return get(key.key(), null);
+	}
+
+	/** Returns the value for the given key, or {@code defaultValue} if absent. */
+	public synchronized String get(Key key, String defaultValue) {
+		return get(key.key(), defaultValue);
+	}
+
+	private synchronized boolean getBoolean(String key, boolean defaultValue) {
 		String strValue = get(key);
 		boolean value;
 		if (strValue == null) {
@@ -137,11 +152,11 @@ public class BuildProperties {
 		return value;
 	}
 
-	public synchronized String get(String key) {
+	private synchronized String get(String key) {
 		return get(key, null);
 	}
 
-	public synchronized String get(String key, String defaultValue) {
+	private synchronized String get(String key, String defaultValue) {
 		String value = _properties.getProperty(key, defaultValue);
 		return value;
 	}
@@ -234,10 +249,10 @@ public class BuildProperties {
 	}
 
 	private String getName() {
-		String projectName = get(Key.PROJECT_NAME.key());
+		String projectName = get(Key.PROJECT_NAME);
 		// MS: compatibility with old build.properties
 		if (projectName == null || projectName.length() == 0) {
-			projectName = get(Key.FRAMEWORK_NAME.key());
+			projectName = get(Key.FRAMEWORK_NAME);
 		}
 		if (projectName == null || projectName.length() == 0) {
 			projectName = _project.getName();
@@ -252,13 +267,13 @@ public class BuildProperties {
 
 	private boolean isFramework() {
 		boolean isFramework = false;
-		String projectType = get(Key.PROJECT_TYPE.key());
+		String projectType = get(Key.PROJECT_TYPE);
 		if (projectType != null) {
 			isFramework = "framework".equals(projectType);
 		}
 		else {
 			// MS: compatibility with old build.properties
-			String frameworkName = get(Key.FRAMEWORK_NAME.key());
+			String frameworkName = get(Key.FRAMEWORK_NAME);
 			if (frameworkName != null) {
 				isFramework = true;
 			}
@@ -308,7 +323,7 @@ public class BuildProperties {
 	 */
 	public String getInlineBindingPrefix() {
 		ensureDefaultsInitialized();
-		return get(Key.INLINE_BINDING_PREFIX.key(), _inlineBindingPrefixDefault);
+		return get(Key.INLINE_BINDING_PREFIX, _inlineBindingPrefixDefault);
 	}
 
 	/**
@@ -317,7 +332,7 @@ public class BuildProperties {
 	 */
 	public String getInlineBindingSuffix() {
 		ensureDefaultsInitialized();
-		return get(Key.INLINE_BINDING_SUFFIX.key(), _inlineBindingSuffixDefault);
+		return get(Key.INLINE_BINDING_SUFFIX, _inlineBindingSuffixDefault);
 	}
 
 	/**
@@ -326,7 +341,7 @@ public class BuildProperties {
 	 */
 	public boolean isWellFormedTemplateRequired() {
 		ensureDefaultsInitialized();
-		return getBoolean(Key.WELL_FORMED_TEMPLATE_REQUIRED.key(), _wellFormedTemplateRequiredDefault);
+		return getBoolean(Key.WELL_FORMED_TEMPLATE_REQUIRED, _wellFormedTemplateRequiredDefault);
 	}
 
 }

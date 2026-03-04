@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Make BuildProperties public API accept Key enum instead of raw strings
+
+- `get(String)`, `get(String, String)`, `getBoolean(String, boolean)` made private — no longer part of the public API.
+- Added `get(Key)`, `get(Key, String)`, `getBoolean(Key, boolean)` as the type-safe public API.
+- All internal callers in `BuildProperties` updated to use `Key` directly (no more `.key()` indirection).
+- External callers updated: `ParsleyProject`, `WodBuilder.getBooleanProperty`, `ProjectDecorator`.
+
 ### Tighten access modifiers and remove newly-exposed dead code
 
 - **`BuildProperties`**: 13 methods made private — `isDirty()`, `getProject()`, `getBuildPropertiesEclipseFile()`, `getBuildPropertiesFile()`, `remove()`, `put(String, boolean)`, `put(String, String)`, `save()`, `getName()`, `setName()`, `isFramework()`, `load()`, `ensureDefaultsInitialized()`. None had callers outside the class.

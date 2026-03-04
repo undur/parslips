@@ -117,7 +117,7 @@ public class ProjectDecorator implements ILabelDecorator {
 		if (project.getFile("build.properties").exists()) {
 			BuildProperties bp = getBuildProperties(project);
 			if (bp != null) {
-				String base = bp.get("base");
+				String base = bp.get(BuildProperties.Key.BASE);
 				if ("ng".equals(base)) {
 					return 1;
 				}
@@ -125,7 +125,7 @@ public class ProjectDecorator implements ILabelDecorator {
 					return -1;
 				}
 				// project.name without explicit base → WebObjects
-				if (bp.get("project.name") != null) {
+				if (bp.get(BuildProperties.Key.PROJECT_NAME) != null) {
 					return -1;
 				}
 			}
