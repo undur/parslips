@@ -41,20 +41,20 @@ public class BuildProperties {
 		load();
 	}
 
-	public boolean isDirty() {
+	private boolean isDirty() {
 		return _dirty;
 	}
 
-	public IProject getProject() {
+	private IProject getProject() {
 		return _project;
 	}
 
-	public IFile getBuildPropertiesEclipseFile() {
+	private IFile getBuildPropertiesEclipseFile() {
 		IFile file = _project.getFile("build.properties");
 		return file;
 	}
 
-	public File getBuildPropertiesFile() {
+	private File getBuildPropertiesFile() {
 		File file = getBuildPropertiesEclipseFile().getLocation().toFile();
 		return file;
 	}
@@ -88,15 +88,15 @@ public class BuildProperties {
 		return value;
 	}
 
-	public synchronized void remove(String key) {
+	private synchronized void remove(String key) {
 		put(key, null);
 	}
 
-	public synchronized void put(String key, boolean value) {
+	private synchronized void put(String key, boolean value) {
 		put(key, Boolean.valueOf(value).toString());
 	}
 
-	public synchronized void put(String key, String value) {
+	private synchronized void put(String key, String value) {
 		if (value == null) {
 			if (_properties.containsKey(key)) {
 				_properties.remove(key);
@@ -112,7 +112,7 @@ public class BuildProperties {
 		}
 	}
 
-	protected void load() {
+	private void load() {
 		try {
 			boolean dirty;
 			
@@ -142,7 +142,7 @@ public class BuildProperties {
 		}
 	}
 
-	public synchronized void save() throws CoreException, IOException {
+	private synchronized void save() throws CoreException, IOException {
 		if (!_dirty) {
 			return;
 		}
@@ -175,7 +175,7 @@ public class BuildProperties {
 		_dirty = false;
 	}
 
-	public String getName() {
+	private String getName() {
 		String projectName = get("project.name");
 		// MS: compatibility with old build.properties
 		if (projectName == null || projectName.length() == 0) {
@@ -187,12 +187,12 @@ public class BuildProperties {
 		return projectName;
 	}
 
-	public void setName(String name) {
+	private void setName(String name) {
 		put("project.name", name);
 		put("project.name.lowercase", name.toLowerCase());
 	}
 
-	public boolean isFramework() {
+	private boolean isFramework() {
 		boolean isFramework = false;
 		String projectType = get("project.type");
 		if (projectType != null) {
@@ -235,7 +235,7 @@ public class BuildProperties {
 		}
 	}
 
-	protected synchronized void ensureDefaultsInitialized() {
+	private synchronized void ensureDefaultsInitialized() {
 		if (!_defaultsInitialized) {
 			_defaultsInitialized = true;
 			_inlineBindingPrefixDefault = "$";

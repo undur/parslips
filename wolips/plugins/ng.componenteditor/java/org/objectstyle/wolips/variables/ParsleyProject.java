@@ -31,14 +31,14 @@ public class ParsleyProject {
 	/** Fully-qualified root component type for ng-objects projects. */
 	public static final String NG_COMPONENT_CLASS = "ng.appserver.templating.NGComponent";
 	/** Package prefix for ng-objects built-in ("private") elements. */
-	public static final String NG_PRIVATE_ELEMENT_PACKAGE = "ng.appserver.templating._private.";
+	private static final String NG_PRIVATE_ELEMENT_PACKAGE = "ng.appserver.templating._private.";
 
 	/** Fully-qualified root element type for WebObjects projects. */
 	public static final String WO_ELEMENT_CLASS = "com.webobjects.appserver.WOElement";
 	/** Fully-qualified root component type for WebObjects projects. */
 	public static final String WO_COMPONENT_CLASS = "com.webobjects.appserver.WOComponent";
 	/** Package prefix for WebObjects built-in ("private") elements. */
-	public static final String WO_PRIVATE_ELEMENT_PACKAGE = "com.webobjects.appserver._private.";
+	private static final String WO_PRIVATE_ELEMENT_PACKAGE = "com.webobjects.appserver._private.";
 
 	private final IProject _project;
 	private final BuildProperties _buildProperties;
@@ -80,7 +80,7 @@ public class ParsleyProject {
 	 *
 	 * @see #isNGProject()
 	 */
-	public String getElementClass() {
+	private String getElementClass() {
 		return resolveFrameworkClass(NG_ELEMENT_CLASS, WO_ELEMENT_CLASS);
 	}
 
@@ -89,14 +89,14 @@ public class ParsleyProject {
 	 *
 	 * @see #isNGProject()
 	 */
-	public String getComponentClass() {
+	private String getComponentClass() {
 		return resolveFrameworkClass(NG_COMPONENT_CLASS, WO_COMPONENT_CLASS);
 	}
 
 	/**
 	 * Returns the package prefix for built-in ("private") elements for this project.
 	 */
-	public String getPrivateElementPackage() {
+	private String getPrivateElementPackage() {
 		return resolveFrameworkClass(NG_PRIVATE_ELEMENT_PACKAGE, WO_PRIVATE_ELEMENT_PACKAGE);
 	}
 
@@ -148,32 +148,10 @@ public class ParsleyProject {
 	}
 
 	/**
-	 * Resolves the element class for the given Java project.
-	 */
-	public static String getElementClass(IJavaProject javaProject) {
-		return javaProject != null ? getElementClass(javaProject.getProject()) : WO_ELEMENT_CLASS;
-	}
-
-	/**
-	 * Resolves the component class for the given Java project.
-	 */
-	public static String getComponentClass(IJavaProject javaProject) {
-		return javaProject != null ? getComponentClass(javaProject.getProject()) : WO_COMPONENT_CLASS;
-	}
-
-	/**
-	 * Resolves the private element package prefix for the given project.
-	 */
-	public static String getPrivateElementPackage(IProject project) {
-		ParsleyProject pp = forProject(project);
-		return pp != null ? pp.getPrivateElementPackage() : NG_PRIVATE_ELEMENT_PACKAGE;
-	}
-
-	/**
 	 * Returns the {@link ParsleyProject} for the given project, or {@code null}
 	 * if the adapter is not available.
 	 */
-	public static ParsleyProject forProject(IProject project) {
+	private static ParsleyProject forProject(IProject project) {
 		if (project != null) {
 			try {
 				return (ParsleyProject) project.getAdapter(ParsleyProject.class);

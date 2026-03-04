@@ -105,7 +105,7 @@ public class HTMLUtil {
 	 * </ul>
 	 * @return processed source code
 	 */
-	public static String jspComment2space(String source,boolean contentsOnly){
+	private static String jspComment2space(String source,boolean contentsOnly){
 		int index = 0;
 		int last  = 0;
 		StringBuffer sb = new StringBuffer();

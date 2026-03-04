@@ -194,7 +194,7 @@ public class WodParserCache implements ITypeOwner {
     // a fallback so validation still runs, but do NOT cache it in
     // _componentType (the real type may resolve on a later call).
     if (_javaProject != null) {
-    	String fallbackClass = ParsleyProject.getComponentClass(_javaProject);
+    	String fallbackClass = ParsleyProject.getComponentClass(_javaProject.getProject());
     	return _javaProject.findType(fallbackClass);
     }
     return null;
@@ -208,23 +208,6 @@ public class WodParserCache implements ITypeOwner {
     return _javaProject;
   }
 
-  // MS: This is not a complete clone at the moment ... I just needed a 
-  // partial clone for preview.
-  public WodParserCache cloneCache() throws CoreException, LocateException {
-    WodParserCache cache = new WodParserCache();
-    cache._componentsLocateResults = _componentsLocateResults;
-    cache._javaProject = _javaProject;
-    cache._project = _project;
-    cache._componentType = _componentType;
-    cache._woFolder = _woFolder;
-    cache._standaloneFile = _standaloneFile;
-    cache._apiFile = _apiFile;
-    cache._htmlEntry.setFile(_htmlEntry.getFile());
-    cache._wodEntry.setFile(_wodEntry.getFile());
-    cache._wooEntry.setFile(_wooEntry.getFile());
-    return cache;
-  }
-
   protected void checkLocateResults() throws CoreException, LocateException {
     if (_componentsLocateResults != null) {
       if (!_componentsLocateResults.isValid()) {
@@ -233,7 +216,7 @@ public class WodParserCache implements ITypeOwner {
     }
   }
 
-  public void clearLocateResultsCache() throws CoreException, LocateException {
+  private void clearLocateResultsCache() throws CoreException, LocateException {
     if (_woFolder != null && _woFolder.exists() && LocatePlugin.getDefault() != null) {
       // For standalone HTML files, use the file itself for locate operations
       // (the file's name minus extension is the component name).
@@ -266,7 +249,7 @@ public class WodParserCache implements ITypeOwner {
     _wooEntry.clear();
   }
 
-  public void clearValidationCache() {
+  private void clearValidationCache() {
     _setValidated(false);
   }
 
@@ -387,10 +370,6 @@ public class WodParserCache implements ITypeOwner {
     return _wodEntry;
   }
 
-  public WooCacheEntry getWooEntry() {
-    return _wooEntry;
-  }
-
   public void _setValidated(boolean validated) {
     // ignore validated = false if we're validating right now ...
     if (validated || !_validating) {
@@ -398,7 +377,7 @@ public class WodParserCache implements ITypeOwner {
     }
   }
 
-  public void _validate() throws Exception {
+  private void _validate() throws Exception {
     synchronized (_validationLock) {
       _validated = true;
       _validating = true;

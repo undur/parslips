@@ -233,7 +233,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         IType componentType = BindingReflectionUtils.findElementType(wodTagInfo.getJavaProject(), componentTypeName, true, WodParserCache.getTypeCache());
         // If no Java class exists for this component, fall back to WOComponent/NGComponent
         if (componentType == null && wodTagInfo.getJavaProject() != null) {
-          String fallbackClass = ParsleyProject.getComponentClass(wodTagInfo.getJavaProject());
+          String fallbackClass = ParsleyProject.getComponentClass(wodTagInfo.getJavaProject().getProject());
           componentType = wodTagInfo.getJavaProject().findType(fallbackClass);
         }
         Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();

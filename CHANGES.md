@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Tighten access modifiers and remove newly-exposed dead code
+
+- **`BuildProperties`**: 13 methods made private — `isDirty()`, `getProject()`, `getBuildPropertiesEclipseFile()`, `getBuildPropertiesFile()`, `remove()`, `put(String, boolean)`, `put(String, String)`, `save()`, `getName()`, `setName()`, `isFramework()`, `load()`, `ensureDefaultsInitialized()`. None had callers outside the class.
+- **`ParsleyProject`**: Instance methods `getElementClass()`, `getComponentClass()`, `getPrivateElementPackage()` made private (only used by static convenience methods). `forProject()` made private. Constants `NG_PRIVATE_ELEMENT_PACKAGE` and `WO_PRIVATE_ELEMENT_PACKAGE` made private. Removed three dead static convenience methods: `getElementClass(IJavaProject)`, `getComponentClass(IJavaProject)`, `getPrivateElementPackage(IProject)`.
+- **`WodParserCache`**: `clearLocateResultsCache()`, `clearValidationCache()`, `_validate()` made private. Removed dead `cloneCache()` and `getWooEntry()` (zero callers, exposed as dead by privatization).
+- **`WodModelUtils`**: `getProblems(IWodElement, ...)` 4-param overload made private. Removed dead `createWooModel(IDocument)`, `createWooModel(IFile)`, `getProblems(IWodModel, WodParserCache)`, `getProblems(IWodModel, ...)` 4-param overload (zero callers, exposed as dead by privatization).
+- **`HTMLUtil`**: `jspComment2space()` made private (only called internally by `comment2space()`).
+
 ### Dead code and commented-out code cleanup
 
 - **`HTMLUtil`**: Removed 13 dead methods — `contains()`, `copyFolder()`, `nullConv()`, `getActiveEditor()`, `openClassSelectDialog()`, `trim()`, `getFirstElement()`, `getGetterName()`, `getSetterName()`, `toRGB()` (with buggy `toDecimal()`), `selectXPathNode()`, `selectXPathNodes()`, and commented-out `cloneList`. Class shrunk from 642 to 430 lines.

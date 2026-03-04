@@ -70,8 +70,6 @@ import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.DocumentWodModel;
-import org.objectstyle.wolips.wodclipse.core.woo.WooModel;
-import org.objectstyle.wolips.wodclipse.core.woo.WooModelException;
 
 /**
  * @author mschrag
@@ -79,14 +77,6 @@ import org.objectstyle.wolips.wodclipse.core.woo.WooModelException;
 public class WodModelUtils {
   public static IWodModel createWodModel(IFile wodFile, IDocument wodDocument) {
     return new DocumentWodModel(wodFile, wodDocument);
-  }
-
-  public static WooModel createWooModel(IDocument wooDocument) throws WooModelException {
-    return new WooModel(wooDocument.get());
-  }
-
-  public static WooModel createWooModel(IFile wooFile) {
-    return new WooModel(wooFile);
   }
 
   public static void deleteProblems(IFile wodFile) {
@@ -104,29 +94,13 @@ public class WodModelUtils {
     return WodModelUtils.getProblems(wodElement, cache.getComponentsLocateResults(), WodParserCache.getTypeCache(), cache.getHtmlEntry().getHtmlElementCache());
   }
 
-  public static List<WodProblem> getProblems(IWodElement wodElement, LocalizedComponentsLocateResult locateResult, TypeCache typeCache, HtmlElementCache htmlCache) throws CoreException, IOException, ApiModelException {
+  private static List<WodProblem> getProblems(IWodElement wodElement, LocalizedComponentsLocateResult locateResult, TypeCache typeCache, HtmlElementCache htmlCache) throws CoreException, IOException, ApiModelException {
     List<WodProblem> problems = new LinkedList<WodProblem>();
     if (wodElement != null) {
       IFile wodFile = locateResult.getFirstWodFile();
       if (wodFile != null) {
         IJavaProject javaProject = JavaCore.create(wodFile.getProject());
         wodElement.fillInProblems(javaProject, locateResult.getDotJavaType(), true, problems, typeCache, htmlCache);
-      }
-    }
-    return problems;
-  }
-
-  public static List<WodProblem> getProblems(IWodModel wodModel, WodParserCache cache) throws Exception {
-    return WodModelUtils.getProblems(wodModel, cache.getComponentsLocateResults(), WodParserCache.getTypeCache(), cache.getHtmlEntry().getHtmlElementCache());
-  }
-
-  public static List<WodProblem> getProblems(IWodModel wodModel, LocalizedComponentsLocateResult locateResult, TypeCache typeCache, HtmlElementCache htmlCache) throws CoreException, IOException, ApiModelException {
-    List<WodProblem> problems = new LinkedList<WodProblem>();
-    if (wodModel != null) {
-      IFile wodFile = locateResult.getFirstWodFile();
-      if (wodFile != null) {
-        IJavaProject javaProject = JavaCore.create(wodFile.getProject());
-        wodModel.fillInProblems(javaProject, locateResult.getDotJavaType(), true, problems, typeCache, htmlCache);
       }
     }
     return problems;
