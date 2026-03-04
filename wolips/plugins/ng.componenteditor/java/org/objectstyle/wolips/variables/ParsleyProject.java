@@ -14,17 +14,30 @@ import org.eclipse.jdt.core.JavaCore;
  * ParsleyProject pp = (ParsleyProject) project.getAdapter(ParsleyProject.class);
  * </pre>
  *
- * <p>Framework detection priority:
+ * <p>Framework detection priority (see {@link #getProjectType()}):
  * <ol>
- *   <li>{@code base=ng} in build.properties → ng-objects</li>
- *   <li>{@code base=wo} in build.properties → WebObjects</li>
- *   <li>Classpath probe: NGElement present and WOElement absent → ng-objects; otherwise WebObjects</li>
+ *   <li>{@code base=ng} in build.properties → {@link ProjectType#NG}</li>
+ *   <li>{@code base=wo} in build.properties → {@link ProjectType#WO}</li>
+ *   <li>{@code project.name} in build.properties (without explicit base) → {@link ProjectType#WO}</li>
+ *   <li>Classpath probe: NGElement present and WOElement absent → {@link ProjectType#NG}</li>
+ *   <li>Classpath probe: WOElement present → {@link ProjectType#WO}</li>
+ *   <li>Neither marker class on classpath → {@link ProjectType#UNKNOWN}</li>
  * </ol>
  *
  * @see BuildProperties
  * @see ParsleyProjectAdapterFactory
  */
 public class ParsleyProject {
+
+	/** The detected framework type for a project. */
+	public enum ProjectType {
+		/** An ng-objects project. */
+		NG,
+		/** A WebObjects project. */
+		WO,
+		/** Not recognized as either framework. */
+		UNKNOWN
+	}
 
 	/** Fully-qualified root element type for ng-objects projects. */
 	public static final String NG_ELEMENT_CLASS = "ng.appserver.templating.NGElement";
@@ -55,53 +68,72 @@ public class ParsleyProject {
 	// ---- Framework detection ----
 
 	/**
-	 * Returns {@code true} if this project uses ng-objects (as opposed to WebObjects).
+	 * Detects the framework type for this project.
+	 *
+	 * <p>Detection priority:
+	 * <ol>
+	 *   <li>{@code base=ng} in build.properties → {@link ProjectType#NG}</li>
+	 *   <li>{@code base=wo} in build.properties → {@link ProjectType#WO}</li>
+	 *   <li>{@code project.name} in build.properties (without explicit base) → {@link ProjectType#WO}</li>
+	 *   <li>Classpath probe: NGElement present and WOElement absent → {@link ProjectType#NG}</li>
+	 *   <li>Classpath probe: WOElement present → {@link ProjectType#WO}</li>
+	 *   <li>Neither marker class on classpath → {@link ProjectType#UNKNOWN}</li>
+	 * </ol>
 	 */
-	public boolean isNGProject() {
+	public ProjectType getProjectType() {
+		// 1. Explicit base in build.properties
 		String base = _buildProperties.get(BuildProperties.Key.BASE);
 		if ("ng".equals(base)) {
-			return true;
+			return ProjectType.NG;
 		}
 		if ("wo".equals(base)) {
-			return false;
+			return ProjectType.WO;
 		}
-		// No explicit override — probe the classpath.
-		// Only claim ng if NGElement is present and WOElement is not;
-		// if both are on the classpath (mixed workspace) default to WO.
-		return classpathContains(NG_ELEMENT_CLASS) && !classpathContains(WO_ELEMENT_CLASS);
+
+		// 2. project.name without explicit base → legacy WO project
+		if (_buildProperties.get(BuildProperties.Key.PROJECT_NAME) != null) {
+			return ProjectType.WO;
+		}
+
+		// 3. Classpath probing
+		boolean hasNG = classpathContains(NG_ELEMENT_CLASS);
+		boolean hasWO = classpathContains(WO_ELEMENT_CLASS);
+
+		if (hasNG && !hasWO) {
+			return ProjectType.NG;
+		}
+		if (hasWO) {
+			return ProjectType.WO;
+		}
+
+		return ProjectType.UNKNOWN;
+	}
+
+	/**
+	 * Returns {@code true} if this project uses ng-objects (as opposed to WebObjects).
+	 *
+	 * @see #getProjectType()
+	 */
+	public boolean isNGProject() {
+		return getProjectType() == ProjectType.NG;
 	}
 
 	/**
 	 * Returns the root element class name for this project.
 	 *
-	 * @see #isNGProject()
+	 * @see #getProjectType()
 	 */
 	private String getElementClass() {
-		return resolveFrameworkClass(NG_ELEMENT_CLASS, WO_ELEMENT_CLASS);
+		return isNGProject() ? NG_ELEMENT_CLASS : WO_ELEMENT_CLASS;
 	}
 
 	/**
 	 * Returns the root component class name for this project.
 	 *
-	 * @see #isNGProject()
+	 * @see #getProjectType()
 	 */
 	private String getComponentClass() {
-		return resolveFrameworkClass(NG_COMPONENT_CLASS, WO_COMPONENT_CLASS);
-	}
-
-	private String resolveFrameworkClass(String ngClass, String woClass) {
-		String base = _buildProperties.get(BuildProperties.Key.BASE);
-		if ("ng".equals(base)) {
-			return ngClass;
-		}
-		if ("wo".equals(base)) {
-			return woClass;
-		}
-		// No explicit override — probe the classpath.
-		if (classpathContains(ngClass) && !classpathContains(woClass)) {
-			return ngClass;
-		}
-		return woClass;
+		return isNGProject() ? NG_COMPONENT_CLASS : WO_COMPONENT_CLASS;
 	}
 
 	private boolean classpathContains(String fullyQualifiedClassName) {
@@ -120,25 +152,20 @@ public class ParsleyProject {
 
 	/**
 	 * Resolves the element class for the given project.
-	 * Falls back to {@value #WO_ELEMENT_CLASS} if no project or adapter can be obtained.
 	 */
 	public static String getElementClass(IProject project) {
-		ParsleyProject pp = forProject(project);
-		return pp != null ? pp.getElementClass() : WO_ELEMENT_CLASS;
+		return forProject(project).getElementClass();
 	}
 
 	/**
 	 * Resolves the component class for the given project.
-	 * Falls back to {@value #WO_COMPONENT_CLASS} if no project or adapter can be obtained.
 	 */
 	public static String getComponentClass(IProject project) {
-		ParsleyProject pp = forProject(project);
-		return pp != null ? pp.getComponentClass() : WO_COMPONENT_CLASS;
+		return forProject(project).getComponentClass();
 	}
 
 	/**
-	 * Returns the {@link ParsleyProject} for the given project, or {@code null}
-	 * if the adapter is not available (e.g. no build.properties).
+	 * Returns the {@link ParsleyProject} for the given project.
 	 */
 	private static ParsleyProject forProject(IProject project) {
 		return (ParsleyProject) project.getAdapter(ParsleyProject.class);
