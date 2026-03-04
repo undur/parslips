@@ -30,15 +30,11 @@ public class ParsleyProject {
 	public static final String NG_ELEMENT_CLASS = "ng.appserver.templating.NGElement";
 	/** Fully-qualified root component type for ng-objects projects. */
 	public static final String NG_COMPONENT_CLASS = "ng.appserver.templating.NGComponent";
-	/** Package prefix for ng-objects built-in ("private") elements. */
-	private static final String NG_PRIVATE_ELEMENT_PACKAGE = "ng.appserver.templating._private.";
 
 	/** Fully-qualified root element type for WebObjects projects. */
 	public static final String WO_ELEMENT_CLASS = "com.webobjects.appserver.WOElement";
 	/** Fully-qualified root component type for WebObjects projects. */
 	public static final String WO_COMPONENT_CLASS = "com.webobjects.appserver.WOComponent";
-	/** Package prefix for WebObjects built-in ("private") elements. */
-	private static final String WO_PRIVATE_ELEMENT_PACKAGE = "com.webobjects.appserver._private.";
 
 	private final IProject _project;
 	private final BuildProperties _buildProperties;
@@ -91,13 +87,6 @@ public class ParsleyProject {
 	 */
 	private String getComponentClass() {
 		return resolveFrameworkClass(NG_COMPONENT_CLASS, WO_COMPONENT_CLASS);
-	}
-
-	/**
-	 * Returns the package prefix for built-in ("private") elements for this project.
-	 */
-	private String getPrivateElementPackage() {
-		return resolveFrameworkClass(NG_PRIVATE_ELEMENT_PACKAGE, WO_PRIVATE_ELEMENT_PACKAGE);
 	}
 
 	private String resolveFrameworkClass(String ngClass, String woClass) {
