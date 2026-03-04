@@ -99,7 +99,7 @@ public class ComponentEditorOutline extends Page implements IContentOutlinePage,
 		listeners = null;
 	}
 
-	public boolean isDisposed() {
+	private boolean isDisposed() {
 		return listeners == null;
 	}
 

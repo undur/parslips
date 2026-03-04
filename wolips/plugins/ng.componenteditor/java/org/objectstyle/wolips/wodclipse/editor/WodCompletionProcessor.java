@@ -298,7 +298,7 @@ public class WodCompletionProcessor implements IContentAssistProcessor {
 		return null;
 	}
 
-	protected IType findNearestElementType(IJavaProject _project, IDocument _document, WodScanner _scanner, int _offset, TypeCache cache) throws BadLocationException, JavaModelException {
+	private IType findNearestElementType(IJavaProject _project, IDocument _document, WodScanner _scanner, int _offset, TypeCache cache) throws BadLocationException, JavaModelException {
 		// Go hunting for the element type in a potentially malformed document
 		// ...
 		IType type = null;

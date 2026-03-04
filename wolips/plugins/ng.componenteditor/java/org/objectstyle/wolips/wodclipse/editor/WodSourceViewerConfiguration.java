@@ -75,7 +75,7 @@ public class WodSourceViewerConfiguration extends SourceViewerConfiguration {
 		myEditor = _editor;
 	}
 
-	protected WodScanner getWODScanner() {
+	private WodScanner getWODScanner() {
 		if (myScanner == null) {
 			myScanner = WodScanner.newWODScanner();
 		}

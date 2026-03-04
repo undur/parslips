@@ -370,7 +370,7 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 		switchToPage(apiPageId);
 	}
 
-	public void switchToPage(int page) {
+	private void switchToPage(int page) {
 		this.setActivePage(page);
 		setFocus();
 	}

@@ -28,11 +28,11 @@ public class WodProblem {
     _warning = warning;
   }
   
-  public void setModel(IWodModel model) {
+  private void setModel(IWodModel model) {
     _model = model;
   }
 
-  public void setForceFile(IFile forceFile) {
+  private void setForceFile(IFile forceFile) {
     _forceFile = forceFile;
   }
   
@@ -44,7 +44,7 @@ public class WodProblem {
     return _message;
   }
 
-  public IWodModel getModel() {
+  private IWodModel getModel() {
     return _model;
   }
 

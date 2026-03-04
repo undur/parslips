@@ -132,7 +132,7 @@ public class WodCompletionUtils {
     return name;
   }
   
-  protected static boolean shouldSmartInsert() {
+  private static boolean shouldSmartInsert() {
     return true;
   }
 
@@ -266,7 +266,7 @@ public class WodCompletionUtils {
     return partialToken;
   }
 
-  protected static void _fillInCompletionProposals(List<BindingValueKey> bindingKeys, String token, int tokenOffset, int offset, Set<WodCompletionProposal> completionProposalsSet, boolean showUsefulSystemBindings) {
+  private static void _fillInCompletionProposals(List<BindingValueKey> bindingKeys, String token, int tokenOffset, int offset, Set<WodCompletionProposal> completionProposalsSet, boolean showUsefulSystemBindings) {
     Iterator<BindingValueKey> bindingKeysIter = BindingReflectionUtils.filterSystemBindingValueKeys(bindingKeys, showUsefulSystemBindings).iterator();
     while (bindingKeysIter.hasNext()) {
       BindingValueKey bindingKey = bindingKeysIter.next();

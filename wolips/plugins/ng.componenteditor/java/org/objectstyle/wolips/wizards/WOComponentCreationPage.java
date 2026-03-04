@@ -321,7 +321,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * @return a sanitized selection pointing to a valid container, or null
 	 *         if the original selection is acceptable as-is
 	 */
-	public static IStructuredSelection processSelection(IStructuredSelection selection) {
+	private static IStructuredSelection processSelection(IStructuredSelection selection) {
 		IStructuredSelection processedSelection = null;
 		if (selection != null) {
 			Object selectedObject = selection.getFirstElement();
@@ -709,7 +709,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * 
 	 * @param c
 	 */
-	public void populateHTMLCombo(Combo c) {
+	private void populateHTMLCombo(Combo c) {
 
 		for (HTML entry : HTML.values()) {
 			c.add(entry.getDisplayString());
@@ -724,7 +724,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * 
 	 * @param c
 	 */
-	public void selectHTMLDocTypePreference(Combo c) {
+	private void selectHTMLDocTypePreference(Combo c) {
 		String previousDocType = this.getDialogSettings().get(HTML_DOCTYPE_KEY);
 
 		if (previousDocType != null && previousDocType.length() > 0) {
@@ -760,7 +760,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * @param displayString
 	 * @return selected doc type or HTML.TRANSITIONAL_XHTML10
 	 */
-	public HTML getHTMLForDisplayString(String displayString) {
+	private HTML getHTMLForDisplayString(String displayString) {
 		for (HTML entry : HTML.values()) {
 
 			if (displayString.equals(entry.getDisplayString())) {
@@ -776,7 +776,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * 
 	 * @param c
 	 */
-	public void populateStringEncodingCombo(Combo c) {
+	private void populateStringEncodingCombo(Combo c) {
 
 		for (NSSTRINGENCODING entry : NSSTRINGENCODING.values()) {
 			c.add(entry.getDisplayString());
@@ -791,7 +791,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * 
 	 * @param c
 	 */
-	public void selectNSStringEncodingPreference(Combo c) {
+	private void selectNSStringEncodingPreference(Combo c) {
 		String previousEncoding = this.getDialogSettings().get(NSSTRING_ENCODING_KEY);
 
 		if (previousEncoding != null && previousEncoding.length() > 0) {
@@ -825,7 +825,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * @param displayString
 	 * @return selected encoding or NSUTF8StringEncoding if not set
 	 */
-	public String getEncodingForDisplayString(String displayString) {
+	private String getEncodingForDisplayString(String displayString) {
 		for (NSSTRINGENCODING entry : NSSTRINGENCODING.values()) {
 
 			if (displayString.equals(entry.getDisplayString())) {
@@ -859,7 +859,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 *
 	 * @return the package name, or null if the component doesn't exist or has no .java file
 	 */
-	protected String packageNameForComponent(String componentName) {
+	private String packageNameForComponent(String componentName) {
 		IPath containerPath = getContainerFullPath();
 		if (containerPath == null || containerPath.segmentCount() == 0) {
 			return null;
@@ -887,7 +887,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 *
 	 * @return the package name, or null if no components are found in the folder
 	 */
-	protected String packageNameForComponentFolder(IFolder folder) {
+	private String packageNameForComponentFolder(IFolder folder) {
 		try {
 			for(IResource resource : folder.members()) {
 				if ("wo".equals(resource.getLocation().getFileExtension())) {
@@ -906,7 +906,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * Handles both WO layout (src/main/components) and ng layout
 	 * (src/main/ng/something/components or deeper).
 	 */
-	protected static IPath findComponentsFolder(IProject project) {
+	private static IPath findComponentsFolder(IProject project) {
 		try {
 			IFolder srcMain = project.getFolder("src/main");
 			if (srcMain.exists()) {
@@ -944,7 +944,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 *
 	 * @return the folder path where the package's components live, or null
 	 */
-	protected IPath componentPathForPackage(IPackageFragment _selection) {
+	private IPath componentPathForPackage(IPackageFragment _selection) {
 		try {
 			LocatePlugin locate = LocatePlugin.getDefault();
 			for (IJavaElement element : _selection.getChildren()) {
@@ -970,7 +970,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * Opens a dialog for the user to browse and select a Java package.
 	 * Lists all packages from source folders in the project.
 	 */
-	protected IPackageFragment choosePackage() {
+	private IPackageFragment choosePackage() {
 		IPath containerPath = getContainerFullPath();
 		if (containerPath == null || containerPath.segmentCount() == 0) {
 			return null;
@@ -1010,7 +1010,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * Opens a dialog for the user to browse and select a superclass.
 	 * Lists all WO element (component) classes available in the project.
 	 */
-	protected String chooseSuperclass() {
+	private String chooseSuperclass() {
 		IPath containerPath = getContainerFullPath();
 		if (containerPath == null || containerPath.segmentCount() == 0) {
 			return null;

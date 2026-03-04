@@ -173,7 +173,7 @@ public class MutableApiModel {
 	}
 
 	/** Returns the Eclipse workspace file backing this model, or null if file-backed only. */
-	public IFile getEclipseFile() {
+	private IFile getEclipseFile() {
 		return _eclipseFile;
 	}
 

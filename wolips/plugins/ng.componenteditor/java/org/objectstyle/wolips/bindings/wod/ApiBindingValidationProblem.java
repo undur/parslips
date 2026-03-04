@@ -20,7 +20,7 @@ public class ApiBindingValidationProblem extends WodBindingProblem {
 	}
 
 	/** Returns the API binding definition that is required but missing. */
-	public IApiBinding getBinding() {
+	private IApiBinding getBinding() {
 		return _binding;
 	}
 }

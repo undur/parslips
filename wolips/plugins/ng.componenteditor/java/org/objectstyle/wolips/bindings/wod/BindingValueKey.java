@@ -57,7 +57,7 @@ public class BindingValueKey implements Comparable<BindingValueKey> {
     return _bindingMember;
   }
 
-  public String getMemberTypeName(IMember member) throws JavaModelException {
+  private String getMemberTypeName(IMember member) throws JavaModelException {
 	  String result = null;
 	  if (member != null) {
 		  if (member instanceof IMethod) {
@@ -70,7 +70,7 @@ public class BindingValueKey implements Comparable<BindingValueKey> {
  	  return result;
   }
   
-  public String getNextTypeName() {
+  private String getNextTypeName() {
     try {
       String nextTypeName;
       if (_nextType != null) {
@@ -115,7 +115,7 @@ public class BindingValueKey implements Comparable<BindingValueKey> {
     return isLeaf;
   }
 
-  protected IType resolveNextType(BindingValueKey parentBinding) throws JavaModelException {
+  private IType resolveNextType(BindingValueKey parentBinding) throws JavaModelException {
     String nextTypeName = getNextTypeName();
     if (nextTypeName == null || nextTypeName.length() == 0) {
       return null;

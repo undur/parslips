@@ -88,7 +88,7 @@ public class SimpleWodElement extends AbstractWodElement {
     return _elementNamePosition;
   }
 
-  public void setElementNamePosition(Position elementNamePosition) {
+  private void setElementNamePosition(Position elementNamePosition) {
     _elementNamePosition = elementNamePosition;
   }
 

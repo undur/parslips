@@ -322,7 +322,7 @@ public class BindingValueKeyPath {
     return lastBindingKeyName;
   }
 
-  public String getNextToLastBindingKeyName() {
+  private String getNextToLastBindingKeyName() {
     String nextToLastBindingKeyName;
     if (_bindingKeyNames.length > 1) {
       nextToLastBindingKeyName = _bindingKeyNames[_bindingKeyNames.length - 2];

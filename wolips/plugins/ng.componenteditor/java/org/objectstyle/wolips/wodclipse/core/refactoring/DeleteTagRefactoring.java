@@ -71,7 +71,7 @@ public class DeleteTagRefactoring implements IRunnableWithProgress {
     }
   }
   
-  public static void deleteWodElement(WodParserCache _cache, IWodElement wodElement) throws MalformedTreeException, BadLocationException {
+  private static void deleteWodElement(WodParserCache _cache, IWodElement wodElement) throws MalformedTreeException, BadLocationException {
     IDocument wodDocument = _cache.getWodEntry().getDocument();
     if (wodDocument != null) {
       List<TextEdit> wodEdits = new LinkedList<TextEdit>();

@@ -160,17 +160,17 @@ public abstract class AbstractWodBinding implements IWodBinding {
     return "true".equalsIgnoreCase(bindingValue) || "yes".equalsIgnoreCase(bindingValue);
   }
 
-  public boolean isEmpty() {
+  private boolean isEmpty() {
     String bindingValue = getValue();
 	return bindingValue == null || bindingValue.length() == 0;
   }
   
-  public boolean isDigitsOnly() {
+  private boolean isDigitsOnly() {
     String bindingValue = getValue();
     return !isEmpty() && StringUtils.isNumericOnly(bindingValue);
   }
 
-  public boolean isCaret() {
+  private boolean isCaret() {
     String bindingValue = getValue();
     return bindingValue != null && bindingValue.startsWith("^");
   }

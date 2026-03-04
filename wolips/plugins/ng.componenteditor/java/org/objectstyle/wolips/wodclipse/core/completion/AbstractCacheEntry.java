@@ -34,7 +34,7 @@ public abstract class AbstractCacheEntry<T> {
 
   public abstract void validate() throws Exception;
 
-  public void _setModel(T model) {
+  private void _setModel(T model) {
     _model = model;
   }
 

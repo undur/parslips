@@ -173,7 +173,7 @@ public class WodEditor extends TextEditor implements IEmbeddedEditor, IWebobject
 		return _cache;
 	}
 
-	protected void updateValidation() {
+	private void updateValidation() {
 		try {
 			getParserCache().scheduleValidate(true, true);
 		}
@@ -231,7 +231,7 @@ public class WodEditor extends TextEditor implements IEmbeddedEditor, IWebobject
 		return super.getAdapter(adapter);
 	}
 
-	protected Throttle getWodOutlineUpdateThrottle() {
+	private Throttle getWodOutlineUpdateThrottle() {
 		return _wodOutlineUpdateThrottle;
 	}
 

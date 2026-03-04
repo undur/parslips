@@ -191,7 +191,7 @@ public class ComponentEditor extends ComponentEditorPart implements IGotoMarker,
 		}
 	}
 
-	protected void initializeDragAndDrop(final ISourceViewer viewer) {
+	private void initializeDragAndDrop(final ISourceViewer viewer) {
 		IDragAndDropService dndService = (IDragAndDropService) getSite().getService(IDragAndDropService.class);
 		if (dndService != null) {
 			final StyledText st = viewer.getTextWidget();

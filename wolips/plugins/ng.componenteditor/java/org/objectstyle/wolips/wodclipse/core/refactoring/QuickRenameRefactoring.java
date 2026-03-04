@@ -74,7 +74,7 @@ public class QuickRenameRefactoring {
     QuickRenameRefactoring.enterLinkedMode(linkedGroup, cache, htmlViewer);
   }
 
-  protected static int linkHtml(String woElementName, IDocument htmlDocument, LinkedPositionGroup linkedGroup, WodParserCache cache, int sequence) throws Exception {
+  private static int linkHtml(String woElementName, IDocument htmlDocument, LinkedPositionGroup linkedGroup, WodParserCache cache, int sequence) throws Exception {
     FuzzyXMLDocument htmlModel = cache.getHtmlEntry().getModel();
     FuzzyXMLNode[] woTags = NodeSelectUtil.getNodeByFilter(htmlModel.getDocumentElement(), new NamedWebobjectTagFilter(woElementName));
     LinkedModeModel.closeAllModels(htmlDocument);
@@ -90,7 +90,7 @@ public class QuickRenameRefactoring {
     return sequence;
   }
 
-  protected static int linkWod(String woElementName, IDocument wodDocument, LinkedPositionGroup linkedGroup, WodParserCache cache, int sequence) throws Exception {
+  private static int linkWod(String woElementName, IDocument wodDocument, LinkedPositionGroup linkedGroup, WodParserCache cache, int sequence) throws Exception {
     LinkedModeModel.closeAllModels(wodDocument);
     IWodModel wodModel = cache.getWodEntry().getModel();
     IWodElement wodElement = wodModel.getElementNamed(woElementName);
@@ -119,7 +119,7 @@ public class QuickRenameRefactoring {
     QuickRenameRefactoring.enterLinkedMode(linkedGroup, cache, htmlViewer, wodViewer);
   }
 
-  protected static void enterLinkedMode(LinkedPositionGroup linkedGroup, final WodParserCache cache, ITextViewer... textViewers) throws BadLocationException {
+  private static void enterLinkedMode(LinkedPositionGroup linkedGroup, final WodParserCache cache, ITextViewer... textViewers) throws BadLocationException {
     if (!linkedGroup.isEmpty()) {
       LinkedModeModel linkedModeModel = new LinkedModeModel();
       linkedModeModel.addGroup(linkedGroup);

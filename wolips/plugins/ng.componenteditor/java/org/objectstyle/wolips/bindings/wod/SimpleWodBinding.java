@@ -62,7 +62,7 @@ public class SimpleWodBinding extends AbstractWodBinding {
     return _valueNamespace;
   }
 
-  public void setValueNamespace(String valueNamespace) {
+  private void setValueNamespace(String valueNamespace) {
     String oldValueNamespace = _valueNamespace;
     _valueNamespace = valueNamespace;
     if (_valueNamespacePosition != null && _valueNamespace != null) {
@@ -91,7 +91,7 @@ public class SimpleWodBinding extends AbstractWodBinding {
     }
   }
 
-  public void setNamespace(String namespace) {
+  private void setNamespace(String namespace) {
     String oldNamespace = _namespace;
     _namespace = namespace;
     if (_namespacePosition != null && _namespace != null) {
@@ -180,7 +180,7 @@ public class SimpleWodBinding extends AbstractWodBinding {
     return startOffset;
   }
 
-  public void setNamespacePosition(Position namespacePosition) {
+  private void setNamespacePosition(Position namespacePosition) {
     _namespacePosition = namespacePosition;
   }
 
@@ -188,7 +188,7 @@ public class SimpleWodBinding extends AbstractWodBinding {
     return _namespacePosition;
   }
 
-  public void setNamePosition(Position namePosition) {
+  private void setNamePosition(Position namePosition) {
     _namePosition = namePosition;
   }
 
@@ -196,7 +196,7 @@ public class SimpleWodBinding extends AbstractWodBinding {
     return _namePosition;
   }
 
-  public void setValuePosition(Position valuePosition) {
+  private void setValuePosition(Position valuePosition) {
     _valuePosition = valuePosition;
   }
 
@@ -208,7 +208,7 @@ public class SimpleWodBinding extends AbstractWodBinding {
     return _valueNamespacePosition;
   }
 
-  public void setValueNamespacePosition(Position valueNamespacePosition) {
+  private void setValueNamespacePosition(Position valueNamespacePosition) {
     _valueNamespacePosition = valueNamespacePosition;
   }
 

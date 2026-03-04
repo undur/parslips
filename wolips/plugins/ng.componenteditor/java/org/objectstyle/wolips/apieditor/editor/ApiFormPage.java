@@ -75,7 +75,7 @@ public abstract class ApiFormPage extends FormPage {
 		// nothing to do
 	}
 
-	protected boolean canPerformDirectly(String id, Control control) {
+	private boolean canPerformDirectly(String id, Control control) {
 		if (control instanceof Text) {
 			Text text = (Text) control;
 			if (id.equals(ActionFactory.CUT.getId())) {

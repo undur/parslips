@@ -97,7 +97,7 @@ public class DocumentWodModel extends AbstractWodModel {
     return _document;
   }
 
-  public void addParseProblem(IWodElement element, String message, RulePosition rulePosition, boolean warning) {
+  private void addParseProblem(IWodElement element, String message, RulePosition rulePosition, boolean warning) {
     Position position = rulePosition.getPosition();
     try {
       int lineNumber = _document.getLineOfOffset(position.getOffset());
@@ -380,7 +380,7 @@ public class DocumentWodModel extends AbstractWodModel {
     return wodUnit;
   }
 
-  protected boolean isIndexContainedByWodUnit(int index, IWodUnit wodUnit) {
+  private boolean isIndexContainedByWodUnit(int index, IWodUnit wodUnit) {
     return index >= wodUnit.getStartOffset() && index <= wodUnit.getEndOffset();
   }
 

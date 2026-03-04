@@ -31,7 +31,7 @@ public class TypeCache {
     _apiCache = new HashMap<IJavaProject, ApiCache>();
   }
 
-  public TypeCacheEntry getTypeCacheEntry(IType type) throws JavaModelException {
+  private TypeCacheEntry getTypeCacheEntry(IType type) throws JavaModelException {
     synchronized (_typeCacheEntries) {
       TypeCacheEntry entry = _typeCacheEntries.get(type);
       if (entry == null) {
@@ -68,7 +68,7 @@ public class TypeCache {
     return getTypeCacheEntry(type).getBindingValueMutatorKeys(javaProject, name);
   }
 
-  public void clearCacheForProject(IProject project) {
+  private void clearCacheForProject(IProject project) {
     if (project != null) {
       List<IType> typesToClear = new LinkedList<IType>();
       synchronized (_typeCacheEntries) {
@@ -111,7 +111,7 @@ public class TypeCache {
     return getTypeCacheEntry(declaringType).getTypeForName(typeName);
   }
 
-  public void clearCache() {
+  private void clearCache() {
     synchronized (_typeCacheEntries) {
       _typeCacheEntries.clear();
     }
@@ -204,7 +204,7 @@ public class TypeCache {
   	 * @return returns the fully qualified type name or build-in-type name. if a unresolved type couldn't be resolved null is returned
   	 * @throws JavaModelException thrown when the type can not be accessed
   	 */
-  	public IType resolveType(String refTypeSig, IType declaringType) throws JavaModelException {
+  	private IType resolveType(String refTypeSig, IType declaringType) throws JavaModelException {
 			IJavaProject javaProject = declaringType.getJavaProject();
 
 			int arrayCount= Signature.getArrayCount(refTypeSig);

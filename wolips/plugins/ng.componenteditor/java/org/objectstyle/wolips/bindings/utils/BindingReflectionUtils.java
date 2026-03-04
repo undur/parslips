@@ -546,7 +546,7 @@ public class BindingReflectionUtils {
    * @param cache the shared type cache
    * @return a BindingValueKey if the member matches, or null
    */
-  public static BindingValueKey getBindingKeyIfMatches(IJavaProject javaProject, IType type, IMember member, String nameStartingWith, String prefix, boolean requireExactNameMatch, int accessorsOrMutators, TypeCache cache) throws JavaModelException {
+  private static BindingValueKey getBindingKeyIfMatches(IJavaProject javaProject, IType type, IMember member, String nameStartingWith, String prefix, boolean requireExactNameMatch, int accessorsOrMutators, TypeCache cache) throws JavaModelException {
     BindingValueKey bindingKey = null;
 
     int flags = member.getFlags();

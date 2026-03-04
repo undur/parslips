@@ -163,7 +163,7 @@ public class HtmlWodTab extends ComponentEditorTab {
 		return this.htmlActive;
 	}
 
-	protected void setHtmlActive(boolean htmlActive) {
+	private void setHtmlActive(boolean htmlActive) {
 		this.htmlActive = htmlActive;
 	}
 

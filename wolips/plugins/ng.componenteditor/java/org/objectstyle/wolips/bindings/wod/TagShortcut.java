@@ -73,7 +73,7 @@ public class TagShortcut {
     return _attributes;
   }
 
-  public void setAttributes(Map<String, String> attributes) {
+  private void setAttributes(Map<String, String> attributes) {
     _attributes = attributes;
   }
 

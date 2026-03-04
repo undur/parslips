@@ -104,7 +104,7 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 	/**
 	 * Returns {@code true} if the user selected ng-objects, {@code false} for WebObjects.
 	 */
-	public boolean isNGProject() {
+	private boolean isNGProject() {
 		return _ngRadio.getSelection();
 	}
 
@@ -122,7 +122,7 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 	 *   <li>{@code "My App 2"} → {@code "myapp2"}</li>
 	 * </ul>
 	 */
-	public String derivePackageName() {
+	private String derivePackageName() {
 		String name = getProjectName().toLowerCase();
 
 		// Replace hyphens and underscores with dots (common Maven convention)

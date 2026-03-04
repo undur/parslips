@@ -87,7 +87,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 		return addType(type);
 	}
 
-	public WOBrowserColumn addType(IType type) throws JavaModelException {
+	private WOBrowserColumn addType(IType type) throws JavaModelException {
 		WOBrowserColumn newColumn = null;
 		if (type != null) {
 			newColumn = new WOBrowserColumn(this, type, _browserComposite, SWT.NONE);
@@ -247,7 +247,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 		return getSelectedKeyPath(null);
 	}
 
-	public String getSelectedKeyPath(WOBrowserColumn throughColumn) {
+	private String getSelectedKeyPath(WOBrowserColumn throughColumn) {
 		StringBuffer keyPath = new StringBuffer();
 		for (WOBrowserColumn column : _columns) {
 			BindingValueKey key = column.getSelectedKey();
@@ -311,7 +311,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 		}
 	}
 
-	protected String getPreviousSelectedKeyPath() {
+	private String getPreviousSelectedKeyPath() {
 		String previousSelectedKeyPath = null;
 		String selectedKey = getSelectedKeyPath();
 		if (selectedKey.length() > 0) {
@@ -349,11 +349,11 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 		clearKeyBuffer();
 	}
 
-	protected void clearKeyBuffer() {
+	private void clearKeyBuffer() {
 		_keypathBuffer.setLength(0);
 	}
 
-	protected void selectFromKeyBuffer() {
+	private void selectFromKeyBuffer() {
 		if (_keypathBuffer.length() > 0) {
 			WOBrowserColumn focusedColumn = getFocusedColumn();
 			if (focusedColumn != null) {
@@ -366,7 +366,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 		}
 	}
 
-	protected void deleteFromKeyBuffer() {
+	private void deleteFromKeyBuffer() {
 		if (_keypathBuffer.length() > 0) {
 			_keypathBuffer.setLength(_keypathBuffer.length() - 1);
 		}
@@ -374,7 +374,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 		_lastKeyTime = System.currentTimeMillis();
 	}
 
-	protected void appendToKeyBuffer(char ch) {
+	private void appendToKeyBuffer(char ch) {
 		long keyTime = System.currentTimeMillis();
 		if ((keyTime - _lastKeyTime) > 1000 || _keypathBuffer.length() == 0) {
 			_keypathBuffer.setLength(0);
