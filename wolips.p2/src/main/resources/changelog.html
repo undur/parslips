@@ -54,6 +54,11 @@
 					<h3>Fix: slash in body text no longer corrupts close-tag completion</h3>
 					<p>A forward slash in body text (e.g. <code>&lt;td&gt;Price / amount&lt;/td&gt;</code>) was mistakenly treated as a self-closing tag marker, popping the current tag off the autocomplete stack. This caused close-tag completion (Ctrl+Space) to suggest the wrong tag. The scanner now only treats <code>/</code> as a self-closing marker when inside a tag context, leaving body text slashes harmless.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: script/style content no longer corrupts close-tag completion</h3>
+					<p>JavaScript operators like <code>&lt;</code> inside <code>&lt;script&gt;</code> blocks were being parsed as HTML tags, corrupting the close-tag autocomplete stack. For example, <code>if (a &lt; b)</code> caused the scanner to think a <code>&lt;b&gt;</code> tag was open. The scanner now skips over <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> content entirely, jumping straight to the matching closing tag.</p>
+				</div>
 			</div>
 
 			<!-- March 3, 2026 -->

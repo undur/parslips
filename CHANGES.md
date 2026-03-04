@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Skip script/style content in close-tag completion
+
+- **JavaScript operators like `<` inside `<script>` blocks** were being parsed as HTML tags, corrupting the tag stack. For example, `<body><script>if (a < b) {}</script>` would cause close-tag completion to suggest `</script>` instead of `</body>`, because `< b` was treated as opening a `<b>` tag.
+- **Fix:** When the scanner encounters the closing `>` of a `<script>` or `<style>` opening tag, it now skips ahead to the matching `</script>` or `</style>` closing tag, bypassing the raw content entirely. If no closing tag is found (cursor is inside the block), the scanner skips to the end of the text, leaving the script/style tag correctly on the stack.
+- Case-insensitive matching handles `<SCRIPT>`, `<Script>`, etc.
+- **7 new tests** covering `<` in JavaScript, multiple operators, script tags with attributes, `<style>` tags, case variations, unclosed scripts, and empty script tags.
+
 ### Fix slash in body text corrupting close-tag completion
 
 - **A forward slash in body text** (e.g. `<td>Price / amount</td>`) was incorrectly interpreted as a self-closing tag marker, popping the current tag off the stack. This caused close-tag auto-completion (Ctrl+Space) to suggest the wrong tag.

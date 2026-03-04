@@ -105,6 +105,24 @@ public class TagStackAnalyzer {
 					sb.append(c);
 				}
 				else if (c == '>') {
+					// Skip raw-text elements: <script> and <style> content is
+					// not HTML, so characters like '<' (e.g. "if (a < b)") must
+					// not be parsed as tags. Skip ahead to the closing tag.
+					if (prevTag.equalsIgnoreCase("script") || prevTag.equalsIgnoreCase("style")) {
+						String closeTag = "</" + prevTag;
+						int closeIdx = indexOfIgnoreCase(text, closeTag, i + 1);
+						if (closeIdx != -1) {
+							// Jump to the '<' of the closing tag so the main
+							// loop processes it normally (popping the stack).
+							i = closeIdx - 1;
+						}
+						else {
+							// No closing tag found — cursor is inside the
+							// script/style block. Skip to the end so the
+							// raw content doesn't corrupt the tag stack.
+							i = text.length();
+						}
+					}
 					prevTag = "";
 					attr = "";
 				}
@@ -130,6 +148,22 @@ public class TagStackAnalyzer {
 		word = sb.toString();
 
 		return new String[] { word, prevTag, lastTag, attr };
+	}
+
+	/**
+	 * Case-insensitive version of {@link String#indexOf(String, int)}.
+	 * Returns the index of the first occurrence of {@code target} in
+	 * {@code text} starting from {@code fromIndex}, or -1 if not found.
+	 */
+	private static int indexOfIgnoreCase(String text, String target, int fromIndex) {
+		int targetLen = target.length();
+		int maxIdx = text.length() - targetLen;
+		for (int i = fromIndex; i <= maxIdx; i++) {
+			if (text.regionMatches(true, i, target, 0, targetLen)) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	/**

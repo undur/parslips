@@ -188,4 +188,50 @@ public class HTMLAssistProcessorGetLastWordTest {
 		// Slash in body text after a properly closed tag.
 		assertEquals("div", lastTag("<div><p>hello</p>a / b"));
 	}
+
+	// =========================================================================
+	// Script/style content — must not be parsed as HTML
+	// =========================================================================
+
+	@Test
+	public void scriptWithLessThan_doesNotCorruptStack() {
+		// The '<' in "a < b" inside a <script> must not be parsed as a tag.
+		assertEquals("body", lastTag("<body><script>\nif( a < b ) {}\n</script>"));
+	}
+
+	@Test
+	public void scriptWithLessThan_unclosedScript() {
+		// Cursor is inside a <script> that hasn't been closed yet.
+		assertEquals("script", lastTag("<body><script>\nif( a < b ) {}"));
+	}
+
+	@Test
+	public void scriptWithMultipleOperators_doesNotCorruptStack() {
+		// Multiple '<' and '>' in JavaScript expressions.
+		assertEquals("body", lastTag("<body><script>\nvar x = a < b && c > d;\n</script>"));
+	}
+
+	@Test
+	public void scriptWithAttributes_doesNotCorruptStack() {
+		// <script> tag with attributes — the skip should trigger after '>'.
+		assertEquals("body", lastTag("<body><script type=\"text/javascript\">\nif( a < b ) {}\n</script>"));
+	}
+
+	@Test
+	public void styleTag_doesNotCorruptStack() {
+		// CSS rarely has '<' but <style> content should still be skipped.
+		assertEquals("head", lastTag("<head><style>\n.a { color: red; }\n</style>"));
+	}
+
+	@Test
+	public void scriptCaseInsensitive() {
+		// <SCRIPT> and </SCRIPT> in uppercase.
+		assertEquals("body", lastTag("<body><SCRIPT>\nif( a < b ) {}\n</SCRIPT>"));
+	}
+
+	@Test
+	public void scriptEmpty_doesNotCorruptStack() {
+		// Empty script tag.
+		assertEquals("body", lastTag("<body><script></script>"));
+	}
 }
