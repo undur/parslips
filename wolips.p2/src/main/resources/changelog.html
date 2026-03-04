@@ -39,6 +39,11 @@
 					<p>The editor now reports an error when a quote character appears inside an attribute name, catching the common typo of omitting <code>=</code> between an attribute name and its value &mdash; e.g. <code>negate&quot;true&quot;</code> instead of <code>negate=&quot;true&quot;</code>. The error message identifies the attribute and suggests the correct syntax.</p>
 					<p>The parser also recovers gracefully: the attribute name and value are correctly extracted despite the missing <code>=</code>, so downstream tools (binding validation, autocomplete, hover) continue to work on the recovered parse tree.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Validate missing closing &lsquo;&gt;&rsquo; on tags</h3>
+					<p>The editor now reports an error when a tag is missing its closing <code>&gt;</code> &mdash; e.g. <code>&lt;wo:if condition=&quot;$showGraphs&quot;</code> followed by a newline. This common typo silently corrupts the document structure: the parser consumes the next line as part of the unclosed tag, making sibling elements disappear. The error marker now points directly at the malformed tag.</p>
+				</div>
 			</div>
 
 			<!-- March 3, 2026 -->

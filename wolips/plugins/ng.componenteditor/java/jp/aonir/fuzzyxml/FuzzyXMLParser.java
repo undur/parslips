@@ -215,6 +215,29 @@ public class FuzzyXMLParser {
 			}
 			String originalText = matcher.group(1);
 			String text = originalText.trim();
+
+			// Detect missing closing '>' — the regex allows tags to match
+			// without a proper '>', using group(4) to capture the final
+			// character. If group(4) is not '>', the tag is unclosed.
+			// Skip special constructs (comments, CDATA, declarations) which
+			// have different closing syntax.
+			if (!">".equals(matcher.group(4))
+					&& !text.startsWith("!")
+					&& !text.startsWith("?")
+					&& !text.startsWith("%")
+					&& text.length() > 0) {
+				// Extract the tag name for the error message
+				String tagName = text;
+				int spaceIdx = FuzzyXMLUtil.getSpaceIndex(tagName);
+				if (spaceIdx != -1) {
+					tagName = tagName.substring(0, spaceIdx);
+				}
+				if (tagName.startsWith("/")) {
+					tagName = tagName.substring(1);
+				}
+				fireErrorEvent(start, end - start,
+						"Missing closing '>' on <" + tagName + "> tag.", null);
+			}
 			// ���^�O
 			if (!woOnly && text.startsWith("%")) {
 				// ignore

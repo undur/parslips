@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Validate missing closing '>' on tags
+
+- **The parser now reports an error when a tag is missing its closing `>`**, e.g. `<wo:if condition="$showGraphs"` followed by a newline. The fuzzy regex intentionally allows this (for recovery), but it's almost always a typo that silently corrupts the document structure.
+- Detection uses the regex capture group that records the tag's final character — if it's not `>`, the tag is unclosed. Special constructs (comments, CDATA, declarations) are excluded since they have different closing syntax.
+- The parser still processes the tag normally (recovery is preserved), but the user now gets an error marker pointing at the unclosed tag.
+- **11 new tests** covering WO tags, HTML tags, close tags, self-closing tags, no false positives on well-formed markup, and recovery behavior.
+
 ### Validate missing '=' in template attributes
 
 - **The parser now reports an error when a quote character appears inside an attribute name**, detecting the common typo of omitting `=` between an attribute name and its value — e.g. `negate"true"` instead of `negate="true"`. The error message identifies the attribute name and suggests the correct syntax.
