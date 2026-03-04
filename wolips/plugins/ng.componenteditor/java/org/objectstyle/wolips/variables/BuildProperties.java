@@ -39,9 +39,6 @@ public class BuildProperties {
 		/** The project name. Falls back to {@link #FRAMEWORK_NAME} for legacy compatibility. */
 		PROJECT_NAME("project.name", "Project name"),
 
-		/** Auto-generated lowercase variant of the project name. */
-		PROJECT_NAME_LOWERCASE("project.name.lowercase", "Lowercase project name"),
-
 		/** Legacy property: framework name (pre-dates project.name). */
 		FRAMEWORK_NAME("framework.name", "Legacy framework name"),
 
@@ -258,11 +255,6 @@ public class BuildProperties {
 			projectName = _project.getName();
 		}
 		return projectName;
-	}
-
-	private void setName(String name) {
-		put(Key.PROJECT_NAME.key(), name);
-		put(Key.PROJECT_NAME_LOWERCASE.key(), name.toLowerCase());
 	}
 
 	private boolean isFramework() {
