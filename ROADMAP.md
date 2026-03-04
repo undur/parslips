@@ -40,12 +40,6 @@ When a method or field that serves as a binding key is renamed in a component's 
 
 Implemented. Hovering over a `<wo:ComponentName>` tag in the template editor now shows the component's API documentation — accepted bindings, required/settable markers, and defaults. Works for both project components (via `.api` files) and built-in WO components (via `WebObjectDefinitions.xml`). Validation errors take priority when both are available.
 
-## Binding type checking
-
-Go beyond "this binding doesn't exist" to "this binding expects a `String`, you're passing an `NSArray`."
-
-Requires bridging the WOD binding values to Java type information via JDT. The validation infrastructure is already in place; this adds a type-resolution step after binding lookup.
-
 ## Component dependency graph
 
 A navigable view of "this component uses these sub-components" — useful for understanding unfamiliar codebases and spotting circular dependencies.
@@ -78,6 +72,7 @@ Requires the parser to map WOD entries to their corresponding template tags. Cou
 
 A major evolution of the `.api` file format to describe the full component contract. This applies to templating as a whole — not just the parser or the editor, but the runtime framework, the template language, and the tooling around it. Changes touch the API file format itself (in ng-objects or as an extended schema), the `ng-template-parser` (for validation), Parsley (for editor support and UI), and potentially ng-objects itself (for runtime enforcement). Items roughly from most to least impactful:
 
+- **Binding type checking** — go beyond "this binding doesn't exist" to "this binding expects a `String`, you're passing an `NSArray`." Requires bridging WOD binding values to Java type information via JDT. The validation infrastructure is already in place; this adds a type-resolution step after binding lookup.
 - **Binding directionality** — specify whether a binding pulls values (get), pushes values (set), or both. Enables validation ("this binding is push-only, you can't read from it") and better documentation.
 - **Deprecated bindings** — mark a binding as deprecated with docs explaining what to use instead. Tooling can show strikethrough, hover warnings, and quick-fix suggestions.
 - **Default values** — specify what a binding defaults to when not bound. Useful for documentation on hover and for understanding component behavior without reading source.
@@ -93,7 +88,7 @@ A major evolution of the `.api` file format to describe the full component contr
 - **Semantic value types** — beyond Java types, a binding might accept a `String` that is semantically a CSS class name, a URL, a date format pattern, a key path, etc. A semantic type layer on top of Java types powers smarter validation and context-aware autocomplete.
 - **Component categories / tags** — grouping components for the selector: "Layout", "Forms", "Navigation", "Data Display". Makes the component catalog browsable instead of a flat alphabetical list.
 
-This feeds into almost every other roadmap item: hover documentation, validation quick-fixes, binding type checking, and the component catalog.
+This feeds into almost every other roadmap item: hover documentation, validation quick-fixes, and the component catalog.
 
 ## ~~Extract component from selection~~ ✓
 
