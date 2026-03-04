@@ -637,7 +637,7 @@ public class BindingReflectionUtils {
    * stripping). Returns the input unchanged if it is empty or already
    * starts with a lowercase letter.
    */
-  private static String toLowercaseFirstLetter(String _memberName) {
+  public static String toLowercaseFirstLetter(String _memberName) {
     String lowercaseFirstLetterMemberName;
     if (_memberName.length() > 0) {
       char firstChar = _memberName.charAt(0);

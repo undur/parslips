@@ -39,10 +39,10 @@
 				<!-- Cross-project reference updating: implemented. Renaming now
 				     updates <wo:OldName> tags and WOD entries within the project. -->
 
-				<div class="roadmap-entry">
-					<h3>Rename binding key in associated template</h3>
-					<p>When a method or field that serves as a binding key is renamed in a component&rsquo;s Java class (via Refactor &gt; Rename), the corresponding key references in the component&rsquo;s own template (inline bindings in HTML, WOD entries) should update automatically.</p>
-				</div>
+				<!-- Rename binding key in associated template: implemented.
+				     Renaming a method/field in a component's Java class now updates
+				     binding key references in the component's own WOD and HTML
+				     template files (e.g. value = title; becomes value = heading;). -->
 
 				<!-- Component documentation on hover: implemented. Hovering over
 				     <wo:ComponentName> tags now shows API bindings from .api files

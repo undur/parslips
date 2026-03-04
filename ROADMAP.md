@@ -32,9 +32,9 @@ Remaining:
 
 - **Undo support** — the undo entry recorded by Eclipse's refactoring framework fails with "No input element provided" after the rename completes. This appears to be a conflict between JDT's compilation unit undo tracking and the resource-level `RenameResourceChange` objects added by our participant. Needs investigation into LTK's undo/redo machinery.
 
-### Rename binding key in associated template
+### ~~Rename binding key in associated template~~ ✓
 
-When a method or field that serves as a binding key is renamed in a component's Java class (via Refactor > Rename), the corresponding key references in the component's own template (inline bindings in HTML, WOD entries) should update automatically. This is a local refactoring — scoped to one component's Java class and its associated template files, not a cross-project rename.
+Implemented. Renaming a method or field that serves as a binding key in a component's Java class (via Refactor > Rename) now automatically updates the corresponding key references in the component's own template files — both WOD binding values (`value = title;` → `value = heading;`) and inline HTML bindings (`value="$title"` → `value="$heading"`). Key paths are handled correctly (only the first segment is renamed). KVC getter/setter prefixes (`get`, `set`, `is`, `_get`, `_set`, `_is`, `_`) and field prefixes (`_`) are stripped when deriving the binding key.
 
 ## ~~Component documentation on hover~~ ✓
 

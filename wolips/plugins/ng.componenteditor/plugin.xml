@@ -534,6 +534,19 @@
             </with>
          </enablement>
       </renameParticipant>
+      <renameParticipant
+            class="org.objectstyle.wolips.wodclipse.core.refactoring.RenameBindingKeyParticipant"
+            id="ng.componenteditor.renameBindingKeyParticipant"
+            name="Rename WO Binding Key References">
+         <enablement>
+            <with variable="element">
+               <or>
+                  <instanceof value="org.eclipse.jdt.core.IMethod"/>
+                  <instanceof value="org.eclipse.jdt.core.IField"/>
+               </or>
+            </with>
+         </enablement>
+      </renameParticipant>
    </extension>
 
 <!-- =================================================================================== -->

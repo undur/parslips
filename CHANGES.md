@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Rename binding key in associated template
+
+- **Binding keys in a component's own template now update when the Java method/field is renamed.** When a developer renames e.g. `title()` to `heading()` in `MyComponent.java` via Refactor > Rename, WOD binding values (`value = title;`) and inline HTML bindings (`value="$title"`) in the component's own template files are automatically updated in the refactoring preview.
+- **KVC-aware key derivation.** The participant correctly strips getter/setter prefixes (`get`, `set`, `is`, `_get`, `_set`, `_is`, `_`) and the underscore field prefix. Renaming `getTitle()` to `getHeading()` renames key `title` → `heading`. Renaming field `_title` to `_heading` renames key `title` → `heading`.
+- **Key path support.** Only the first segment of key paths is replaced: `value = title.length;` becomes `value = heading.length;`. String literals, caret references (`^parent.title`), and non-key-path substrings are left alone.
+- **New class: `RenameBindingKeyParticipant`** — LTK `RenameParticipant` for `IMethod` and `IField` renames. Activates only when the declaring type is a WOComponent/NGComponent subclass. Derives old/new binding keys and delegates to `RenameBindingKeyProcessor`.
+- **New class: `RenameBindingKeyProcessor`** — regex-based scanner that finds binding key references in a component's own WOD and HTML template files. Follows the same `TextFileChange`/`MultiTextEdit`/`ReplaceEdit` pattern as `RenameComponentProcessor` and `RenameBindingProcessor`.
+- **36 new tests** covering WOD key scanning, HTML inline key scanning, edit application with various replacement lengths, and KVC key derivation for all prefix combinations.
+
 ### Remove dead WOLips builder infrastructure
 
 The old WOLips builder pipeline (`IBuilder` → `IFullBuilder`/`IIncrementalBuilder` → `AbstractFullAndIncrementalBuilder` → `WodBuilder`) was never invoked — the coordinator that read the `ng.componenteditor.builders` extension point lived in the old `org.objectstyle.wolips.builder` plugin, which no longer exists. Actual validation happens via `WodBuilder.validateComponent()` called directly by `JavaChangeRevalidator` and `WodParserCache`.
