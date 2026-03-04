@@ -40,18 +40,15 @@
 				     updates <wo:OldName> tags and WOD entries within the project. -->
 
 				<div class="roadmap-entry">
-					<h3>Rename binding across files</h3>
-					<p>Rename a binding in Java and have it update in the WOD and HTML template automatically. WO component bundles are inherently multi-file, so cross-file refactoring is where tooling saves the most manual effort.</p>
+					<h3>Rename binding key in associated template</h3>
+					<p>When a method or field that serves as a binding key is renamed in a component&rsquo;s Java class (via Refactor &gt; Rename), the corresponding key references in the component&rsquo;s own template (inline bindings in HTML, WOD entries) should update automatically.</p>
 				</div>
 
 				<!-- Component documentation on hover: implemented. Hovering over
 				     <wo:ComponentName> tags now shows API bindings from .api files
 				     and WebObjectDefinitions.xml. -->
 
-				<div class="roadmap-entry">
-					<h3>Binding type checking</h3>
-					<p>Go beyond "this binding doesn't exist" to "this binding expects a String, you're passing an NSArray." Requires bridging WOD binding values to Java type information via JDT.</p>
-				</div>
+				<!-- Binding type checking: folded into Rich component API model below. -->
 
 				<div class="roadmap-entry">
 					<h3>Component dependency graph</h3>
@@ -73,7 +70,7 @@
 
 				<div class="roadmap-entry">
 					<h3>Rich component API model</h3>
-					<p>A major evolution of the <code>.api</code> file format to describe the full component contract. Binding directionality (get/set/both), deprecated bindings, default values, value constraints, required vs. optional bindings, per-binding documentation, component descriptions, content model, and more. This feeds into almost every other roadmap item.</p>
+					<p>A major evolution of the <code>.api</code> file format to describe the full component contract. Binding type checking (go beyond &ldquo;this binding doesn&rsquo;t exist&rdquo; to &ldquo;this binding expects a String, you&rsquo;re passing an NSArray&rdquo;), binding directionality (get/set/both), deprecated bindings, default values, value constraints, required vs. optional bindings, per-binding documentation, component descriptions, content model, and more. This feeds into almost every other roadmap item.</p>
 				</div>
 
 				<!-- Extract component from selection: implemented. Cmd+2, E extracts
@@ -112,10 +109,9 @@
 					<p>The codebase was written for Java 1.4&ndash;5 and never updated. Opportunities include: enhanced for-each loops (replacing <code>Enumeration</code>/<code>Iterator</code> while-loops), generics (eliminating raw types and manual casting), try-with-resources for streams, diamond operator, <code>StringBuilder</code> over <code>StringBuffer</code>, lambdas for anonymous inner classes, and text blocks for multi-line strings.</p>
 				</div>
 
-				<div class="roadmap-entry">
-					<h3>Thread safety around the API model</h3>
-					<p>The global <code>WebObjectDefinitions.xml</code> model is a shared Xerces DOM singleton with manual <code>synchronized</code> blocks. Xerces DOM is not thread-safe even for reads. This should be replaced with a safer caching strategy or an immutable model.</p>
-				</div>
+				<!-- Thread safety around the API model: addressed. The global
+				     WebObjectDefinitions.xml DOM singleton is now properly synchronized
+				     for all access paths. -->
 
 				<div class="roadmap-entry">
 					<h3>Continued dead code removal</h3>
