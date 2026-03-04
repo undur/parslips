@@ -2,24 +2,17 @@ package org.objectstyle.wolips.variables;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRunnable;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 
 /**
- * Wrapper around a project's {@code build.properties} file. Provides access
- * to build-time configuration: inline binding syntax, template strictness,
- * project name, and framework/application type.
+ * Read-only wrapper around a project's {@code build.properties} file.
+ * Provides access to build-time configuration: inline binding syntax,
+ * template strictness, and project name.
  *
  * <p>For project-level concerns like framework detection (ng-objects vs WebObjects)
  * and element/component class resolution, use {@link ParsleyProject} instead.
@@ -39,7 +32,7 @@ public class BuildProperties {
 		/** The project name. */
 		PROJECT_NAME("project.name", "Project name"),
 
-		/** Project type: "framework" for framework projects, absent for applications. */
+		/** Project type: "framework" or "application". Used by the Vermilingua build plugin. */
 		PROJECT_TYPE("project.type", "Project type (framework or application)"),
 
 		/** Inline binding prefix (e.g. "$"). */
@@ -74,22 +67,12 @@ public class BuildProperties {
 
 	private Properties _properties;
 
-	private boolean _dirty;
-
 	private long _version;
 
 	public BuildProperties(IProject project) {
 		_project = project;
 		_version = -1;
 		load();
-	}
-
-	private boolean isDirty() {
-		return _dirty;
-	}
-
-	private IProject getProject() {
-		return _project;
 	}
 
 	private IFile getBuildPropertiesEclipseFile() {
@@ -146,34 +129,8 @@ public class BuildProperties {
 		return value;
 	}
 
-	private synchronized void remove(String key) {
-		put(key, null);
-	}
-
-	private synchronized void put(String key, boolean value) {
-		put(key, Boolean.valueOf(value).toString());
-	}
-
-	private synchronized void put(String key, String value) {
-		if (value == null) {
-			if (_properties.containsKey(key)) {
-				_properties.remove(key);
-				_dirty = true;
-			}
-		}
-		else {
-			String oldValue = get(key);
-			if (!value.equals(oldValue)) {
-				_properties.setProperty(key, value);
-				_dirty = true;
-			}
-		}
-	}
-
 	private void load() {
 		try {
-			boolean dirty;
-			
 			Properties properties = new Properties();
 			File file = getBuildPropertiesFile();
 			if (file.exists()) {
@@ -184,66 +141,15 @@ public class BuildProperties {
 				finally {
 					inputStream.close();
 				}
-				dirty = false;
 			}
-			else {
-				dirty = true;
-			}
-			
+
 			synchronized (this) {
-				_dirty = dirty;
 				_properties = properties;
 			}
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Failed to load the build properties for the project '" + _project + "'.", e);
 		}
-	}
-
-	private synchronized void save() throws CoreException, IOException {
-		if (!_dirty) {
-			return;
-		}
-
-		// Use a sorted Properties subclass so the output is deterministic.
-		// This replaces the old ToHellWithProperties from woenvironment.jar.
-		Properties sorted = new Properties() {
-			@Override
-			public java.util.Enumeration<Object> keys() {
-				return java.util.Collections.enumeration(new java.util.TreeSet<>(super.keySet()));
-			}
-		};
-		sorted.putAll(_properties);
-
-		File file = getBuildPropertiesFile();
-		FileOutputStream fos = new FileOutputStream(file);
-		try {
-			sorted.store(fos, null);
-		}
-		finally {
-			fos.close();
-		}
-
-		ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-			public void run(IProgressMonitor monitor) throws CoreException {
-				getBuildPropertiesEclipseFile().refreshLocal(IResource.DEPTH_ONE, monitor);
-			}
-		}, null);
-
-		_dirty = false;
-	}
-
-	private String getName() {
-		String projectName = get(Key.PROJECT_NAME);
-		if (projectName == null || projectName.length() == 0) {
-			projectName = _project.getName();
-		}
-		return projectName;
-	}
-
-	private boolean isFramework() {
-		String projectType = get(Key.PROJECT_TYPE);
-		return "framework".equals(projectType);
 	}
 
 	// ---- Defaults machinery ----
