@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dead code and commented-out code cleanup
+
+- Deleted `JavaScriptFormatter` and `CSSStyleSheetFormatter` — entirely commented-out classes (abandoned Rhino/CSSDOM formatter prototypes).
+- Removed dead `WodHtmlUtils.getHtmlFileForWodFilePath()` (no callers).
+- Removed dead `WodModelUtils.validateWodFile(IFile, ...)` (only called itself, never externally).
+- Removed dead `WodParserCache._lastJavaParseTime` field (declared but never read or written).
+- Removed empty no-op validity check in `WodParserCache.getComponentsLocateResults()`.
+- Cleaned up commented-out code fragments in `FuzzyXMLNode`, `AbstractFuzzyXMLNode`, `FuzzyXMLElementImpl`, `WodModelUtils`, `TemplateSourceEditor`, and `TemplateAssistProcessor`.
+
 ### Introduce `ParsleyProject` as the project model
 
 - **New class: `ParsleyProject`** — a proper project model that owns `BuildProperties` and hosts project-level concerns (framework detection, element/component class resolution). Obtained via `project.getAdapter(ParsleyProject.class)`.

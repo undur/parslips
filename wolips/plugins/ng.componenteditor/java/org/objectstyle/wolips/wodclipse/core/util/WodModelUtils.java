@@ -55,7 +55,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
-import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.wod.ApiBindingValidationProblem;
@@ -71,7 +70,6 @@ import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.DocumentWodModel;
-import org.objectstyle.wolips.wodclipse.core.document.WodFileDocumentProvider;
 import org.objectstyle.wolips.wodclipse.core.woo.WooModel;
 import org.objectstyle.wolips.wodclipse.core.woo.WooModelException;
 
@@ -153,33 +151,12 @@ public class WodModelUtils {
     }
   }
 
-  public static void validateWodFile(IFile wodFile, LocalizedComponentsLocateResult locateResults, TypeCache typeCache, HtmlElementCache htmlCache) throws CoreException {
-    FileEditorInput input = new FileEditorInput(wodFile);
-    WodFileDocumentProvider provider = new WodFileDocumentProvider();
-    provider.connect(input);
-    try {
-      IDocument document = provider.getDocument(input);
-      WodModelUtils.validateWodDocument(document, locateResults, typeCache, htmlCache);
-    }
-    finally {
-      provider.disconnect(input);
-    }
-  }
-
   public static IMarker createMarker(IFile file, WodProblem wodProblem) {
     if (file == null) {
       return null;
     }
 
     Position problemPosition = wodProblem.getPosition();
-
-    // String type = "org.eclipse.ui.workbench.texteditor.error";
-    // String type = "org.eclipse.ui.workbench.texteditor.warning";
-    // Annotation problemAnnotation = new Annotation(type, false,
-    // problem.getMessage());
-    // Position problemPosition = currentPosition.getPosition();
-    // annotationModel.addAnnotation(problemAnnotation,
-    // problemPosition);
 
     IMarker marker = null;
     try {
@@ -199,11 +176,6 @@ public class WodModelUtils {
       }
       marker.setAttribute(IMarker.SEVERITY, Integer.valueOf(severity));
       if (problemPosition != null) {
-//        IWodModel model = getModel();
-//        if (_lineNumber == -1 && model instanceof DocumentWodModel) {
-//          marker.setAttribute(IMarker.LINE_NUMBER, ((DocumentWodModel) model).getDocument().getLineOfOffset(problemPosition.getOffset()));
-//        }
-//        else
         if (wodProblem.getLineNumber() != -1) {
           marker.setAttribute(IMarker.LINE_NUMBER, wodProblem.getLineNumber());
         }
@@ -227,9 +199,6 @@ public class WodModelUtils {
     catch (CoreException e) {
       WodclipsePlugin.getDefault().log(e);
     }
-//    catch (BadLocationException e) {
-//      Activator.getDefault().log(e);
-//    }
     return marker;
   }
   

@@ -4,10 +4,6 @@ import jp.aonir.fuzzyxml.internal.RenderContext;
 
 public interface FuzzyXMLNode {
 
-  //	public String getNamespaceURI();
-  //	
-  //	public String getPrefix();
-
   public FuzzyXMLNode getParentNode();
 
   public int getOffset();

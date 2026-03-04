@@ -87,7 +87,6 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
 
   private List<TagInfo> _tagList;
   private WodParserCache _cache;
-  //private ClassNameAssistProcessor classNameProcessor = new ClassNameAssistProcessor();
   private IFile _file;
   private IEditorPart _editorPart;
   private ParsleyProject _parsleyProject;

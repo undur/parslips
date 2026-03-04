@@ -51,7 +51,6 @@ public class WodParserCache implements ITypeOwner {
   private IFile _standaloneFile; // non-null for standalone HTML files (not inside .wo folder)
   private IFile _apiFile;
 
-  private long _lastJavaParseTime;
   private boolean _validated;
   private boolean _validating;
 
@@ -248,7 +247,6 @@ public class WodParserCache implements ITypeOwner {
       _wodEntry.setFile(_componentsLocateResults.getFirstWodFile());
       _apiFile = _componentsLocateResults.getDotApi(true);
       _componentType = null;
-      //_componentType = _componentsLocateResults.getDotJavaType();
       _wooEntry.setFile(_componentsLocateResults.getFirstWooFile());
     }
     else {
@@ -273,9 +271,6 @@ public class WodParserCache implements ITypeOwner {
   }
 
   public LocalizedComponentsLocateResult getComponentsLocateResults() {
-    if (_componentsLocateResults.isValid()) {
-
-    }
     return _componentsLocateResults;
   }
 

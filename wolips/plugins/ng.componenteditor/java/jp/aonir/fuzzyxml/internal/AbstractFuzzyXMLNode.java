@@ -10,9 +10,6 @@ public abstract class AbstractFuzzyXMLNode implements FuzzyXMLNode {
   private FuzzyXMLNode _parent;
   private FuzzyXMLDocumentImpl _doc;
 
-  //	private String namespaceURI;
-  //	private String prefix;
-
   public AbstractFuzzyXMLNode() {
     super();
   }
@@ -23,22 +20,6 @@ public abstract class AbstractFuzzyXMLNode implements FuzzyXMLNode {
     setOffset(offset);
     setLength(length);
   }
-
-  //	public void setNamespaceURI(String namespaceURI){
-  //		this.namespaceURI = namespaceURI;
-  //	}
-  //	
-  //	public String getNamespaceURI(){
-  //		return this.namespaceURI;
-  //	}
-  //	
-  //	public void setPrefix(String prefix){
-  //		this.prefix = prefix;
-  //	}
-  //	
-  //	public String getPrefix(){
-  //		return this.prefix;
-  //	}
 
   public void setLength(int length) {
     this._length = length;

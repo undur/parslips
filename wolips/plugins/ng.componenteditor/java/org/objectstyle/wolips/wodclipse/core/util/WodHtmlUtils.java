@@ -4,9 +4,6 @@ import java.util.regex.Pattern;
 
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
@@ -67,12 +64,6 @@ public class WodHtmlUtils {
       }
     }
     return isWOTag;
-  }
-
-  public static IFile getHtmlFileForWodFilePath(IPath wodFilePath) {
-    IPath templatePath = wodFilePath.removeFileExtension().addFileExtension("html");
-    IFile file = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(templatePath);
-    return file;
   }
 
   /**

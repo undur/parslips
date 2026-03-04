@@ -278,12 +278,6 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
     return _templateOutlinePage;
   }
 
-  //  public String getHTMLSource(){
-  //    String source = super.getHTMLSource();
-  //    source = HTMLUtil.scriptlet2space(source,false);
-  //    return source;
-  //  }
-
   @Override
   protected void addContextMenuActions(IMenuManager menu) {
     super.addContextMenuActions(menu);

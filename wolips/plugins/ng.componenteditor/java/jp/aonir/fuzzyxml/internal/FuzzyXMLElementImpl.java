@@ -47,8 +47,6 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
   
   private boolean _synthetic;
 
-  //	private HashMap namespace = new HashMap();
-
   public FuzzyXMLElementImpl(String name) {
     this(null, name, -1, -1, -1);
   }
