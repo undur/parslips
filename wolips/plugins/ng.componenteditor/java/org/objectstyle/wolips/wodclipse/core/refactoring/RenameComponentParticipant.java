@@ -140,6 +140,15 @@ public class RenameComponentParticipant extends RenameParticipant {
 		try {
 			ITypeHierarchy hierarchy = type.newSupertypeHierarchy(null);
 			IType[] allSupertypes = hierarchy.getAllClasses();
+			StringBuilder debugInfo = new StringBuilder();
+			debugInfo.append("classifyType(").append(type.getFullyQualifiedName()).append("): supertypes=[");
+			for (int i = 0; i < allSupertypes.length; i++) {
+				if (i > 0) debugInfo.append(", ");
+				debugInfo.append(allSupertypes[i].getFullyQualifiedName());
+			}
+			debugInfo.append("]");
+			org.objectstyle.wolips.bindings.Activator.getDefault().log(debugInfo.toString());
+
 			for (IType supertype : allSupertypes) {
 				String fqn = supertype.getFullyQualifiedName();
 				if (ParsleyProject.NG_COMPONENT_CLASS.equals(fqn) || ParsleyProject.WO_COMPONENT_CLASS.equals(fqn)) {
@@ -152,10 +161,12 @@ public class RenameComponentParticipant extends RenameParticipant {
 					// Don't return — keep looking to see if it's also a component
 				}
 			}
+			org.objectstyle.wolips.bindings.Activator.getDefault().log(
+					"classifyType result: isElement=" + _isElement + ", isComponent=" + _isComponent);
 		}
 		catch (CoreException e) {
-			// If we can't resolve the hierarchy, don't participate.
-			// This is conservative — better to skip than to break the rename.
+			org.objectstyle.wolips.bindings.Activator.getDefault().log(
+					"classifyType failed for " + type.getFullyQualifiedName() + ": " + e.getMessage());
 		}
 	}
 }
