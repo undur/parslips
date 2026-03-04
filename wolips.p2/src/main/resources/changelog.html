@@ -44,6 +44,11 @@
 					<h3>Validate missing closing &lsquo;&gt;&rsquo; on tags</h3>
 					<p>The editor now reports an error when a tag is missing its closing <code>&gt;</code> &mdash; e.g. <code>&lt;wo:if condition=&quot;$showGraphs&quot;</code> followed by a newline. This common typo silently corrupts the document structure: the parser consumes the next line as part of the unclosed tag, making sibling elements disappear. The error marker now points directly at the malformed tag.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: double-click selects attribute name correctly</h3>
+					<p>Double-clicking an attribute name after the first one in a tag (e.g. <code>item</code> or <code>selection</code> in a tag with multiple bindings) previously selected the preceding whitespace, the <code>=</code> sign, and surrounding spaces along with the name. The editor&rsquo;s quoted-string selection was too eager &mdash; it found the nearest quotes on each side without checking whether they belonged to the same attribute value. Now it verifies the selection doesn&rsquo;t span across attribute boundaries before claiming a match.</p>
+				</div>
 			</div>
 
 			<!-- March 3, 2026 -->

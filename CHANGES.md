@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix double-click attribute name selection
+
+- **Double-clicking an attribute name after the first one in a tag** previously selected the preceding whitespace, the `=` sign, and surrounding spaces along with the name. Root cause: the editor's "select quoted string" handler (`selectComment` in `HTMLDoubleClickStrategy`) ran before the word-selection handler and found the nearest `"` on each side — which were the closing quote of the *previous* attribute's value and the opening quote of the *current* attribute's value, spanning across attribute boundaries.
+- **Fix:** After finding the two bounding quotes, verify the selected text doesn't contain `=`. If it does, the selection spans across attributes — reject and let `selectWord()` handle it instead, which correctly stops at whitespace and `=`.
+
 ### Validate missing closing '>' on tags
 
 - **The parser now reports an error when a tag is missing its closing `>`**, e.g. `<wo:if condition="$showGraphs"` followed by a newline. The fuzzy regex intentionally allows this (for recovery), but it's almost always a typo that silently corrupts the document structure.

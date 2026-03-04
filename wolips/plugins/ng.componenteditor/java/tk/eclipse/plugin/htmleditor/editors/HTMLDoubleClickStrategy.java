@@ -17,6 +17,17 @@ public class HTMLDoubleClickStrategy implements ITextDoubleClickStrategy {
 			selectWord(pos);
 		}
 	}
+	/**
+	 * Attempts to select a quoted attribute value when the caret is inside
+	 * one. Scans backward and forward for the nearest {@code "} characters,
+	 * then selects the content between them.
+	 *
+	 * <p>To avoid false matches when the caret is on an attribute <em>name</em>
+	 * (between the closing quote of one value and the opening quote of the
+	 * next), the selected text is checked for {@code =} signs — if present,
+	 * the match spans across attribute boundaries and is rejected, allowing
+	 * {@link #selectWord(int)} to handle the selection instead.
+	 */
 	protected boolean selectComment(int caretPos) {
 		IDocument doc = fText.getDocument();
 		int startPos, endPos;
@@ -56,8 +67,18 @@ public class HTMLDoubleClickStrategy implements ITextDoubleClickStrategy {
 
 			endPos = pos;
 
+			// Verify we're inside a single quoted value, not spanning across
+			// attribute boundaries (e.g. between ..."$docs"  item="...).
+			// An '=' sign in the selected text means we've crossed from one
+			// attribute's value into the next — reject and let selectWord()
+			// handle it.
 			int offset = startPos + 1;
 			int len = endPos - offset;
+			String selected = doc.get(offset, len);
+			if (selected.indexOf('=') >= 0) {
+				return false;
+			}
+
 			fText.setSelectedRange(offset, len);
 			return true;
 		} catch (BadLocationException x) {
