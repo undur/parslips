@@ -141,13 +141,9 @@ public class ParsleyProject {
 	 * if the adapter is not available.
 	 */
 	private static ParsleyProject forProject(IProject project) {
-		if (project != null) {
-			try {
-				return (ParsleyProject) project.getAdapter(ParsleyProject.class);
-			} catch (Exception e) {
-				// ignore
-			}
+		if (project == null) {
+			return null;
 		}
-		return null;
+		return (ParsleyProject) project.getAdapter(ParsleyProject.class);
 	}
 }
