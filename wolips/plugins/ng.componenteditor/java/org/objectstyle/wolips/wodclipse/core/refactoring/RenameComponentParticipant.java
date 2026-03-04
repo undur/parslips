@@ -139,15 +139,11 @@ public class RenameComponentParticipant extends RenameParticipant {
 		_isComponent = false;
 		try {
 			ITypeHierarchy hierarchy = type.newSupertypeHierarchy(null);
-			IType[] allSupertypes = hierarchy.getAllClasses();
-			StringBuilder debugInfo = new StringBuilder();
-			debugInfo.append("classifyType(").append(type.getFullyQualifiedName()).append("): supertypes=[");
-			for (int i = 0; i < allSupertypes.length; i++) {
-				if (i > 0) debugInfo.append(", ");
-				debugInfo.append(allSupertypes[i].getFullyQualifiedName());
-			}
-			debugInfo.append("]");
-			org.objectstyle.wolips.bindings.Activator.getDefault().log(debugInfo.toString());
+
+			// getAllSupertypes() returns both superclasses and superinterfaces.
+			// This matters because NGElement is an interface (unlike WOElement
+			// which is a class), so getAllClasses() would miss it entirely.
+			IType[] allSupertypes = hierarchy.getAllSupertypes(type);
 
 			for (IType supertype : allSupertypes) {
 				String fqn = supertype.getFullyQualifiedName();
@@ -161,12 +157,10 @@ public class RenameComponentParticipant extends RenameParticipant {
 					// Don't return — keep looking to see if it's also a component
 				}
 			}
-			org.objectstyle.wolips.bindings.Activator.getDefault().log(
-					"classifyType result: isElement=" + _isElement + ", isComponent=" + _isComponent);
 		}
 		catch (CoreException e) {
-			org.objectstyle.wolips.bindings.Activator.getDefault().log(
-					"classifyType failed for " + type.getFullyQualifiedName() + ": " + e.getMessage());
+			// If we can't resolve the hierarchy, don't participate.
+			// Conservative — better to skip than to break the rename.
 		}
 	}
 }

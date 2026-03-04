@@ -417,7 +417,10 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 		ICompilationUnit compilationUnit = (ICompilationUnit) javaElement;
 		IType typeToCheck = compilationUnit.findPrimaryType();
 		ITypeHierarchy typeHierarchy = typeToCheck.newSupertypeHierarchy(new NullProgressMonitor());
-		IType[] types = typeHierarchy.getAllClasses();
+		// getAllSupertypes() returns both superclasses and superinterfaces.
+		// This matters because NGElement is an interface (unlike WOElement
+		// which is a class), so getAllClasses() would miss it.
+		IType[] types = typeHierarchy.getAllSupertypes(typeToCheck);
 		for (IType type : types) {
 			for (String superclass : superclasses) {
 				if (type.getFullyQualifiedName().equals(superclass)) {
