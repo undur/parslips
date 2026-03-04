@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix slash in body text corrupting close-tag completion
+
+- **A forward slash in body text** (e.g. `<td>Price / amount</td>`) was incorrectly interpreted as a self-closing tag marker, popping the current tag off the stack. This caused close-tag auto-completion (Ctrl+Space) to suggest the wrong tag.
+- **Root cause:** The self-closing detection (`temp1.endsWith("/")`) in `TagStackAnalyzer` fired on any token ending with `/`, even in body text where no tag was being parsed.
+- **Fix:** Added a `!prevTag.equals("")` guard so the self-closing pop only fires when currently inside a tag context. `prevTag` is cleared when `>` is hit, so it's always empty in body text.
+- **4 new tests** covering slashes in text content (Price / amount), URLs in body text, math expressions, and slashes after closed tags.
+
 ### Fix double-click attribute name selection
 
 - **Double-clicking an attribute name after the first one in a tag** previously selected the preceding whitespace, the `=` sign, and surrounding spaces along with the name. Root cause: the editor's "select quoted string" handler (`selectComment` in `HTMLDoubleClickStrategy`) ran before the word-selection handler and found the nearest `"` on each side — which were the closing quote of the *previous* attribute's value and the opening quote of the *current* attribute's value, spanning across attribute boundaries.

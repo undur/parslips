@@ -49,6 +49,11 @@
 					<h3>Fix: double-click selects attribute name correctly</h3>
 					<p>Double-clicking an attribute name after the first one in a tag (e.g. <code>item</code> or <code>selection</code> in a tag with multiple bindings) previously selected the preceding whitespace, the <code>=</code> sign, and surrounding spaces along with the name. The editor&rsquo;s quoted-string selection was too eager &mdash; it found the nearest quotes on each side without checking whether they belonged to the same attribute value. Now it verifies the selection doesn&rsquo;t span across attribute boundaries before claiming a match.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: slash in body text no longer corrupts close-tag completion</h3>
+					<p>A forward slash in body text (e.g. <code>&lt;td&gt;Price / amount&lt;/td&gt;</code>) was mistakenly treated as a self-closing tag marker, popping the current tag off the autocomplete stack. This caused close-tag completion (Ctrl+Space) to suggest the wrong tag. The scanner now only treats <code>/</code> as a self-closing marker when inside a tag context, leaving body text slashes harmless.</p>
+				</div>
 			</div>
 
 			<!-- March 3, 2026 -->

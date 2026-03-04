@@ -159,4 +159,33 @@ public class HTMLAssistProcessorGetLastWordTest {
 		// Spaces inside double-quoted attribute values must still be preserved.
 		assertEquals("input", lastTag("<input value=\"hello world\">"));
 	}
+
+	// =========================================================================
+	// Slash in body text — must not corrupt the tag stack
+	// =========================================================================
+
+	@Test
+	public void slashInBodyText_doesNotPopTag() {
+		// A "/" in body text like "Price / amount" must not be treated as a
+		// self-closing tag marker. Previously this popped <td> off the stack.
+		assertEquals("tr", lastTag("<table><tr><td>Price / amount</td>"));
+	}
+
+	@Test
+	public void slashInBodyText_urlInText() {
+		// URLs in body text contain multiple slashes — none should corrupt the
+		// tag stack. Leave <p> unclosed so we can verify it's still on the stack.
+		assertEquals("p", lastTag("<div><p>Visit http://example.com/path/to/page for details"));
+	}
+
+	@Test
+	public void slashInBodyText_mathExpression() {
+		assertEquals("td", lastTag("<table><tr><td>10 / 5 = 2"));
+	}
+
+	@Test
+	public void slashInBodyText_afterClosedTag() {
+		// Slash in body text after a properly closed tag.
+		assertEquals("div", lastTag("<div><p>hello</p>a / b"));
+	}
 }

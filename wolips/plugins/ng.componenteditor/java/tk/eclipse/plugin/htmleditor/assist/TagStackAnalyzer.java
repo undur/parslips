@@ -82,10 +82,12 @@ public class TagStackAnalyzer {
 					stack.pop();
 				}
 				else if (temp1.endsWith("/") && stack.size() != 0
+						&& !prevTag.equals("")
 						&& !temp1.startsWith("\"") && !temp1.startsWith("'")) {
 					// Self-closing tag marker (e.g. <img />) — pop the tag we just pushed.
 					// Guard against quoted attribute values like href="/" which also end
-					// with "/" but must not affect the tag stack.
+					// with "/" but must not affect the tag stack, and against "/" appearing
+					// in body text (e.g. "Price / amount") where prevTag is empty.
 					stack.pop();
 				}
 				sb.setLength(0);
