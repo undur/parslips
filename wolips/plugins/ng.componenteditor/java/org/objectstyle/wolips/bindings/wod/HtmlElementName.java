@@ -25,6 +25,7 @@ public class HtmlElementName {
     return obj instanceof HtmlElementName && ((HtmlElementName) obj)._name.equals(_name);
   }
   
+  /** Currently unused — retained for potential future use. */
   private IFile getHtmlFile() {
     return _htmlFile;
   }

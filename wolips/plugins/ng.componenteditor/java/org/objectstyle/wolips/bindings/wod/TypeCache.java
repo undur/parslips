@@ -68,6 +68,7 @@ public class TypeCache {
     return getTypeCacheEntry(type).getBindingValueMutatorKeys(javaProject, name);
   }
 
+  /** Currently unused — retained for broader project-level cache invalidation. */
   private void clearCacheForProject(IProject project) {
     if (project != null) {
       List<IType> typesToClear = new LinkedList<IType>();
@@ -111,6 +112,7 @@ public class TypeCache {
     return getTypeCacheEntry(declaringType).getTypeForName(typeName);
   }
 
+  /** Currently unused — retained for a potential "clear all caches" action. */
   private void clearCache() {
     synchronized (_typeCacheEntries) {
       _typeCacheEntries.clear();

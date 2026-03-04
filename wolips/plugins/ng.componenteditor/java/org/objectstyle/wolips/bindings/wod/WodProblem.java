@@ -28,10 +28,12 @@ public class WodProblem {
     _warning = warning;
   }
   
+  /** Currently unused — retained for a richer problem-reporting pipeline. */
   private void setModel(IWodModel model) {
     _model = model;
   }
 
+  /** Currently unused — retained for overriding the file associated with a problem marker. */
   private void setForceFile(IFile forceFile) {
     _forceFile = forceFile;
   }
@@ -44,6 +46,7 @@ public class WodProblem {
     return _message;
   }
 
+  /** Currently unused — companion to {@link #setModel}. */
   private IWodModel getModel() {
     return _model;
   }

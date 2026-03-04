@@ -73,6 +73,7 @@ public class TagShortcut {
     return _attributes;
   }
 
+  /** Currently unused — retained for programmatic shortcut construction with pre-parsed attributes. */
   private void setAttributes(Map<String, String> attributes) {
     _attributes = attributes;
   }

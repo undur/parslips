@@ -19,7 +19,11 @@ public class ApiBindingValidationProblem extends WodBindingProblem {
 		_binding = binding;
 	}
 
-	/** Returns the API binding definition that is required but missing. */
+	/**
+	 * Returns the API binding definition that is required but missing.
+	 *
+	 * <p>Currently unused — retained for potential future use.
+	 */
 	private IApiBinding getBinding() {
 		return _binding;
 	}

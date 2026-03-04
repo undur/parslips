@@ -81,6 +81,8 @@ public class VisibleBinding implements Comparable<VisibleBinding> {
 	/**
 	 * Returns the underlying API binding definition, or {@code null} if this
 	 * binding is not defined in any {@code .api} file.
+	 *
+	 * <p>Currently unused — retained for potential future use.
 	 */
 	private IApiBinding getApiBinding() {
 		return _apiBinding;

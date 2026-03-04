@@ -276,6 +276,7 @@ public class BindingValueKeyPath {
     return _valid;
   }
 
+  /** Currently unused — retained for potential future use (richer binding validation). */
   public boolean isGettable() {
     boolean gettable = false;
     if (_gettable != null) {
@@ -287,6 +288,7 @@ public class BindingValueKeyPath {
     return gettable;
   }
   
+  /** Currently unused — retained for potential future use (richer binding validation). */
   public boolean isSettable() throws JavaModelException {
     boolean settable = false;
     if (_settable != null) {
