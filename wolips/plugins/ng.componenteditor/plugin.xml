@@ -16,9 +16,6 @@
    <extension-point id="preferenceContributer" name="preferenceContributer"/>
    <extension-point id="pagefilter" name="pagefilter"/>
 
-<!-- Extension point from core plugin -->
-   <extension-point id="builders" name="Builder"/>
-
 <!-- =================================================================================== -->
 <!-- Content Types (from editors plugin, with ng.componenteditor IDs)                    -->
 <!-- =================================================================================== -->
@@ -648,15 +645,6 @@
       <contextType class="tk.eclipse.plugin.htmleditor.template.JavaScriptContextType"
             name="JavaScript"
             id="ng.componenteditor.templateContextType.javascript"/>
-   </extension>
-
-<!-- =================================================================================== -->
-<!-- WOD Builder (registers with the ng.componenteditor.builders extension point)        -->
-<!-- =================================================================================== -->
-   <extension point="ng.componenteditor.builders">
-      <builder class="org.objectstyle.wolips.wodclipse.core.builder.WodBuilder"
-            id="ng.componenteditor.builder.WodBuilder"
-            name="Wod Builder"/>
    </extension>
 
 <!-- =================================================================================== -->

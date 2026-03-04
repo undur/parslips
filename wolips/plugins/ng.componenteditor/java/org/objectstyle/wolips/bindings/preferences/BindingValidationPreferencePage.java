@@ -65,11 +65,9 @@ public class BindingValidationPreferencePage extends FieldEditorPreferencePage i
 	@Override
 	public void createFieldEditors() {
 		addField(new BooleanFieldEditor(PreferenceConstants.VALIDATE_TEMPLATES_KEY, "Component Validation", getFieldEditorParent()));
-		addField(new BooleanFieldEditor(PreferenceConstants.VALIDATE_TEMPLATES_ON_BUILD_KEY, "Validate on Build", getFieldEditorParent()));
 		addField(new BooleanFieldEditor(PreferenceConstants.USE_INLINE_BINDINGS_KEY, "Inline Bindings Allowed", getFieldEditorParent()));
 		addField(new BooleanFieldEditor(PreferenceConstants.VALIDATE_BINDING_VALUES, "Binding Value Validation (Slow)", getFieldEditorParent()));
 		addField(new BooleanFieldEditor(PreferenceConstants.VALIDATE_WOO_ENCODINGS_KEY, "WOO Encoding Validation", getFieldEditorParent()));
-		addField(new BooleanFieldEditor(PreferenceConstants.THREADED_VALIDATION_KEY, "Threaded Validation", getFieldEditorParent()));
 
 		addField(new ComboFieldEditor(PreferenceConstants.HTML_ERRORS_SEVERITY_KEY, "Invalid HTML", PreferenceConstants.IGNORE_WARNING_ERROR, getFieldEditorParent()));
 		addField(new ComboFieldEditor(PreferenceConstants.WOD_MISSING_COMPONENT_SEVERITY_KEY, "Missing Component", PreferenceConstants.IGNORE_WARNING_ERROR, getFieldEditorParent()));

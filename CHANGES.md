@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Remove dead WOLips builder infrastructure
+
+The old WOLips builder pipeline (`IBuilder` → `IFullBuilder`/`IIncrementalBuilder` → `AbstractFullAndIncrementalBuilder` → `WodBuilder`) was never invoked — the coordinator that read the `ng.componenteditor.builders` extension point lived in the old `org.objectstyle.wolips.builder` plugin, which no longer exists. Actual validation happens via `WodBuilder.validateComponent()` called directly by `JavaChangeRevalidator` and `WodParserCache`.
+
+- Deleted `IBuilder`, `IFullBuilder`, `IIncrementalBuilder`, `AbstractFullAndIncrementalBuilder`, `AbstractOldBuilder` — entire builder framework.
+- Stripped `WodBuilder` to only the live static validation code (was 435 lines, now ~200). Removed all instance fields, constructor, lifecycle methods (`buildStarted`, `handleSource`, `handleWoappResources`, etc.), and the `getBooleanProperty` helper.
+- Removed `BuildProperties.Key` entries: `VALIDATE_TEMPLATES`, `VALIDATE_TEMPLATES_ON_BUILD`, `THREADED_VALIDATION` — only used by dead builder lifecycle.
+- Removed preference constants `VALIDATE_TEMPLATES_ON_BUILD_KEY` and `THREADED_VALIDATION_KEY`, their defaults in `PreferenceInitializer`, and UI fields in `BindingValidationPreferencePage`.
+- Removed `ng.componenteditor.builders` extension point declaration and builder registration from `plugin.xml`.
+
 ### Make BuildProperties public API accept Key enum instead of raw strings
 
 - `get(String)`, `get(String, String)`, `getBoolean(String, boolean)` made private — no longer part of the public API.

@@ -52,16 +52,7 @@ public class BuildProperties {
 		INLINE_BINDING_SUFFIX("component.inlineBindingSuffix", "Inline binding suffix"),
 
 		/** Whether templates must be well-formed (XHTML-style). */
-		WELL_FORMED_TEMPLATE_REQUIRED("component.wellFormedTemplateRequired", "Require well-formed templates"),
-
-		/** Whether template validation is enabled. */
-		VALIDATE_TEMPLATES("component.validateTemplates", "Enable template validation"),
-
-		/** Whether template validation runs during incremental builds. */
-		VALIDATE_TEMPLATES_ON_BUILD("component.validateTemplatesOnBuild", "Validate templates on build"),
-
-		/** Whether validation runs in a thread pool. */
-		THREADED_VALIDATION("component.threadedValidation", "Use threaded validation");
+		WELL_FORMED_TEMPLATE_REQUIRED("component.wellFormedTemplateRequired", "Require well-formed templates");
 
 		private final String _key;
 		private final String _description;

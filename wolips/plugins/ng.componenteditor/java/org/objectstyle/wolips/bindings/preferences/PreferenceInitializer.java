@@ -140,7 +140,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     prefs.setDefault(PreferenceConstants.USE_INLINE_BINDINGS_KEY, false);
 
     prefs.setDefault(PreferenceConstants.VALIDATE_TEMPLATES_KEY, true);
-    prefs.setDefault(PreferenceConstants.VALIDATE_TEMPLATES_ON_BUILD_KEY, true);
     prefs.setDefault(PreferenceConstants.VALIDATE_BINDING_VALUES, true);
     prefs.setDefault(PreferenceConstants.VALIDATE_WOO_ENCODINGS_KEY, true);
 
@@ -158,7 +157,5 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     prefs.setDefault(PreferenceConstants.AT_OPERATOR_SEVERITY_KEY, PreferenceConstants.WARNING);
     prefs.setDefault(PreferenceConstants.HELPER_FUNCTION_SEVERITY_KEY, PreferenceConstants.WARNING);
     prefs.setDefault(PreferenceConstants.WELL_FORMED_TEMPLATE_KEY, PreferenceConstants.DEFAULT);
-
-    prefs.setDefault(PreferenceConstants.THREADED_VALIDATION_KEY, true);
   }
 }

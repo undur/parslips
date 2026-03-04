@@ -74,8 +74,6 @@ public class PreferenceConstants {
 
 	public static final String VALIDATE_TEMPLATES_KEY = "ValidateTemplatesKey";
 
-	public static final String VALIDATE_TEMPLATES_ON_BUILD_KEY = "ValidateTemplatesOnBuildKey";
-
 	public static final String VALIDATE_WOO_ENCODINGS_KEY = "ValidateWooEncodingsKey";
 
 	public static final String TAG_SHORTCUTS_KEY = "TagShortcuts";
@@ -85,8 +83,6 @@ public class PreferenceConstants {
 	// public static final String WO54_KEY = "WO 5.4";
 
 	public static final String USE_INLINE_BINDINGS_KEY = "UseInlineBindings";
-
-	public static final String THREADED_VALIDATION_KEY = "ThreadedValidation";
 
 	public static final String WELL_FORMED_TEMPLATE_KEY = "WellFormedTemplate";
 
