@@ -14,8 +14,6 @@
    <extension-point id="tldLocator" name="tldLocator"/>
    <extension-point id="customTagValidator" name="customTagValidator"/>
    <extension-point id="preferenceContributer" name="preferenceContributer"/>
-   <extension-point id="pagefilter" name="pagefilter"/>
-
 <!-- =================================================================================== -->
 <!-- Content Types (from editors plugin, with ng.componenteditor IDs)                    -->
 <!-- =================================================================================== -->
