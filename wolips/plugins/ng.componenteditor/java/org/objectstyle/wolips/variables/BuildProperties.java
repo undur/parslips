@@ -63,7 +63,7 @@ public class BuildProperties {
 		}
 	}
 
-	private IProject _project;
+	private final IProject _project;
 
 	private Properties _properties;
 
