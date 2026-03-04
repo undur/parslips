@@ -138,12 +138,9 @@ public class ParsleyProject {
 
 	/**
 	 * Returns the {@link ParsleyProject} for the given project, or {@code null}
-	 * if the adapter is not available.
+	 * if the adapter is not available (e.g. no build.properties).
 	 */
 	private static ParsleyProject forProject(IProject project) {
-		if (project == null) {
-			return null;
-		}
 		return (ParsleyProject) project.getAdapter(ParsleyProject.class);
 	}
 }
