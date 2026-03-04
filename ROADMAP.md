@@ -32,11 +32,9 @@ Remaining:
 
 - **Undo support** — the undo entry recorded by Eclipse's refactoring framework fails with "No input element provided" after the rename completes. This appears to be a conflict between JDT's compilation unit undo tracking and the resource-level `RenameResourceChange` objects added by our participant. Needs investigation into LTK's undo/redo machinery.
 
-### Rename binding across files
+### Rename binding key in associated template
 
-Rename a binding in Java and have it update in the WOD and HTML template automatically.
-
-WO component bundles are inherently multi-file (HTML + WOD + WOO + Java + .api), so cross-file refactoring is where tooling can save the most manual effort.
+When a method or field that serves as a binding key is renamed in a component's Java class (via Refactor > Rename), the corresponding key references in the component's own template (inline bindings in HTML, WOD entries) should update automatically. This is a local refactoring — scoped to one component's Java class and its associated template files, not a cross-project rename.
 
 ## ~~Component documentation on hover~~ ✓
 
