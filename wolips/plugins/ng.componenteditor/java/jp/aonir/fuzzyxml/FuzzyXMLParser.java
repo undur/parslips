@@ -148,6 +148,23 @@ public class FuzzyXMLParser {
 	}
 
 	/**
+	 * Fires any deferred parse errors that were collected during attribute
+	 * scanning. Error offsets in {@link TagInfo} are relative to the tag
+	 * content text (after the opening {@code <}); {@code tagContentOffset}
+	 * is the document-level offset of that text so errors get correct
+	 * global positions.
+	 *
+	 * @param info the parsed tag info (may contain deferred errors)
+	 * @param tagContentOffset the document offset of the tag content text
+	 *        (i.e. one past the {@code <})
+	 */
+	private void fireDeferredTagErrors(TagInfo info, int tagContentOffset) {
+		for (TagError error : info.getErrors()) {
+			fireErrorEvent(tagContentOffset + error.offset, error.length, error.message, null);
+		}
+	}
+
+	/**
 	 * ��̓X�g���[������XML�h�L�������g���p�[�X���܂��B
 	 * �����R�[�h��XML�錾�ɂ��������Ĕ��ʂ���܂��B
 	 * 
@@ -345,6 +362,7 @@ public class FuzzyXMLParser {
 		String[] content = _preCloseTagPattern.split(_originalSource.substring(end, _originalSource.length()), 2);
 		String text = content[0];
 		TagInfo info = parseTagContents(_originalSource.substring(offset + 1, end - 1));
+		fireDeferredTagErrors(info, offset + 1);
 		FuzzyXMLPreImpl preNode = new FuzzyXMLPreImpl(getParent(), text, offset, text.length());
 		handleStartTag(preNode, info, offset, end);
 		String preBlock = _originalSource.substring(offset, end + text.length() + 1);
@@ -374,6 +392,7 @@ public class FuzzyXMLParser {
 		}
 
 		TagInfo info = parseTagContents(_originalSource.substring(offset + 1, end - 1));
+		fireDeferredTagErrors(info, offset + 1);
 		FuzzyXMLElementImpl rawElement = new FuzzyXMLElementImpl(getParent(), info.name, offset, closeTagEnd - offset, info.nameOffset);
 
 		// Add attributes (if any) and push onto stack
@@ -438,6 +457,7 @@ public class FuzzyXMLParser {
 		}
 
 		TagInfo info = parseTagContents(_originalSource.substring(offset + 1, end - 1));
+		fireDeferredTagErrors(info, offset + 1);
 		FuzzyXMLElementImpl commentElement = new FuzzyXMLElementImpl(getParent(), info.name, offset, closeTagEnd - offset, info.nameOffset);
 
 		// Add attributes (if any) and push onto stack
@@ -760,6 +780,7 @@ public class FuzzyXMLParser {
 	private void handleEmptyTag(int offset, int end, boolean synthetic) {
 		closeAutocloseTags();
 		TagInfo info = parseTagContents(_originalSource.substring(offset + 1, end - 1));
+		fireDeferredTagErrors(info, offset + 1);
 		FuzzyXMLNode parent = getParent();
 		FuzzyXMLElementImpl element = new FuzzyXMLElementImpl(parent, info.name, offset, end - offset, info.nameOffset);
 		if (parent == null) {
@@ -833,6 +854,7 @@ public class FuzzyXMLParser {
 			tagContents = tagContents.substring(0, tagContents.length() - 1);
 		}
 		TagInfo info = parseTagContents(tagContents);
+		fireDeferredTagErrors(info, offset + 1);
 		FuzzyXMLElement element;
 		if (info.name.equalsIgnoreCase("script")) {
 			element = new FuzzyXMLScriptImpl(getParent(), info.name, offset, end - offset, info.nameOffset);
@@ -960,6 +982,22 @@ public class FuzzyXMLParser {
 					tokenBuffer.setLength(0);
 					valueOffset = -1;
 				}
+				else if (c == '"' || c == '\'') {
+					// A quote character inside an attribute name means the '='
+					// was omitted — e.g. negate"true" instead of negate="true".
+					// Record the error and recover by treating the quote as if
+					// '=' had been present, so the attribute parses correctly
+					// and downstream tools (validation, autocomplete) still work.
+					String attrName = tokenBuffer.toString().trim();
+					info.addError(start, i - start,
+							"Missing '=' after attribute '" + attrName
+							+ "' — did you mean " + attrName + "=" + c + "...?");
+					name = attrName;
+					tokenBuffer.setLength(0);
+					quoteCharacter = c;
+					valueOffset = i + 1;
+					state = AttributeParseState.InAttributeValue;
+				}
 				else {
 					tokenBuffer.append(c);
 				}
@@ -1062,8 +1100,10 @@ public class FuzzyXMLParser {
 		private int nameOffset;
 		private ArrayList<AttrInfo> attrs = new ArrayList<AttrInfo>();
 
+		/** Parse errors detected during attribute scanning (e.g. missing '='). */
+		private ArrayList<TagError> errors = new ArrayList<TagError>();
+
 		public void addAttr(AttrInfo attr) {
-			// �������̂������Ă��ǉ����Ȃ�
 			AttrInfo[] info = getAttrs();
 			for (int i = 0; i < info.length; i++) {
 				if (info[i].name.equals(attr.name)) {
@@ -1075,6 +1115,37 @@ public class FuzzyXMLParser {
 
 		public AttrInfo[] getAttrs() {
 			return attrs.toArray(new AttrInfo[attrs.size()]);
+		}
+
+		/**
+		 * Records a parse error with offsets relative to the tag content text
+		 * (i.e. the string passed to parseAttributeContents). These are fired
+		 * as proper error events later, once the tag's global offset is known.
+		 */
+		public void addError(int offset, int length, String message) {
+			errors.add(new TagError(offset, length, message));
+		}
+
+		public TagError[] getErrors() {
+			return errors.toArray(new TagError[errors.size()]);
+		}
+	}
+
+	/**
+	 * A parse error detected during attribute scanning, with offsets relative
+	 * to the tag content text. Converted to a global-offset error event by the
+	 * tag handler methods (handleStartTag, handleEmptyTag, etc.) once the
+	 * tag's position in the document is known.
+	 */
+	private static class TagError {
+		final int offset;
+		final int length;
+		final String message;
+
+		TagError(int offset, int length, String message) {
+			this.offset = offset;
+			this.length = length;
+			this.message = message;
 		}
 	}
 

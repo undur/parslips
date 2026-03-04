@@ -29,6 +29,12 @@
 				<h2 class="date-header">March 4, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Validate missing &lsquo;=&rsquo; in template attributes</h3>
+					<p>The editor now reports an error when a quote character appears inside an attribute name, catching the common typo of omitting <code>=</code> between an attribute name and its value &mdash; e.g. <code>negate&quot;true&quot;</code> instead of <code>negate=&quot;true&quot;</code>. The error message identifies the attribute and suggests the correct syntax.</p>
+					<p>The parser also recovers gracefully: the attribute name and value are correctly extracted despite the missing <code>=</code>, so downstream tools (binding validation, autocomplete, hover) continue to work on the recovered parse tree.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Rename binding key in associated template</h3>
 					<p>Renaming a method or field in a component&rsquo;s Java class via <strong>Refactor &gt; Rename</strong> now automatically updates binding key references in the component&rsquo;s own template files. WOD binding values (<code>value = title;</code>) and inline HTML bindings (<code>value=&quot;$title&quot;</code>) are included in the refactoring preview alongside the Java rename.</p>
 					<p>Key paths are handled correctly &mdash; renaming <code>title()</code> to <code>heading()</code> updates <code>value = title.length;</code> to <code>value = heading.length;</code>, changing only the first segment. KVC getter/setter prefixes are stripped automatically: renaming <code>getTitle()</code> to <code>getHeading()</code> renames key <code>title</code> &rarr; <code>heading</code>. String literals, caret references, and partial matches are conservatively excluded.</p>

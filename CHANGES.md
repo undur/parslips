@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Validate missing '=' in template attributes
+
+- **The parser now reports an error when a quote character appears inside an attribute name**, detecting the common typo of omitting `=` between an attribute name and its value — e.g. `negate"true"` instead of `negate="true"`. The error message identifies the attribute name and suggests the correct syntax.
+- **Error recovery.** Instead of leaving the DOM corrupted (the entire `negate"true"` was previously treated as a single attribute name), the parser now recovers by treating the quote as an implicit `=`. This means the attribute name (`negate`) and value (`true`) are correctly parsed, so downstream tools (validation, autocomplete, hover) continue to work.
+- **Deferred error firing.** Parse errors detected in the attribute scanner are stored in `TagInfo` and fired as proper error events once the tag's global offset is known. This keeps the attribute parser clean and avoids changing its method signature.
+- **15 new tests** covering error detection (double/single quotes, multiple errors, self-closing tags), no false positives (valid attributes, valueless attributes, empty values), error recovery (attribute name/value extraction), and error offset accuracy.
+
 ### Rename binding key in associated template
 
 - **Binding keys in a component's own template now update when the Java method/field is renamed.** When a developer renames e.g. `title()` to `heading()` in `MyComponent.java` via Refactor > Rename, WOD binding values (`value = title;`) and inline HTML bindings (`value="$title"`) in the component's own template files are automatically updated in the refactoring preview.
