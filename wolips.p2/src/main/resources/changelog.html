@@ -24,6 +24,17 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- March 4, 2026 -->
+			<div class="card">
+				<h2 class="date-header">March 4, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Rename binding key in associated template</h3>
+					<p>Renaming a method or field in a component&rsquo;s Java class via <strong>Refactor &gt; Rename</strong> now automatically updates binding key references in the component&rsquo;s own template files. WOD binding values (<code>value = title;</code>) and inline HTML bindings (<code>value=&quot;$title&quot;</code>) are included in the refactoring preview alongside the Java rename.</p>
+					<p>Key paths are handled correctly &mdash; renaming <code>title()</code> to <code>heading()</code> updates <code>value = title.length;</code> to <code>value = heading.length;</code>, changing only the first segment. KVC getter/setter prefixes are stripped automatically: renaming <code>getTitle()</code> to <code>getHeading()</code> renames key <code>title</code> &rarr; <code>heading</code>. String literals, caret references, and partial matches are conservatively excluded.</p>
+				</div>
+			</div>
+
 			<!-- March 3, 2026 -->
 			<div class="card">
 				<h2 class="date-header">March 3, 2026</h2>
