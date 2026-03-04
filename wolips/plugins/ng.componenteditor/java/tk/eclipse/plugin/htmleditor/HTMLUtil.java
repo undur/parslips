@@ -1,12 +1,8 @@
 package tk.eclipse.plugin.htmleditor;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,38 +10,21 @@ import java.util.List;
 import java.util.Map;
 
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
-import jp.aonir.fuzzyxml.FuzzyXMLNode;
 import jp.aonir.fuzzyxml.XPath;
 import jp.aonir.fuzzyxml.internal.FuzzyXMLUtil;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.ui.IJavaElementSearchConstants;
-import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.dialogs.SelectionDialog;
 
 /**
  * This provides utility methods.
@@ -53,55 +32,6 @@ import org.eclipse.ui.dialogs.SelectionDialog;
  * @author Naoki Takezoe
  */
 public class HTMLUtil {
-	
-	/**
-	 * Returns whether the <code>IResourceDelta</code> contains
-	 * the specified <code>IFile</code>.
-	 * 
-	 * @param delta the <code>IResourceDelta</code>
-	 * @param file the <code>IFile</code>
-	 * @return true if the file is contained, otherwise false
-	 */
-	public static boolean contains(IResourceDelta delta, IFile file){
-		IResourceDelta member = delta.findMember(file.getFullPath());
-		if(member==null){
-			return false;
-		}
-		return true;
-	}
-	
-	/**
-	 * Copy folder.
-	 * 
-	 * @param from the target folder
-	 * @param to the destination folder
-	 * @throws IOException when I/O error occurs
-	 */
-	public static void copyFolder(File from, File to) throws IOException {
-		File[] files = from.listFiles();
-		for(int i=0;i<files.length;i++){
-			if(files[i].isDirectory()){
-				File newDir = new File(to,files[i].getName());
-				if(!newDir.exists()){
-					newDir.mkdir();
-					copyFolder(files[i],newDir);
-				}
-			} else {
-				File newFile = new File(to,files[i].getName());
-				if(!newFile.exists()){
-					InputStream  in  = new FileInputStream(files[i]);
-					OutputStream out = new FileOutputStream(newFile);
-					byte[] buf = new byte[1027 * 8];
-					int length = 0;
-					while((length=in.read(buf))!=-1){
-						out.write(buf,0,length);
-					}
-					in.close();
-					out.close();
-				}
-			}
-		}
-	}
 	
 	/**
 	 * Escape HTML special characters.
@@ -245,16 +175,7 @@ public class HTMLUtil {
 		}
 		return sb.toString();
 	}
-	
-//	/** Copy a list */
-//	public static List cloneList(List from){
-//		List result = new ArrayList();
-//		for(int i=0;i<from.size();i++){
-//			result.add(from.get(i));
-//		}
-//		return result;
-//	}
-	
+
 	/**
 	 * Returns stream contents as a byte array.
 	 */
@@ -306,32 +227,6 @@ public class HTMLUtil {
 	}
 	
 	
-	public static FuzzyXMLNode selectXPathNode(FuzzyXMLElement element,String xpath){
-		try {
-			return XPath.selectSingleNode(element,xpath);
-		} catch(Exception ex){
-			return null;
-		}
-	}
-	
-	public static FuzzyXMLNode[] selectXPathNodes(FuzzyXMLElement element,String xpath){
-		try {
-			return XPath.selectNodes(element,xpath);
-		} catch(Exception ex){
-			return new FuzzyXMLNode[0];
-		}
-	}
-	
-	/**
-	 * Returns an empty string if an argument is null.
-	 */
-	public static String nullConv(String value){
-		if(value==null){
-			return "";
-		}
-		return value;
-	}
-		
 	/**
 	 * Sorts informations of code completion in alphabetical order.
 	 * 
@@ -435,33 +330,6 @@ public class HTMLUtil {
 	}
 	
 	/**
-	 * Trim all elements in the array.
-	 * 
-	 * @param array The string array
-	 */
-	public static void trim(String[] array){
-		for(int i=0;i<array.length;i++){
-			array[i] = array[i].trim();
-		}
-	}
-	
-	/**
-	 * Returns the first child element of the specified element.
-	 * 
-	 * @param element the element
-	 * @return the first child element
-	 */
-	public static FuzzyXMLElement getFirstElement(FuzzyXMLElement element){
-		FuzzyXMLNode[] nodes = element.getChildren();
-		for(int i=0;i<nodes.length;i++){
-			if(nodes[i] instanceof FuzzyXMLElement){
-				return (FuzzyXMLElement)nodes[i];
-			}
-		}
-		return null;
-	}
-	
-	/**
 	 * Converts {@link RGB} to the hex string.
 	 * 
 	 * @param color the RGB object
@@ -482,84 +350,6 @@ public class HTMLUtil {
 			hex = "0" + hex;
 		}
 		return hex;
-	}
-	
-	/**
-	 * Converts the hex string to {@link RGB}.
-	 * 
-	 * @param value the hex string
-	 * @return {@link RGB}
-	 */
-	public static RGB toRGB(String value){
-		if(value.startsWith("#")){
-			String red   = value.substring(1, 3);
-			String green = value.substring(3, 5);
-			String blue  = value.substring(5, 7);
-			return new RGB(toDecimal(red), toDecimal(green), toDecimal(blue));
-		}
-		return null;
-	}
-	
-	private static int toDecimal(String value){
-		int result = 0;
-		int count = 1;
-		for(int i=value.length()-1;i>=0;i--){
-			char c = value.charAt(i);
-			if(c>='0' && c<='9'){
-				result += Integer.parseInt(String.valueOf(c)) * count;
-			} else if(c>='a' || c<='f'){
-				result += (c - 'a' + 10) * count;
-			} else if(c>='A' || c<='F'){
-				result += (c - 'A' + 10) * count;
-			}
-			count = count * 16;
-		}
-		return result;
-	}
-	
-	/**
-	 * Returns the getter method name from the property name.
-	 * 
-	 * @param propertyName the property name
-	 * @param isBool
-	 * <ul>
-	 *   <li>true  - returns isXxxx</li>
-	 *   <li>false - returns getXxxx</li>
-	 * </ul>
-	 * @return the getter method name
-	 */
-	public static String getGetterName(String propertyName, boolean isBool){
-		if(isBool){
-			return "is" + propertyName.substring(0, 1).toUpperCase() + 
-				propertyName.substring(1);
-		} else {
-			return "get" + propertyName.substring(0, 1).toUpperCase() + 
-				propertyName.substring(1);
-		}
-	}
-	
-	/**
-	 * Returns the setter method name from the property name.
-	 * 
-	 * @param propertyName the propery name
-	 * @return the setter method name
-	 */
-	public static String getSetterName(String propertyName){
-		return "set" + propertyName.substring(0, 1).toUpperCase() + 
-			propertyName.substring(1);
-	}
-	
-	/**
-	 * Returns an active editor part in the workbench.
-	 * 
-	 * @return An instance of an active editorpart.
-	 */
-	public static IEditorPart getActiveEditor(){
-		IWorkbench workbench = PlatformUI.getWorkbench();
-		IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-		IWorkbenchPage page = window.getActivePage();
-		IEditorPart editorPart = page.getActiveEditor();
-		return editorPart;
 	}
 	
 	private static HashMap<IJavaProject, ICompilationUnit> unitMap = new HashMap<IJavaProject, ICompilationUnit>();
@@ -616,27 +406,4 @@ public class HTMLUtil {
 		}
 	}
 	
-	/**
-	 * Open the type select dialog.
-	 * 
-	 * @param parent the parent control
-	 * @return the selected type name or <code>null</code>
-	 */
-	public static String openClassSelectDialog(IJavaProject project, Control parent) {
-		try {
-			Shell shell = parent.getShell();
-			SelectionDialog dialog = JavaUI.createTypeDialog(
-					shell,new ProgressMonitorDialog(shell),
-					SearchEngine.createJavaSearchScope(new IJavaElement[]{project}),
-					IJavaElementSearchConstants.CONSIDER_CLASSES,false);
-				
-			if(dialog.open()==SelectionDialog.OK){
-				Object[] result = dialog.getResult();
-				return ((IType)result[0]).getFullyQualifiedName();
-			}
-		} catch(Exception ex){
-			HTMLPlugin.logException(ex);
-		}
-		return null;
-	}
 }

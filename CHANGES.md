@@ -14,6 +14,7 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ### Dead code and commented-out code cleanup
 
+- **`HTMLUtil`**: Removed 13 dead methods — `contains()`, `copyFolder()`, `nullConv()`, `getActiveEditor()`, `openClassSelectDialog()`, `trim()`, `getFirstElement()`, `getGetterName()`, `getSetterName()`, `toRGB()` (with buggy `toDecimal()`), `selectXPathNode()`, `selectXPathNodes()`, and commented-out `cloneList`. Class shrunk from 642 to 430 lines.
 - Deleted `JavaScriptFormatter` and `CSSStyleSheetFormatter` — entirely commented-out classes (abandoned Rhino/CSSDOM formatter prototypes).
 - Removed dead `WodHtmlUtils.getHtmlFileForWodFilePath()` (no callers).
 - Removed dead `WodModelUtils.validateWodFile(IFile, ...)` (only called itself, never externally).
