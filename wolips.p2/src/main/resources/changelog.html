@@ -59,6 +59,11 @@
 					<h3>Fix: script/style content no longer corrupts close-tag completion</h3>
 					<p>JavaScript operators like <code>&lt;</code> inside <code>&lt;script&gt;</code> blocks were being parsed as HTML tags, corrupting the close-tag autocomplete stack. For example, <code>if (a &lt; b)</code> caused the scanner to think a <code>&lt;b&gt;</code> tag was open. The scanner now skips over <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> content entirely, jumping straight to the matching closing tag.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: void elements no longer corrupt close-tag completion</h3>
+					<p>HTML void elements like <code>&lt;br&gt;</code>, <code>&lt;img&gt;</code>, and <code>&lt;input&gt;</code> were pushed onto the unclosed-tag stack even though they can never have children. This caused close-tag completion to suggest closing the void element instead of its parent. The scanner now recognizes all 14 HTML void elements and never pushes them onto the stack, regardless of whether they use the explicit self-closing syntax (<code>&lt;br /&gt;</code>) or not (<code>&lt;br&gt;</code>).</p>
+				</div>
 			</div>
 
 			<!-- March 3, 2026 -->

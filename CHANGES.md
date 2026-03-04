@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Treat HTML void elements as implicitly self-closing
+
+- **HTML void elements** (`<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, `<link>`, etc.) were pushed onto the unclosed-tag stack, causing close-tag completion to suggest closing the void element instead of its parent. For example, `<div><p><br></p>` would suggest `</br>` instead of `</div>`.
+- **Fix:** The scanner now maintains a set of all 14 HTML void elements and never pushes them onto the stack, regardless of whether they use explicit self-closing syntax (`<br />`) or not (`<br>`). The self-closing `/` pop also skips void elements to avoid popping a parent tag.
+- **8 new tests** covering `<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, `<link>`, explicit self-closing void elements, and multiple void elements in sequence.
+
 ### Skip script/style content in close-tag completion
 
 - **JavaScript operators like `<` inside `<script>` blocks** were being parsed as HTML tags, corrupting the tag stack. For example, `<body><script>if (a < b) {}</script>` would cause close-tag completion to suggest `</script>` instead of `</body>`, because `< b` was treated as opening a `<b>` tag.

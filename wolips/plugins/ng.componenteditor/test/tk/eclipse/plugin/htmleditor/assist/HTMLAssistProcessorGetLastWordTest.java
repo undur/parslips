@@ -234,4 +234,51 @@ public class HTMLAssistProcessorGetLastWordTest {
 		// Empty script tag.
 		assertEquals("body", lastTag("<body><script></script>"));
 	}
+
+	// =========================================================================
+	// Void elements — must never be pushed onto the tag stack
+	// =========================================================================
+
+	@Test
+	public void br_notPushedOnStack() {
+		// <br> is a void element — must not be treated as an opening tag.
+		assertEquals("div", lastTag("<div><p><br></p>"));
+	}
+
+	@Test
+	public void br_selfClosing_notPushedOnStack() {
+		// Explicit self-closing <br /> should also work (already did, but verify).
+		assertEquals("div", lastTag("<div><p><br /></p>"));
+	}
+
+	@Test
+	public void hr_notPushedOnStack() {
+		assertEquals("div", lastTag("<div><hr>"));
+	}
+
+	@Test
+	public void img_notPushedOnStack() {
+		assertEquals("p", lastTag("<div><p><img src=\"photo.jpg\">"));
+	}
+
+	@Test
+	public void input_notPushedOnStack() {
+		assertEquals("form", lastTag("<form><input type=\"text\">"));
+	}
+
+	@Test
+	public void meta_notPushedOnStack() {
+		assertEquals("head", lastTag("<head><meta charset=\"utf-8\">"));
+	}
+
+	@Test
+	public void link_notPushedOnStack() {
+		assertEquals("head", lastTag("<head><link rel=\"stylesheet\" href=\"style.css\">"));
+	}
+
+	@Test
+	public void multipleVoidElements_notPushedOnStack() {
+		// Several void elements in a row.
+		assertEquals("p", lastTag("<div><p><br><br><hr><img src=\"x\">"));
+	}
 }

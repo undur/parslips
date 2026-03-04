@@ -1,5 +1,8 @@
 package tk.eclipse.plugin.htmleditor.assist;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
 
 /**
@@ -21,6 +24,18 @@ import java.util.Stack;
  * with no Eclipse/SWT dependencies, making it directly unit-testable.
  */
 public class TagStackAnalyzer {
+
+	/**
+	 * HTML void elements — tags that can never have children and are
+	 * implicitly self-closing (e.g. {@code <br>}, {@code <img>}).
+	 * These must never be pushed onto the unclosed-tag stack.
+	 *
+	 * @see <a href="https://html.spec.whatwg.org/multipage/syntax.html#void-elements">HTML spec: void elements</a>
+	 */
+	private static final Set<String> VOID_ELEMENTS = new HashSet<String>(Arrays.asList(
+			"area", "base", "br", "col", "embed", "hr", "img", "input",
+			"link", "meta", "param", "source", "track", "wbr"
+	));
 
 	/**
 	 * Analyzes the given HTML text (typically the document content from the
@@ -74,7 +89,7 @@ public class TagStackAnalyzer {
 				}
 				if (temp1.startsWith("<") && !temp1.startsWith("</") && !temp1.startsWith("<!")) {
 					prevTag = temp1.substring(1);
-					if (!temp1.endsWith("/")) {
+					if (!temp1.endsWith("/") && !VOID_ELEMENTS.contains(prevTag.toLowerCase())) {
 						stack.push(prevTag);
 					}
 				}
@@ -83,11 +98,13 @@ public class TagStackAnalyzer {
 				}
 				else if (temp1.endsWith("/") && stack.size() != 0
 						&& !prevTag.equals("")
+						&& !VOID_ELEMENTS.contains(prevTag.toLowerCase())
 						&& !temp1.startsWith("\"") && !temp1.startsWith("'")) {
-					// Self-closing tag marker (e.g. <img />) — pop the tag we just pushed.
+					// Self-closing tag marker (e.g. <div />) — pop the tag we just pushed.
 					// Guard against quoted attribute values like href="/" which also end
-					// with "/" but must not affect the tag stack, and against "/" appearing
-					// in body text (e.g. "Price / amount") where prevTag is empty.
+					// with "/" but must not affect the tag stack, against "/" appearing
+					// in body text (e.g. "Price / amount") where prevTag is empty, and
+					// against void elements (e.g. <br />) which were never pushed.
 					stack.pop();
 				}
 				sb.setLength(0);
