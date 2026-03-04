@@ -9,7 +9,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.ide.IEditorAssociationOverride;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.eclipse.core.runtime.content.IContentType;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
  * Overrides Eclipse's default editor selection so that component files open
@@ -100,9 +100,9 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 			return false;
 		}
 		try {
-			BuildProperties buildProps = (BuildProperties) project.getAdapter(BuildProperties.class);
-			if (buildProps != null) {
-				return buildProps.isNGProject();
+			ParsleyProject parsleyProject = (ParsleyProject) project.getAdapter(ParsleyProject.class);
+			if (parsleyProject != null) {
+				return parsleyProject.isNGProject();
 			}
 		} catch (Exception e) {
 			// Ignore — fall through to false

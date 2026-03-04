@@ -8,7 +8,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 public class WodHtmlUtils {
@@ -145,17 +145,17 @@ public class WodHtmlUtils {
    * return the corresponding WOD element entry.
    * 
    * @param element the XML element to process
-   * @param buildProperties the build properties for this project
+   * @param parsleyProject the project model (for tag shortcut resolution and inline binding settings)
    * @param resolveWodElement if true, webobject tags will resolve to their DocumentWodElement
    * @param cache the WodParserCache
    * @return an IWodElement corresponding to the node
-   * @throws Exception 
+   * @throws Exception
    */
-  public static IWodElement getWodElement(FuzzyXMLElement element, BuildProperties buildProperties, boolean resolveWodElement, WodParserCache cache) throws Exception {
+  public static IWodElement getWodElement(FuzzyXMLElement element, ParsleyProject parsleyProject, boolean resolveWodElement, WodParserCache cache) throws Exception {
     IWodElement wodElement;
     if (WodHtmlUtils.isWOTag(element)) {
       if (WodHtmlUtils.isInline(element.getName()) || !resolveWodElement) {
-        wodElement = new FuzzyXMLWodElement(element, buildProperties);
+        wodElement = new FuzzyXMLWodElement(element, parsleyProject);
       }
       else {
         String elementName = element.getAttributeValue("name");

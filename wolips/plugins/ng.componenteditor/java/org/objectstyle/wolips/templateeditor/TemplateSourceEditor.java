@@ -40,6 +40,7 @@ import org.objectstyle.wolips.components.editor.ComponentEditorInteraction;
 import org.objectstyle.wolips.components.editor.IEmbeddedEditor;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.ITextWOEditor;
@@ -224,7 +225,8 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
   public FuzzyXMLDocument getHtmlXmlDocument(boolean refreshModel) throws Exception {
     FuzzyXMLDocument doc;
     if (refreshModel || isDirty()) {
-      BuildProperties buildProperties = (BuildProperties)getParserCache().getProject().getAdapter(BuildProperties.class);
+      ParsleyProject parsleyProject = (ParsleyProject)getParserCache().getProject().getAdapter(ParsleyProject.class);
+      BuildProperties buildProperties = parsleyProject != null ? parsleyProject.getBuildProperties() : null;
       FuzzyXMLParser parser = new FuzzyXMLParser(buildProperties != null ? buildProperties.isWellFormedTemplateRequired() : false, true);
       doc = parser.parse(getHTMLSource());
       getParserCache().getHtmlEntry().setModel(doc);
@@ -246,8 +248,8 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
         FuzzyXMLDocument document = getHtmlXmlDocument(refreshModel);
         if (document != null) {
           FuzzyXMLElement element = document.getElementByOffset(textSelection.getOffset());
-          BuildProperties buildProperties = (BuildProperties)cache.getProject().getAdapter(BuildProperties.class);
-          wodElement = WodHtmlUtils.getWodElement(element, buildProperties, resolveWodElement, cache);
+          ParsleyProject parsleyProject = (ParsleyProject)cache.getProject().getAdapter(ParsleyProject.class);
+          wodElement = WodHtmlUtils.getWodElement(element, parsleyProject, resolveWodElement, cache);
         }
       }
       else if (realSelection instanceof IStructuredSelection) {
@@ -255,8 +257,8 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
         Object obj = structuredSelection.getFirstElement();
         if (obj instanceof FuzzyXMLElement) {
           FuzzyXMLElement element = (FuzzyXMLElement) obj;
-          BuildProperties buildProperties = (BuildProperties)cache.getProject().getAdapter(BuildProperties.class);
-          wodElement = WodHtmlUtils.getWodElement(element, buildProperties, resolveWodElement, cache);
+          ParsleyProject parsleyProject = (ParsleyProject)cache.getProject().getAdapter(ParsleyProject.class);
+          wodElement = WodHtmlUtils.getWodElement(element, parsleyProject, resolveWodElement, cache);
         }
       }
     }
@@ -345,8 +347,8 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
     FuzzyXMLElement element = getElementAtPoint(point, refreshModel);
     if (WodHtmlUtils.isWOTag(element)) {
       WodParserCache cache = getParserCache();
-      BuildProperties buildProperties = (BuildProperties)cache.getProject().getAdapter(BuildProperties.class);
-      wodElement = WodHtmlUtils.getWodElement(element, buildProperties, resolveWodElement, cache);
+      ParsleyProject parsleyProject = (ParsleyProject)cache.getProject().getAdapter(ParsleyProject.class);
+      wodElement = WodHtmlUtils.getWodElement(element, parsleyProject, resolveWodElement, cache);
     }
     return wodElement;
   }
@@ -420,8 +422,8 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
           int offset = templateSelection.getOffset();
           FuzzyXMLElement element = getElementAtOffset(offset, true);
           if (element != null) {
-            BuildProperties buildProperties = (BuildProperties)getParserCache().getProject().getAdapter(BuildProperties.class);
-            DeleteTagRefactoring.run(element, false, buildProperties, getParserCache(), new NullProgressMonitor());
+            ParsleyProject parsleyProject = (ParsleyProject)getParserCache().getProject().getAdapter(ParsleyProject.class);
+            DeleteTagRefactoring.run(element, false, parsleyProject, getParserCache(), new NullProgressMonitor());
           }
         }
       }
@@ -444,8 +446,8 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
           int offset = templateSelection.getOffset();
           FuzzyXMLElement element = getElementAtOffset(offset, true);
           if (element != null) {
-            BuildProperties buildProperties = (BuildProperties)getParserCache().getProject().getAdapter(BuildProperties.class);
-            DeleteTagRefactoring.run(element, true, buildProperties, getParserCache(), new NullProgressMonitor());
+            ParsleyProject parsleyProject = (ParsleyProject)getParserCache().getProject().getAdapter(ParsleyProject.class);
+            DeleteTagRefactoring.run(element, true, parsleyProject, getParserCache(), new NullProgressMonitor());
           }
         }
       }

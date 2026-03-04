@@ -13,7 +13,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
@@ -54,8 +54,8 @@ public class OpenDeclarationHandler extends AbstractHandler {
 			}
 
 			WodParserCache cache = sourceEditor.getParserCache();
-			BuildProperties buildProperties = (BuildProperties) cache.getProject().getAdapter(BuildProperties.class);
-			SimpleWodElement wodElement = new FuzzyXMLWodElement(element, buildProperties);
+			ParsleyProject parsleyProject = (ParsleyProject) cache.getProject().getAdapter(ParsleyProject.class);
+			SimpleWodElement wodElement = new FuzzyXMLWodElement(element, parsleyProject);
 
 			if (!wodElement.isTypeWithin(new Region(offset, 0))) {
 				return null;

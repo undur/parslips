@@ -114,7 +114,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wizards.WizardsPlugin;
 
 /**
@@ -558,7 +558,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 			IPath scContainerPath = getContainerFullPath();
 			if (scContainerPath != null && scContainerPath.segmentCount() > 0) {
 				IProject wizProject = ResourcesPlugin.getWorkspace().getRoot().getProject(scContainerPath.segment(0));
-				_superclassDialogField.setText(BuildProperties.getComponentClass(wizProject));
+				_superclassDialogField.setText(ParsleyProject.getComponentClass(wizProject));
 			} else {
 				_superclassDialogField.setText("");
 			}
@@ -1077,9 +1077,9 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot()
 					.getProject(containerPath.segment(0));
 			if (project != null && project.exists()) {
-				BuildProperties bp = (BuildProperties) project.getAdapter(BuildProperties.class);
-				if (bp != null) {
-					return bp.isNGProject();
+				ParsleyProject pp = (ParsleyProject) project.getAdapter(ParsleyProject.class);
+				if (pp != null) {
+					return pp.isNGProject();
 				}
 			}
 		}

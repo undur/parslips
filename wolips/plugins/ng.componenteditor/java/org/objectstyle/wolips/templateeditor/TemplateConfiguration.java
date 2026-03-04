@@ -10,7 +10,7 @@ import org.eclipse.jface.text.reconciler.MonoReconciler;
 import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.part.FileEditorInput;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.editor.WodAnnotationHover;
 
@@ -113,8 +113,8 @@ public class TemplateConfiguration extends HTMLConfiguration {
     try {
       IFile file = ((FileEditorInput) getEditorPart().getEditorInput()).getFile();
       WodParserCache parserCache = WodParserCache.parser(file);
-      BuildProperties buildProperties = (BuildProperties)parserCache.getProject().getAdapter(BuildProperties.class);
-      return new TemplateAssistProcessor(getEditorPart(), parserCache, buildProperties);
+      ParsleyProject parsleyProject = (ParsleyProject)parserCache.getProject().getAdapter(ParsleyProject.class);
+      return new TemplateAssistProcessor(getEditorPart(), parserCache, parsleyProject);
     }
     catch (Exception e) {
       throw new RuntimeException("Failed to create assist processor.", e);

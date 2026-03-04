@@ -15,9 +15,17 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 
+/**
+ * Wrapper around a project's {@code build.properties} file. Provides access
+ * to build-time configuration: inline binding syntax, template strictness,
+ * project name, and framework/application type.
+ *
+ * <p>For project-level concerns like framework detection (ng-objects vs WebObjects)
+ * and element/component class resolution, use {@link ParsleyProject} instead.
+ *
+ * @see ParsleyProject
+ */
 public class BuildProperties {
 	private IProject _project;
 
@@ -215,7 +223,7 @@ public class BuildProperties {
 
 	/**
 	 * Copies cached defaults from another BuildProperties instance to avoid
-	 * re-reading preferences. Called from {@link BuildPropertiesAdapterFactory}
+	 * re-reading preferences. Called from {@link ParsleyProjectAdapterFactory}
 	 * when creating a new BuildProperties for a project that shares the same workspace.
 	 */
 	public void _copyDefaultsFrom(BuildProperties props) {
@@ -263,164 +271,4 @@ public class BuildProperties {
 		return getBoolean("component.wellFormedTemplateRequired", _wellFormedTemplateRequiredDefault);
 	}
 
-	// ---- Framework detection (ng-objects vs WebObjects) ----
-
-	/** Fully-qualified root element type for ng-objects projects. */
-	public static final String NG_ELEMENT_CLASS = "ng.appserver.templating.NGElement";
-	/** Fully-qualified root component type for ng-objects projects. */
-	public static final String NG_COMPONENT_CLASS = "ng.appserver.templating.NGComponent";
-	/** Package prefix for ng-objects built-in ("private") elements. */
-	public static final String NG_PRIVATE_ELEMENT_PACKAGE = "ng.appserver.templating._private.";
-
-	/** Fully-qualified root element type for WebObjects projects. */
-	public static final String WO_ELEMENT_CLASS = "com.webobjects.appserver.WOElement";
-	/** Fully-qualified root component type for WebObjects projects. */
-	public static final String WO_COMPONENT_CLASS = "com.webobjects.appserver.WOComponent";
-	/** Package prefix for WebObjects built-in ("private") elements. */
-	public static final String WO_PRIVATE_ELEMENT_PACKAGE = "com.webobjects.appserver._private.";
-
-	/**
-	 * Returns the root element class name for this project, using the following priority:
-	 * <ol>
-	 *   <li>{@code base=ng} in build.properties &rarr; {@value #NG_ELEMENT_CLASS}</li>
-	 *   <li>{@code base=wo} in build.properties &rarr; {@value #WO_ELEMENT_CLASS}</li>
-	 *   <li>Classpath probe: if NGElement is on the classpath, use it; otherwise fall back to WOElement</li>
-	 * </ol>
-	 */
-	public String getElementClass() {
-		return resolveFrameworkClass(NG_ELEMENT_CLASS, WO_ELEMENT_CLASS);
-	}
-
-	/**
-	 * Returns the root component class name for this project (same priority as {@link #getElementClass()}).
-	 */
-	public String getComponentClass() {
-		return resolveFrameworkClass(NG_COMPONENT_CLASS, WO_COMPONENT_CLASS);
-	}
-
-	/**
-	 * Returns the package prefix for built-in ("private") elements for this project.
-	 */
-	public String getPrivateElementPackage() {
-		return resolveFrameworkClass(NG_PRIVATE_ELEMENT_PACKAGE, WO_PRIVATE_ELEMENT_PACKAGE);
-	}
-
-	/**
-	 * Returns {@code true} if this project uses ng-objects (as opposed to WebObjects).
-	 */
-	public boolean isNGProject() {
-		String base = get("base");
-		if ("ng".equals(base)) {
-			return true;
-		}
-		if ("wo".equals(base)) {
-			return false;
-		}
-		// No explicit override — probe the classpath.
-		// Only claim ng if NGElement is present and WOElement is not;
-		// if both are on the classpath (mixed workspace) default to WO.
-		return classpathContains(NG_ELEMENT_CLASS) && !classpathContains(WO_ELEMENT_CLASS);
-	}
-
-	private String resolveFrameworkClass(String ngClass, String woClass) {
-		String base = get("base");
-		if ("ng".equals(base)) {
-			return ngClass;
-		}
-		if ("wo".equals(base)) {
-			return woClass;
-		}
-		// No explicit override — probe the classpath.
-		// Only use ng classes if NGElement is present and WOElement is not;
-		// if both are on the classpath (mixed workspace) default to WO.
-		if (classpathContains(ngClass) && !classpathContains(woClass)) {
-			return ngClass;
-		}
-		return woClass;
-	}
-
-	private boolean classpathContains(String fullyQualifiedClassName) {
-		try {
-			IJavaProject javaProject = JavaCore.create(_project);
-			if (javaProject != null && javaProject.exists()) {
-				return javaProject.findType(fullyQualifiedClassName) != null;
-			}
-		} catch (Exception e) {
-			// ignore — fall through to false
-		}
-		return false;
-	}
-
-	/**
-	 * Convenience: resolves the element class for the given project.
-	 * Falls back to {@value #WO_ELEMENT_CLASS} if no project or build.properties can be obtained.
-	 */
-	public static String getElementClass(IProject project) {
-		if (project != null) {
-			try {
-				BuildProperties bp = (BuildProperties) project.getAdapter(BuildProperties.class);
-				if (bp != null) {
-					return bp.getElementClass();
-				}
-			} catch (Exception e) {
-				// ignore
-			}
-		}
-		return WO_ELEMENT_CLASS;
-	}
-
-	/**
-	 * Convenience: resolves the component class for the given project.
-	 * Falls back to {@value #WO_COMPONENT_CLASS} if no project or build.properties can be obtained.
-	 */
-	public static String getComponentClass(IProject project) {
-		if (project != null) {
-			try {
-				BuildProperties bp = (BuildProperties) project.getAdapter(BuildProperties.class);
-				if (bp != null) {
-					return bp.getComponentClass();
-				}
-			} catch (Exception e) {
-				// ignore
-			}
-		}
-		return WO_COMPONENT_CLASS;
-	}
-
-	/**
-	 * Convenience: resolves the element class for the given Java project.
-	 */
-	public static String getElementClass(IJavaProject javaProject) {
-		if (javaProject != null) {
-			return getElementClass(javaProject.getProject());
-		}
-		return WO_ELEMENT_CLASS;
-	}
-
-	/**
-	 * Convenience: resolves the component class for the given Java project.
-	 */
-	public static String getComponentClass(IJavaProject javaProject) {
-		if (javaProject != null) {
-			return getComponentClass(javaProject.getProject());
-		}
-		return WO_COMPONENT_CLASS;
-	}
-
-	/**
-	 * Convenience: resolves the private element package prefix for the given project.
-	 */
-	public static String getPrivateElementPackage(IProject project) {
-		if (project != null) {
-			try {
-				BuildProperties bp = (BuildProperties) project.getAdapter(BuildProperties.class);
-				if (bp != null) {
-					return bp.getPrivateElementPackage();
-				}
-			} catch (Exception e) {
-				// ignore
-			}
-		}
-		return NG_PRIVATE_ELEMENT_PACKAGE;
-	}
 }

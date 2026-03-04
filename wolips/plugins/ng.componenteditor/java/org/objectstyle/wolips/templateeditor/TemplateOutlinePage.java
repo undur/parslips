@@ -41,6 +41,7 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
@@ -558,8 +559,8 @@ public class TemplateOutlinePage extends Page implements IContentOutlinePage, IH
       if (woTag) {
         className = className + " wo";
         try {
-          BuildProperties buildProperties = (BuildProperties)_editor.getParserCache().getProject().getAdapter(BuildProperties.class);
-          wodElement = WodHtmlUtils.getWodElement(element, buildProperties, true, cache);
+          ParsleyProject parsleyProject = (ParsleyProject)_editor.getParserCache().getProject().getAdapter(ParsleyProject.class);
+          wodElement = WodHtmlUtils.getWodElement(element, parsleyProject, true, cache);
         }
         catch (Throwable t) {
           // IGNORE

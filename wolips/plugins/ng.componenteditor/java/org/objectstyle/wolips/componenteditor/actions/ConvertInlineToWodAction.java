@@ -7,7 +7,7 @@ import org.eclipse.ui.IEditorPart;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.refactoring.ConvertInlineToWodRefactoring;
 import org.objectstyle.wolips.wodclipse.editor.WodEditor;
@@ -25,8 +25,8 @@ public class ConvertInlineToWodAction extends AbstractTemplateAction {
 					ITextSelection templateSelection = (ITextSelection) templateEditor.getSourceEditor().getSelectionProvider().getSelection();
 					int offset = templateSelection.getOffset();
 					WodParserCache cache = templateEditor.getSourceEditor().getParserCache();
-					BuildProperties buildProperties = (BuildProperties)cache.getProject().getAdapter(BuildProperties.class);
-					ConvertInlineToWodRefactoring.run(cache, offset, buildProperties, new NullProgressMonitor());
+					ParsleyProject parsleyProject = (ParsleyProject)cache.getProject().getAdapter(ParsleyProject.class);
+					ConvertInlineToWodRefactoring.run(cache, offset, parsleyProject, new NullProgressMonitor());
 				}
 			}
 		} catch (Exception e) {

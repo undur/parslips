@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 
 public class TagShortcut {
   private String _shortcut;
@@ -47,8 +47,8 @@ public class TagShortcut {
    *
    * <p>This is a temporary bridge until tag shortcuts become per-project.
    */
-  public String getActual(BuildProperties buildProperties) {
-    if (buildProperties != null && buildProperties.isNGProject()) {
+  public String getActual(ParsleyProject parsleyProject) {
+    if (parsleyProject != null && parsleyProject.isNGProject()) {
       return woToNGClassName(_actual);
     }
     return _actual;

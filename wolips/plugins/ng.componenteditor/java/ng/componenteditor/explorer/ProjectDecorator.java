@@ -18,6 +18,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.jface.viewers.DecorationOverlayIcon;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -145,10 +146,10 @@ public class ProjectDecorator implements ILabelDecorator {
 			if (javaProject == null || !javaProject.exists()) {
 				return 0;
 			}
-			if (javaProject.findType(BuildProperties.NG_ELEMENT_CLASS) != null) {
+			if (javaProject.findType(ParsleyProject.NG_ELEMENT_CLASS) != null) {
 				return 1;
 			}
-			if (javaProject.findType(BuildProperties.WO_ELEMENT_CLASS) != null) {
+			if (javaProject.findType(ParsleyProject.WO_ELEMENT_CLASS) != null) {
 				return -1;
 			}
 		} catch (Exception e) {

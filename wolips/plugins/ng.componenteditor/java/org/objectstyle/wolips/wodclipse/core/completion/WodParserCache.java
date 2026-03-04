@@ -31,7 +31,7 @@ import org.objectstyle.wolips.core.resources.types.LimitedLRUCache;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.builder.WodBuilder;
 public class WodParserCache implements ITypeOwner {
@@ -195,7 +195,7 @@ public class WodParserCache implements ITypeOwner {
     // a fallback so validation still runs, but do NOT cache it in
     // _componentType (the real type may resolve on a later call).
     if (_javaProject != null) {
-    	String fallbackClass = BuildProperties.getComponentClass(_javaProject);
+    	String fallbackClass = ParsleyProject.getComponentClass(_javaProject);
     	return _javaProject.findType(fallbackClass);
     }
     return null;

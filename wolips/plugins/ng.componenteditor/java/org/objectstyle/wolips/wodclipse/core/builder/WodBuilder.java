@@ -75,6 +75,7 @@ import org.objectstyle.wolips.core.resources.types.WOHierarchyScope;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodModelUtils;
@@ -145,7 +146,7 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 					if (compilationUnit != null) {
 						IType type = compilationUnit.findPrimaryType();
 						if (type != null) {
-							IType woElementType = type.getJavaProject().findType(BuildProperties.getElementClass(type.getJavaProject()), progressMonitor);
+							IType woElementType = type.getJavaProject().findType(ParsleyProject.getElementClass(type.getJavaProject()), progressMonitor);
 							if (woElementType != null) {
 								ITypeHierarchy typeHierarchy = SuperTypeHierarchyCache.getTypeHierarchy(type, progressMonitor);
 								if (typeHierarchy != null && typeHierarchy.contains(woElementType)) {

@@ -30,6 +30,7 @@ import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionProposal;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCompletionUtils;
 import org.objectstyle.wolips.wodclipse.core.completion.WodDeprecatedCompletionProposal;
@@ -67,7 +68,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
    * Returns a cached InlineWodTagInfo for the given element type name and
    * project, creating and caching a new one if none exists.
    */
-  private static synchronized InlineWodTagInfo getCachedTagInfo(String elementTypeName, IJavaProject javaProject, BuildProperties buildProperties) {
+  private static synchronized InlineWodTagInfo getCachedTagInfo(String elementTypeName, IJavaProject javaProject, ParsleyProject parsleyProject) {
     IProject project = javaProject.getProject();
     Map<String, InlineWodTagInfo> projectCache = _tagInfoCache.get(project);
     if (projectCache == null) {
@@ -78,7 +79,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
     if (tagInfo == null) {
       tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());
       tagInfo.setJavaProject(javaProject);
-      tagInfo.setBuildProperties(buildProperties);
+      tagInfo.setParsleyProject(parsleyProject);
       projectCache.put(elementTypeName, tagInfo);
     }
     return tagInfo;
@@ -89,10 +90,10 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
   //private ClassNameAssistProcessor classNameProcessor = new ClassNameAssistProcessor();
   private IFile _file;
   private IEditorPart _editorPart;
-  private BuildProperties _buildProperties;
+  private ParsleyProject _parsleyProject;
 
-  public TemplateAssistProcessor(IEditorPart editorPart, WodParserCache wodParserCache, BuildProperties buildProperties) {
-    _buildProperties = buildProperties;
+  public TemplateAssistProcessor(IEditorPart editorPart, WodParserCache wodParserCache, ParsleyProject parsleyProject) {
+    _parsleyProject = parsleyProject;
     _editorPart = editorPart;
     _cache = wodParserCache;
     _tagList = new ArrayList<TagInfo>(TagDefinition.getTagInfoAsList());
@@ -179,7 +180,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         if (!proposals.isEmpty()) {
           tagInfos = new LinkedList<TagInfo>();
           for (WodCompletionProposal proposal : proposals) {
-            tagInfos.add(getCachedTagInfo(proposal.getProposal(), javaProject, _buildProperties));
+            tagInfos.add(getCachedTagInfo(proposal.getProposal(), javaProject, _parsleyProject));
           }
         }
       }
@@ -205,8 +206,9 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         String bindingValue = value;
         String prefix = "$";
         String suffix = "";
-        String inlineBindingPrefix = _buildProperties != null ? _buildProperties.getInlineBindingPrefix() : "$";
-        String inlineBindingSuffix = _buildProperties != null ? _buildProperties.getInlineBindingSuffix() : "";
+        BuildProperties buildProperties = _parsleyProject != null ? _parsleyProject.getBuildProperties() : null;
+        String inlineBindingPrefix = buildProperties != null ? buildProperties.getInlineBindingPrefix() : "$";
+        String inlineBindingSuffix = buildProperties != null ? buildProperties.getInlineBindingSuffix() : "";
         if (value.startsWith(inlineBindingPrefix)) {
           prefix = inlineBindingPrefix;
           bindingValue = value.substring(inlineBindingPrefix.length());
@@ -232,7 +234,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
         IType componentType = BindingReflectionUtils.findElementType(wodTagInfo.getJavaProject(), componentTypeName, true, WodParserCache.getTypeCache());
         // If no Java class exists for this component, fall back to WOComponent/NGComponent
         if (componentType == null && wodTagInfo.getJavaProject() != null) {
-          String fallbackClass = BuildProperties.getComponentClass(wodTagInfo.getJavaProject());
+          String fallbackClass = ParsleyProject.getComponentClass(wodTagInfo.getJavaProject());
           componentType = wodTagInfo.getJavaProject().findType(fallbackClass);
         }
         Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();
@@ -334,7 +336,7 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
       String elementTypeName = name.substring("wo:".length());
       IJavaProject javaProject = getJavaProject();
       if (javaProject != null) {
-        return getCachedTagInfo(elementTypeName, javaProject, _buildProperties);
+        return getCachedTagInfo(elementTypeName, javaProject, _parsleyProject);
       }
       // No Java project available (shouldn't happen in practice)
       InlineWodTagInfo tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());

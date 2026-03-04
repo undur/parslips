@@ -660,16 +660,6 @@
    </extension>
 
 <!-- =================================================================================== -->
-<!-- Adapters (from core plugin)                                                         -->
-<!-- =================================================================================== -->
-   <extension point="org.eclipse.core.runtime.adapters">
-      <factory class="org.objectstyle.wolips.core.resources.internal.types.ProjectAdapterFactory"
-            adaptableType="org.eclipse.core.resources.IProject">
-         <adapter type="org.objectstyle.wolips.core.resources.types.ProjectAdapter"/>
-      </factory>
-   </extension>
-
-<!-- =================================================================================== -->
 <!-- Element Factories (for editor state persistence)                                    -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.ui.elementFactories">
@@ -695,15 +685,14 @@
    </extension>
 
 <!-- =================================================================================== -->
-<!-- BuildProperties adapter factory (from variables plugin)                             -->
+<!-- ParsleyProject adapter factory (project model + build properties)                   -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.core.runtime.adapters">
       <factory
             adaptableType="org.eclipse.core.resources.IProject"
-            class="org.objectstyle.wolips.variables.BuildPropertiesAdapterFactory">
-         <adapter
-               type="org.objectstyle.wolips.variables.BuildProperties">
-         </adapter>
+            class="org.objectstyle.wolips.variables.ParsleyProjectAdapterFactory">
+         <adapter type="org.objectstyle.wolips.variables.ParsleyProject"/>
+         <adapter type="org.objectstyle.wolips.variables.BuildProperties"/>
       </factory>
    </extension>
 

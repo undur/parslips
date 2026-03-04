@@ -16,21 +16,21 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.objectstyle.wolips.bindings.wod.HtmlElementName;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.WodDocumentUtils;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
 public class DeleteTagRefactoring implements IRunnableWithProgress {
-  private BuildProperties _buildProperties;
+  private ParsleyProject _parsleyProject;
   private FuzzyXMLElement _element;
   private WodParserCache _cache;
   private boolean _unwrap;
 
-  public DeleteTagRefactoring(FuzzyXMLElement element, boolean unwrap, BuildProperties buildProperties, WodParserCache cache) {
+  public DeleteTagRefactoring(FuzzyXMLElement element, boolean unwrap, ParsleyProject parsleyProject, WodParserCache cache) {
     _element = element;
     _unwrap = unwrap;
-    _buildProperties = buildProperties;
+    _parsleyProject = parsleyProject;
     _cache = cache;
   }
 
@@ -39,7 +39,7 @@ public class DeleteTagRefactoring implements IRunnableWithProgress {
       int referenceCount = 0;
 
       if (WodHtmlUtils.isWOTag(_element) && !WodHtmlUtils.isInline(_element)) {
-        IWodElement wodElement = WodHtmlUtils.getWodElement(_element, _buildProperties, true, _cache);
+        IWodElement wodElement = WodHtmlUtils.getWodElement(_element, _parsleyProject, true, _cache);
         if (wodElement != null) {
 	        String elementName = wodElement.getElementName();
 	        List<HtmlElementName> htmlElementNames = _cache.getHtmlEntry().getHtmlElementCache().getHtmlElementNames(elementName);
@@ -80,7 +80,7 @@ public class DeleteTagRefactoring implements IRunnableWithProgress {
     }
   }
 
-  public static void run(FuzzyXMLElement element, boolean unwrap, BuildProperties buildProperties, WodParserCache cache, IProgressMonitor progressMonitor) throws CoreException, InvocationTargetException, InterruptedException {
-    TemplateRefactoring.processHtmlAndWod(new DeleteTagRefactoring(element, unwrap, buildProperties, cache), cache, progressMonitor);
+  public static void run(FuzzyXMLElement element, boolean unwrap, ParsleyProject parsleyProject, WodParserCache cache, IProgressMonitor progressMonitor) throws CoreException, InvocationTargetException, InterruptedException {
+    TemplateRefactoring.processHtmlAndWod(new DeleteTagRefactoring(element, unwrap, parsleyProject, cache), cache, progressMonitor);
   }
 }

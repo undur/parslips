@@ -20,7 +20,7 @@ import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.bindings.wod.WodBindingValueProblem;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.locate.LocateException;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.HtmlCacheEntry;
 import org.objectstyle.wolips.wodclipse.core.completion.WodCacheEntry;
@@ -29,13 +29,13 @@ import org.objectstyle.wolips.wodclipse.core.util.FuzzyXMLWodElement;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
 public class TemplateValidator {
-  private BuildProperties _buildProperties;
+  private ParsleyProject _parsleyProject;
   private WodParserCache _cache;
   private Set<FuzzyXMLElement> _woElements;
 
   public TemplateValidator(WodParserCache cache) {
     _cache = cache;
-    _buildProperties = (BuildProperties)cache.getProject().getAdapter(BuildProperties.class);
+    _parsleyProject = (ParsleyProject)cache.getProject().getAdapter(ParsleyProject.class);
   }
 
   /**
@@ -93,7 +93,7 @@ public class TemplateValidator {
     String elementName = element.getName();
     if (WodHtmlUtils.isInline(elementName)) {
       if (validate) {
-        IWodElement wodElement = new FuzzyXMLWodElement(element, _buildProperties);
+        IWodElement wodElement = new FuzzyXMLWodElement(element, _parsleyProject);
         if (wodElement != null) {
           boolean validateBindingValues = Activator.getDefault().getPluginPreferences().getBoolean(PreferenceConstants.VALIDATE_BINDING_VALUES);
           //String invalidOGNLSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.INVALID_OGNL_SEVERITY_KEY);

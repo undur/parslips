@@ -315,7 +315,7 @@ public class TagShortcutTest {
 	}
 
 	@Test
-	public void getActual_nullBuildProperties_returnsOriginal() {
+	public void getActual_nullParsleyProject_returnsOriginal() {
 		TagShortcut ts = new TagShortcut("if", "WOConditional");
 		assertEquals("WOConditional", ts.getActual(null));
 	}

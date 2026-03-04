@@ -8,7 +8,7 @@ import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.WodBindingValueHyperlink;
 import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
@@ -24,10 +24,10 @@ public class InlineWodElementHyperlinkProvider implements IHyperlinkProvider {
     HTMLHyperlinkInfo hyperlinkInfo = null;
     try {
       if (WodHtmlUtils.isWOTag(element.getName()) && WodHtmlUtils.isInline(element.getName())) {
-        BuildProperties buildProperties = (BuildProperties)file.getProject().getAdapter(BuildProperties.class);
+        ParsleyProject parsleyProject = (ParsleyProject)file.getProject().getAdapter(ParsleyProject.class);
         if (attrName == null) {
           WodParserCache cache = WodParserCache.parser(file);
-          SimpleWodElement wodElement = new FuzzyXMLWodElement(element, buildProperties);
+          SimpleWodElement wodElement = new FuzzyXMLWodElement(element, parsleyProject);
           if (wodElement.isTypeWithin(new Region(offset, 0))) {
             hyperlinkInfo = new HTMLHyperlinkInfo();
             hyperlinkInfo.setOffset(wodElement.getElementTypePosition().getOffset());
@@ -38,7 +38,7 @@ public class InlineWodElementHyperlinkProvider implements IHyperlinkProvider {
         else {
           WodParserCache cache;
           cache = WodParserCache.parser(file);
-          SimpleWodElement wodElement = new FuzzyXMLWodElement(element, buildProperties);
+          SimpleWodElement wodElement = new FuzzyXMLWodElement(element, parsleyProject);
           IWodBinding wodBinding = wodElement.getBindingNamed(attrName);
           if (wodBinding != null) {
             Position valuePosition = wodBinding.getValuePosition();

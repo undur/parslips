@@ -11,13 +11,14 @@ import org.objectstyle.wolips.bindings.wod.SimpleWodBinding;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils.BindingValue;
 
 public class FuzzyXMLWodElement extends SimpleWodElement {
   private FuzzyXMLElement _xmlElement;
 
-  public FuzzyXMLWodElement(FuzzyXMLElement element, BuildProperties buildProperties) {
-    // FIXME: buildProperties can be null when the project doesn't have WOLips nature / adapter
+  public FuzzyXMLWodElement(FuzzyXMLElement element, ParsleyProject parsleyProject) {
+    BuildProperties buildProperties = parsleyProject != null ? parsleyProject.getBuildProperties() : null;
     String inlineBindingPrefix = buildProperties != null ? buildProperties.getInlineBindingPrefix() : "$";
     String inlineBindingSuffix = buildProperties != null ? buildProperties.getInlineBindingSuffix() : "";
 
@@ -39,7 +40,7 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
       if (!namespaceElementName.equals(matchingTagShortcut.getShortcut())) {
         setTagShortcutCaseMismatch(namespaceElementName, matchingTagShortcut.getShortcut());
       }
-      namespaceElementName = matchingTagShortcut.getActual(buildProperties);
+      namespaceElementName = matchingTagShortcut.getActual(parsleyProject);
     }
 
     _setElementName("_temp");

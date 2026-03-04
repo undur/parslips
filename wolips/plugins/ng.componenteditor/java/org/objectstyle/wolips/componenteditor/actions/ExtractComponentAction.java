@@ -32,7 +32,7 @@ import org.eclipse.ui.ide.IDE;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcessor;
 
@@ -118,7 +118,7 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 			}
 
 			// Determine the superclass and package for the new component
-			String superclassName = BuildProperties.getComponentClass(project);
+			String superclassName = ParsleyProject.getComponentClass(project);
 			String packageName = determinePackageName(cache);
 
 			// Dedent the selected HTML: strip the common leading whitespace

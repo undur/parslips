@@ -60,7 +60,7 @@ import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.objectstyle.wolips.core.CorePlugin;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
  * @author mike
@@ -79,11 +79,11 @@ public class TypeNameCollector extends TypeNameRequestor {
 	private boolean _requireTypeInProject;
 
 	public TypeNameCollector(IJavaProject project, boolean requireTypeInProject) throws JavaModelException {
-		this(BuildProperties.getElementClass(project), project, requireTypeInProject, new TreeSet<String>());
+		this(ParsleyProject.getElementClass(project), project, requireTypeInProject, new TreeSet<String>());
 	}
 
 	public TypeNameCollector(IJavaProject project, boolean requireTypeInProject, Set<String> typeNames) throws JavaModelException {
-		this(BuildProperties.getElementClass(project), project, requireTypeInProject, typeNames);
+		this(ParsleyProject.getElementClass(project), project, requireTypeInProject, typeNames);
 	}
 	
 	public TypeNameCollector(String superclassTypeName, IJavaProject project, boolean requireTypeInProject) throws JavaModelException {

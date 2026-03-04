@@ -14,7 +14,7 @@ import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
-import org.objectstyle.wolips.variables.BuildProperties;
+import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
  * Participates in Eclipse's Rename Type refactoring to update template files
@@ -142,12 +142,12 @@ public class RenameComponentParticipant extends RenameParticipant {
 			IType[] allSupertypes = hierarchy.getAllClasses();
 			for (IType supertype : allSupertypes) {
 				String fqn = supertype.getFullyQualifiedName();
-				if (BuildProperties.NG_COMPONENT_CLASS.equals(fqn) || BuildProperties.WO_COMPONENT_CLASS.equals(fqn)) {
+				if (ParsleyProject.NG_COMPONENT_CLASS.equals(fqn) || ParsleyProject.WO_COMPONENT_CLASS.equals(fqn)) {
 					_isComponent = true;
 					_isElement = true;
 					return; // Component implies element — no need to keep looking
 				}
-				if (BuildProperties.NG_ELEMENT_CLASS.equals(fqn) || BuildProperties.WO_ELEMENT_CLASS.equals(fqn)) {
+				if (ParsleyProject.NG_ELEMENT_CLASS.equals(fqn) || ParsleyProject.WO_ELEMENT_CLASS.equals(fqn)) {
 					_isElement = true;
 					// Don't return — keep looking to see if it's also a component
 				}

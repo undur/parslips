@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Introduce `ParsleyProject` as the project model
+
+- **New class: `ParsleyProject`** — a proper project model that owns `BuildProperties` and hosts project-level concerns (framework detection, element/component class resolution). Obtained via `project.getAdapter(ParsleyProject.class)`.
+- **Extracted from `BuildProperties`:** `isNGProject()`, `getElementClass()`, `getComponentClass()`, `getPrivateElementPackage()`, classpath probing (`resolveFrameworkClass()`, `classpathContains()`), static convenience methods, and framework constants (`NG_ELEMENT_CLASS`, `WO_ELEMENT_CLASS`, etc.) all moved to `ParsleyProject`. `BuildProperties` now only represents the `build.properties` file.
+- **New adapter factory: `ParsleyProjectAdapterFactory`** — replaces `BuildPropertiesAdapterFactory`. Produces both `ParsleyProject` and `BuildProperties` adapters for backward compatibility.
+- **Deleted dead `ProjectAdapter` hierarchy** — `ProjectAdapter`, `ProjectAdapterFactory`, `AbstractResourceAdapter`, `AbstractResourceAdapterFactory`, `IResourceType`, and `BuildPropertiesAdapterFactory`. The `ProjectAdapterFactory` was dead code (its `createAdapter()` returned `null`).
+- Updated all call sites (~25 files) to use `ParsleyProject` for project-level queries and `BuildProperties` only for raw property access.
+
 ### F3 "Open Declaration" for wo: tags
 
 - **F3 now opens the Java class declaration** when the cursor is on a `<wo:ComponentName>` tag's type name in the template editor. This is the same navigation that Cmd+click provides, now available via the standard Eclipse "Open Declaration" shortcut.
@@ -20,8 +28,8 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 ### Framework-aware tag shortcut resolution
 
 - **Tag shortcuts now resolve to NG class names in ng-objects projects.** Tag shortcuts (e.g. `if` → `WOConditional`) previously always expanded to WO class names, causing expensive failed type lookups in ng-objects projects where those classes don't exist. Now, when the project has `base=ng`, WO-prefixed class names are automatically translated to their NG equivalents (e.g. `WOConditional` → `NGConditional`, `WORepetition` → `NGRepetition`). Non-WO-prefixed shortcuts (like `ERXLocalizedString`) pass through unchanged.
-- **New method: `TagShortcut.getActual(BuildProperties)`** — returns the framework-appropriate class name. The translation is a simple `WO` → `NG` prefix swap, matching ng-objects' naming convention. This is a temporary bridge; the long-term plan is per-project tag shortcut registration.
-- Updated `FuzzyXMLWodElement` (validation path) and `InlineWodTagInfo` (autocomplete path) to use framework-aware shortcut expansion. `BuildProperties` is threaded through `TemplateAssistProcessor` → `InlineWodTagInfo` via a new `setBuildProperties()` setter.
+- **New method: `TagShortcut.getActual(ParsleyProject)`** — returns the framework-appropriate class name. The translation is a simple `WO` → `NG` prefix swap, matching ng-objects' naming convention. This is a temporary bridge; the long-term plan is per-project tag shortcut registration.
+- Updated `FuzzyXMLWodElement` (validation path) and `InlineWodTagInfo` (autocomplete path) to use framework-aware shortcut expansion. `ParsleyProject` is threaded through `TemplateAssistProcessor` → `InlineWodTagInfo` via a new `setParsleyProject()` setter.
 - **Global API definitions now apply to NG elements.** `ApiUtils.findApiSnapshot()` now recognizes `ng.appserver.templating.elements` as a framework package (alongside `_private`), and `findGlobalApiSnapshotByClassName()` falls back from NG to WO names (e.g. `NGConditional` → `WOConditional`) when looking up `WebObjectDefinitions.xml`. This gives NG elements the same binding autocomplete and validation as their WO counterparts without requiring separate `.api` files.
 - **`InlineWodTagInfo.loadAttributeInfo()` supplements reflection-based bindings with global API bindings.** Previously, when a type was found on the classpath, only Java reflection was used for binding discovery. Now, global API bindings are merged in as well, which is essential for NG dynamic elements whose bindings are declared via private association fields rather than KVC-style getters/setters.
 
