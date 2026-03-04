@@ -36,11 +36,8 @@ public class BuildProperties {
 		/** Framework type: "ng" for ng-objects, "wo" for WebObjects, or absent for classpath probing. */
 		BASE("base", "Framework type (ng or wo)"),
 
-		/** The project name. Falls back to {@link #FRAMEWORK_NAME} for legacy compatibility. */
+		/** The project name. */
 		PROJECT_NAME("project.name", "Project name"),
-
-		/** Legacy property: framework name (pre-dates project.name). */
-		FRAMEWORK_NAME("framework.name", "Legacy framework name"),
 
 		/** Project type: "framework" for framework projects, absent for applications. */
 		PROJECT_TYPE("project.type", "Project type (framework or application)"),
@@ -238,10 +235,6 @@ public class BuildProperties {
 
 	private String getName() {
 		String projectName = get(Key.PROJECT_NAME);
-		// MS: compatibility with old build.properties
-		if (projectName == null || projectName.length() == 0) {
-			projectName = get(Key.FRAMEWORK_NAME);
-		}
 		if (projectName == null || projectName.length() == 0) {
 			projectName = _project.getName();
 		}
@@ -249,19 +242,8 @@ public class BuildProperties {
 	}
 
 	private boolean isFramework() {
-		boolean isFramework = false;
 		String projectType = get(Key.PROJECT_TYPE);
-		if (projectType != null) {
-			isFramework = "framework".equals(projectType);
-		}
-		else {
-			// MS: compatibility with old build.properties
-			String frameworkName = get(Key.FRAMEWORK_NAME);
-			if (frameworkName != null) {
-				isFramework = true;
-			}
-		}
-		return isFramework;
+		return "framework".equals(projectType);
 	}
 
 	// ---- Defaults machinery ----
