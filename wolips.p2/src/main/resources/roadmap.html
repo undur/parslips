@@ -44,6 +44,12 @@
 				     binding key references in the component's own WOD and HTML
 				     template files (e.g. value = title; becomes value = heading;). -->
 
+				<div class="roadmap-entry">
+					<h3>Deep keypath segment renaming</h3>
+					<p>When a method like <code>Invoice.customer()</code> is renamed to <code>Invoice.buyer()</code>, template keypaths that traverse through that type should update too &mdash; e.g. <code>$selectedInvoice.customer.name</code> &rarr; <code>$selectedInvoice.buyer.name</code>. The current binding key rename only handles the first segment (the component&rsquo;s own keys); this would extend it to any segment in a keypath chain.</p>
+					<p>Requires type resolution through the keypath chain &mdash; resolving each segment to its Java type, then matching the renamed method against that type. The validation engine already does this for error checking, but bridging it with the refactoring layer across all templates in the workspace is a significant piece of work.</p>
+				</div>
+
 				<!-- Component documentation on hover: implemented. Hovering over
 				     <wo:ComponentName> tags now shows API bindings from .api files
 				     and WebObjectDefinitions.xml. -->

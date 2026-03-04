@@ -36,6 +36,12 @@ Remaining:
 
 Implemented. Renaming a method or field that serves as a binding key in a component's Java class (via Refactor > Rename) now automatically updates the corresponding key references in the component's own template files — both WOD binding values (`value = title;` → `value = heading;`) and inline HTML bindings (`value="$title"` → `value="$heading"`). Key paths are handled correctly (only the first segment is renamed). KVC getter/setter prefixes (`get`, `set`, `is`, `_get`, `_set`, `_is`, `_`) and field prefixes (`_`) are stripped when deriving the binding key.
 
+### Deep keypath segment renaming
+
+When a method like `Invoice.customer()` is renamed to `Invoice.buyer()`, template keypaths that traverse through that type should update too — e.g. `$selectedInvoice.customer.name` → `$selectedInvoice.buyer.name`. The current binding key rename only handles the first segment (the component's own keys); this would extend it to any segment in a keypath chain.
+
+Requires type resolution through the keypath — resolving `selectedInvoice` to `Invoice`, then matching `.customer` against that type. The validation engine already does this for error checking, but that machinery is tightly coupled to the Eclipse workspace. Bridging JDT's type-aware rename with template scanning across all templates in the workspace is the main challenge. Scope is also much larger: unlike first-segment renames (local to one component), a type like `Invoice` could appear in keypaths across any template.
+
 ## ~~Component documentation on hover~~ ✓
 
 Implemented. Hovering over a `<wo:ComponentName>` tag in the template editor now shows the component's API documentation — accepted bindings, required/settable markers, and defaults. Works for both project components (via `.api` files) and built-in WO components (via `WebObjectDefinitions.xml`). Validation errors take priority when both are available.
