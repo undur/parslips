@@ -27,6 +27,64 @@ import org.eclipse.core.runtime.Platform;
  * @see ParsleyProject
  */
 public class BuildProperties {
+
+	/**
+	 * Known property keys in {@code build.properties}.
+	 * Each constant carries the property key string and a human-readable description.
+	 */
+	public enum Key {
+		/** Framework type: "ng" for ng-objects, "wo" for WebObjects, or absent for classpath probing. */
+		BASE("base", "Framework type (ng or wo)"),
+
+		/** The project name. Falls back to {@link #FRAMEWORK_NAME} for legacy compatibility. */
+		PROJECT_NAME("project.name", "Project name"),
+
+		/** Auto-generated lowercase variant of the project name. */
+		PROJECT_NAME_LOWERCASE("project.name.lowercase", "Lowercase project name"),
+
+		/** Legacy property: framework name (pre-dates project.name). */
+		FRAMEWORK_NAME("framework.name", "Legacy framework name"),
+
+		/** Project type: "framework" for framework projects, absent for applications. */
+		PROJECT_TYPE("project.type", "Project type (framework or application)"),
+
+		/** Inline binding prefix (e.g. "$"). */
+		INLINE_BINDING_PREFIX("component.inlineBindingPrefix", "Inline binding prefix"),
+
+		/** Inline binding suffix (e.g. ""). */
+		INLINE_BINDING_SUFFIX("component.inlineBindingSuffix", "Inline binding suffix"),
+
+		/** Whether templates must be well-formed (XHTML-style). */
+		WELL_FORMED_TEMPLATE_REQUIRED("component.wellFormedTemplateRequired", "Require well-formed templates"),
+
+		/** Whether template validation is enabled. */
+		VALIDATE_TEMPLATES("component.validateTemplates", "Enable template validation"),
+
+		/** Whether template validation runs during incremental builds. */
+		VALIDATE_TEMPLATES_ON_BUILD("component.validateTemplatesOnBuild", "Validate templates on build"),
+
+		/** Whether validation runs in a thread pool. */
+		THREADED_VALIDATION("component.threadedValidation", "Use threaded validation");
+
+		private final String _key;
+		private final String _description;
+
+		Key(String key, String description) {
+			_key = key;
+			_description = description;
+		}
+
+		/** The property key string as it appears in {@code build.properties}. */
+		public String key() {
+			return _key;
+		}
+
+		/** Human-readable description of this property's purpose. */
+		public String description() {
+			return _description;
+		}
+	}
+
 	private IProject _project;
 
 	private Properties _properties;
@@ -176,10 +234,10 @@ public class BuildProperties {
 	}
 
 	private String getName() {
-		String projectName = get("project.name");
+		String projectName = get(Key.PROJECT_NAME.key());
 		// MS: compatibility with old build.properties
 		if (projectName == null || projectName.length() == 0) {
-			projectName = get("framework.name");
+			projectName = get(Key.FRAMEWORK_NAME.key());
 		}
 		if (projectName == null || projectName.length() == 0) {
 			projectName = _project.getName();
@@ -188,19 +246,19 @@ public class BuildProperties {
 	}
 
 	private void setName(String name) {
-		put("project.name", name);
-		put("project.name.lowercase", name.toLowerCase());
+		put(Key.PROJECT_NAME.key(), name);
+		put(Key.PROJECT_NAME_LOWERCASE.key(), name.toLowerCase());
 	}
 
 	private boolean isFramework() {
 		boolean isFramework = false;
-		String projectType = get("project.type");
+		String projectType = get(Key.PROJECT_TYPE.key());
 		if (projectType != null) {
 			isFramework = "framework".equals(projectType);
 		}
 		else {
 			// MS: compatibility with old build.properties
-			String frameworkName = get("framework.name");
+			String frameworkName = get(Key.FRAMEWORK_NAME.key());
 			if (frameworkName != null) {
 				isFramework = true;
 			}
@@ -250,7 +308,7 @@ public class BuildProperties {
 	 */
 	public String getInlineBindingPrefix() {
 		ensureDefaultsInitialized();
-		return get("component.inlineBindingPrefix", _inlineBindingPrefixDefault);
+		return get(Key.INLINE_BINDING_PREFIX.key(), _inlineBindingPrefixDefault);
 	}
 
 	/**
@@ -259,7 +317,7 @@ public class BuildProperties {
 	 */
 	public String getInlineBindingSuffix() {
 		ensureDefaultsInitialized();
-		return get("component.inlineBindingSuffix", _inlineBindingSuffixDefault);
+		return get(Key.INLINE_BINDING_SUFFIX.key(), _inlineBindingSuffixDefault);
 	}
 
 	/**
@@ -268,7 +326,7 @@ public class BuildProperties {
 	 */
 	public boolean isWellFormedTemplateRequired() {
 		ensureDefaultsInitialized();
-		return getBoolean("component.wellFormedTemplateRequired", _wellFormedTemplateRequiredDefault);
+		return getBoolean(Key.WELL_FORMED_TEMPLATE_REQUIRED.key(), _wellFormedTemplateRequiredDefault);
 	}
 
 }

@@ -113,16 +113,16 @@ public class WodBuilder extends AbstractFullAndIncrementalBuilder {
 
 	public boolean buildStarted(int kind, Map args, IProgressMonitor monitor, IProject project, Map buildCache) {
 		_buildKind = kind;
-		if (getBooleanProperty("component.validateTemplates", PreferenceConstants.VALIDATE_TEMPLATES_KEY, project, Activator.getDefault().getPreferenceStore())) {
+		if (getBooleanProperty(BuildProperties.Key.VALIDATE_TEMPLATES.key(), PreferenceConstants.VALIDATE_TEMPLATES_KEY, project, Activator.getDefault().getPreferenceStore())) {
 			_validateTemplatesAtAll = true;
-			if (!getBooleanProperty("component.validateTemplatesOnBuild", PreferenceConstants.VALIDATE_TEMPLATES_ON_BUILD_KEY, project, Activator.getDefault().getPreferenceStore())) {
+			if (!getBooleanProperty(BuildProperties.Key.VALIDATE_TEMPLATES_ON_BUILD.key(), PreferenceConstants.VALIDATE_TEMPLATES_ON_BUILD_KEY, project, Activator.getDefault().getPreferenceStore())) {
 				_validateTemplatesNow = false;
 			}
 			else {
 				_validateTemplatesNow = true;
 			}
 		}
-		_threadedBuild = getBooleanProperty("component.threadedValidation", PreferenceConstants.THREADED_VALIDATION_KEY, project, Activator.getDefault().getPreferenceStore());
+		_threadedBuild = getBooleanProperty(BuildProperties.Key.THREADED_VALIDATION.key(), PreferenceConstants.THREADED_VALIDATION_KEY, project, Activator.getDefault().getPreferenceStore());
 		if (kind == IncrementalProjectBuilder.FULL_BUILD) {
 			WodParserCache.getTypeCache().clearCacheForProject(project);
 			WOHierarchyScope.clearCacheForProject(project);
