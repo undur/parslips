@@ -310,7 +310,7 @@ public class DocumentWodModel extends AbstractWodModel {
     }
   }
 
-  protected DocumentWodBinding addBinding(DocumentWodElement element, RulePosition namespaceRulePosition, RulePosition nameRulePosition, RulePosition valueNamespaceRulePosition, RulePosition valueRulePosition, WodScanner scanner) {
+  private DocumentWodBinding addBinding(DocumentWodElement element, RulePosition namespaceRulePosition, RulePosition nameRulePosition, RulePosition valueNamespaceRulePosition, RulePosition valueRulePosition, WodScanner scanner) {
     DocumentWodBinding binding = null;
     if (element == null) {
       addParseProblem(element, "A binding must appear in a declaration", valueRulePosition, false);

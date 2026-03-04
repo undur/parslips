@@ -459,7 +459,7 @@ public class WOComponentCreator implements IRunnableWithProgress {
 	/**
 	 * Recursively creates folders if they don't exist.
 	 */
-	public void prepareFolder(IFolder _folder, IProgressMonitor _progressMonitor) throws CoreException {
+	private void prepareFolder(IFolder _folder, IProgressMonitor _progressMonitor) throws CoreException {
 		if (!_folder.exists()) {
 			IContainer parent = _folder.getParent();
 			if (parent instanceof IFolder) {

@@ -170,7 +170,7 @@ public class WodParserCache implements ITypeOwner {
     init();
   }
 
-  protected void init() throws CoreException, LocateException {
+  private void init() throws CoreException, LocateException {
     _undoManager = new TextViewerUndoManager(25);
     _wodEntry = new WodCacheEntry(this);
     _htmlEntry = new HtmlCacheEntry(this);
@@ -208,7 +208,7 @@ public class WodParserCache implements ITypeOwner {
     return _javaProject;
   }
 
-  protected void checkLocateResults() throws CoreException, LocateException {
+  private void checkLocateResults() throws CoreException, LocateException {
     if (_componentsLocateResults != null) {
       if (!_componentsLocateResults.isValid()) {
         clearLocateResultsCache();

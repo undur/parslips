@@ -46,7 +46,7 @@ public class TemplateValidator {
     visitDocument(doc, true);
   }
 
-  public void visitDocument(FuzzyXMLDocument doc, boolean validate) throws Exception {
+  private void visitDocument(FuzzyXMLDocument doc, boolean validate) throws Exception {
     if (doc != null) {
       _woElements = new HashSet<FuzzyXMLElement>();
 

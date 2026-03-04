@@ -167,7 +167,7 @@ public class HtmlWodTab extends ComponentEditorTab {
 		this.htmlActive = htmlActive;
 	}
 
-	protected void hideWodIfNecessary() {
+	private void hideWodIfNecessary() {
 		if (this._wodContainer == null) {
 			int[] weights = new int[] { 100 };
 			getParentSashForm().setWeights(weights);
@@ -201,7 +201,7 @@ public class HtmlWodTab extends ComponentEditorTab {
 		}
 	}
 
-	protected void restoreSashWeights() {
+	private void restoreSashWeights() {
 		String sashWeightsStr = Activator.getDefault().getPluginPreferences().getString(HtmlWodTab.SASH_WEIGHTS_KEY);
 		if (sashWeightsStr != null && sashWeightsStr.length() > 0) {
 			String[] sashWeightStrs = sashWeightsStr.split(",");
@@ -219,7 +219,7 @@ public class HtmlWodTab extends ComponentEditorTab {
 		}
 	}
 
-	protected void saveSashWeights() {
+	private void saveSashWeights() {
 		int[] weights = getParentSashForm().getWeights();
 		StringBuffer weightsBuffer = new StringBuffer();
 		for (int weight : weights) {

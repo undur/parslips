@@ -101,7 +101,7 @@ public class WooModel {
     }
   }
 
-  public String blankContent() {
+  private String blankContent() {
     // XXX Should use components default encoding charset
     StringBuffer sb = new StringBuffer();
     sb.append("{\n");

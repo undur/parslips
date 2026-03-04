@@ -1119,13 +1119,13 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	 * Updates dependent UI controls when a checkbox is toggled.
 	 * Currently, the HTML doctype combo is only enabled when the body checkbox is checked.
 	 */
-	protected void refreshButtonSettings(Button button) {
+	private void refreshButtonSettings(Button button) {
 		if (button.equals(_bodyCheckbox)) {
 			_htmlCombo.setEnabled(_bodyCheckbox.getSelection());
 		}
 	}
 
-	protected void handleSelectionEvent(SelectionEvent event) {
+	private void handleSelectionEvent(SelectionEvent event) {
 		Widget w = event.widget;
 		if (w instanceof Button) {
 			refreshButtonSettings((Button) w);
