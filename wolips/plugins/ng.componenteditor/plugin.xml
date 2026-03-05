@@ -664,7 +664,7 @@
    <extension point="org.eclipse.ui.elementFactories">
       <factory
             class="org.objectstyle.wolips.components.input.ComponentEditorInputFactory"
-            id="org.objectstyle.wolips.components.input.ComponentEditorInputFactory"/>
+            id="ng.componenteditor.input.ComponentEditorInputFactory"/>
    </extension>
 
 <!-- =================================================================================== -->

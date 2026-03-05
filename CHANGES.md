@@ -12,6 +12,10 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Use unique element factory ID
+
+- Changed the `ComponentEditorInputFactory` ID from `org.objectstyle.wolips.components.input.ComponentEditorInputFactory` (same as WOLips) to `ng.componenteditor.input.ComponentEditorInputFactory`. The old shared ID caused Eclipse to pick one factory at random when both plugins were installed — if WOLips' factory won, Parsley editors would fail to restore on Eclipse restart (broken editor state). Also a problem without WOLips if Eclipse's memento contained stale references.
+
 ### Share content type IDs and names with WOLips
 
 - Changed content type IDs from `ng.componenteditor.{wod,api,woo,html}` to `org.objectstyle.wolips.editors.{wod,api,woo,wohtml}` — the same IDs used by WOLips. When both plugins are installed, they now share a single content type per file extension instead of registering duplicates. No functional change when Parsley is installed alone.

@@ -50,6 +50,19 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 
+/**
+ * Restores {@link ComponentEditorInput} instances from persisted workbench
+ * state (i.e. which component editors were open when Eclipse shut down).
+ *
+ * <p>Eclipse's workbench persistence calls {@link #saveState} on shutdown and
+ * {@link #createElement} on startup.  The factory is registered in plugin.xml
+ * under the {@code org.eclipse.ui.elementFactories} extension point.
+ *
+ * <p>The factory ID ({@link #ID_FACTORY}) must be unique across all installed
+ * plugins.  WOLips uses the class name as its factory ID; we use a distinct
+ * {@code ng.componenteditor} prefix to avoid collisions when both plugins are
+ * installed.
+ */
 public class ComponentEditorInputFactory implements IElementFactory {
 	private static final String NAME = "name";
 
@@ -67,7 +80,12 @@ public class ComponentEditorInputFactory implements IElementFactory {
 
 	private static final String TAG_DISPLAY_WOO_PART_ON_REVEAL = "woo";
 
-	public static final String ID_FACTORY = ComponentEditorInputFactory.class.getName();
+	/**
+	 * Unique factory ID for Parsley's component editor input.
+	 * Must match the {@code id} attribute in the plugin.xml
+	 * {@code elementFactories} registration.
+	 */
+	public static final String ID_FACTORY = "ng.componenteditor.input.ComponentEditorInputFactory";
 
 	public ComponentEditorInputFactory() {
 		super();
