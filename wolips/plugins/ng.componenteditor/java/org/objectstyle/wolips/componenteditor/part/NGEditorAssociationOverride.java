@@ -1,9 +1,9 @@
 package org.objectstyle.wolips.componenteditor.part;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.ide.IEditorAssociationOverride;
@@ -33,22 +33,24 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 			return null;
 		}
 
-		if (NG_EDITOR_ID.equals(editorDescriptor.getId())) {
-			return editorDescriptor;
-		}
-
 		IFile file = ResourceUtil.getFile(editorInput);
 		if (file == null) {
 			return editorDescriptor;
 		}
 
-		if (!shouldUseComponentEditor(file)) {
-			return editorDescriptor;
+		if (shouldUseComponentEditor(file)) {
+			// Parsley project — force our editor
+			if (NG_EDITOR_ID.equals(editorDescriptor.getId())) {
+				return editorDescriptor;
+			}
+			IEditorDescriptor ngEditor = findEditor(NG_EDITOR_ID);
+			return ngEditor != null ? ngEditor : editorDescriptor;
 		}
 
-		IEditorDescriptor ngEditor = findEditor(NG_EDITOR_ID);
-		if (ngEditor != null) {
-			return ngEditor;
+		// Not a Parsley project — if Eclipse chose our editor (because of
+		// plugin.xml default="true"), reject it so the next editor is used
+		if (isOurEditor(editorDescriptor)) {
+			return null;
 		}
 
 		return editorDescriptor;
@@ -62,11 +64,16 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 	@Override
 	public IEditorDescriptor[] overrideEditors(IEditorInput editorInput, IContentType contentType, IEditorDescriptor[] editorDescriptors) {
 		IFile file = ResourceUtil.getFile(editorInput);
-		if (file == null || !shouldUseComponentEditor(file)) {
+		if (file == null) {
 			return editorDescriptors;
 		}
 
-		return reorderEditors(editorDescriptors);
+		if (shouldUseComponentEditor(file)) {
+			return reorderEditors(editorDescriptors);
+		}
+
+		// Not a Parsley project — remove our editors from the list
+		return removeOurEditors(editorDescriptors);
 	}
 
 	@Override
@@ -76,14 +83,20 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 
 	/**
 	 * Returns true if this file should be opened with the component editor.
-	 * A file qualifies if it's inside a .wo folder, or if it's a component
-	 * file extension in an ng-objects project.
+	 *
+	 * <p>A file qualifies if it's inside a .wo folder or has a component file
+	 * extension — but only if the project is a Parsley project. When WOLips
+	 * is installed alongside Parsley, this check ensures we only claim files
+	 * in projects that have explicitly opted in via {@code project.base}.
 	 */
 	private boolean shouldUseComponentEditor(IFile file) {
+		if (!ParsleyProject.isParsleyProject(file.getProject())) {
+			return false;
+		}
 		if (isInsideWoFolder(file)) {
 			return true;
 		}
-		return isComponentFile(file) && isNGProject(file.getProject());
+		return isComponentFile(file);
 	}
 
 	private boolean isInsideWoFolder(IFile file) {
@@ -93,21 +106,6 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 	private boolean isComponentFile(IFile file) {
 		String ext = file.getFileExtension();
 		return ext != null && COMPONENT_EXTENSIONS.contains(ext.toLowerCase());
-	}
-
-	private boolean isNGProject(IProject project) {
-		if (project == null || !project.isOpen()) {
-			return false;
-		}
-		try {
-			ParsleyProject parsleyProject = (ParsleyProject) project.getAdapter(ParsleyProject.class);
-			if (parsleyProject != null) {
-				return parsleyProject.isNGProject();
-			}
-		} catch (Exception e) {
-			// Ignore — fall through to false
-		}
-		return false;
 	}
 
 	/**
@@ -133,6 +131,26 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 			}
 		}
 		return reordered;
+	}
+
+	/**
+	 * Returns true if the given editor descriptor is one of ours.
+	 */
+	private boolean isOurEditor(IEditorDescriptor descriptor) {
+		String id = descriptor.getId();
+		return id != null && id.startsWith("ng.componenteditor.");
+	}
+
+	/**
+	 * Remove all Parsley editors from the list. Used for non-Parsley projects
+	 * to prevent our editors from appearing in "Open With" menus.
+	 */
+	private IEditorDescriptor[] removeOurEditors(IEditorDescriptor[] editors) {
+		IEditorDescriptor[] filtered = Arrays.stream(editors)
+			.filter(e -> !isOurEditor(e))
+			.toArray(IEditorDescriptor[]::new);
+		// If we filtered nothing, return original array to avoid unnecessary allocation
+		return filtered.length == editors.length ? editors : filtered;
 	}
 
 	private IEditorDescriptor findEditor(String editorId) {

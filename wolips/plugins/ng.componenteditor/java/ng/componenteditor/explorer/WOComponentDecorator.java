@@ -3,6 +3,7 @@ package ng.componenteditor.explorer;
 import java.net.URL;
 
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.ui.ProblemsLabelDecorator;
@@ -11,6 +12,7 @@ import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.PlatformUI;
+import org.objectstyle.wolips.variables.ParsleyProject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -38,6 +40,16 @@ public class WOComponentDecorator implements ILabelDecorator {
 			// Prevent re-entrant decoration
 			return image;
 		}
+
+		// When WOLips is installed, only decorate .wo folders in projects
+		// that have explicitly opted in via project.base in build.properties.
+		if (element instanceof IFolder) {
+			IProject project = ((IFolder) element).getProject();
+			if (!ParsleyProject.isParsleyProject(project)) {
+				return image;
+			}
+		}
+
 		_decorating = true;
 		try {
 			if (_componentBundleImage == null) {
