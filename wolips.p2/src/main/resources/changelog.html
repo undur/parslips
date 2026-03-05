@@ -33,6 +33,11 @@
 					<p>Parsley now coexists cleanly with WOLips in the same Eclipse installation. Install both plugins and everything just works &mdash; no manual configuration needed. Parsley&rsquo;s editors, menus, and actions use the 🌿 parsley icon, so you can always tell at a glance which plugin&rsquo;s UI you&rsquo;re looking at.</p>
 					<p>To activate Parsley for an existing WebObjects project, add <code>project.base=wo</code> to the project&rsquo;s <code>build.properties</code>. Projects without this property continue to use WOLips.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Fix: unparseable CSS in style tags no longer crashes editor</h3>
+					<p>Opening a component whose template contained a <code>&lt;style&gt;</code> tag with CSS the parser couldn&rsquo;t handle (e.g. <code>@import(&quot;...&quot;)</code>) would throw a <code>NullPointerException</code> and prevent the editor from loading. The CSS class-name completion processor now handles unparseable stylesheets gracefully.</p>
+				</div>
 			</div>
 
 			<!-- March 4, 2026 -->

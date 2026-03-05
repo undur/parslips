@@ -145,6 +145,11 @@ public class CSSAssistProcessor {
 	   * Then it can provide these class names in code assist when editing.
 	   */
 	  CascadingStyleSheet styles = CSSReader.readFromString(css, ECSSVersion.LATEST);
+	  if (styles == null) {
+		  // CSS couldn't be parsed — e.g. @import("...") or other non-standard
+		  // syntax.  Nothing to extract for class-name completion.
+		  return;
+	  }
 	  styles.getAllStyleRules().stream().forEach(stylerule ->{
 		  stylerule.getAllSelectors().forEach(sel ->{
 			  //add to _rules here
