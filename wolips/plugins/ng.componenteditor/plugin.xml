@@ -461,6 +461,7 @@
             visible="true">
          <action class="org.objectstyle.wolips.componenteditor.actions.OpenComponentAction"
                definitionId="ng.componenteditor.openComponent"
+               icon="icons/parsley16.png"
                id="ng.componenteditor.openComponent"
                label="Open Component..."
                menubarPath="navigate/open.ext2"/>
@@ -503,7 +504,7 @@
             objectClass="org.eclipse.core.resources.IFolder">
          <action class="org.objectstyle.wolips.wodclipse.action.GenerateAPIAction"
                enablesFor="*"
-               icon="icons/file-api.png"
+               icon="icons/parsley16.png"
                id="ng.componenteditor.generateAPIActionForWO"
                label="Generate API File"
                menubarPath="additions"/>
@@ -514,6 +515,7 @@
             objectClass="org.eclipse.core.resources.IFolder">
          <action class="org.objectstyle.wolips.componenteditor.actions.RenameComponentAction"
                enablesFor="1"
+               icon="icons/parsley16.png"
                id="ng.componenteditor.renameComponentAction"
                label="Rename Component..."
                menubarPath="additions"/>
