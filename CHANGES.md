@@ -12,9 +12,10 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
-### Share content type IDs with WOLips
+### Share content type IDs and names with WOLips
 
 - Changed content type IDs from `ng.componenteditor.{wod,api,woo,html}` to `org.objectstyle.wolips.editors.{wod,api,woo,wohtml}` — the same IDs used by WOLips. When both plugins are installed, they now share a single content type per file extension instead of registering duplicates. No functional change when Parsley is installed alone.
+- Changed content type names to match WOLips: removed the "NG" prefix (e.g. "NG WOComponent wod part" → "WOComponent wod part"). Ensures the UI looks identical to WO users regardless of which plugin is installed.
 
 ### Treat HTML void elements as implicitly self-closing
 

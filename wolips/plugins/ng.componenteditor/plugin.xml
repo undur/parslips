@@ -23,7 +23,7 @@
             default-charset="UTF-8"
             file-extensions="wod"
             id="org.objectstyle.wolips.editors.wod"
-            name="NG WOComponent wod part"
+            name="WOComponent wod part"
             priority="normal">
                <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
       </content-type>
@@ -32,7 +32,7 @@
             default-charset="UTF-8"
             file-extensions="api"
             id="org.objectstyle.wolips.editors.api"
-            name="NG WOComponent api part"
+            name="WOComponent api part"
             priority="normal">
                <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
       </content-type>
@@ -41,7 +41,7 @@
             default-charset="UTF-8"
             file-extensions="woo"
             id="org.objectstyle.wolips.editors.woo"
-            name="NG WOComponent woo part"
+            name="WOComponent woo part"
             priority="normal">
                <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
       </content-type>
@@ -50,7 +50,7 @@
             describer="org.objectstyle.wolips.editors.ContentDescriberWO"
             file-extensions="html"
             id="org.objectstyle.wolips.editors.wohtml"
-            name="NG Html with WO tags"
+            name="Html with WO tags"
             priority="high"/>
    </extension>
 
