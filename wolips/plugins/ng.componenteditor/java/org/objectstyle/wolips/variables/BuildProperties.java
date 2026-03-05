@@ -27,7 +27,7 @@ public class BuildProperties {
 	 */
 	public enum Key {
 		/** Framework type: "ng" for ng-objects, "wo" for WebObjects, or absent for classpath probing. */
-		BASE("base", "Framework type (ng or wo)"),
+		BASE("project.base", "Framework type (ng or wo)"),
 
 		/** The project name. */
 		PROJECT_NAME("project.name", "Project name"),

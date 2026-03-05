@@ -16,9 +16,9 @@ import org.eclipse.jdt.core.JavaCore;
  *
  * <p>Framework detection priority (see {@link #getProjectType()}):
  * <ol>
- *   <li>{@code base=ng} in build.properties → {@link ProjectType#NG}</li>
- *   <li>{@code base=wo} in build.properties → {@link ProjectType#WO}</li>
- *   <li>{@code project.name} in build.properties (without explicit base) → {@link ProjectType#WO}</li>
+ *   <li>{@code project.base=ng} in build.properties → {@link ProjectType#NG}</li>
+ *   <li>{@code project.base=wo} in build.properties → {@link ProjectType#WO}</li>
+ *   <li>{@code project.name} in build.properties (without explicit project.base) → {@link ProjectType#WO}</li>
  *   <li>Classpath probe: NGElement present and WOElement absent → {@link ProjectType#NG}</li>
  *   <li>Classpath probe: WOElement present → {@link ProjectType#WO}</li>
  *   <li>Neither marker class on classpath → {@link ProjectType#UNKNOWN}</li>
@@ -72,9 +72,9 @@ public class ParsleyProject {
 	 *
 	 * <p>Detection priority:
 	 * <ol>
-	 *   <li>{@code base=ng} in build.properties → {@link ProjectType#NG}</li>
-	 *   <li>{@code base=wo} in build.properties → {@link ProjectType#WO}</li>
-	 *   <li>{@code project.name} in build.properties (without explicit base) → {@link ProjectType#WO}</li>
+	 *   <li>{@code project.base=ng} in build.properties → {@link ProjectType#NG}</li>
+	 *   <li>{@code project.base=wo} in build.properties → {@link ProjectType#WO}</li>
+	 *   <li>{@code project.name} in build.properties (without explicit project.base) → {@link ProjectType#WO}</li>
 	 *   <li>Classpath probe: NGElement present and WOElement absent → {@link ProjectType#NG}</li>
 	 *   <li>Classpath probe: WOElement present → {@link ProjectType#WO}</li>
 	 *   <li>Neither marker class on classpath → {@link ProjectType#UNKNOWN}</li>

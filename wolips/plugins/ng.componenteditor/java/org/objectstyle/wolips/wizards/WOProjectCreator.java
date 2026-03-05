@@ -19,7 +19,7 @@ import java.nio.file.Path;
  * <p>The generated project follows standard Maven conventions:
  * <pre>
  *   pom.xml                           — Maven project descriptor
- *   build.properties                   — Parsley framework detection (base=ng or base=wo)
+ *   build.properties                   — Parsley framework detection (project.base=ng or project.base=wo)
  *   src/main/java/{package}/           — Application, Session, DirectAction
  *   src/main/java/{package}/components/ — Main.java
  *   src/main/components/              — Main.html, Main.wod, Main.woo (ng: standalone; WO: inside Main.wo/)
@@ -216,7 +216,7 @@ public class WOProjectCreator {
 
 	private String generateBuildProperties() {
 		return String.format("""
-				base=%s
+				project.base=%s
 				project.name=%s
 				project.type=application
 				""", _isNG ? "ng" : "wo", _projectName);

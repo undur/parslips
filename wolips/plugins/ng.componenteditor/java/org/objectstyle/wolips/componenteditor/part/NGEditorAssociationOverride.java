@@ -19,7 +19,7 @@ import org.objectstyle.wolips.variables.ParsleyProject;
  * <ul>
  *   <li>Any file inside a {@code .wo} folder (unambiguously a WO component)</li>
  *   <li>Component files ({@code .html}, {@code .wod}, {@code .woo}, {@code .api})
- *       in ng-objects projects (identified by {@code base=ng} in {@code build.properties})</li>
+ *       in ng-objects projects (identified by {@code project.base=ng} in {@code build.properties})</li>
  * </ul>
  */
 public class NGEditorAssociationOverride implements IEditorAssociationOverride {

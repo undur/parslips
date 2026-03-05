@@ -9,7 +9,7 @@ The plugin provides:
 - Tag/attribute autocomplete, binding validation, syntax highlighting
 - An "NG Explorer" (Package Explorer variant with component-aware behavior)
 - A "New WO Component" wizard
-- Support for both ng-objects (`base=ng`) and WebObjects (`base=wo`) projects
+- Support for both ng-objects (`project.base=ng`) and WebObjects (`project.base=wo`) projects
 
 ## Repository structure
 
@@ -60,13 +60,13 @@ The "New WO Component" wizard has a tricky lifecycle — see the class javadoc f
 
 Ensures the component editor is used for `.html`, `.wod`, `.woo`, `.api` files. Activates for:
 - Any file inside a `.wo` folder (regardless of project type)
-- Component file extensions in ng-objects projects (`base=ng` or NGElement on classpath)
+- Component file extensions in ng-objects projects (`project.base=ng` or NGElement on classpath)
 
 ### Element type detection (BuildProperties)
 
 Per-project framework detection:
-1. `base=ng` in build.properties → ng-objects types (NGElement, NGComponent)
-2. `base=wo` in build.properties → WebObjects types (WOElement, WOComponent)
+1. `project.base=ng` in build.properties → ng-objects types (NGElement, NGComponent)
+2. `project.base=wo` in build.properties → WebObjects types (WOElement, WOComponent)
 3. Neither → probes classpath (tries NGElement first, falls back to WOElement)
 
 ### WOD validation thread safety

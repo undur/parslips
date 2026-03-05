@@ -110,7 +110,7 @@ The old WOLips builder pipeline (`IBuilder` → `IFullBuilder`/`IIncrementalBuil
 
 ### Framework-aware tag shortcut resolution
 
-- **Tag shortcuts now resolve to NG class names in ng-objects projects.** Tag shortcuts (e.g. `if` → `WOConditional`) previously always expanded to WO class names, causing expensive failed type lookups in ng-objects projects where those classes don't exist. Now, when the project has `base=ng`, WO-prefixed class names are automatically translated to their NG equivalents (e.g. `WOConditional` → `NGConditional`, `WORepetition` → `NGRepetition`). Non-WO-prefixed shortcuts (like `ERXLocalizedString`) pass through unchanged.
+- **Tag shortcuts now resolve to NG class names in ng-objects projects.** Tag shortcuts (e.g. `if` → `WOConditional`) previously always expanded to WO class names, causing expensive failed type lookups in ng-objects projects where those classes don't exist. Now, when the project has `project.base=ng`, WO-prefixed class names are automatically translated to their NG equivalents (e.g. `WOConditional` → `NGConditional`, `WORepetition` → `NGRepetition`). Non-WO-prefixed shortcuts (like `ERXLocalizedString`) pass through unchanged.
 - **New method: `TagShortcut.getActual(ParsleyProject)`** — returns the framework-appropriate class name. The translation is a simple `WO` → `NG` prefix swap, matching ng-objects' naming convention. This is a temporary bridge; the long-term plan is per-project tag shortcut registration.
 - Updated `FuzzyXMLWodElement` (validation path) and `InlineWodTagInfo` (autocomplete path) to use framework-aware shortcut expansion. `ParsleyProject` is threaded through `TemplateAssistProcessor` → `InlineWodTagInfo` via a new `setParsleyProject()` setter.
 - **Global API definitions now apply to NG elements.** `ApiUtils.findApiSnapshot()` now recognizes `ng.appserver.templating.elements` as a framework package (alongside `_private`), and `findGlobalApiSnapshotByClassName()` falls back from NG to WO names (e.g. `NGConditional` → `WOConditional`) when looking up `WebObjectDefinitions.xml`. This gives NG elements the same binding autocomplete and validation as their WO counterparts without requiring separate `.api` files.
@@ -480,7 +480,7 @@ To allow `ng.componenteditor` to coexist with WOLips in the same Eclipse install
 
 Added `NGEditorAssociationOverride`, an `IEditorAssociationOverride` that ensures the NG Component Editor takes precedence over WOLips (or any other editor) for component files in ng-objects projects.
 
-**How it works:** When Eclipse is about to open an editor for an `.html`, `.wod`, `.woo`, or `.api` file, the override checks whether the file's project has `base=ng` in its `build.properties`. If so, it forces the NG Component Editor. Projects without `base=ng` are left alone, so WOLips continues to work normally for WebObjects projects.
+**How it works:** When Eclipse is about to open an editor for an `.html`, `.wod`, `.woo`, or `.api` file, the override checks whether the file's project has `project.base=ng` in its `build.properties`. If so, it forces the NG Component Editor. Projects without `project.base=ng` are left alone, so WOLips continues to work normally for WebObjects projects.
 
 **Key files:**
 - `NGEditorAssociationOverride.java` — the override implementation
@@ -511,7 +511,7 @@ Gutted the WOO editor tab (the "Display Groups" tab in the component editor). Th
 
 ### Removed: WOLips nature checks and launcher infrastructure
 
-ng-objects projects don't use WOLips project natures — they use `base=ng` in `build.properties` instead. All nature-checking code has been removed, along with unregistered JavaScript launcher infrastructure inherited from the Amateras HTML editor.
+ng-objects projects don't use WOLips project natures — they use `project.base=ng` in `build.properties` instead. All nature-checking code has been removed, along with unregistered JavaScript launcher infrastructure inherited from the Amateras HTML editor.
 
 **Deleted:**
 - `WOLipsNatureUtils.java` — WOLips nature IDs and add/remove/check utilities
@@ -622,8 +622,8 @@ Merged 12 single/two-file packages into their logical neighbors, eliminating unn
 The plugin can now be used for both ng-objects and WebObjects projects. Previously, the element type hierarchy was hardcoded to `ng.appserver.templating.NGElement` — which meant autocomplete, validation, and the "New Component" wizard only worked with ng-objects projects.
 
 **Detection priority** (per-project):
-1. `base=ng` in `build.properties` → uses ng-objects types (`NGElement`, `NGComponent`)
-2. `base=wo` in `build.properties` → uses WebObjects types (`WOElement`, `WOComponent`)
+1. `project.base=ng` in `build.properties` → uses ng-objects types (`NGElement`, `NGComponent`)
+2. `project.base=wo` in `build.properties` → uses WebObjects types (`WOElement`, `WOComponent`)
 3. Neither set → probes the project classpath (tries `NGElement` first, falls back to `WOElement`)
 
 This allows users with mixed-framework workspaces (or projects that include both library sets) to explicitly control which framework the plugin targets via `build.properties`.
@@ -638,7 +638,7 @@ This allows users with mixed-framework workspaces (or projects that include both
 - `ApiUtils.findApiModelWo()` — private element package check now matches both `ng.appserver.templating._private.` and `com.webobjects.appserver._private.`
 - `AbstractWodElement.fillInProblems()` — error message updated from "does not extend NGElement" to framework-agnostic wording
 - `WOComponentCreationPage` — "New Component" wizard default superclass now resolved dynamically from the target project
-- `NGEditorAssociationOverride.isNGProject()` — now delegates to `BuildProperties.isNGProject()` (includes classpath probing, not just `base=ng` check)
+- `NGEditorAssociationOverride.isNGProject()` — now delegates to `BuildProperties.isNGProject()` (includes classpath probing, not just `project.base=ng` check)
 
 ### Added: NG Explorer view
 
@@ -738,7 +738,7 @@ Standalone HTML templates (`.html` files not inside `.wo` bundles) now have full
 *Element type autocomplete filtering:*
 - `BuildProperties.WO_ELEMENT_CLASS` — corrected from `com.webobjects.appserver._private.WOElement` to `com.webobjects.appserver.WOElement`. The `_private` package is for built-in element implementations, not the `WOElement` base class itself. This caused `findType()` to return null → no superclass filtering → every Java class appeared in autocomplete.
 - `TypeNameCollector.acceptType()` — re-enabled the supertype hierarchy check as a safety net. The check had been commented out, relying solely on `WOHierarchyScope` which can return `true` for everything in edge cases.
-- `BuildProperties` static convenience methods — changed fallback defaults from `NG_*` to `WO_*` when the project adapter lookup fails (the common case for projects without explicit `base=` configuration).
+- `BuildProperties` static convenience methods — changed fallback defaults from `NG_*` to `WO_*` when the project adapter lookup fails (the common case for projects without explicit `project.base=` configuration).
 
 *Build-time validation for standalone templates:*
 - `WodBuilder.handleWoappResources()` — added handling for `.html` files not inside `.wo` folders. Previously only `.wo` folder contents were processed.
@@ -801,7 +801,7 @@ Added a wizard for creating new ng-objects or WebObjects Maven projects from scr
 
 **Generated project structure (ng-objects):**
 - `pom.xml` — jar packaging, Java 25, `ng-appserver` + `ng-adaptor-jetty` + `slf4j-simple` dependencies
-- `build.properties` — `base=ng` for framework detection
+- `build.properties` — `project.base=ng` for framework detection
 - `Application.java`, `Session.java`, `DirectAction.java` — standard ng-objects classes
 - `components/Main.java` — extends `NGComponent` with `NGContext` constructor
 - `src/main/components/Main.html` — standalone hello world template
@@ -809,7 +809,7 @@ Added a wizard for creating new ng-objects or WebObjects Maven projects from scr
 
 **Generated project structure (WebObjects):**
 - `pom.xml` — `woapplication` packaging, Java 25, Wonder 8.0.0.slim-SNAPSHOT (ERExtensions, ERLoggingReload4j, Ajax) + JavaWebObjects 5.4.3, `vermilingua-maven-plugin` for WO build support
-- `build.properties` — `base=wo` for framework detection
+- `build.properties` — `project.base=wo` for framework detection
 - `Application.java`, `Session.java`, `DirectAction.java` — standard Wonder/WO classes
 - `components/Main.java` — extends `WOComponent(WOContext)`
 - `src/main/components/Main.wo/` — bundled component (Main.html, Main.wod, Main.woo)

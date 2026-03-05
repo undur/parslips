@@ -157,7 +157,8 @@ public class HTMLAssistProcessorGetLastWordTest {
 	@Test
 	public void doubleQuotedAttributeWithSpacesStillWorks() {
 		// Spaces inside double-quoted attribute values must still be preserved.
-		assertEquals("input", lastTag("<input value=\"hello world\">"));
+		// Uses <form> wrapper since <input> is a void element and won't be on the stack.
+		assertEquals("form", lastTag("<form><input value=\"hello world\">"));
 	}
 
 	// =========================================================================
