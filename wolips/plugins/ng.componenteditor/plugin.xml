@@ -15,14 +15,14 @@
    <extension-point id="customTagValidator" name="customTagValidator"/>
    <extension-point id="preferenceContributer" name="preferenceContributer"/>
 <!-- =================================================================================== -->
-<!-- Content Types (from editors plugin, with ng.componenteditor IDs)                    -->
+<!-- Content Types — uses the same IDs as WOLips so both plugins share file types       -->
 <!-- =================================================================================== -->
    <extension point="org.eclipse.core.runtime.contentTypes">
       <content-type
             base-type="org.eclipse.core.runtime.text"
             default-charset="UTF-8"
             file-extensions="wod"
-            id="ng.componenteditor.wod"
+            id="org.objectstyle.wolips.editors.wod"
             name="NG WOComponent wod part"
             priority="normal">
                <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
@@ -31,7 +31,7 @@
             base-type="org.eclipse.core.runtime.text"
             default-charset="UTF-8"
             file-extensions="api"
-            id="ng.componenteditor.api"
+            id="org.objectstyle.wolips.editors.api"
             name="NG WOComponent api part"
             priority="normal">
                <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
@@ -40,7 +40,7 @@
             base-type="org.eclipse.core.runtime.text"
             default-charset="UTF-8"
             file-extensions="woo"
-            id="ng.componenteditor.woo"
+            id="org.objectstyle.wolips.editors.woo"
             name="NG WOComponent woo part"
             priority="normal">
                <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
@@ -49,7 +49,7 @@
             base-type="org.eclipse.core.runtime.text"
             describer="org.objectstyle.wolips.editors.ContentDescriberWO"
             file-extensions="html"
-            id="ng.componenteditor.html"
+            id="org.objectstyle.wolips.editors.wohtml"
             name="NG Html with WO tags"
             priority="high"/>
    </extension>
@@ -67,10 +67,10 @@
             id="ng.componenteditor.ComponentEditor"
             matchingStrategy="org.objectstyle.wolips.componenteditor.part.ComponentEditorMatchingStrategy"
             name="Parsley Component Editor">
-         <contentTypeBinding contentTypeId="ng.componenteditor.html"/>
-         <contentTypeBinding contentTypeId="ng.componenteditor.api"/>
-         <contentTypeBinding contentTypeId="ng.componenteditor.wod"/>
-         <contentTypeBinding contentTypeId="ng.componenteditor.woo"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wohtml"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.api"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wod"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.woo"/>
       </editor>
 
 <!-- Template Editor (standalone) -->
@@ -82,7 +82,7 @@
             icon="icons/ComponentHTML.png"
             id="ng.componenteditor.TemplateEditor"
             name="NG Template Editor">
-         <contentTypeBinding contentTypeId="ng.componenteditor.html"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wohtml"/>
       </editor>
 
 <!-- WOD Editor (standalone) -->
@@ -93,7 +93,7 @@
             icon="icons/file-wod.png"
             id="ng.componenteditor.WodEditor"
             name="NG Wod Editor">
-         <contentTypeBinding contentTypeId="ng.componenteditor.wod"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wod"/>
       </editor>
 
 <!-- API Editor -->
@@ -104,7 +104,7 @@
             icon="icons/ComponentEditor.png"
             id="ng.componenteditor.ApiEditor"
             name="NG Api Editor">
-         <contentTypeBinding contentTypeId="ng.componenteditor.api"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.api"/>
       </editor>
 
 <!-- WOO Editor -->
@@ -115,7 +115,7 @@
             id="ng.componenteditor.WooEditor"
             class="org.objectstyle.wolips.wooeditor.WooEditor"
             name="NG WOO Editor">
-         <contentTypeBinding contentTypeId="ng.componenteditor.woo"/>
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.woo"/>
       </editor>
 
 <!-- Amateras sub-editors (kept as-is) -->

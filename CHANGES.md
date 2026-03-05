@@ -12,6 +12,10 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Share content type IDs with WOLips
+
+- Changed content type IDs from `ng.componenteditor.{wod,api,woo,html}` to `org.objectstyle.wolips.editors.{wod,api,woo,wohtml}` — the same IDs used by WOLips. When both plugins are installed, they now share a single content type per file extension instead of registering duplicates. No functional change when Parsley is installed alone.
+
 ### Treat HTML void elements as implicitly self-closing
 
 - **HTML void elements** (`<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, `<link>`, etc.) were pushed onto the unclosed-tag stack, causing close-tag completion to suggest closing the void element instead of its parent. For example, `<div><p><br></p>` would suggest `</br>` instead of `</div>`.

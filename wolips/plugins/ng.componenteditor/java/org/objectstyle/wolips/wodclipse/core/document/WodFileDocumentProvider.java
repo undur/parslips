@@ -59,7 +59,8 @@ import org.objectstyle.wolips.wodclipse.core.parser.IWodFilePartitions;
  * @author mike
  */
 public class WodFileDocumentProvider extends TextFileDocumentProvider {
-	public static final String WOD_FILE_CONTENT_TYPE_STRING = "ng.componenteditor.wod";
+	/** Uses WOLips' content type ID so both plugins share one file type. */
+	public static final String WOD_FILE_CONTENT_TYPE_STRING = "org.objectstyle.wolips.editors.wod";
 
 	public static final IContentType WOD_FILE_CONTENT_TYPE = Platform.getContentTypeManager().getContentType(WodFileDocumentProvider.WOD_FILE_CONTENT_TYPE_STRING); //$NON-NLS-1$
 
