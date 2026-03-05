@@ -22,6 +22,7 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -144,6 +145,10 @@ public class HTMLPlugin extends AbstractUIPlugin {
 
   public static final String PREF_TEMPLATE_COMPACT_VIEW  = "_pref_template_compact_view";
 
+  /** Whether to shadow WOLips keybindings so Parsley shortcuts take over.
+   *  WORKAROUND: WOLips coexistence. */
+  public static final String PREF_SHADOW_WOLIPS_BINDINGS = "_pref_shadow_wolips_bindings";
+
 	
 	public static final String[] SUPPORTED_IMAGE_TYPES = {
 			"gif","png","jpg","jpeg","bmp"
@@ -215,6 +220,32 @@ public class HTMLPlugin extends AbstractUIPlugin {
 		colorProvider = new ColorProvider(getPreferenceStore());
 		org.objectstyle.wolips.componenteditor.part.JavaChangeRevalidator.install();
 		EmptyWoFolderCleaner.install();
+		applyWOLipsShadowsIfEnabled();
+	}
+
+	/**
+	 * If the user has enabled WOLips keybinding shadows, reapply them on startup.
+	 * Deferred to the UI thread since the workbench binding service may not be
+	 * fully initialized during bundle activation.
+	 *
+	 * <p>WORKAROUND: WOLips coexistence.
+	 */
+	private void applyWOLipsShadowsIfEnabled() {
+		if (!getPreferenceStore().getBoolean(PREF_SHADOW_WOLIPS_BINDINGS)) {
+			return;
+		}
+		// Defer to ensure the workbench and binding service are fully ready
+		Display display = PlatformUI.getWorkbench().getDisplay();
+		if (display != null && !display.isDisposed()) {
+			display.asyncExec(() -> {
+				try {
+					org.objectstyle.wolips.componenteditor.preferences.WOLipsBindingShadow.applyShadows();
+				}
+				catch (Exception e) {
+					logException(e);
+				}
+			});
+		}
 	}
 	
 	@Override

@@ -57,7 +57,9 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(HTMLPlugin.PREF_ENABLE_CLASSNAME, false);
 		store.setDefault(HTMLPlugin.PREF_CLASSNAME_ATTRS, "type class classname className bean component");
 		store.setDefault(HTMLPlugin.PREF_SCHEMA_MAPPINGS, "");
-		
+		// WORKAROUND: WOLips coexistence
+		store.setDefault(HTMLPlugin.PREF_SHADOW_WOLIPS_BINDINGS, false);
+
 		getContributions(store);
 	}
 	
