@@ -63,7 +63,7 @@
             contributorClass="org.objectstyle.wolips.componenteditor.part.ComponentEditorContributor"
             default="true"
             extensions="wod,html,api,woo"
-            icon="icons/ComponentEditor.png"
+            icon="icons/parsley16.png"
             id="ng.componenteditor.ComponentEditor"
             matchingStrategy="org.objectstyle.wolips.componenteditor.part.ComponentEditorMatchingStrategy"
             name="Parsley Component Editor">
@@ -101,7 +101,7 @@
             class="org.objectstyle.wolips.apieditor.editor.ApiEditor"
             default="false"
             extensions="api"
-            icon="icons/ComponentEditor.png"
+            icon="icons/parsley16.png"
             id="ng.componenteditor.ApiEditor"
             name="NG Api Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.api"/>
