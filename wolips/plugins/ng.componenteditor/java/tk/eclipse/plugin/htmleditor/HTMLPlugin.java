@@ -234,6 +234,12 @@ public class HTMLPlugin extends AbstractUIPlugin {
 		if (!getPreferenceStore().getBoolean(PREF_SHADOW_WOLIPS_BINDINGS)) {
 			return;
 		}
+		// Guard against headless/test environments where the workbench
+		// is not available (PlatformUI.getWorkbench() throws
+		// IllegalStateException if the workbench hasn't been created).
+		if (!PlatformUI.isWorkbenchRunning()) {
+			return;
+		}
 		// Defer to ensure the workbench and binding service are fully ready
 		Display display = PlatformUI.getWorkbench().getDisplay();
 		if (display != null && !display.isDisposed()) {
