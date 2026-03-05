@@ -25,6 +25,7 @@ import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
  * Command handler for switching to the API editor from any editor context.
@@ -37,8 +38,17 @@ import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
  * <p>If no .api file exists at all, one is created automatically: in the
  * project's {@code components} folder if one exists under {@code src/main/},
  * otherwise next to the Java file.
+ *
+ * <p>For non-Parsley projects (when WOLips is installed), delegates to
+ * WOLips' equivalent command so WOLips behavior is preserved.
+ *
+ * <p>WORKAROUND: WOLips coexistence — the project check and delegation.
  */
 public class SwitchToApiHandler extends AbstractHandler {
+
+	/** WOLips' equivalent command ID. */
+	private static final String WOLIPS_COMMAND_ID =
+		"org.objectstyle.wolips.componenteditor.editors.toapi";
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -59,6 +69,14 @@ public class SwitchToApiHandler extends AbstractHandler {
 		}
 
 		IFile file = ((FileEditorInput) editorInput).getFile();
+
+		// WORKAROUND: WOLips coexistence.
+		// For non-Parsley projects, delegate to WOLips' command so
+		// WOLips behavior is preserved.
+		if (!ParsleyProject.isParsleyProject(file.getProject())) {
+			return WOLipsCommandDelegate.execute(WOLIPS_COMMAND_ID, event);
+		}
+
 		try {
 			LocalizedComponentsLocateResult result = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(file);
 			if (result == null) {

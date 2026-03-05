@@ -16,13 +16,23 @@ import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
  * Command handler for switching to the WOD editor from any editor context.
  * If the active editor is the ComponentEditor, switches to the WOD tab.
  * Otherwise, locates the WOD file and opens it in the ComponentEditor.
+ *
+ * <p>For non-Parsley projects (when WOLips is installed), delegates to
+ * WOLips' equivalent command so WOLips behavior is preserved.
+ *
+ * <p>WORKAROUND: WOLips coexistence — the project check and delegation.
  */
 public class SwitchToWodHandler extends AbstractHandler {
+
+	/** WOLips' equivalent command ID. */
+	private static final String WOLIPS_COMMAND_ID =
+		"org.objectstyle.wolips.componenteditor.editors.towod";
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -43,6 +53,14 @@ public class SwitchToWodHandler extends AbstractHandler {
 		}
 
 		IFile file = ((FileEditorInput) editorInput).getFile();
+
+		// WORKAROUND: WOLips coexistence.
+		// For non-Parsley projects, delegate to WOLips' command so
+		// WOLips behavior is preserved.
+		if (!ParsleyProject.isParsleyProject(file.getProject())) {
+			return WOLipsCommandDelegate.execute(WOLIPS_COMMAND_ID, event);
+		}
+
 		try {
 			LocalizedComponentsLocateResult result = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(file);
 			if (result != null) {

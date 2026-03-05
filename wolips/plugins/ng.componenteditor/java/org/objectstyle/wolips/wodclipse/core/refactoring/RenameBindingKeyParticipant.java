@@ -71,6 +71,12 @@ public class RenameBindingKeyParticipant extends RenameParticipant {
 			return false;
 		}
 
+		// When WOLips is installed, only participate for projects that have
+		// explicitly opted in via project.base in build.properties.
+		if (!ParsleyProject.isParsleyProject(_declaringType.getJavaProject().getProject())) {
+			return false;
+		}
+
 		// Only participate if the declaring type is a WOComponent/NGComponent
 		if (!isComponent(_declaringType)) {
 			return false;

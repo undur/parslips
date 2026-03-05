@@ -57,7 +57,14 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(HTMLPlugin.PREF_ENABLE_CLASSNAME, false);
 		store.setDefault(HTMLPlugin.PREF_CLASSNAME_ATTRS, "type class classname className bean component");
 		store.setDefault(HTMLPlugin.PREF_SCHEMA_MAPPINGS, "");
-		
+		// WORKAROUND: WOLips coexistence.
+		// Default to true — when WOLips is installed the shadows eliminate
+		// the keybinding disambiguation popup.  The startup code in
+		// HTMLPlugin.applyWOLipsShadowsIfEnabled() only applies shadows
+		// if WOLips is actually present, so this default is harmless when
+		// WOLips is not installed.
+		store.setDefault(HTMLPlugin.PREF_SHADOW_WOLIPS_BINDINGS, true);
+
 		getContributions(store);
 	}
 	

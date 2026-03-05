@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### WOLips coexistence: keybinding shadow preference
+
+- **New preference page: "WOLips Coexistence"** under Parsley preferences. Provides a single checkbox: "Take over component shortcuts from WOLips".
+- When enabled, creates Eclipse `Binding.USER` entries that shadow all WOLips SYSTEM keybindings, eliminating the disambiguation popup that appears when both plugins register the same key sequences (Cmd+Alt+1/2/3/5, Cmd+Shift+X, etc.). Uses null-command unbindings to suppress WOLips' bindings, plus positive USER bindings to re-establish Parsley's shortcuts — the same mechanism Eclipse's own Keys preference page uses.
+- Shadows are persisted to the workspace preference store and reapplied on startup.
+- **Command handler delegation:** when the shadow is active, Parsley's handlers check `isParsleyProject()` — for Parsley projects they run normally, for non-Parsley projects they delegate to the corresponding WOLips command via `IHandlerService.executeCommand()`. This preserves WOLips behavior on WOLips projects.
+- **New classes:** `WOLipsCoexistencePreferencePage`, `WOLipsBindingShadow`, `WOLipsCommandDelegate`.
+
 ### Use unique element factory ID
 
 - Changed the `ComponentEditorInputFactory` ID from `org.objectstyle.wolips.components.input.ComponentEditorInputFactory` (same as WOLips) to `ng.componenteditor.input.ComponentEditorInputFactory`. The old shared ID caused Eclipse to pick one factory at random when both plugins were installed — if WOLips' factory won, Parsley editors would fail to restore on Eclipse restart (broken editor state). Also a problem without WOLips if Eclipse's memento contained stale references.

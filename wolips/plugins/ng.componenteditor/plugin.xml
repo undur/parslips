@@ -214,6 +214,7 @@
    </extension>
 
    <extension point="org.eclipse.ui.bindings">
+      <!-- Parsley's own keybindings -->
       <key commandId="ng.componenteditor.editors.tojava"
            contextId="org.eclipse.ui.contexts.window"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -257,6 +258,7 @@
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
            sequence="F3"/>
+
    </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -582,6 +584,11 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.Maven"
             name="Maven"/>
+      <!-- WORKAROUND: WOLips coexistence -->
+      <page class="org.objectstyle.wolips.componenteditor.preferences.WOLipsCoexistencePreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.WOLipsCoexistence"
+            name="WOLips Coexistence"/>
    </extension>
 
 <!-- =================================================================================== -->

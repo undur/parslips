@@ -1,6 +1,7 @@
 package org.objectstyle.wolips.variables;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
@@ -146,6 +147,67 @@ public class ParsleyProject {
 			// ignore — fall through to false
 		}
 		return false;
+	}
+
+	// ---- WOLips coexistence ----
+
+	/**
+	 * The WOLips component editor bundle ID, used to detect whether WOLips
+	 * is installed alongside Parsley.
+	 */
+	private static final String WOLIPS_BUNDLE_ID = "org.objectstyle.wolips.componenteditor";
+
+	/** Cached result of WOLips bundle detection (null = not yet checked). */
+	private static Boolean _wolipsInstalled;
+
+	/**
+	 * Returns {@code true} if Parsley should be active for this project.
+	 *
+	 * <p>When WOLips is <b>not</b> installed, Parsley handles all recognized
+	 * projects (NG or WO) — the same as it always has.
+	 *
+	 * <p>When WOLips <b>is</b> installed, Parsley only activates for projects
+	 * that explicitly set {@code project.base} in {@code build.properties}.
+	 * Projects without this property are left to WOLips. This allows the user
+	 * to opt in per-project by adding {@code project.base=wo} (or {@code =ng}).
+	 */
+	public boolean isParsleyProject() {
+		if (!isWOLipsInstalled()) {
+			// No WOLips — activate for any recognized project type
+			return getProjectType() != ProjectType.UNKNOWN;
+		}
+		// WOLips is present — only activate if project.base is explicitly set
+		return _buildProperties.get(BuildProperties.Key.BASE) != null;
+	}
+
+	/**
+	 * Returns whether the WOLips component editor bundle is installed.
+	 * Cached after first check since bundles don't change during a session.
+	 */
+	private static boolean isWOLipsInstalled() {
+		if (_wolipsInstalled == null) {
+			_wolipsInstalled = Platform.getBundle(WOLIPS_BUNDLE_ID) != null;
+		}
+		return _wolipsInstalled;
+	}
+
+	/**
+	 * Convenience method: checks if the given project is a Parsley project.
+	 *
+	 * @return {@code true} if Parsley should be active for this project
+	 * @see #isParsleyProject()
+	 */
+	public static boolean isParsleyProject(IProject project) {
+		if (project == null || !project.isOpen()) {
+			return false;
+		}
+		try {
+			ParsleyProject pp = (ParsleyProject) project.getAdapter(ParsleyProject.class);
+			return pp != null && pp.isParsleyProject();
+		}
+		catch (Exception e) {
+			return false;
+		}
 	}
 
 	// ---- Static convenience methods ----
