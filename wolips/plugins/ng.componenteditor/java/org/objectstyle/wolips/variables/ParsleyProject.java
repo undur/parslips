@@ -184,7 +184,7 @@ public class ParsleyProject {
 	 * Returns whether the WOLips component editor bundle is installed.
 	 * Cached after first check since bundles don't change during a session.
 	 */
-	private static boolean isWOLipsInstalled() {
+	public static boolean isWOLipsInstalled() {
 		if (_wolipsInstalled == null) {
 			_wolipsInstalled = Platform.getBundle(WOLIPS_BUNDLE_ID) != null;
 		}

@@ -19,6 +19,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.editors.EditorsPlugin;
+import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
  * Parsley Explorer — a Package Explorer variant with component-aware behavior.
@@ -168,26 +169,47 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 	}
 
 	/**
+	 * WOLips' component editor ID — used to delegate .wo bundle opens to
+	 * WOLips when the project isn't a Parsley project. We can't use Eclipse's
+	 * editor association here because WOLips doesn't register an
+	 * {@code IEditorAssociationOverride} — it hardcodes its editor ID in its
+	 * own explorer, just like we do. So we have to hardcode theirs too.
+	 */
+	private static final String WOLIPS_COMPONENT_EDITOR_ID =
+			"org.objectstyle.wolips.componenteditor.ComponentEditor";
+
+	/**
 	 * Opens a .wo component bundle by finding the HTML template file inside
-	 * and opening it with the NG Component Editor.
+	 * and opening it with an appropriate component editor.
+	 *
+	 * <p>For Parsley projects, uses the NG Component Editor. For non-Parsley
+	 * projects when WOLips is installed, delegates to WOLips' component editor.
+	 * If neither applies (no WOLips, no project.base), falls back to our
+	 * editor — still better than Eclipse's web browser for {@code .html}.
 	 */
 	private void openComponentBundle(IFolder woFolder) {
 		String folderName = woFolder.getName();
 		// Strip the .wo extension to get the component name
 		String componentName = folderName.substring(0, folderName.length() - ".wo".length());
 
+		// Pick the right component editor for this project
+		String editorId = EditorsPlugin.ComponentEditorID;
+		if (!ParsleyProject.isParsleyProject(woFolder.getProject()) && ParsleyProject.isWOLipsInstalled()) {
+			editorId = WOLIPS_COMPONENT_EDITOR_ID;
+		}
+
 		// Look for the HTML file inside the .wo folder
 		List<IResource> htmlFiles = new ArrayList<>();
 		WorkbenchUtilities.findFilesInResourceByName(htmlFiles, woFolder, componentName + ".html");
 
 		if (!htmlFiles.isEmpty()) {
-			WorkbenchUtilities.open((IFile) htmlFiles.get(0), EditorsPlugin.ComponentEditorID);
+			WorkbenchUtilities.open((IFile) htmlFiles.get(0), editorId);
 		} else {
 			// Fall back to .wod if no HTML found
 			List<IResource> wodFiles = new ArrayList<>();
 			WorkbenchUtilities.findFilesInResourceByName(wodFiles, woFolder, componentName + ".wod");
 			if (!wodFiles.isEmpty()) {
-				WorkbenchUtilities.open((IFile) wodFiles.get(0), EditorsPlugin.ComponentEditorID);
+				WorkbenchUtilities.open((IFile) wodFiles.get(0), editorId);
 			}
 		}
 	}
