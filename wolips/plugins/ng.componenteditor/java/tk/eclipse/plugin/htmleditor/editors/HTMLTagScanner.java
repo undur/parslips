@@ -55,10 +55,12 @@ public class HTMLTagScanner extends RuleBasedScanner {
     super.setRange(document, offset, length);
 
     try {
-      // Read enough characters to detect the longest prefix (</p:comment = 11 chars)
-      String start = document.get(offset, Math.min(length, 12));
+      // Read enough characters to detect the longest prefix (</webobject = 12 chars)
+      String start = document.get(offset, Math.min(length, 13));
       String lowerStart = start.toLowerCase();
       _inWoTag = lowerStart.startsWith("<wo:") || lowerStart.startsWith("</wo:") ||
+                 lowerStart.startsWith("<wo ") || lowerStart.startsWith("</wo>") ||
+                 lowerStart.startsWith("<webobject") || lowerStart.startsWith("</webobject") ||
                  lowerStart.startsWith("<p:raw") || lowerStart.startsWith("</p:raw") ||
                  lowerStart.startsWith("<p:comment") || lowerStart.startsWith("</p:comment");
     }
