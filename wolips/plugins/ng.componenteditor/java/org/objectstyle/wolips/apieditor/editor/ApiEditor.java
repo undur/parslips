@@ -261,7 +261,7 @@ public class ApiEditor extends FormEditor {
 		super.init(site, input);
 
 		// Use the filename (e.g. "MyElement.api") as the editor tab title
-		// instead of the generic "NG Api Editor" from plugin.xml.
+		// instead of the generic "Parsley API Editor" from plugin.xml.
 		if (input instanceof FileEditorInput) {
 			setPartName(((FileEditorInput) input).getFile().getName());
 		}

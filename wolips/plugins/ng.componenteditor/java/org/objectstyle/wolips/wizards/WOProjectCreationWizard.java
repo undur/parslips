@@ -10,7 +10,7 @@ import org.eclipse.ui.IWorkbench;
 /**
  * Wizard for creating a new ng-objects or WebObjects Maven project.
  *
- * <p>Registered in plugin.xml under the "NG Objects" category with
+ * <p>Registered in plugin.xml under the "Parsley" category with
  * {@code project="true"} so it appears in Eclipse's "New Project" dialog.
  *
  * <p>Creates a complete Maven project structure with a sample Main component,

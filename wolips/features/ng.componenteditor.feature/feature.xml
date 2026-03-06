@@ -6,7 +6,7 @@
       provider-name="ng-objects">
 
    <description>
-      Parsley is a component editor for ng-objects development on the Eclipse platform.
+      Parsley is a component editor for WebObjects and ng-objects development on the Eclipse platform.
    </description>
 
    <license>

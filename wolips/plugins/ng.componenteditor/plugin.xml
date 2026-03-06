@@ -81,7 +81,7 @@
             extensions="html,xhtml"
             icon="icons/ComponentHTML.png"
             id="ng.componenteditor.TemplateEditor"
-            name="NG Template Editor">
+            name="Parsley Template Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wohtml"/>
       </editor>
 
@@ -92,7 +92,7 @@
             default="false"
             icon="icons/file-wod.png"
             id="ng.componenteditor.WodEditor"
-            name="NG Wod Editor">
+            name="Parsley WOD Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wod"/>
       </editor>
 
@@ -103,7 +103,7 @@
             extensions="api"
             icon="icons/parsley16.png"
             id="ng.componenteditor.ApiEditor"
-            name="NG Api Editor">
+            name="Parsley API Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.api"/>
       </editor>
 
@@ -114,7 +114,7 @@
             icon="icons/WooEditor.gif"
             id="ng.componenteditor.WooEditor"
             class="org.objectstyle.wolips.wooeditor.WooEditor"
-            name="NG WOO Editor">
+            name="Parsley WOO Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.woo"/>
       </editor>
 
@@ -126,21 +126,21 @@
             extensions="html,xhtml"
             icon="icons/html.png"
             id="ng.componenteditor.HTMLEditor"
-            name="NG HTML Editor"/>
+            name="Parsley HTML Editor"/>
       <editor
             class="tk.eclipse.plugin.csseditor.editors.CSSEditor"
             contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
             extensions="css"
             icon="icons/css.png"
             id="ng.componenteditor.CSSEditor"
-            name="NG CSS Editor"/>
+            name="Parsley CSS Editor"/>
       <editor
             class="tk.eclipse.plugin.jseditor.editors.JavaScriptEditor"
             contributorClass="tk.eclipse.plugin.jseditor.editors.JavaScriptEditorContributor"
             extensions="js"
             icon="icons/javascript.gif"
             id="ng.componenteditor.JavaScriptEditor"
-            name="NG JavaScript Editor"/>
+            name="Parsley JavaScript Editor"/>
 
    </extension>
 
@@ -271,7 +271,7 @@
    <extension point="org.eclipse.ui.contexts">
       <context description="Editing Components Context"
             id="ng.componenteditor.componentEditorScope"
-            name="NG Editing Components"
+            name="Parsley Editing Components"
             parentId="org.eclipse.ui.textEditorScope"/>
    </extension>
 
@@ -504,7 +504,7 @@
             icon="icons/WOComponentBundle.png"
             id="ng.componenteditor.newWOComponentWizard"
             name="Parsley Component">
-         <description>Create a new NG component</description>
+         <description>Create a new component</description>
       </wizard>
    </extension>
 
@@ -575,7 +575,7 @@
       <renameParticipant
             class="org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentParticipant"
             id="ng.componenteditor.renameComponentParticipant"
-            name="Rename WO Component Files">
+            name="Rename Component Files">
          <enablement>
             <with variable="element">
                <instanceof value="org.eclipse.jdt.core.IType"/>
@@ -585,7 +585,7 @@
       <renameParticipant
             class="org.objectstyle.wolips.wodclipse.core.refactoring.RenameBindingKeyParticipant"
             id="ng.componenteditor.renameBindingKeyParticipant"
-            name="Rename WO Binding Key References">
+            name="Rename Binding Key References">
          <enablement>
             <with variable="element">
                <or>
@@ -656,7 +656,7 @@
 <!-- =================================================================================== -->
 <!-- Markers                                                                             -->
 <!-- =================================================================================== -->
-   <extension id="problem" name="NG Template Problems"
+   <extension id="problem" name="Parsley Template Problems"
          point="org.eclipse.core.resources.markers">
       <super type="org.eclipse.core.resources.problemmarker"/>
       <super type="org.eclipse.core.resources.textmarker"/>

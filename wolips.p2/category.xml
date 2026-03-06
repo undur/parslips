@@ -5,7 +5,7 @@
    </feature>
    <category-def name="parsley" label="Parsley Template Editor">
       <description>
-         Component editor for ng-objects development.
+         Component editor for WebObjects and ng-objects development.
       </description>
    </category-def>
 </site>
