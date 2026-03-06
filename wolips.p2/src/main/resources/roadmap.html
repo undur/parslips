@@ -69,13 +69,14 @@
 				     bindings, move HTML out of the bundle, and delete the .wo folder.
 				     Supports multi-selection and recursive conversion. -->
 
-				<!-- Convert WOD bindings to inline: implemented (bundle-to-inline
-				     direction). The reverse direction (inline to WOD) already existed
-				     as Cmd+2, W. -->
-
 				<!-- Convert standalone template to .wo bundle: implemented.
 				     Right-click .html files to wrap them in a .wo folder with an
 				     empty .wod file. Supports multi-selection. -->
+
+				<div class="roadmap-entry">
+					<h3>Convert between WOD and inline bindings</h3>
+					<p>Convert individual tags or an entire template between WOD-reference syntax (<code>&lt;webobject name=&quot;X&quot;&gt;</code> + <code>.wod</code> entry) and inline binding syntax (<code>&lt;wo:Type binding=&quot;value&quot;&gt;</code>). Single-tag inline &rarr; WOD already works via <kbd>Cmd+2, W</kbd>; the remaining pieces are batch conversion (entire file) in both directions and single-tag WOD &rarr; inline.</p>
+				</div>
 
 				<div class="roadmap-entry">
 					<h3>Rich component API model</h3>
