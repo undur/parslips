@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="ng.componenteditor.feature"
-      label="NGLips"
+      label="Parsley Template Editor"
       version="5.0.3.qualifier"
       provider-name="ng-objects">
 
    <description>
-      NGLips is a component editor for ng-objects development on the Eclipse platform.
+      Parsley is a component editor for ng-objects development on the Eclipse platform.
    </description>
 
    <license>

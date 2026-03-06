@@ -13,7 +13,7 @@ import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
  * Overrides Eclipse's default editor selection so that component files open
- * in the NG Component Editor instead of any other editor.
+ * in the Parsley Template Editor instead of any other editor.
  *
  * Activates for:
  * <ul>

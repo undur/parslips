@@ -182,7 +182,7 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 	 * Opens a .wo component bundle by finding the HTML template file inside
 	 * and opening it with an appropriate component editor.
 	 *
-	 * <p>For Parsley projects, uses the NG Component Editor. For non-Parsley
+	 * <p>For Parsley projects, uses the Parsley Template Editor. For non-Parsley
 	 * projects when WOLips is installed, delegates to WOLips' component editor.
 	 * If neither applies (no WOLips, no project.base), falls back to our
 	 * editor — still better than Eclipse's web browser for {@code .html}.
