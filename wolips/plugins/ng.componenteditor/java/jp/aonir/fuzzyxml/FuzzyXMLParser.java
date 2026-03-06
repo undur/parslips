@@ -46,10 +46,8 @@ public class FuzzyXMLParser {
 	private boolean _wellFormedRequired = false;
 	private boolean _isHTML = false;
 
-	// �p�[�X�Ɏg�p���鐳�K�\��
+	// Regular expressions used for parsing
 	private Pattern _tag = Pattern.compile("<((|/)([^<>]*))([^<]?|>)");
-	// private Pattern attr =
-	// Pattern.compile("([\\w:]+?)\\s*=(\"|')([^\"]*?)\\2");
 	private Pattern _docTypeName = Pattern.compile("^<!DOCTYPE[ \r\n\t]+([\\w\\-_]*)", Pattern.CASE_INSENSITIVE);
 	private Pattern _docTypePublic = Pattern.compile("PUBLIC[ \r\n\t]+\"([^\"]*)\"[ \r\n\t]*\"*([^\">]*)\"*", Pattern.CASE_INSENSITIVE);
 	private Pattern _docTypeSystem = Pattern.compile("SYSTEM[ \r\n\t]+\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
@@ -131,10 +129,10 @@ public class FuzzyXMLParser {
 	}
 
 	/**
-	 * �G���[�n���h�����O�p�̃��X�i��ǉ����܂��B
-	 * 
+	 * Adds a listener for parse error events.
+	 *
 	 * @param listener
-	 *          ���X�i
+	 *          the error listener
 	 */
 	public void addErrorListener(FuzzyXMLErrorListener listener) {
 		_listeners.add(listener);
@@ -165,12 +163,12 @@ public class FuzzyXMLParser {
 	}
 
 	/**
-	 * ��̓X�g���[������XML�h�L�������g���p�[�X���܂��B
-	 * �����R�[�h��XML�錾�ɂ��������Ĕ��ʂ���܂��B
-	 * 
+	 * Parses an XML document from an input stream.
+	 * Character encoding is detected from the XML declaration.
+	 *
 	 * @param in
-	 *          ��̓X�g���[��
-	 * @return �p�[�X����
+	 *          the input stream
+	 * @return the parsed document
 	 * @throws IOException
 	 */
 	public FuzzyXMLDocument parse(InputStream in) throws IOException {
@@ -183,12 +181,12 @@ public class FuzzyXMLParser {
 	}
 
 	/**
-	 * �t�@�C������XML�h�L�������g���p�[�X���܂��B
-	 * �����R�[�h��XML�錾�ɂ��������Ĕ��ʂ���܂��B
-	 * 
+	 * Parses an XML document from a file.
+	 * Character encoding is detected from the XML declaration.
+	 *
 	 * @param file
-	 *          �t�@�C��
-	 * @return �p�[�X����
+	 *          the file to parse
+	 * @return the parsed document
 	 * @throws IOException
 	 */
 	public FuzzyXMLDocument parse(File file) throws IOException {
@@ -201,7 +199,7 @@ public class FuzzyXMLParser {
 	}
 
 	protected int _parse(String source, int initialOffset, boolean woOnly, boolean parseAsSynthetic) {
-		// �p�[�X���J�n
+		// Begin parsing
 		Matcher matcher = _tag.matcher(source);
 		int lastIndex = initialOffset - 1;
 		while (matcher.find()) {
@@ -238,7 +236,7 @@ public class FuzzyXMLParser {
 				fireErrorEvent(start, end - start,
 						"Missing closing '>' on <" + tagName + "> tag.", null);
 			}
-			// ���^�O
+			// Scriptlet tag
 			if (!woOnly && text.startsWith("%")) {
 				// ignore
 				handleText(start, end, false);
@@ -292,19 +290,19 @@ public class FuzzyXMLParser {
 	}
 
 	/**
-	 * ��Ƃ��ēn���ꂽXML�\�[�X���p�[�X����FuzzyXMLDocument�I�u�W�F�N�g��ԋp���܂��B
-	 * 
+	 * Parses the given XML/HTML source string and returns the resulting document.
+	 *
 	 * @param source
-	 *          XML�\�[�X
-	 * @return �p�[�X���ʂ�FuzzyXMLDocument�I�u�W�F�N�g
+	 *          the XML/HTML source
+	 * @return the parsed FuzzyXMLDocument
 	 */
 	public FuzzyXMLDocument parse(String source) {
-		// �I���W�i���̃\�[�X��ۑ����Ă���
+		// Preserve original source for attribute value extraction
 		_originalSource = source;
 		// Blank out p:raw and p:comment block content before any other preprocessing,
 		// so broken/unclosed quotes inside these blocks don't corrupt escapeString
 		source = FuzzyXMLUtil.pBlock2space(source);
-		// �R�����g�ACDATA�ADOCTYPE����������
+		// Blank out comments, CDATA, and DOCTYPE for safe tag matching
 		source = FuzzyXMLUtil.comment2space(source, true);
 		source = FuzzyXMLUtil.escapeScript(source);
 		source = FuzzyXMLUtil.scriptlet2space(source, true);
@@ -359,7 +357,7 @@ public class FuzzyXMLParser {
 		return doc;
 	}
 
-	/** CDATA�m�[�h���������܂��B */
+	/** Processes a CDATA node. */
 	private void handleCDATA(int offset, int end, String text) {
 		closeAutocloseTags();
 		text = text.replaceFirst("<!\\[CDATA\\[", "");
@@ -535,7 +533,7 @@ public class FuzzyXMLParser {
 		}
 	}
 
-	/** XML�錾�i�������߁j���������܂��B */
+	/** Processes an XML declaration (processing instruction). */
 	private void handleDeclaration(int offset, int end) {
 		closeAutocloseTags();
 		String text = _originalSource.substring(offset, end);
@@ -549,7 +547,7 @@ public class FuzzyXMLParser {
 
 		FuzzyXMLProcessingInstructionImpl pi = new FuzzyXMLProcessingInstructionImpl(null, name, data, offset, end - offset);
 		if (getParent() != null) {
-			// �]�v�ȕ��������
+			// Append to parent element
 			((FuzzyXMLElement) getParent()).appendChild(pi);
 		}
 		else {
@@ -562,7 +560,7 @@ public class FuzzyXMLParser {
 		}
 	}
 
-	/** DOCTYPE�錾���������܂��B */
+	/** Processes a DOCTYPE declaration. */
 	private void handleDoctype(int offset, int end, String text) {
 		closeAutocloseTags();
 		if (_docType == null) {
@@ -608,7 +606,7 @@ public class FuzzyXMLParser {
 		}
 	}
 
-	/** ���^�O���������܂��B */
+	/** Processes a close tag. */
 	private void handleCloseTag(int offset, int end, String text) {
 		handleCloseTag(offset, end, text, true);
 	}
@@ -657,24 +655,8 @@ public class FuzzyXMLParser {
 				if (looseTag) {
 					while (lowercaseLastOpenElementName != null && !lowercaseLastOpenElementName.equals(lowercaseCloseTagName) && _looseTags.contains(lowercaseLastOpenElementName)) {
 						int lastOpenElementEndOffset = end;
-						// int lastOpenElementEndOffset = lastOpenElement.getOffset() +
-						// lastOpenElement.getLength();
 						_stack.push(lastOpenElement);
 						handleCloseTag(lastOpenElementEndOffset, lastOpenElementEndOffset, "/" + lastOpenElement.getName(), false);
-
-						/*
-						 * FuzzyXMLElement looseElement = lastOpenElement;
-						 * FuzzyXMLNode[] looseElementChildren =
-						 * lastOpenElement.getChildren();
-						 * FuzzyXMLElement looseElementParent = (FuzzyXMLElement)
-						 * lastOpenElement.getParentNode();
-						 * for (FuzzyXMLNode looseElementChild : looseElementChildren) {
-						 * looseElement.removeChild(looseElementChild);
-						 * looseElementParent.insertAfter(looseElementChild, looseElement);
-						 * //((AbstractFuzzyXMLNode)
-						 * looseElementChild).setOffset(looseElementChild.getOffset() + 1);
-						 * }
-						 */
 
 						if (_stack.size() == 0) {
 							lastOpenElement = null;
@@ -702,8 +684,6 @@ public class FuzzyXMLParser {
 					}
 
 					if (showMismatchError) {
-						// fireErrorEvent(offset, end - offset, "Found </" + tagName +
-						// "> before </" + lastOpenElement.getName() + ">", null);
 						fireErrorEvent(lastOpenElement.getOffset(), lastOpenElement.getLength(), "Missing </" + lastOpenElement.getName() + "> tag", null);
 					}
 					_stack.push(lastOpenElement);
@@ -711,55 +691,10 @@ public class FuzzyXMLParser {
 					lastOpenElement = (FuzzyXMLElementImpl) _stack.pop();
 					lowercaseLastOpenElementName = lastOpenElement.getName().toLowerCase();
 				}
-				/*
-				 * boolean matchesOpenElement = false;
-				 * if (looseTag) {
-				 * for (FuzzyXMLElement nonCloseElement : nonCloseElements) {
-				 * if
-				 * (nonCloseElement.getName().equalsIgnoreCase(lowercaseCloseTagName)) {
-				 * matchesOpenElement = true;
-				 * }
-				 * }
-				 * if (matchesOpenElement) {
-				 * nonCloseElements.remove(lastOpenElement);
-				 * }
-				 * }
-				 * 
-				 * if (lastOpenElement.getParentNode() != null) {
-				 * ((FuzzyXMLElementImpl)
-				 * lastOpenElement.getParentNode()).appendChildWithNoCheck
-				 * (lastOpenElement);
-				 * FuzzyXMLNode[] nodes = lastOpenElement.getChildren();
-				 * for (int i = 0; i < nodes.length; i++) {
-				 * ((AbstractFuzzyXMLNode)
-				 * nodes[i]).setParentNode(lastOpenElement.getParentNode());
-				 * lastOpenElement.removeChild(nodes[i]);
-				 * ((FuzzyXMLElementImpl)
-				 * lastOpenElement.getParentNode()).appendChildWithNoCheck(nodes[i]);
-				 * }
-				 * }
-				 * else {
-				 * //System.out.println(tagName + "�̊J�n�^�O��������܂���B");
-				 * fireErrorEvent(offset, end - offset,
-				 * Messages.getMessage("error.noStartTag", tagName), null);
-				 * }
-				 * if (matchesOpenElement) {
-				 * handleCloseTag(offset, end, text);
-				 * }
-				 * // stack.push(element);
-				 * return;
-				 */
 			}
 		}
 
 		if (lastOpenElement != null) {
-			// ��^�O�̏ꍇ�͋�̃e�L�X�g�m�[�h��ǉ����Ă���
-			if (lastOpenElement.getChildren().length == 0) {
-				// MS: Hopefully this doesn't break things ... Sure wish I could read
-				// Japanese to know what the original author said about this :)
-				// lastOpenElement.appendChild(new FuzzyXMLTextImpl(getParent(), "",
-				// offset, 0));
-			}
 			lastOpenElement.setLength(end - lastOpenElement.getOffset());
 			if (closeTagMatches) {
 				lastOpenElement.setCloseTagOffset(offset);
@@ -799,7 +734,7 @@ public class FuzzyXMLParser {
 		}
 	}
 
-	/** ��^�O���������܂��B */
+	/** Processes a self-closing (empty) tag. */
 	private void handleEmptyTag(int offset, int end, boolean synthetic) {
 		closeAutocloseTags();
 		TagInfo info = parseTagContents(_originalSource.substring(offset + 1, end - 1));
@@ -812,7 +747,7 @@ public class FuzzyXMLParser {
 		else {
 			((FuzzyXMLElement) parent).appendChild(element);
 		}
-		// ������ǉ�
+		// Add attributes
 		AttrInfo[] attrs = info.getAttrs();
 		for (int i = 0; i < attrs.length; i++) {
 			FuzzyXMLAttributeImpl attr = createFuzzyXMLAttribute(element, offset, attrs[i]);
@@ -842,7 +777,7 @@ public class FuzzyXMLParser {
 		}
 	}
 
-	/** �R�����g���������܂��B */
+	/** Processes an HTML comment. */
 	private void handleComment(int offset, int end, String text) {
 		closeAutocloseTags();
 		FuzzyXMLNode parent = getParent();
@@ -863,7 +798,7 @@ public class FuzzyXMLParser {
 		}
 	}
 
-	/** �J�n�^�O���������܂��B */
+	/** Processes an open tag (parses tag text and creates element). */
 	private void handleStartTag(int offset, int end, boolean synthetic) {
 		closeAutocloseTags();
 		String tagContents = _originalSource.substring(offset, end);
@@ -917,21 +852,10 @@ public class FuzzyXMLParser {
 		return attr;
 	}
 
-	/** �J�n�^�O���������܂��B */
+	/** Adds parsed attributes to the element and pushes it onto the open-element stack. */
 	private void handleStartTag(FuzzyXMLElement element, TagInfo info, int offset, int end) {
-		// ������ǉ�
 		AttrInfo[] attrs = info.getAttrs();
 		for (int i = 0; i < attrs.length; i++) {
-			// // ���O��Ԃ̃T�|�[�g
-			// if(attrs[i].name.startsWith("xmlns")){
-			// String uri = attrs[i].value;
-			// String prefix = null;
-			// String[] dim = attrs[i].name.split(":");
-			// if(dim.length > 1){
-			// prefix = dim[1];
-			// }
-			// element.addNamespaceURI(prefix,uri);
-			// }
 			element.appendChild(createFuzzyXMLAttribute(element, offset, attrs[i]));
 		}
 		_stack.push(element);
@@ -940,7 +864,7 @@ public class FuzzyXMLParser {
 		checkElement(element);
 	}
 
-	/** �X�^�b�N�̍Ō�̗v�f���擾���܂�(�X�^�b�N����͍폜���܂���)�B */
+	/** Returns the top of the open-element stack without removing it. */
 	private FuzzyXMLNode getParent() {
 		if (_stack.size() == 0) {
 			return null;
@@ -948,16 +872,16 @@ public class FuzzyXMLParser {
 		return _stack.get(_stack.size() - 1);
 	}
 
-	/** �^�O�������p�[�X���܂��B */
+	/** Parses the text content of a tag into a name and attributes. */
 	private TagInfo parseTagContents(String text) {
-		// �g����
+		// Trim whitespace
 		Range trimmedRange = Range.trimmedRange(text);
 		text = trimmedRange.trim(text);
-		// ���^�O��������Ō�̃X���b�V�����폜
+		// Remove trailing slash for self-closing tags
 		if (text.endsWith("/")) {
 			text = text.substring(0, text.length() - 1);
 		}
-		// �ŏ��̃X�y�[�X�܂ł��^�O��
+		// Tag name is everything up to the first space
 		TagInfo info = new TagInfo();
 		if (FuzzyXMLUtil.getSpaceIndex(text) != -1) {
 			info.name = text.substring(0, FuzzyXMLUtil.getSpaceIndex(text)).trim();
@@ -974,7 +898,7 @@ public class FuzzyXMLParser {
 		Start, BeforeAttributeName, InAttributeName, AfterAttributeName, InAttributeValue, InNestedTag,
 	}
 
-	/** �A�g���r���[�g�������p�[�X���܂��B */
+	/** Parses the attribute portion of a tag into name-value pairs. */
 	private void parseAttributeContents(TagInfo info, String text) {
 
 		AttributeParseState state = AttributeParseState.Start;
