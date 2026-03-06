@@ -12,6 +12,10 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### "Restore WOLips Keybindings" button on coexistence preference page
+
+- The WOLips Coexistence preference page (Preferences → Parsley → WOLips Coexistence) now has a **"Restore WOLips Keybindings"** button. Click it before uninstalling Parsley to remove all keybinding overrides and restore WOLips' original keyboard shortcuts. The button also unchecks the shadow preference so the overrides are not re-applied on next startup.
+
 ### Support for Fluffy Bunny project layout
 
 - **Components folder discovery now supports the Fluffy Bunny layout.** The New Component wizard, Extract Component action, and Switch to API handler previously only searched for a `components` folder under `src/main/` (Maven layout). They now fall back to `Components/` at the project root, which is the convention used by "Fluffy Bunny" WebObjects projects.

@@ -3,7 +3,10 @@ package org.objectstyle.wolips.componenteditor.preferences;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
@@ -19,9 +22,14 @@ import tk.eclipse.plugin.htmleditor.HTMLPlugin;
  * etc.) for different commands. Eclipse shows a disambiguation popup every
  * time the user presses one of these keys.
  *
- * <p>This page provides a single checkbox that shadows WOLips' keybindings
- * using Eclipse's USER-level binding mechanism, letting Parsley's bindings
- * take over cleanly.
+ * <p>This page provides:
+ * <ul>
+ *   <li>A checkbox that shadows WOLips' keybindings using Eclipse's USER-level
+ *       binding mechanism, letting Parsley's bindings take over cleanly.</li>
+ *   <li>A "Restore WOLips keybindings" button that removes all shadow bindings,
+ *       restoring WOLips' original keybindings. Use this before uninstalling
+ *       Parsley to ensure WOLips' shortcuts are not left broken.</li>
+ * </ul>
  *
  * <p>WORKAROUND: WOLips coexistence.
  *
@@ -71,6 +79,65 @@ public class WOLipsCoexistencePreferencePage extends FieldEditorPreferencePage i
 			"Take over component shortcuts from WOLips",
 			parent);
 		addField(_shadowBindings);
+
+		// Spacer before restore section
+		Label spacer2 = new Label(parent, SWT.NONE);
+		GridData spacer2Gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		spacer2Gd.horizontalSpan = 2;
+		spacer2Gd.heightHint = 20;
+		spacer2.setLayoutData(spacer2Gd);
+
+		// Restore section — horizontal rule effect via separator
+		Label separator = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
+		GridData sepGd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		sepGd.horizontalSpan = 2;
+		separator.setLayoutData(sepGd);
+
+		// Spacer after separator
+		Label spacer3 = new Label(parent, SWT.NONE);
+		GridData spacer3Gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		spacer3Gd.horizontalSpan = 2;
+		spacer3Gd.heightHint = 10;
+		spacer3.setLayoutData(spacer3Gd);
+
+		// Explanatory text for the restore button
+		Label restoreExplanation = new Label(parent, SWT.WRAP);
+		restoreExplanation.setText(
+			"If you are about to uninstall Parsley, click the button below first "
+			+ "to restore WOLips' original keyboard shortcuts. This removes all "
+			+ "keybinding overrides that Parsley has applied.");
+		GridData restoreGd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		restoreGd.horizontalSpan = 2;
+		restoreGd.widthHint = 400;
+		restoreExplanation.setLayoutData(restoreGd);
+
+		// Spacer
+		Label spacer4 = new Label(parent, SWT.NONE);
+		GridData spacer4Gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		spacer4Gd.horizontalSpan = 2;
+		spacer4Gd.heightHint = 5;
+		spacer4.setLayoutData(spacer4Gd);
+
+		// Restore button
+		Button restoreButton = new Button(parent, SWT.PUSH);
+		restoreButton.setText("Restore WOLips Keybindings");
+		GridData buttonGd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+		buttonGd.horizontalSpan = 2;
+		restoreButton.setLayoutData(buttonGd);
+		restoreButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				WOLipsBindingShadow.removeShadows();
+				// Also uncheck the shadow preference so it doesn't
+				// get re-applied on next startup
+				getPreferenceStore().setValue(
+					HTMLPlugin.PREF_SHADOW_WOLIPS_BINDINGS, false);
+				_shadowBindings.load();
+				setMessage("WOLips keybindings have been restored. "
+					+ "You can now safely uninstall Parsley.",
+					INFORMATION);
+			}
+		});
 	}
 
 	@Override

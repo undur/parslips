@@ -121,6 +121,13 @@ public class WOLipsBindingShadow {
 						schemeId = DEFAULT_SCHEME_ID;
 					}
 
+					// Keep the WOLips SYSTEM binding in the array. It won't
+					// be persisted (savePreferences only writes USER entries)
+					// but it must remain in the in-memory set so that
+					// removeShadows() can later identify our null-command
+					// unbindings by matching against these SYSTEM bindings.
+					result.add(binding);
+
 					// 1. Create a null-command unbinding to suppress the
 					//    WOLips SYSTEM binding (and any other SYSTEM binding
 					//    on this key+context).
