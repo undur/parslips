@@ -29,10 +29,10 @@
 				<h2 class="date-header">March 6, 2026</h2>
 
 				<div class="changelog-entry">
-					<h3>Convert between component formats</h3>
-					<p><strong>Bundle &rarr; inline:</strong> Right-click a <code>.wo</code> folder and select <strong>&ldquo;Convert to Inline Template&rdquo;</strong> to convert it to a standalone HTML file. The action replaces all <code>&lt;webobject name=&quot;X&quot;&gt;</code> tags with their inline equivalents (<code>&lt;wo:Type binding=&quot;value&quot;&gt;</code>) using the WOD definitions, moves the HTML file out of the bundle, and deletes the <code>.wo</code> folder. Supports multi-selection and recursive conversion of entire folder trees.</p>
-					<p><strong>Inline &rarr; bundle:</strong> Right-click a standalone <code>.html</code> template and select <strong>&ldquo;Convert to .wo Bundle&rdquo;</strong> to wrap it in a <code>.wo</code> folder with an empty <code>.wod</code> file. Also supports multi-selection.</p>
-					<p>The bundle-to-inline conversion respects the <strong>&ldquo;Spaces around equals&rdquo;</strong> formatting preference and the project&rsquo;s configured inline binding prefix/suffix. Missing WOD entries are left unchanged with a warning dialog.</p>
+					<h3>Convert between template formats</h3>
+					<p><strong>Bundle &rarr; standalone:</strong> Right-click a <code>.wo</code> folder and select <strong>&ldquo;Convert to Standalone Template&rdquo;</strong> to convert it to a standalone template. The action replaces all <code>&lt;webobject name=&quot;X&quot;&gt;</code> tags with their inline equivalents (<code>&lt;wo:Type binding=&quot;value&quot;&gt;</code>) using the WOD definitions, moves the HTML file out of the <code>.wo</code> folder, and deletes it. Supports multi-selection and recursive conversion of entire folder trees.</p>
+					<p><strong>Standalone &rarr; bundle:</strong> Right-click a standalone <code>.html</code> template and select <strong>&ldquo;Convert to Bundle Template&rdquo;</strong> to wrap it in a <code>.wo</code> folder with an empty <code>.wod</code> file. Also supports multi-selection.</p>
+					<p>The bundle-to-standalone conversion respects the <strong>&ldquo;Spaces around equals&rdquo;</strong> formatting preference and the project&rsquo;s configured inline binding prefix/suffix. Missing WOD entries are left unchanged with a warning dialog.</p>
 				</div>
 
 				<div class="changelog-entry">
@@ -178,7 +178,7 @@
 
 				<div class="changelog-entry">
 					<h3>New component wizard: template type selection</h3>
-					<p>The New Component wizard now lets you choose between <strong>Standalone HTML file</strong> (ng-objects style) and <strong>.wo folder bundle</strong> (WebObjects style). The default is auto-detected from the project type &mdash; ng-objects projects default to standalone, WO projects to bundles.</p>
+					<p>The New Component wizard now lets you choose between <strong>Standalone template</strong> (ng-objects style) and <strong>Bundle template</strong> (WebObjects style). The default is auto-detected from the project type &mdash; ng-objects projects default to standalone templates, WO projects to bundle templates.</p>
 				</div>
 
 				<div class="changelog-entry">
@@ -258,7 +258,7 @@
 
 				<div class="changelog-entry">
 					<h3>Full editor support for standalone HTML templates</h3>
-					<p>Single-file <code>.html</code> templates (not inside <code>.wo</code> bundles) now have full editor support: autocomplete, keypath validation, and build-time validation — all on par with traditional <code>.wo</code> components. This is a key enabler for ng-objects, where single-file templates are the primary component format.</p>
+					<p>Standalone templates (<code>.html</code> files not inside <code>.wo</code> folders) now have full editor support: autocomplete, keypath validation, and build-time validation — all on par with traditional <code>.wo</code> components. This is a key enabler for ng-objects, where single-file templates are the primary component format.</p>
 				</div>
 
 				<div class="changelog-entry">
@@ -294,7 +294,7 @@
 
 				<div class="changelog-entry">
 					<h3>Parsley Explorer</h3>
-					<p>A Package Explorer variant with component-aware behavior: <code>.wo</code> bundles are expandable (unlike WOLips), pulled-up source folders, and project/component decorators throughout.</p>
+					<p>A Package Explorer variant with component-aware behavior: bundle template folders are expandable (unlike WOLips), pulled-up source folders, and project/component decorators throughout.</p>
 				</div>
 
 				<div class="changelog-entry">

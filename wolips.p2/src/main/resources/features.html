@@ -30,12 +30,12 @@
 
 				<div class="feature-entry">
 					<h3>Multi-tab component editor</h3>
-					<p>Open <code>.wo</code> bundles or standalone <code>.html</code> templates in a tabbed editor with synchronized views for the HTML template, WOD bindings, API definitions, and WOO settings. Each tab provides specialized editing for its file type.</p>
+					<p>Open bundle templates (<code>.wo</code> folders) or standalone templates (<code>.html</code> files) in a tabbed editor with synchronized views for the HTML template, WOD bindings, API definitions, and WOO settings. Each tab provides specialized editing for its file type.</p>
 				</div>
 
 				<div class="feature-entry">
 					<h3>Standalone template support</h3>
-					<p>Single-file <code>.html</code> templates (not inside <code>.wo</code> bundles) have full editor support: autocomplete, keypath validation, and build-time validation &mdash; all on par with traditional <code>.wo</code> components. This is a key enabler for ng-objects, where single-file templates are the primary component format.</p>
+					<p>Standalone templates (<code>.html</code> files not inside <code>.wo</code> folders) have full editor support: autocomplete, keypath validation, and build-time validation &mdash; all on par with traditional bundle template components. This is a key enabler for ng-objects, where standalone templates are the primary component format.</p>
 				</div>
 
 				<div class="feature-entry">
@@ -190,7 +190,7 @@
 
 				<div class="feature-entry">
 					<h3>Convert between component formats</h3>
-					<p>Convert between standalone single-file templates and <code>.wo</code> bundles in both directions. <strong>&ldquo;Convert to Inline Template&rdquo;</strong> on <code>.wo</code> folders replaces <code>&lt;webobject&gt;</code> tags with inline <code>&lt;wo:Type&gt;</code> syntax, moves the HTML out, and deletes the bundle. <strong>&ldquo;Convert to .wo Bundle&rdquo;</strong> on standalone <code>.html</code> files wraps them in a <code>.wo</code> folder with an empty <code>.wod</code> file. Both support multi-selection.</p>
+					<p>Convert between standalone templates and bundle templates in both directions. <strong>&ldquo;Convert to Standalone Template&rdquo;</strong> on <code>.wo</code> folders replaces <code>&lt;webobject&gt;</code> tags with inline <code>&lt;wo:Type&gt;</code> syntax, moves the HTML out, and deletes the <code>.wo</code> folder. <strong>&ldquo;Convert to Bundle Template&rdquo;</strong> on standalone <code>.html</code> files wraps them in a <code>.wo</code> folder with an empty <code>.wod</code> file. Both support multi-selection.</p>
 				</div>
 
 				<div class="feature-entry">
@@ -235,7 +235,7 @@
 
 				<div class="feature-entry">
 					<h3>Component-aware Package Explorer</h3>
-					<p>A Package Explorer variant designed for WebObjects development. <code>.wo</code> bundles are expandable (showing their contained files), unlike the standard Package Explorer where they appear as opaque folders.</p>
+					<p>A Package Explorer variant designed for WebObjects development. Bundle template folders are expandable (showing their contained files), unlike the standard Package Explorer where they appear as opaque folders.</p>
 				</div>
 
 				<div class="feature-entry">
@@ -255,7 +255,7 @@
 
 				<div class="feature-entry">
 					<h3>Component icons</h3>
-					<p>Custom icons for <code>.wo</code> bundles with problem marker overlays, visible across all Eclipse views (explorer, search results, etc.).</p>
+					<p>Custom icons for bundle template folders with problem marker overlays, visible across all Eclipse views (explorer, search results, etc.).</p>
 				</div>
 			</div>
 
@@ -270,7 +270,7 @@
 
 				<div class="feature-entry">
 					<h3>New Component wizard</h3>
-					<p>Create new components with a choice between <strong>Standalone HTML file</strong> (ng-objects style) and <strong>.wo folder bundle</strong> (WebObjects style). The default format is auto-detected from the project type. For bundles, the wizard generates HTML, WOD, WOO, and Java files; for standalone, just the HTML and Java files.</p>
+					<p>Create new components with a choice between <strong>Standalone template</strong> (ng-objects style) and <strong>Bundle template</strong> (WebObjects style). The default format is auto-detected from the project type. For bundle templates, the wizard generates HTML, WOD, WOO, and Java files; for standalone templates, just the HTML and Java files.</p>
 				</div>
 			</div>
 

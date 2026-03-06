@@ -24,7 +24,15 @@ wolips/
       lib/                       # Vendored JARs (Velocity, Xerces, CSS parser, etc.)
   features/
     ng.componenteditor.feature/  # Eclipse feature wrapper for p2
-  p2/                            # p2 update site build
+  wolips.p2/
+    src/main/resources/          # Public-facing HTML site for the p2 update site
+      changelog.html             # HTML changelog (user-facing, keep in sync with CHANGES.md)
+      roadmap.html               # HTML roadmap (user-facing, keep in sync with ROADMAP.md)
+      features.html              # Feature overview page
+      index.html                 # Landing page
+      non-features.html          # Anti-features / design decisions
+      css/                       # Site styles
+      img/                       # Site images
   pom.xml                        # Parent POM (Maven/Tycho build)
   install.sh                     # Build-and-install script for local dev
   CHANGES.md                     # Detailed changelog (project history reference)

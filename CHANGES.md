@@ -14,7 +14,7 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ### Convert between template formats
 
-- **New context menu action: "Convert to Standalone Template"** on `.wo` folders. Converts bundle templates from WOD-reference syntax (`<webobject name="X">`) to inline binding syntax (`<wo:Type binding="value">`), then moves the HTML file out of the `.wo` folder and deletes the bundle.
+- **New context menu action: "Convert to Standalone Template"** on `.wo` folders. Converts bundle templates from WOD-reference syntax (`<webobject name="X">`) to inline binding syntax (`<wo:Type binding="value">`), then moves the HTML file out of the `.wo` folder and deletes it.
 - Supports multi-selection: select multiple `.wo` folders and convert them all at once.
 - **"Convert All to Standalone Templates"** action on regular folders: recursively finds and converts all bundle templates inside.
 - Missing WOD entries are handled gracefully — affected tags are left unchanged and a warning dialog lets the user decide whether to proceed with partial conversion.
@@ -676,7 +676,7 @@ This allows users with mixed-framework workspaces (or projects that include both
 
 ### Added: NG Explorer view
 
-Ported the WO Explorer project view from `org.objectstyle.wolips.jdt` into `ng.componenteditor`. The NG Explorer is a Package Explorer variant with component-aware behavior for `.wo` bundle folders.
+Ported the WO Explorer project view from `org.objectstyle.wolips.jdt` into `ng.componenteditor`. The NG Explorer is a Package Explorer variant with component-aware behavior for bundle template folders.
 
 **What's included:**
 - `.wo` component folders show the expansion triangle — can be expanded to see contents (html/wod/woo files)
