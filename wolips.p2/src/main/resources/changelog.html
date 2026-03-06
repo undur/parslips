@@ -29,10 +29,10 @@
 				<h2 class="date-header">March 6, 2026</h2>
 
 				<div class="changelog-entry">
-					<h3>Convert .wo bundle to inline template</h3>
-					<p>Right-click a <code>.wo</code> folder and select <strong>&ldquo;Convert to Inline Template&rdquo;</strong> to convert it to a standalone HTML file. The action replaces all <code>&lt;webobject name=&quot;X&quot;&gt;</code> tags with their inline equivalents (<code>&lt;wo:Type binding=&quot;value&quot;&gt;</code>) using the WOD definitions, moves the HTML file out of the bundle, and deletes the <code>.wo</code> folder.</p>
-					<p>Supports multi-selection &mdash; select several <code>.wo</code> folders and convert them all at once. A separate <strong>&ldquo;Convert All to Inline Templates&rdquo;</strong> action on regular folders recursively finds and converts every <code>.wo</code> bundle inside. Missing WOD entries are left unchanged with a warning dialog, so you can proceed with partial conversion or cancel.</p>
-					<p>Respects the <strong>&ldquo;Spaces around equals&rdquo;</strong> formatting preference and the project&rsquo;s configured inline binding prefix/suffix.</p>
+					<h3>Convert between component formats</h3>
+					<p><strong>Bundle &rarr; inline:</strong> Right-click a <code>.wo</code> folder and select <strong>&ldquo;Convert to Inline Template&rdquo;</strong> to convert it to a standalone HTML file. The action replaces all <code>&lt;webobject name=&quot;X&quot;&gt;</code> tags with their inline equivalents (<code>&lt;wo:Type binding=&quot;value&quot;&gt;</code>) using the WOD definitions, moves the HTML file out of the bundle, and deletes the <code>.wo</code> folder. Supports multi-selection and recursive conversion of entire folder trees.</p>
+					<p><strong>Inline &rarr; bundle:</strong> Right-click a standalone <code>.html</code> template and select <strong>&ldquo;Convert to .wo Bundle&rdquo;</strong> to wrap it in a <code>.wo</code> folder with an empty <code>.wod</code> file. Also supports multi-selection.</p>
+					<p>The bundle-to-inline conversion respects the <strong>&ldquo;Spaces around equals&rdquo;</strong> formatting preference and the project&rsquo;s configured inline binding prefix/suffix. Missing WOD entries are left unchanged with a warning dialog.</p>
 				</div>
 			</div>
 

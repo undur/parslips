@@ -543,6 +543,17 @@
                label="Convert All to Inline Templates"
                menubarPath="additions"/>
       </objectContribution>
+      <objectContribution adaptable="false"
+            id="ng.componenteditor.convertInlineToBundle.htmlContribution"
+            nameFilter="*.html"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertInlineToBundleAction"
+               enablesFor="*"
+               icon="icons/parsley16.png"
+               id="ng.componenteditor.convertInlineToBundleAction"
+               label="Convert to .wo Bundle"
+               menubarPath="additions"/>
+      </objectContribution>
    </extension>
 
 <!-- =================================================================================== -->

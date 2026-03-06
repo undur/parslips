@@ -60,9 +60,9 @@ Implemented. The wizard now offers a "Component Format" radio group to choose be
 
 Implemented. Context menu actions on .wo folders ("Convert to Inline Template") and regular folders ("Convert All to Inline Templates") convert WOD-reference syntax to inline bindings, move the HTML file out, and delete the .wo folder. Supports multi-selection and recursive conversion. Missing WOD entries produce a warning dialog for partial conversion.
 
-## Convert inline template to .wo bundle
+## ~~Convert inline template to .wo bundle~~ ✓
 
-The reverse direction: create a .wo bundle folder from a standalone HTML template, optionally extracting inline bindings into a separate `.wod` file and generating a `.woo` file. (The existing `ConvertInlineToWodAction` handles individual tag conversion within an open editor — this would be a higher-level batch operation.)
+Implemented. Context menu action "Convert to .wo Bundle" on standalone `.html` files creates a `.wo` folder, moves the HTML file inside, and creates an empty `.wod` file. Supports multi-selection; files already inside `.wo` folders are excluded.
 
 ## Convert between WOD and inline bindings
 
