@@ -40,12 +40,14 @@ import org.osgi.framework.FrameworkUtil;
  * name with the full project-relative path (e.g. {@code src/main/components})
  * in a uniform style — no grey qualifier prefix.
  * <p>
- * <b>Icon override:</b> For pulled-up source folders, composites a small "wo"
- * overlay badge at bottom-left, similar to how JDT marks Java source folders.
+ * <b>Icon override:</b> For pulled-up source folders, composites a small
+ * overlay badge at bottom-left — "wo" for WO-style folders, "ng" for
+ * ng-style folders — similar to how JDT marks Java source folders.
  */
 public class SourceFolderDecorator {
 
 	private static final String WO_OVERLAY_PATH = "icons/ovr16/wo_co.png";
+	private static final String NG_OVERLAY_PATH = "icons/ovr16/ng_co.png";
 
 	/**
 	 * Installs source folder label overrides on the given tree viewer.
@@ -85,7 +87,10 @@ public class SourceFolderDecorator {
 
 		private final IStyledLabelProvider _delegate;
 		private ImageDescriptor _woOverlay;
-		private final Map<Image, Image> _badgeCache = new HashMap<>();
+		private ImageDescriptor _ngOverlay;
+
+		/** Cache keyed by (base image, overlay path) to handle both badges. */
+		private final Map<String, Image> _badgeCache = new HashMap<>();
 
 		SourceFolderStyledLabelProvider(IStyledLabelProvider delegate) {
 			_delegate = delegate;
@@ -106,7 +111,8 @@ public class SourceFolderDecorator {
 			Image base = _delegate.getImage(element);
 			if (element instanceof IFolder folder) {
 				if (NGPackageExplorerContentProvider.isSourceFolder(folder)) {
-					return base != null ? badgedImage(base) : null;
+					boolean isNg = NGPackageExplorerContentProvider.isNgSourceFolder(folder);
+					return base != null ? badgedImage(base, isNg) : null;
 				}
 			}
 			return base;
@@ -138,13 +144,15 @@ public class SourceFolderDecorator {
 			_delegate.dispose();
 		}
 
-		private Image badgedImage(Image baseImage) {
-			Image cached = _badgeCache.get(baseImage);
+		private Image badgedImage(Image baseImage, boolean isNg) {
+			// Cache key combines the base image identity with the overlay type
+			String cacheKey = System.identityHashCode(baseImage) + (isNg ? ":ng" : ":wo");
+			Image cached = _badgeCache.get(cacheKey);
 			if (cached != null && !cached.isDisposed()) {
 				return cached;
 			}
 
-			ImageDescriptor overlay = getWOOverlay();
+			ImageDescriptor overlay = isNg ? getNgOverlay() : getWoOverlay();
 			if (overlay == null) {
 				return baseImage;
 			}
@@ -155,23 +163,35 @@ public class SourceFolderDecorator {
 			Image composited = new DecorationOverlayIcon(baseImage, overlays, size).createImage(false);
 
 			if (composited != null) {
-				_badgeCache.put(baseImage, composited);
+				_badgeCache.put(cacheKey, composited);
 				return composited;
 			}
 			return baseImage;
 		}
 
-		private ImageDescriptor getWOOverlay() {
+		private ImageDescriptor getWoOverlay() {
 			if (_woOverlay == null) {
-				Bundle bundle = FrameworkUtil.getBundle(SourceFolderDecorator.class);
-				if (bundle != null) {
-					URL url = FileLocator.find(bundle, new Path(WO_OVERLAY_PATH), null);
-					if (url != null) {
-						_woOverlay = ImageDescriptor.createFromURL(url);
-					}
-				}
+				_woOverlay = loadOverlay(WO_OVERLAY_PATH);
 			}
 			return _woOverlay;
+		}
+
+		private ImageDescriptor getNgOverlay() {
+			if (_ngOverlay == null) {
+				_ngOverlay = loadOverlay(NG_OVERLAY_PATH);
+			}
+			return _ngOverlay;
+		}
+
+		private static ImageDescriptor loadOverlay(String path) {
+			Bundle bundle = FrameworkUtil.getBundle(SourceFolderDecorator.class);
+			if (bundle != null) {
+				URL url = FileLocator.find(bundle, new Path(path), null);
+				if (url != null) {
+					return ImageDescriptor.createFromURL(url);
+				}
+			}
+			return null;
 		}
 	}
 

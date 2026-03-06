@@ -170,6 +170,16 @@ public class NGPackageExplorerContentProvider extends PackageExplorerContentProv
 	}
 
 	/**
+	 * Returns true if the folder is an ng-style pulled-up source folder
+	 * (under {@code src/main/resources/}). Used by the decorator to choose
+	 * the "ng" badge instead of the "wo" badge.
+	 */
+	static boolean isNgSourceFolder(IFolder folder) {
+		String path = folder.getProjectRelativePath().toString();
+		return path.startsWith(NG_RESOURCES_ROOT + "/") && NG_RESOURCE_FOLDER_NAMES.contains(folder.getName());
+	}
+
+	/**
 	 * Recursively scans a folder for ng-style resource folders (those
 	 * with names in {@link #NG_RESOURCE_FOLDER_NAMES}). When a matching
 	 * folder is found, it's added to the result and its children are not
