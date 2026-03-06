@@ -46,6 +46,15 @@ mvn verify -pl wolips/plugins/ng.componenteditor -am -Dtycho.localArtifacts=igno
 
 The build uses **Tycho** (Maven plugin for Eclipse/OSGi builds). Target platform is Eclipse 2024-12+, Java 21+.
 
+## Terminology
+
+- **Standalone template** — a single `.html` file with inline bindings (`<wo:Type binding="value">`). The ng-objects default.
+- **Bundle template** — a `.wo` folder containing `.html` + `.wod` + optionally `.woo`. Bindings are expressed via `<webobject name="X">` references into the `.wod` file. The traditional WebObjects format.
+- **Inline bindings** — binding syntax where attributes are written directly on the tag: `<wo:WOString value="$name" />`. This describes the *syntax*, not the template format — don't say "inline template" when you mean "standalone template."
+- **WOD bindings** — binding syntax where tags reference named entries in a separate `.wod` file: `<webobject name="MyString">` + `MyString : WOString { value = name; }`.
+
+Always use "bundle template" as the full phrase, never just "bundle" — "bundle" is an overloaded term in WebObjects (framework bundles, application bundles, etc.).
+
 ## Key architectural concepts
 
 ### Eclipse wizard lifecycle (WOComponentCreationPage)
