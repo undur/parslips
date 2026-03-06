@@ -72,6 +72,7 @@ Convert individual tags or an entire template between WOD-reference syntax (`<we
 - **WOD → inline (single tag)**: implemented as `Cmd+2, I` (`ConvertWodToInlineAction`). Place cursor on a `<webobject name="X">` tag to convert it to inline syntax and remove the WOD entry.
 - **Inline → WOD (entire file)**: batch-convert all inline tags in a template to WOD-reference syntax in one step. Essentially `Cmd+2, W` applied to every inline tag.
 - **WOD → inline (entire file)**: batch-convert all WOD-reference tags in a template to inline syntax. The core engine for this already exists (`ConvertBundleToInlineTransformer`) but it's only exposed as part of the bundle-to-inline format conversion — it needs to be wired up as a standalone editor action.
+- **Cross-editor undo**: the single-tag actions modify both the HTML and WOD documents, but Eclipse maintains separate undo stacks per editor. Pressing Ctrl+Z in the template editor only reverts the HTML change, leaving the WOD file modified. Ideally, undo would be atomic across both files. Requires investigation into Eclipse's `IOperationHistory` and shared `IUndoContext` APIs.
 
 ## Rich component API model
 
