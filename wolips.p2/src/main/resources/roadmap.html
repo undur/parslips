@@ -85,6 +85,11 @@
 				</div>
 
 				<div class="roadmap-entry">
+					<h3>Tag shortcuts for WOD &rarr; inline conversion</h3>
+					<p>When converting WOD declarations to inline tags, use short tag names for well-known elements &mdash; e.g. <code>&lt;wo:if&gt;</code> instead of <code>&lt;wo:WOConditional&gt;</code>, <code>&lt;wo:str&gt;</code> instead of <code>&lt;wo:WOString&gt;</code>. Requires a mapping from element types to preferred short names, which could live in the component API model or as a user-configurable registry.</p>
+				</div>
+
+				<div class="roadmap-entry">
 					<h3>Rich component API model</h3>
 					<p>A major evolution of the <code>.api</code> file format to describe the full component contract. Binding type checking (go beyond &ldquo;this binding doesn&rsquo;t exist&rdquo; to &ldquo;this binding expects a String, you&rsquo;re passing an NSArray&rdquo;), binding directionality (get/set/both), deprecated bindings, default values, value constraints, required vs. optional bindings, per-binding documentation, component descriptions, content model, and more. This feeds into almost every other roadmap item.</p>
 				</div>
