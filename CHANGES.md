@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Convert .wo bundle to inline template
+
+- **New context menu action: "Convert to Inline Template"** on `.wo` folders. Converts WebObjects component bundles from WOD-reference syntax (`<webobject name="X">`) to inline binding syntax (`<wo:Type binding="value">`), then moves the HTML file out of the `.wo` folder and deletes the bundle.
+- Supports multi-selection: select multiple `.wo` folders and convert them all at once.
+- **"Convert All to Inline Templates"** action on regular folders: recursively finds and converts all `.wo` bundles inside.
+- Missing WOD entries are handled gracefully — affected tags are left unchanged and a warning dialog lets the user decide whether to proceed with partial conversion.
+- Respects the "Spaces around equals" formatting preference — produces `value = "$x"` or `value="$x"` accordingly.
+- Core transformation logic (`ConvertBundleToInlineTransformer`) is a pure string-based engine with no Eclipse dependencies, fully covered by 31 unit tests.
+- Uses the existing `AbstractWodBinding.writeInlineFormat()` infrastructure for correct serialization of literal, key path, and OGNL binding values with the project's configured inline binding prefix/suffix.
+
 ### WOLips coexistence: keybinding shadow preference
 
 - **New preference page: "WOLips Coexistence"** under Parsley preferences. Provides a single checkbox: "Take over component shortcuts from WOLips".

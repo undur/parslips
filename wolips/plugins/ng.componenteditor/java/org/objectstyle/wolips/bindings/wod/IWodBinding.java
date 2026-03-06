@@ -104,6 +104,8 @@ public interface IWodBinding extends IWodUnit {
 
   public void writeInlineFormat(Writer writer, String prefix, String suffix) throws IOException;
 
+  public void writeInlineFormat(Writer writer, String prefix, String suffix, boolean spacesAroundEquals) throws IOException;
+
   public void writeWodFormat(Writer writer) throws IOException;
   
   public boolean isValueWithin(IRegion region);

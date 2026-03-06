@@ -522,6 +522,27 @@
                label="Rename Component..."
                menubarPath="additions"/>
       </objectContribution>
+      <objectContribution adaptable="false"
+            id="ng.componenteditor.convertBundleToInline.woContribution"
+            nameFilter="*.wo"
+            objectClass="org.eclipse.core.resources.IFolder">
+         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertBundleToInlineAction"
+               enablesFor="*"
+               icon="icons/parsley16.png"
+               id="ng.componenteditor.convertBundleToInlineAction"
+               label="Convert to Inline Template"
+               menubarPath="additions"/>
+      </objectContribution>
+      <objectContribution adaptable="false"
+            id="ng.componenteditor.convertBundleToInline.folderContribution"
+            objectClass="org.eclipse.core.resources.IFolder">
+         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertBundleToInlineAction"
+               enablesFor="1"
+               icon="icons/parsley16.png"
+               id="ng.componenteditor.convertAllBundlesToInlineAction"
+               label="Convert All to Inline Templates"
+               menubarPath="additions"/>
+      </objectContribution>
    </extension>
 
 <!-- =================================================================================== -->

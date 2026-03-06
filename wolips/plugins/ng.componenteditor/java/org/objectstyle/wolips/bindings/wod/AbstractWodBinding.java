@@ -131,13 +131,29 @@ public abstract class AbstractWodBinding implements IWodBinding {
   }
 
   public void writeInlineFormat(Writer writer, String prefix, String suffix) throws IOException {
+    writeInlineFormat(writer, prefix, suffix, true);
+  }
+
+  /**
+   * Writes this binding in inline HTML attribute format.
+   *
+   * <p>Output examples (with spaces): {@code  value = "$session.user"}
+   * <br>Output examples (without spaces): {@code  value="$session.user"}
+   *
+   * @param writer the writer to write to
+   * @param prefix the inline binding prefix (e.g. "$")
+   * @param suffix the inline binding suffix (e.g. "")
+   * @param spacesAroundEquals whether to put spaces around the {@code =} sign
+   */
+  public void writeInlineFormat(Writer writer, String prefix, String suffix, boolean spacesAroundEquals) throws IOException {
+    String equals = spacesAroundEquals ? " = " : "=";
     writer.write(" ");
     if (getNamespace() != null) {
       writer.write(getNamespace());
       writer.write(":");
     }
     writer.write(getName());
-    writer.write(" = ");
+    writer.write(equals);
     if (isLiteral()) {
       writer.write(getValue());
     }

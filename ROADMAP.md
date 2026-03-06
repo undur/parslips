@@ -56,23 +56,22 @@ Prior work exists in a separate project. Natural home would be an Eclipse view c
 
 Implemented. The wizard now offers a "Component Format" radio group to choose between standalone HTML (ng-objects style) and .wo folder bundle (WebObjects style). The default is detected from the project type, and the choice is persisted between invocations.
 
-## Convert between component formats
+## ~~Convert .wo bundle to inline template~~ ✓
 
-Convert a `.wo` folder bundle to a single-file standalone component, and vice versa.
+Implemented. Context menu actions on .wo folders ("Convert to Inline Template") and regular folders ("Convert All to Inline Templates") convert WOD-reference syntax to inline bindings, move the HTML file out, and delete the .wo folder. Supports multi-selection and recursive conversion. Missing WOD entries produce a warning dialog for partial conversion.
 
-- **`.wo` → single file**: merge the WOD into inline bindings, move the HTML out of the bundle, clean up the `.wo` folder.
-- **Single file → `.wo`**: create the bundle folder, optionally extract inline bindings into a separate `.wod` file, generate a `.woo` file.
+## Convert inline template to .wo bundle
 
-Could be offered as a context menu action on components in the explorer.
+The reverse direction: create a .wo bundle folder from a standalone HTML template, optionally extracting inline bindings into a separate `.wod` file and generating a `.woo` file. (The existing `ConvertInlineToWodAction` handles individual tag conversion within an open editor — this would be a higher-level batch operation.)
 
 ## Convert between WOD and inline bindings
 
-Convert a component's WOD bindings to inline bindings within the HTML template, and vice versa. Useful when switching coding styles or converting between component formats.
+Convert a component's WOD bindings to inline bindings within the HTML template, and vice versa. Useful when switching coding styles.
 
-- **WOD → inline**: for each WOD definition, find the corresponding tag in the template and replace it with an inline binding tag, then remove the WOD entry.
-- **Inline → WOD**: extract inline bindings from the template into named WOD definitions, replacing the inline tags with named references.
+- **WOD → inline**: for each WOD definition, find the corresponding tag in the template and replace it with an inline binding tag, then remove the WOD entry. (Now partially covered by the bundle-to-inline conversion.)
+- **Inline → WOD**: extract inline bindings from the template into named WOD definitions, replacing the inline tags with named references. (Already exists as `ConvertInlineToWodAction` for individual tags.)
 
-Requires the parser to map WOD entries to their corresponding template tags. Could be offered as an editor action, a context menu item, or both.
+Could be offered as an editor action for batch conversion of all tags in a template.
 
 ## Rich component API model
 
@@ -129,3 +128,21 @@ This is the direction the project is actually heading. Improving the Eclipse edi
 ## Live preview
 
 Side-by-side rendering of the template as you edit. Challenging for WO components since they render server-side with dynamic bindings, but even a static structural preview (showing component nesting and placeholder content) could be valuable.
+
+## One-click deployment
+
+Right-click an application → "Deploy" → it's on the internet. The ng-objects runtime produces a standard fat JAR (embedded Jetty), making it a natural fit for container-based PaaS providers (Fly.io, Railway, Render, etc.).
+
+Envisioned workflow:
+
+1. **First time:** user provides an API token and picks a provider. Stored in project preferences or `build.properties`.
+2. **Every deploy:** plugin builds the application, wraps the artifact in a Docker image (or pushes directly if the provider supports bare JARs), and deploys via the provider's CLI/API.
+
+The plugin would essentially be a GUI wrapper around a CLI deploy command. Main challenges:
+
+- **First-run setup** — authenticating with the provider, creating the app, choosing a region.
+- **Database provisioning** — if the app needs one, the provider's managed database needs to be wired up.
+- **Environment variables / secrets** — configuration that differs between dev and prod.
+- **Provider abstraction** — start with one provider, but design the abstraction so others can be added. A Dockerfile-based approach is the most portable.
+
+This is a long-distance item — not specific to Parsley's template editor, but a natural extension of the "make ng-objects development frictionless" mission. May eventually live in its own project or in the ng-objects tooling layer.
