@@ -542,7 +542,7 @@
                enablesFor="*"
                icon="icons/parsley16.png"
                id="ng.componenteditor.convertBundleToInlineAction"
-               label="Convert to Inline Template"
+               label="Convert to Standalone Template"
                menubarPath="additions"/>
       </objectContribution>
       <objectContribution adaptable="false"
@@ -552,7 +552,7 @@
                enablesFor="1"
                icon="icons/parsley16.png"
                id="ng.componenteditor.convertAllBundlesToInlineAction"
-               label="Convert All to Inline Templates"
+               label="Convert All to Standalone Templates"
                menubarPath="additions"/>
       </objectContribution>
       <objectContribution adaptable="false"
@@ -563,7 +563,7 @@
                enablesFor="*"
                icon="icons/parsley16.png"
                id="ng.componenteditor.convertInlineToBundleAction"
-               label="Convert to .wo Bundle"
+               label="Convert to Bundle Template"
                menubarPath="additions"/>
       </objectContribution>
    </extension>

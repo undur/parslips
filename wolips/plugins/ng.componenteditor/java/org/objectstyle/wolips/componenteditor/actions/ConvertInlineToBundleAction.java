@@ -24,8 +24,8 @@ import org.eclipse.ui.PlatformUI;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
 /**
- * Context menu action that converts standalone HTML component templates
- * to .wo bundle format.
+ * Context menu action that converts standalone templates (single .html
+ * files) to bundle templates (.wo folders).
  *
  * <p>This is the reverse of {@link ConvertBundleToInlineAction}. Since
  * standalone templates already use inline binding syntax, no HTML rewriting
@@ -37,7 +37,7 @@ import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
  * </ol>
  *
  * <p>The action is registered on {@code .html} files and filters out files
- * that are already inside a {@code .wo} folder (those are already bundles).
+ * that are already inside a {@code .wo} folder (those are already bundle templates).
  * Supports multi-selection.
  *
  * @see ConvertBundleToInlineAction
@@ -76,16 +76,16 @@ public class ConvertInlineToBundleAction implements IObjectActionDelegate {
 		}
 
 		if (htmlFiles.isEmpty()) {
-			MessageDialog.openInformation(getShell(), "Convert to .wo Bundle",
-					"No standalone HTML templates found to convert.\n\n"
+			MessageDialog.openInformation(getShell(), "Convert to Bundle Template",
+					"No standalone templates found to convert.\n\n"
 					+ "(HTML files already inside .wo folders are excluded.)");
 			return;
 		}
 
 		// Confirm when converting many files at once
 		if (htmlFiles.size() > 1) {
-			boolean proceed = MessageDialog.openConfirm(getShell(), "Convert to .wo Bundle",
-					"Convert " + htmlFiles.size() + " standalone templates to .wo bundles?\n\n"
+			boolean proceed = MessageDialog.openConfirm(getShell(), "Convert to Bundle Template",
+					"Convert " + htmlFiles.size() + " standalone templates to bundle templates?\n\n"
 					+ "This will create a .wo folder for each template, move the HTML file inside, "
 					+ "and create an empty .wod file.");
 			if (!proceed) {
@@ -117,12 +117,12 @@ public class ConvertInlineToBundleAction implements IObjectActionDelegate {
 			for (String error : errors) {
 				message.append("  \u2022 " + error + "\n");
 			}
-			MessageDialog.openWarning(getShell(), "Convert to .wo Bundle", message.toString());
+			MessageDialog.openWarning(getShell(), "Convert to Bundle Template", message.toString());
 		}
 	}
 
 	/**
-	 * Converts a single standalone HTML template to a .wo bundle.
+	 * Converts a single standalone template to a bundle template.
 	 *
 	 * <p>Steps:
 	 * <ol>
@@ -132,7 +132,7 @@ public class ConvertInlineToBundleAction implements IObjectActionDelegate {
 	 *   <li>Create an empty {@code ComponentName.wod} file in the folder
 	 * </ol>
 	 *
-	 * @param htmlFile the standalone HTML template to convert
+	 * @param htmlFile the standalone template to convert
 	 * @param monitor progress monitor
 	 */
 	private static void convertToBundle(IFile htmlFile, IProgressMonitor monitor) throws CoreException {
@@ -157,7 +157,7 @@ public class ConvertInlineToBundleAction implements IObjectActionDelegate {
 	}
 
 	/**
-	 * Returns true if the file is inside a .wo folder (i.e. already a bundle).
+	 * Returns true if the file is inside a .wo folder (i.e. already a bundle template).
 	 */
 	private static boolean isInsideWoFolder(IFile file) {
 		IContainer parent = file.getParent();

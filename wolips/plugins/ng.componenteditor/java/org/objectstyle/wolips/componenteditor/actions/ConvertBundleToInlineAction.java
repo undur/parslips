@@ -35,20 +35,20 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.ConvertBundleToInlineTr
 import org.objectstyle.wolips.wodclipse.core.util.WodModelUtils;
 
 /**
- * Context menu action that converts .wo bundle templates to standalone
- * inline templates.
+ * Context menu action that converts bundle templates (.wo folders) to
+ * standalone templates (single .html files with inline bindings).
  *
  * <p>Handles two scenarios:
  * <ul>
- *   <li><b>Right-click on .wo folders:</b> Converts the selected bundles directly.
- *       Supports multi-selection ({@code enablesFor="*"}).
- *   <li><b>Right-click on a regular folder:</b> Recursively finds all .wo bundles
- *       inside and converts them all.
+ *   <li><b>Right-click on .wo folders:</b> Converts the selected bundle templates
+ *       directly. Supports multi-selection ({@code enablesFor="*"}).
+ *   <li><b>Right-click on a regular folder:</b> Recursively finds all bundle
+ *       templates inside and converts them all.
  * </ul>
  *
- * <p>For each .wo bundle, the conversion:
+ * <p>For each bundle template, the conversion:
  * <ol>
- *   <li>Reads the HTML template and WOD file from the bundle
+ *   <li>Reads the HTML template and WOD file from the .wo folder
  *   <li>Replaces {@code <webobject name="X">} tags with inline
  *       {@code <wo:Type binding="value">} syntax using the WOD definitions
  *   <li>Creates the converted HTML file alongside the .wo folder (one level up)
@@ -112,15 +112,15 @@ public class ConvertBundleToInlineAction implements IObjectActionDelegate {
 		}
 
 		if (woFolders.isEmpty()) {
-			MessageDialog.openInformation(getShell(), "Convert to Inline Template",
-					"No .wo component bundles found to convert.");
+			MessageDialog.openInformation(getShell(), "Convert to Standalone Template",
+					"No bundle templates (.wo folders) found to convert.");
 			return;
 		}
 
 		// Confirm when converting many components at once
 		if (woFolders.size() > 1) {
-			boolean proceed = MessageDialog.openConfirm(getShell(), "Convert to Inline Template",
-					"Convert " + woFolders.size() + " component bundles to inline templates?\n\n"
+			boolean proceed = MessageDialog.openConfirm(getShell(), "Convert to Standalone Template",
+					"Convert " + woFolders.size() + " bundle templates to standalone templates?\n\n"
 					+ "This will replace <webobject> tags with inline <wo:> syntax, "
 					+ "move HTML files out of the .wo folders, and delete the .wo folders.");
 			if (!proceed) {
@@ -153,12 +153,12 @@ public class ConvertBundleToInlineAction implements IObjectActionDelegate {
 			for (String error : errors) {
 				message.append("  \u2022 " + error + "\n");
 			}
-			MessageDialog.openWarning(getShell(), "Convert to Inline Template", message.toString());
+			MessageDialog.openWarning(getShell(), "Convert to Standalone Template", message.toString());
 		}
 	}
 
 	/**
-	 * Converts a single .wo bundle to a standalone inline template.
+	 * Converts a single bundle template (.wo folder) to a standalone template.
 	 *
 	 * @param woFolder the .wo folder to convert
 	 * @param monitor progress monitor
@@ -218,7 +218,7 @@ public class ConvertBundleToInlineAction implements IObjectActionDelegate {
 			message.append("\nProceed with partial conversion?");
 
 			boolean proceed = MessageDialog.openQuestion(getShell(),
-					"Convert to Inline Template", message.toString());
+					"Convert to Standalone Template", message.toString());
 			if (!proceed) {
 				return;
 			}

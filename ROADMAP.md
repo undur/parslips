@@ -54,24 +54,24 @@ Prior work exists in a separate project. Natural home would be an Eclipse view c
 
 ## ~~New component wizard: template type selection~~ ✓
 
-Implemented. The wizard now offers a "Component Format" radio group to choose between standalone HTML (ng-objects style) and .wo folder bundle (WebObjects style). The default is detected from the project type, and the choice is persisted between invocations.
+Implemented. The wizard now offers a "Component Format" radio group to choose between standalone template (ng-objects style) and bundle template (WebObjects style). The default is detected from the project type, and the choice is persisted between invocations.
 
-## ~~Convert .wo bundle to inline template~~ ✓
+## ~~Convert bundle template to standalone template~~ ✓
 
-Implemented. Context menu actions on .wo folders ("Convert to Inline Template") and regular folders ("Convert All to Inline Templates") convert WOD-reference syntax to inline bindings, move the HTML file out, and delete the .wo folder. Supports multi-selection and recursive conversion. Missing WOD entries produce a warning dialog for partial conversion.
+Implemented. Context menu actions on .wo folders ("Convert to Standalone Template") and regular folders ("Convert All to Standalone Templates") convert WOD-reference syntax to inline bindings, move the HTML file out, and delete the .wo folder. Supports multi-selection and recursive conversion. Missing WOD entries produce a warning dialog for partial conversion.
 
-## ~~Convert inline template to .wo bundle~~ ✓
+## ~~Convert standalone template to bundle template~~ ✓
 
-Implemented. Context menu action "Convert to .wo Bundle" on standalone `.html` files creates a `.wo` folder, moves the HTML file inside, and creates an empty `.wod` file. Supports multi-selection; files already inside `.wo` folders are excluded.
+Implemented. Context menu action "Convert to Bundle Template" on standalone `.html` files creates a `.wo` folder, moves the HTML file inside, and creates an empty `.wod` file. Supports multi-selection; files already inside `.wo` folders are excluded.
 
 ## Convert between WOD and inline bindings
 
-Convert individual tags or an entire template between WOD-reference syntax (`<webobject name="X">` + `.wod` entry) and inline binding syntax (`<wo:Type binding="value">`). This is purely about the binding style within the files — not about component bundling (which is handled by the format conversion actions above).
+Convert individual tags or an entire template between WOD-reference syntax (`<webobject name="X">` + `.wod` entry) and inline binding syntax (`<wo:Type binding="value">`). This is purely about the binding style within the files — not about the template format (which is handled by the bundle/standalone conversion actions above).
 
 - **Inline → WOD (single tag)**: already exists as `Cmd+2, W` (`ConvertInlineToWodAction`), which extracts one inline tag's bindings into the `.wod` file and replaces it with a named reference.
 - **WOD → inline (single tag)**: implemented as `Cmd+2, I` (`ConvertWodToInlineAction`). Place cursor on a `<webobject name="X">` tag to convert it to inline syntax and remove the WOD entry.
 - **Inline → WOD (entire file)**: batch-convert all inline tags in a template to WOD-reference syntax in one step. Essentially `Cmd+2, W` applied to every inline tag.
-- **WOD → inline (entire file)**: batch-convert all WOD-reference tags in a template to inline syntax. The core engine for this already exists (`ConvertBundleToInlineTransformer`) but it's only exposed as part of the bundle-to-inline format conversion — it needs to be wired up as a standalone editor action.
+- **WOD → inline (entire file)**: batch-convert all WOD-reference tags in a template to inline syntax. The core engine for this already exists (`ConvertBundleToInlineTransformer`) but it's only exposed as part of the bundle/standalone format conversion — it needs to be wired up as a standalone editor action.
 - **Cross-editor undo**: the single-tag actions modify both the HTML and WOD documents, but Eclipse maintains separate undo stacks per editor. Pressing Ctrl+Z in the template editor only reverts the HTML change, leaving the WOD file modified. Ideally, undo would be atomic across both files. Requires investigation into Eclipse's `IOperationHistory` and shared `IUndoContext` APIs.
 
 ## Rich component API model
