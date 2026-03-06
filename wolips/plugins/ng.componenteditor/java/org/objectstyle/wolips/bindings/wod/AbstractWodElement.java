@@ -175,10 +175,14 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
   }
 
   public void writeInlineFormat(Writer writer, String content, boolean alphabetize, String bindingPrefix, String bindingSuffix) throws IOException {
-    writeInlineFormat(writer, content, alphabetize, true, true, true, bindingPrefix, bindingSuffix);
+    writeInlineFormat(writer, content, alphabetize, true, true, true, bindingPrefix, bindingSuffix, true);
   }
 
   public void writeInlineFormat(Writer writer, String content, boolean alphabetize, boolean showOpenTag, boolean showContent, boolean showCloseTag, String bindingPrefix, String bindingSuffix) throws IOException {
+    writeInlineFormat(writer, content, alphabetize, showOpenTag, showContent, showCloseTag, bindingPrefix, bindingSuffix, true);
+  }
+
+  public void writeInlineFormat(Writer writer, String content, boolean alphabetize, boolean showOpenTag, boolean showContent, boolean showCloseTag, String bindingPrefix, String bindingSuffix, boolean spacesAroundEquals) throws IOException {
     List<IWodBinding> bindings = getBindings();
     if (alphabetize) {
       bindings = new LinkedList<IWodBinding>(bindings);
@@ -188,7 +192,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
       writer.write("<");
       writer.write(getTagName());
       for (IWodBinding binding : bindings) {
-        binding.writeInlineFormat(writer, bindingPrefix, bindingSuffix);
+        binding.writeInlineFormat(writer, bindingPrefix, bindingSuffix, spacesAroundEquals);
       }
       if (content == null) {
         writer.write("/>");

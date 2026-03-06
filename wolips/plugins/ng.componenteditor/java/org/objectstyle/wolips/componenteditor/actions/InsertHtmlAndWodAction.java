@@ -17,6 +17,8 @@ import org.objectstyle.wolips.bindings.wod.SimpleWodBinding;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.wodclipse.core.Activator;
+import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
 import org.objectstyle.wolips.wodclipse.editor.WodEditor;
 
 /**
@@ -139,6 +141,10 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 			IDocument weDoc = we.getWodEditDocument();
 			ITextSelection teDocTSel = (ITextSelection) te.getSourceEditor().getSelectionProvider().getSelection();
 
+			// Read the "spaces around equals" formatting preference
+			boolean spacesAroundEquals = Activator.getDefault().getPreferenceStore()
+					.getBoolean(PreferenceConstants.SPACES_AROUND_EQUALS);
+
 			// insert the WebObjects component into the template portion.
 			try {
 				ITextViewerExtension teExt = (ITextViewerExtension) te.getSourceEditor().getViewer();
@@ -152,11 +158,11 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 						int selectionEndLine = teDocTSel.getEndLine();
 
 						StringWriter startTagWriter = new StringWriter();
-						htmlElement.writeInlineFormat(startTagWriter, "", true, true, false, false, "$", "");
+						htmlElement.writeInlineFormat(startTagWriter, "", true, true, false, false, "$", "", spacesAroundEquals);
 						String startTag = startTagWriter.toString();
 
 						StringWriter endTagWriter = new StringWriter();
-						htmlElement.writeInlineFormat(endTagWriter, "", true, false, false, true, "$", "");
+						htmlElement.writeInlineFormat(endTagWriter, "", true, false, false, true, "$", "", spacesAroundEquals);
 						String endTag = endTagWriter.toString();
 
 						String indentText = getIndentText(teDoc, selectionStartOffset);
@@ -218,7 +224,7 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 						}
 					} else {
 						StringWriter startTagWriter = new StringWriter();
-						htmlElement.writeInlineFormat(startTagWriter, null, true, true, false, true, "$", "");
+						htmlElement.writeInlineFormat(startTagWriter, null, true, true, false, true, "$", "", spacesAroundEquals);
 						String tag = startTagWriter.toString();
 						teDoc.replace(selectionStartOffset, 0, tag);
 					}

@@ -19,7 +19,9 @@ import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.variables.ParsleyProject;
+import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
+import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
 import org.objectstyle.wolips.wodclipse.core.util.FuzzyXMLWodElement;
 import org.objectstyle.wolips.wodclipse.core.util.WodDocumentUtils;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
@@ -68,7 +70,10 @@ public class ConvertInlineToWodRefactoring implements IRunnableWithProgress {
           else {
             openTagLength--;
           }
-          edits.add(new ReplaceEdit(element.getOffset() + 1, openTagLength, "webobject name = \"" + elementRename.getNewName() + "\""));
+          boolean spacesAroundEquals = Activator.getDefault().getPreferenceStore()
+              .getBoolean(PreferenceConstants.SPACES_AROUND_EQUALS);
+          String equals = spacesAroundEquals ? " = " : "=";
+          edits.add(new ReplaceEdit(element.getOffset() + 1, openTagLength, "webobject name" + equals + "\"" + elementRename.getNewName() + "\""));
           WodDocumentUtils.applyEdits(htmlDocument, edits);
         }
       }
