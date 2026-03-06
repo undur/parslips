@@ -69,8 +69,8 @@ Implemented. Context menu action "Convert to .wo Bundle" on standalone `.html` f
 Convert individual tags or an entire template between WOD-reference syntax (`<webobject name="X">` + `.wod` entry) and inline binding syntax (`<wo:Type binding="value">`). This is purely about the binding style within the files — not about component bundling (which is handled by the format conversion actions above).
 
 - **Inline → WOD (single tag)**: already exists as `Cmd+2, W` (`ConvertInlineToWodAction`), which extracts one inline tag's bindings into the `.wod` file and replaces it with a named reference.
+- **WOD → inline (single tag)**: implemented as `Cmd+2, I` (`ConvertWodToInlineAction`). Place cursor on a `<webobject name="X">` tag to convert it to inline syntax and remove the WOD entry.
 - **Inline → WOD (entire file)**: batch-convert all inline tags in a template to WOD-reference syntax in one step. Essentially `Cmd+2, W` applied to every inline tag.
-- **WOD → inline (single tag)**: convert one `<webobject name="X">` tag to inline syntax, inlining its WOD bindings and removing the WOD entry.
 - **WOD → inline (entire file)**: batch-convert all WOD-reference tags in a template to inline syntax. The core engine for this already exists (`ConvertBundleToInlineTransformer`) but it's only exposed as part of the bundle-to-inline format conversion — it needs to be wired up as a standalone editor action.
 
 ## Rich component API model

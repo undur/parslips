@@ -1,0 +1,50 @@
+package org.objectstyle.wolips.componenteditor.actions;
+
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.ui.IEditorPart;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
+import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
+import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.variables.ParsleyProject;
+import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
+import org.objectstyle.wolips.wodclipse.core.refactoring.ConvertWodToInlineRefactoring;
+import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+
+/**
+ * Editor action that converts a single WOD-reference tag
+ * ({@code <webobject name="X">}) to inline binding syntax
+ * ({@code <wo:Type binding="value">}).
+ *
+ * <p>This is the reverse of {@link ConvertInlineToWodAction}. The cursor
+ * must be on a {@code <webobject>} or {@code <wo name="...">} tag in the
+ * template editor. The action looks up the WOD entry, replaces the tag
+ * with the inline equivalent, and removes the WOD entry.
+ *
+ * @see ConvertWodToInlineRefactoring
+ */
+public class ConvertWodToInlineAction extends AbstractTemplateAction {
+
+	@Override
+	public void run(IAction action) {
+		try {
+			ComponentEditorPart componentEditorPart = getComponentEditorPart();
+			if (componentEditorPart != null) {
+				IEditorPart activeEditorPart = componentEditorPart.getActiveEditor();
+				TemplateEditor templateEditor = getTemplateEditor();
+				WodEditor wodEditor = getWodEditor();
+				if (templateEditor != null && wodEditor != null && activeEditorPart == templateEditor) {
+					ITextSelection templateSelection = (ITextSelection) templateEditor.getSourceEditor().getSelectionProvider().getSelection();
+					int offset = templateSelection.getOffset();
+					WodParserCache cache = templateEditor.getSourceEditor().getParserCache();
+					ParsleyProject parsleyProject = (ParsleyProject) cache.getProject().getAdapter(ParsleyProject.class);
+					ConvertWodToInlineRefactoring.run(cache, offset, parsleyProject, new NullProgressMonitor());
+				}
+			}
+		}
+		catch (Exception e) {
+			ComponenteditorPlugin.getDefault().log(e);
+		}
+	}
+}

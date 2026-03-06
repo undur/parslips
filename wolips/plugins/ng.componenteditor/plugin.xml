@@ -173,6 +173,9 @@
       <command name="Convert Inline to WOD" description="Convert Inline to WOD"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.editors.command.refactorConvertToWod"/>
+      <command name="Convert WOD to Inline" description="Convert WOD to Inline"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.command.refactorConvertToInline"/>
       <command name="Extract Component..." description="Extract selected HTML into a new component"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.editors.command.extractComponent"/>
@@ -243,6 +246,10 @@
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
            sequence="M1+2 W"/>
+      <key commandId="ng.componenteditor.editors.command.refactorConvertToInline"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+2 I"/>
       <key commandId="ng.componenteditor.editors.command.extractComponent"
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -307,6 +314,11 @@
                definitionId="ng.componenteditor.editors.command.refactorConvertToWod"
                id="ng.componenteditor.editors.action.refactorConvertToWod"
                label="Convert Inline to WOD"
+               menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertWodToInlineAction"
+               definitionId="ng.componenteditor.editors.command.refactorConvertToInline"
+               id="ng.componenteditor.editors.action.refactorConvertToInline"
+               label="Convert WOD to Inline"
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
          <action class="org.objectstyle.wolips.componenteditor.actions.ExtractComponentAction"
                definitionId="ng.componenteditor.editors.command.extractComponent"

@@ -23,6 +23,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 - Uses the existing `AbstractWodBinding.writeInlineFormat()` infrastructure for correct serialization of literal, key path, and OGNL binding values with the project's configured inline binding prefix/suffix.
 - **New context menu action: "Convert to .wo Bundle"** on standalone `.html` template files. Creates a `.wo` folder, moves the HTML file inside, and creates an empty `.wod` file. The reverse of the bundle-to-inline conversion. Supports multi-selection; files already inside `.wo` folders are excluded.
 
+### Convert WOD to Inline (single tag)
+
+- **New editor action: "Convert WOD to Inline"** (`Cmd+2, I`). Place the cursor on a `<webobject name="X">` tag in the template editor and invoke the action to replace it with inline `<wo:Type binding="value">` syntax. The WOD entry is looked up, the tag is rewritten with the correct element type and bindings, and the WOD declaration is removed from the `.wod` file.
+- The reverse of the existing "Convert Inline to WOD" (`Cmd+2, W`).
+- Respects the "Spaces around equals" formatting preference and the project's inline binding prefix/suffix.
+
 ### WOLips coexistence: keybinding shadow preference
 
 - **New preference page: "WOLips Coexistence"** under Parsley preferences. Provides a single checkbox: "Take over component shortcuts from WOLips".

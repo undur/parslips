@@ -34,6 +34,11 @@
 					<p><strong>Inline &rarr; bundle:</strong> Right-click a standalone <code>.html</code> template and select <strong>&ldquo;Convert to .wo Bundle&rdquo;</strong> to wrap it in a <code>.wo</code> folder with an empty <code>.wod</code> file. Also supports multi-selection.</p>
 					<p>The bundle-to-inline conversion respects the <strong>&ldquo;Spaces around equals&rdquo;</strong> formatting preference and the project&rsquo;s configured inline binding prefix/suffix. Missing WOD entries are left unchanged with a warning dialog.</p>
 				</div>
+
+				<div class="changelog-entry">
+					<h3>Convert WOD to Inline (single tag)</h3>
+					<p><kbd>Cmd+2, I</kbd> converts a single <code>&lt;webobject name=&quot;X&quot;&gt;</code> tag to inline <code>&lt;wo:Type&gt;</code> syntax. Place the cursor on the tag, invoke the action, and the tag is rewritten with the correct element type and bindings from the WOD file. The WOD declaration is removed automatically. The reverse of the existing <kbd>Cmd+2, W</kbd> (Convert Inline to WOD).</p>
+				</div>
 			</div>
 
 			<!-- March 5, 2026 -->
