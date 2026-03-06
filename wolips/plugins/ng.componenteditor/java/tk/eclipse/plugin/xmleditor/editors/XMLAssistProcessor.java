@@ -7,9 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
-import jp.aonir.fuzzyxml.FuzzyXMLElement;
-
 import org.apache.xerces.impl.xs.SchemaGrammar;
 import org.apache.xerces.impl.xs.XMLSchemaLoader;
 import org.apache.xerces.xni.parser.XMLInputSource;
@@ -27,13 +24,6 @@ import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.eclipse.ui.IFileEditorInput;
 
-import tk.eclipse.plugin.htmleditor.HTMLPlugin;
-import tk.eclipse.plugin.htmleditor.assist.AssistInfo;
-import tk.eclipse.plugin.htmleditor.assist.AttributeInfo;
-import tk.eclipse.plugin.htmleditor.assist.HTMLAssistProcessor;
-import tk.eclipse.plugin.htmleditor.assist.TagInfo;
-import tk.eclipse.plugin.htmleditor.editors.HTMLSourceEditor;
-
 import com.wutka.dtd.DTD;
 import com.wutka.dtd.DTDAttribute;
 import com.wutka.dtd.DTDChoice;
@@ -47,6 +37,15 @@ import com.wutka.dtd.DTDName;
 import com.wutka.dtd.DTDParseException;
 import com.wutka.dtd.DTDParser;
 import com.wutka.dtd.DTDSequence;
+
+import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
+import jp.aonir.fuzzyxml.FuzzyXMLElement;
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
+import tk.eclipse.plugin.htmleditor.assist.AssistInfo;
+import tk.eclipse.plugin.htmleditor.assist.AttributeInfo;
+import tk.eclipse.plugin.htmleditor.assist.HTMLAssistProcessor;
+import tk.eclipse.plugin.htmleditor.assist.TagInfo;
+import tk.eclipse.plugin.htmleditor.editors.HTMLSourceEditor;
 
 /**
  * The AssistProcessor for the <code>XMLEditor</code>.

@@ -1,14 +1,13 @@
 package tk.eclipse.plugin.xmleditor.editors;
 
-import jp.aonir.fuzzyxml.FuzzyXMLDocument;
-import jp.aonir.fuzzyxml.FuzzyXMLElement;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 
+import jp.aonir.fuzzyxml.FuzzyXMLDocument;
+import jp.aonir.fuzzyxml.FuzzyXMLElement;
 import tk.eclipse.plugin.htmleditor.IHyperlinkProvider;
 import tk.eclipse.plugin.htmleditor.editors.HTMLHyperlinkInfo;
 

@@ -11,6 +11,8 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
+
 import jp.aonir.fuzzyxml.event.FuzzyXMLErrorEvent;
 import jp.aonir.fuzzyxml.event.FuzzyXMLErrorListener;
 import jp.aonir.fuzzyxml.internal.FuzzyXMLAttributeImpl;
@@ -25,10 +27,7 @@ import jp.aonir.fuzzyxml.internal.FuzzyXMLScriptImpl;
 import jp.aonir.fuzzyxml.internal.FuzzyXMLStyleImpl;
 import jp.aonir.fuzzyxml.internal.FuzzyXMLTextImpl;
 import jp.aonir.fuzzyxml.internal.FuzzyXMLUtil;
-import jp.aonir.fuzzyxml.internal.RenderContext;
 import jp.aonir.fuzzyxml.resources.Messages;
-
-import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
 public class FuzzyXMLParser {
 

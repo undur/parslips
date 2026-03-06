@@ -2,6 +2,15 @@ package org.objectstyle.wolips.wodclipse.core.refactoring;
 
 import java.lang.reflect.InvocationTargetException;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.IDocument;
+import org.objectstyle.wolips.wodclipse.core.Activator;
+import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
+import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
+
 import jp.aonir.fuzzyxml.FuzzyXMLDocType;
 import jp.aonir.fuzzyxml.FuzzyXMLDocument;
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
@@ -11,15 +20,6 @@ import jp.aonir.fuzzyxml.internal.FuzzyXMLFormatComposite;
 import jp.aonir.fuzzyxml.internal.RenderContext;
 import jp.aonir.fuzzyxml.internal.RenderDelegate;
 import jp.aonir.fuzzyxml.internal.WOHTMLRenderDelegate;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.IDocument;
-import org.objectstyle.wolips.wodclipse.core.Activator;
-import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
-import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
 
 public class FormatRefactoring implements IRunnableWithProgress {
   private WodParserCache _cache;

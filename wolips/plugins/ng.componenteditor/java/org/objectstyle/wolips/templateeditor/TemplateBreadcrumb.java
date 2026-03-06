@@ -3,10 +3,6 @@ package org.objectstyle.wolips.templateeditor;
 import java.util.LinkedList;
 import java.util.List;
 
-import jp.aonir.fuzzyxml.FuzzyXMLDocument;
-import jp.aonir.fuzzyxml.FuzzyXMLElement;
-import jp.aonir.fuzzyxml.FuzzyXMLNode;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -22,12 +18,15 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.variables.ParsleyProject;
-
-import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
 import org.objectstyle.wolips.wodclipse.core.util.ICursorPositionListener;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
+
+import jp.aonir.fuzzyxml.FuzzyXMLDocument;
+import jp.aonir.fuzzyxml.FuzzyXMLElement;
+import jp.aonir.fuzzyxml.FuzzyXMLNode;
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 
 public class TemplateBreadcrumb extends Composite implements ICursorPositionListener, MouseListener {
   private TemplateSourceEditor _editor;

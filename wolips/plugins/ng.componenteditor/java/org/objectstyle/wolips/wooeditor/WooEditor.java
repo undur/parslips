@@ -79,7 +79,6 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.baseforplugins.util.CharSetUtils;
 import org.objectstyle.wolips.wodclipse.core.woo.WooModel;
-import org.objectstyle.wolips.wooeditor.WooeditorPlugin;
 
 /**
  * Editor for .woo files. Currently a minimal shell — the WODisplayGroup

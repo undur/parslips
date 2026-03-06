@@ -2,9 +2,6 @@ package org.objectstyle.wolips.wodclipse.core.util;
 
 import java.util.Map;
 
-import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
-import jp.aonir.fuzzyxml.FuzzyXMLElement;
-
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.wod.SimpleWodBinding;
@@ -13,6 +10,9 @@ import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils.BindingValue;
+
+import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
+import jp.aonir.fuzzyxml.FuzzyXMLElement;
 
 public class FuzzyXMLWodElement extends SimpleWodElement {
   private FuzzyXMLElement _xmlElement;

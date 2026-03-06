@@ -25,11 +25,11 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.objectstyle.wolips.baseforplugins.util.CharSetUtils;
 import org.objectstyle.wolips.bindings.Activator;
-import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelMap;
+import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 public class WooModel {
   public static final String IS_DIRTY = "IS_DIRTY";
 

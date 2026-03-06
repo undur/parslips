@@ -3,7 +3,6 @@ package org.objectstyle.wolips.componenteditor.actions;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.action.IAction;
 import org.objectstyle.wolips.baseforuiplugins.utils.ErrorUtils;
-import org.objectstyle.wolips.componenteditor.actions.AbstractTemplateAction;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddActionDialog;

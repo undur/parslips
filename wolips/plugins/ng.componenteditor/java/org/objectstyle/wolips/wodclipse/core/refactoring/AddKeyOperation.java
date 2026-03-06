@@ -20,7 +20,6 @@ import org.eclipse.jdt.internal.core.CreateMethodOperation;
 import org.eclipse.jdt.internal.core.JavaModelOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.GetterSetterUtil;
 import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.text.IRewriteTarget;
 import org.eclipse.ui.IEditorPart;

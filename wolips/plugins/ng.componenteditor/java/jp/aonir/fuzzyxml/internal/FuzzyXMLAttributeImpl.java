@@ -1,10 +1,10 @@
 package jp.aonir.fuzzyxml.internal;
 
+import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
+
 import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
 import jp.aonir.fuzzyxml.FuzzyXMLNode;
-
-import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
 public class FuzzyXMLAttributeImpl extends AbstractFuzzyXMLNode implements FuzzyXMLAttribute {
 

@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.ide.IEditorAssociationOverride;
 import org.eclipse.ui.ide.ResourceUtil;
-import org.eclipse.core.runtime.content.IContentType;
 import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**

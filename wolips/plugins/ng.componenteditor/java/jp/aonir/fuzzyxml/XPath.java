@@ -2,10 +2,10 @@ package jp.aonir.fuzzyxml;
 
 import java.util.List;
 
-import jp.aonir.fuzzyxml.xpath.FuzzyXMLNodePointerFactory;
-
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.commons.jxpath.ri.JXPathContextReferenceImpl;
+
+import jp.aonir.fuzzyxml.xpath.FuzzyXMLNodePointerFactory;
 
 /**
  * FuzzyXML

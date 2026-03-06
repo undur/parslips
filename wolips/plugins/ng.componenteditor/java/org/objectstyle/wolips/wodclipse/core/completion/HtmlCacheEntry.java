@@ -3,11 +3,6 @@ package org.objectstyle.wolips.wodclipse.core.completion;
 import java.util.LinkedList;
 import java.util.List;
 
-import jp.aonir.fuzzyxml.FuzzyXMLDocument;
-import jp.aonir.fuzzyxml.FuzzyXMLParser;
-import jp.aonir.fuzzyxml.event.FuzzyXMLErrorEvent;
-import jp.aonir.fuzzyxml.event.FuzzyXMLErrorListener;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.Activator;
@@ -15,6 +10,11 @@ import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.wod.HtmlElementCache;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
+
+import jp.aonir.fuzzyxml.FuzzyXMLDocument;
+import jp.aonir.fuzzyxml.FuzzyXMLParser;
+import jp.aonir.fuzzyxml.event.FuzzyXMLErrorEvent;
+import jp.aonir.fuzzyxml.event.FuzzyXMLErrorListener;
 
 public class HtmlCacheEntry extends AbstractCacheEntry<FuzzyXMLDocument> implements FuzzyXMLErrorListener {
   private HtmlElementCache _htmlElementCache;

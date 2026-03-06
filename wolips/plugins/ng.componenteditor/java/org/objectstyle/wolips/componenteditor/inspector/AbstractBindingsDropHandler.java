@@ -1,9 +1,9 @@
 package org.objectstyle.wolips.componenteditor.inspector;
 
 import org.eclipse.swt.graphics.Point;
-import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
+import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
 public abstract class AbstractBindingsDropHandler<T, U, V, W extends Control> implements IWOBrowserDelegate, IAutoscroller.Delegate {
 	private V _bindingsAnnotation;

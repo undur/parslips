@@ -1,9 +1,8 @@
 package tk.eclipse.plugin.htmleditor.editors;
 
-import jp.aonir.fuzzyxml.internal.FuzzyXMLUtil;
-
 import org.eclipse.jface.text.IDocument;
 
+import jp.aonir.fuzzyxml.internal.FuzzyXMLUtil;
 import tk.eclipse.plugin.htmleditor.HTMLUtil;
 
 /**

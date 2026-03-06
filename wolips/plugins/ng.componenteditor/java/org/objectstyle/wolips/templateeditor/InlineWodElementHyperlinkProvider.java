@@ -1,8 +1,5 @@
 package org.objectstyle.wolips.templateeditor;
 
-import jp.aonir.fuzzyxml.FuzzyXMLDocument;
-import jp.aonir.fuzzyxml.FuzzyXMLElement;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
@@ -15,6 +12,8 @@ import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
 import org.objectstyle.wolips.wodclipse.core.util.FuzzyXMLWodElement;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
+import jp.aonir.fuzzyxml.FuzzyXMLDocument;
+import jp.aonir.fuzzyxml.FuzzyXMLElement;
 import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.IHyperlinkProvider;
 import tk.eclipse.plugin.htmleditor.editors.HTMLHyperlinkInfo;

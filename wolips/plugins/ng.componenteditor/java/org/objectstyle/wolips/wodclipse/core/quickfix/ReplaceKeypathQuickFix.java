@@ -6,10 +6,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
-import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 

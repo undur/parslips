@@ -2,11 +2,11 @@ package org.objectstyle.wolips.wodclipse.core.util;
 
 import java.util.regex.Pattern;
 
-import jp.aonir.fuzzyxml.FuzzyXMLElement;
-
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
+
+import jp.aonir.fuzzyxml.FuzzyXMLElement;
 
 public class WodHtmlUtils {
   public static Pattern WEBOBJECTS_PATTERN;

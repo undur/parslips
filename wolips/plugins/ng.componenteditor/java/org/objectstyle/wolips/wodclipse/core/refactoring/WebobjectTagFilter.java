@@ -1,10 +1,10 @@
 package org.objectstyle.wolips.wodclipse.core.refactoring;
 
+import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
+
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
 import jp.aonir.fuzzyxml.FuzzyXMLNode;
 import jp.aonir.fuzzyxml.util.NodeFilter;
-
-import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
 public class WebobjectTagFilter implements NodeFilter {
   private boolean _findWod;

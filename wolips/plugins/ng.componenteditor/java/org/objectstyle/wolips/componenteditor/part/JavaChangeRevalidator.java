@@ -20,7 +20,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.ResourceUtil;
-import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.wodclipse.core.builder.WodBuilder;
 
 /**

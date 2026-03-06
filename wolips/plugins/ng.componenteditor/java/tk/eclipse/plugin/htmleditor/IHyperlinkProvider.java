@@ -1,10 +1,9 @@
 package tk.eclipse.plugin.htmleditor;
 
-import jp.aonir.fuzzyxml.FuzzyXMLDocument;
-import jp.aonir.fuzzyxml.FuzzyXMLElement;
-
 import org.eclipse.core.resources.IFile;
 
+import jp.aonir.fuzzyxml.FuzzyXMLDocument;
+import jp.aonir.fuzzyxml.FuzzyXMLElement;
 import tk.eclipse.plugin.htmleditor.editors.HTMLHyperlinkInfo;
 
 /**

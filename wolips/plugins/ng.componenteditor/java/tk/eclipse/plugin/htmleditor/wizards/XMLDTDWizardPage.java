@@ -27,13 +27,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import tk.eclipse.plugin.htmleditor.HTMLPlugin;
-import tk.eclipse.plugin.xmleditor.editors.DTDResolver;
-import tk.eclipse.plugin.xmleditor.editors.IDTDResolver;
-
 import com.wutka.dtd.DTD;
 import com.wutka.dtd.DTDElement;
 import com.wutka.dtd.DTDParser;
+
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
+import tk.eclipse.plugin.xmleditor.editors.DTDResolver;
+import tk.eclipse.plugin.xmleditor.editors.IDTDResolver;
 
 public class XMLDTDWizardPage extends WizardPage {
 	

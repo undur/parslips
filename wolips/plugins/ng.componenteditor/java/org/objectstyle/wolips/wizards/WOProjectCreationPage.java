@@ -1,7 +1,6 @@
 package org.objectstyle.wolips.wizards;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
-
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 
 /**
