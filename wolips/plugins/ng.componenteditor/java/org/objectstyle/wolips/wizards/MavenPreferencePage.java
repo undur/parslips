@@ -26,8 +26,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 /**
- * Preference page for configuring Maven settings related to WebObjects and
- * ng-objects development.
+ * Preference page for configuring Maven settings related to WebObjects
+ * development.
  *
  * <p>Detects whether the user's {@code settings.xml} already contains the
  * WOCommunity repository configuration. If not, offers a one-click button to
@@ -139,7 +139,7 @@ public class MavenPreferencePage extends PreferencePage implements IWorkbenchPre
 	private Button _addRepoButton;
 
 	public MavenPreferencePage() {
-		setDescription("Configure Maven settings for WebObjects and ng-objects development.");
+		setDescription("Configure Maven settings for WebObjects development.");
 		noDefaultAndApplyButton();
 	}
 
