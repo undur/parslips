@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Parsley Template Editor — Getting Started</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="css/site.css"/>
+		<link rel="icon" type="image/x-icon" href="img/favicon.ico"/>
+	</head>
+	<body>
+		<div class="container features">
+			<nav class="site-nav">
+				<a href="index.html">Home</a>
+				<a href="changelog.html">Changelog</a>
+				<a href="roadmap.html">Roadmap</a>
+				<a href="features.html">Features</a>
+				<a href="non-features.html" class="nav-muted">Non-Features</a>
+				<a href="guide.html" class="active">Getting Started</a>
+				<a href="https://github.com/undur/parslips" class="nav-github">GitHub ↗</a>
+			</nav>
+
+			<div class="hero">
+				<div class="hero-emoji">🌿</div>
+				<h1>Getting Started</h1>
+				<p class="tagline">A quick guide to Parsley Template Editor</p>
+			</div>
+
+			<div class="warning">
+				<strong>Already using WOLips?</strong>
+				<p>Parsley is a fork of WOLips, so most of this will be familiar. You might want to skip straight to <a href="#wolips-coexistence" style="color: #6b5a2e;">WOLips Coexistence</a> and <a href="#parsley-explorer" style="color: #6b5a2e;">Parsley Explorer</a>.</p>
+			</div>
+
+			<!-- ===== INSTALLATION ===== -->
+			<div class="card">
+				<h2 class="section-header">Installation</h2>
+
+				<div class="feature-entry">
+					<h3>Install from the update site</h3>
+					<p>In Eclipse, go to <strong>Help</strong> &rarr; <strong>Install New Software&hellip;</strong>, click <strong>Add</strong>, and enter the update site URL:</p>
+					<p><a class="update-url" href="https://undur.github.io/parslips/repository/">https://undur.github.io/parslips/repository/</a></p>
+					<p style="margin-top: 10px;">Select <strong>Parsley Template Editor</strong> from the list and follow the prompts. Restart Eclipse when done.</p>
+				</div>
+
+			</div>
+
+			<!-- ===== FIRST STEPS ===== -->
+			<div class="card">
+				<h2 class="section-header">First Steps</h2>
+
+				<div class="feature-entry">
+					<h3>Switch to the Parsley perspective</h3>
+					<p><strong>Window</strong> &rarr; <strong>Perspective</strong> &rarr; <strong>Open Perspective</strong> &rarr; <strong>Parsley</strong>. This gives you the Parsley Explorer (a component-aware Package Explorer), the Outline view, and a layout tuned for template editing. This is optional &mdash; all Parsley features work in any perspective.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Open a component</h3>
+					<p>Double-click any <code>.html</code> template or <code>.wo</code> folder in the Package Explorer. Parsley opens it in a multi-tab editor with views for the HTML template, WOD bindings, API definitions, and WOO settings.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Try autocomplete</h3>
+					<p>In the template editor, type <code>&lt;wo:</code> and press <kbd>Ctrl+Space</kbd>. You&rsquo;ll see all available component types for your project&rsquo;s framework. Select one to insert a complete tag with required bindings pre-filled.</p>
+				</div>
+			</div>
+
+			<!-- ===== KEY SHORTCUTS ===== -->
+			<div class="card">
+				<h2 class="section-header">Key Shortcuts</h2>
+
+				<div class="feature-entry">
+					<h3>Navigation</h3>
+					<p>
+						<kbd>Cmd+Alt+1</kbd> &mdash; Open Java class<br>
+						<kbd>Cmd+Alt+2</kbd> &mdash; Open HTML template<br>
+						<kbd>Cmd+Alt+3</kbd> &mdash; Open WOD file<br>
+						<kbd>Cmd+Alt+5</kbd> &mdash; Open API editor<br>
+						<kbd>Cmd+Shift+X</kbd> &mdash; Open component by name<br>
+						<kbd>Ctrl+Click</kbd> &mdash; Navigate to definition
+					</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Editing</h3>
+					<p>
+						<kbd>Ctrl+Space</kbd> &mdash; Autocomplete (tags, bindings, keypaths)<br>
+						<kbd>Cmd+1</kbd> &mdash; Quick-fix for validation errors<br>
+						<kbd>Cmd+Shift+F</kbd> &mdash; Format template<br>
+						<kbd>Cmd+6</kbd> &mdash; Insert component dialog
+					</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Refactoring</h3>
+					<p>
+						<kbd>Cmd+2, R</kbd> &mdash; Linked rename (tag + close tag)<br>
+						<kbd>Cmd+2, E</kbd> &mdash; Extract selection to new component<br>
+						<kbd>Cmd+2, W</kbd> &mdash; Convert inline tag to WOD entry<br>
+						<kbd>Cmd+2, I</kbd> &mdash; Convert WOD entry to inline tag
+					</p>
+				</div>
+			</div>
+
+			<!-- ===== PROJECT SETUP ===== -->
+			<div class="card">
+				<h2 class="section-header">Project Setup</h2>
+
+				<div class="feature-entry">
+					<h3>build.properties</h3>
+					<p>Parsley reads a <code>build.properties</code> file at the root of your project for configuration. The most important property is:</p>
+					<p><code>project.base=ng</code> or <code>project.base=wo</code></p>
+					<p style="margin-top: 8px;">This tells Parsley which framework your project uses, which determines the available component types, the root element class for validation, and default template format settings. If this property is absent, Parsley probes the classpath automatically.</p>
+					<p style="margin-top: 8px;"><strong>Note:</strong> If WOLips is also installed, <code>project.base</code> must be set for Parsley to activate on the project. Without it, the WOLips template editor will be used by default. See <a href="#wolips-coexistence" style="color: #3a6e3a;">WOLips Coexistence</a> below.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Inline binding prefix</h3>
+					<p>Inline binding values use a prefix to distinguish key paths from literal strings. The default is <code>$</code> (e.g. <code>value="$name"</code>). To customize:</p>
+					<p><code>component.inlineBindingPrefix=$</code><br><code>component.inlineBindingSuffix=</code></p>
+				</div>
+			</div>
+
+			<!-- ===== TEMPLATE FORMATS ===== -->
+			<div class="card">
+				<h2 class="section-header">Template Formats</h2>
+
+				<div class="feature-entry">
+					<h3>Standalone templates</h3>
+					<p>A single <code>.html</code> file with inline bindings: <code>&lt;wo:WOString value="$name" /&gt;</code>. This is the default for ng-objects projects and the recommended format for new development. Create one via <strong>File</strong> &rarr; <strong>New</strong> &rarr; <strong>WO Component</strong> and select <strong>Standalone template</strong>.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Bundle templates</h3>
+					<p>A <code>.wo</code> folder containing an <code>.html</code> file, a <code>.wod</code> file, and optionally a <code>.woo</code> file. The HTML uses <code>&lt;webobject name="X"&gt;</code> references that are resolved against binding definitions in the <code>.wod</code> file. This is the traditional WebObjects format.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Converting between formats</h3>
+					<p>Right-click a <code>.wo</code> folder and select <strong>&ldquo;Convert to Standalone Template&rdquo;</strong> to convert from bundle to standalone format. Right-click a standalone <code>.html</code> file and select <strong>&ldquo;Convert to Bundle Template&rdquo;</strong> to go the other direction. Both support multi-selection, and <strong>&ldquo;Convert All to Standalone Templates&rdquo;</strong> on a regular folder converts all bundle templates inside recursively.</p>
+				</div>
+			</div>
+
+			<!-- ===== WOLIPS COEXISTENCE ===== -->
+			<div class="card" id="wolips-coexistence">
+				<h2 class="section-header">WOLips Coexistence</h2>
+
+				<div class="feature-entry">
+					<h3>Can I install both?</h3>
+					<p>Yes. Parsley is designed to coexist with WOLips in the same Eclipse installation. Both plugins can be active simultaneously without conflicts.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Which editor opens my files?</h3>
+					<p>When both plugins are installed, Parsley only activates for projects that have a <code>project.base</code> property in their <code>build.properties</code> file. Projects without this property are left to WOLips.</p>
+					<p style="margin-top: 8px;">This means you can opt in per-project:</p>
+					<ul style="margin-top: 8px; padding-left: 20px; font-size: 15px; color: #4a5e4a; line-height: 1.8;">
+						<li>Add <code>project.base=wo</code> to use Parsley for a WebObjects project</li>
+						<li>Add <code>project.base=ng</code> to use Parsley for an ng-objects project</li>
+						<li>Leave it out to keep using WOLips for that project</li>
+					</ul>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Without WOLips installed</h3>
+					<p>When WOLips is not installed, Parsley activates for all recognized projects automatically &mdash; no <code>build.properties</code> needed. It detects the framework by probing the classpath for ng-objects or WebObjects marker classes.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>What Parsley doesn&rsquo;t replace</h3>
+					<p>Parsley is a <strong>template editor</strong>, not a full IDE suite. It does not include WOLips&rsquo; Entity Modeler, EOGenerator, WO launch configurations, D2W rule editor, incremental builder, or classpath management. See <a href="non-features.html">Non-Features</a> for the full list.</p>
+				</div>
+			</div>
+
+			<!-- ===== PARSLEY EXPLORER ===== -->
+			<div class="card" id="parsley-explorer">
+				<h2 class="section-header">Parsley Explorer</h2>
+
+				<div class="feature-entry">
+					<h3>Opening the explorer</h3>
+					<p>The Parsley Explorer is available via <strong>Window</strong> &rarr; <strong>Show View</strong> &rarr; <strong>Other&hellip;</strong> &rarr; <strong>Parsley</strong> &rarr; <strong>Parsley Explorer</strong>. It is also included in the Parsley perspective.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>What&rsquo;s different from Package Explorer</h3>
+					<p>The Parsley Explorer is a Package Explorer variant tuned for WebObjects development. Key differences:</p>
+					<ul style="margin-top: 8px; padding-left: 20px; font-size: 15px; color: #4a5e4a; line-height: 1.8;">
+						<li>Bundle template folders (<code>.wo</code>) are expandable, showing their contained files</li>
+						<li>WO source folders (<code>components</code>, <code>woresources</code>, <code>webserver-resources</code>) are pulled up to the project root for easy access</li>
+						<li>Projects show framework badges (ng-objects or WebObjects)</li>
+						<li>Custom icons for component files with problem marker overlays</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- ===== REPORTING ISSUES ===== -->
+			<div class="card">
+				<h2 class="section-header">Reporting Issues</h2>
+
+				<div class="feature-entry">
+					<h3>Found a bug?</h3>
+					<p>Please report issues on <a href="https://github.com/undur/parslips/issues" style="color: #3a6e3a;">GitHub Issues</a>. Include the Eclipse version, the project&rsquo;s framework type (ng-objects or WebObjects), and if possible, a snippet of the template that triggers the problem.</p>
+				</div>
+			</div>
+
+			<div class="footer">
+				<p>🌿 <a href="https://github.com/undur/parslips">github.com/undur/parslips</a></p>
+			</div>
+		</div>
+	</body>
+</html>

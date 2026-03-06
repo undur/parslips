@@ -31,6 +31,7 @@ wolips/
       features.html              # Feature overview page
       index.html                 # Landing page
       non-features.html          # Anti-features / design decisions
+      guide.html                 # Getting started guide (installation, setup, WOLips coexistence)
       css/                       # Site styles
       img/                       # Site images
   pom.xml                        # Parent POM (Maven/Tycho build)

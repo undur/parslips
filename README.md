@@ -4,6 +4,7 @@ A refactoring of [WOLips](https://github.com/wocommunity/wolips), focused solely
 
 More information on the project is on its [website](https://undur.github.io/parslips/repository/):
 
+* [Getting Started](https://undur.github.io/parslips/repository/guide.html)
 * [Eclipse Update Site](https://undur.github.io/parslips/repository/index.html)
 * [Changelog](https://undur.github.io/parslips/repository/changelog.html)
 * [Roadmap](https://undur.github.io/parslips/repository/roadmap.html)
