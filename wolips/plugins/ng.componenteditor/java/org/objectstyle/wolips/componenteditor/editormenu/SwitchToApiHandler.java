@@ -8,9 +8,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.IEditorInput;
@@ -128,34 +126,11 @@ public class SwitchToApiHandler extends AbstractHandler {
 	}
 
 	/**
-	 * Searches for a folder named "components" under {@code src/main/} in the
-	 * given project. Returns the first match, or {@code null} if none found.
-	 * Same heuristic as {@link org.objectstyle.wolips.wizards.WOComponentCreationPage#findComponentsFolder}.
+	 * Searches for a "components" folder in the given project.
+	 *
+	 * @see ParsleyProject#findComponentsFolder(IProject)
 	 */
 	private static IContainer findComponentsFolder(IProject project) {
-		try {
-			IFolder srcMain = project.getFolder("src/main");
-			if (srcMain.exists()) {
-				return findComponentsFolderIn(srcMain);
-			}
-		} catch (CoreException e) {
-			// fall through
-		}
-		return null;
-	}
-
-	private static IFolder findComponentsFolderIn(IContainer container) throws CoreException {
-		for (IResource member : container.members()) {
-			if (member.getType() == IResource.FOLDER) {
-				if ("components".equals(member.getName())) {
-					return (IFolder) member;
-				}
-				IFolder found = findComponentsFolderIn((IFolder) member);
-				if (found != null) {
-					return found;
-				}
-			}
-		}
-		return null;
+		return ParsleyProject.findComponentsFolder(project);
 	}
 }

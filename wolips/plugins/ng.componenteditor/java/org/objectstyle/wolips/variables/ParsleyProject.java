@@ -1,6 +1,10 @@
 package org.objectstyle.wolips.variables;
 
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -208,6 +212,75 @@ public class ParsleyProject {
 		catch (Exception e) {
 			return false;
 		}
+	}
+
+	// ---- Project layout ----
+
+	/**
+	 * Finds the "components" folder in this project.
+	 *
+	 * <p>Searches in order:
+	 * <ol>
+	 *   <li>Under {@code src/main/} — the standard Maven layout
+	 *       (handles both {@code src/main/components} and deeper nesting
+	 *       like {@code src/main/resources/components})
+	 *   <li>{@code Components/} at the project root — the "Fluffy Bunny"
+	 *       layout used by some WebObjects projects
+	 * </ol>
+	 *
+	 * @return the components folder, or {@code null} if not found
+	 */
+	public IFolder findComponentsFolder() {
+		return findComponentsFolder(_project);
+	}
+
+	/**
+	 * Static variant of {@link #findComponentsFolder()} for callers that
+	 * don't have a {@link ParsleyProject} instance handy.
+	 *
+	 * @param project the project to search in
+	 * @return the components folder, or {@code null} if not found
+	 */
+	public static IFolder findComponentsFolder(IProject project) {
+		try {
+			// 1. Maven layout: search under src/main/
+			IFolder srcMain = project.getFolder("src/main");
+			if (srcMain.exists()) {
+				IFolder found = findComponentsFolderIn(srcMain);
+				if (found != null) {
+					return found;
+				}
+			}
+
+			// 2. Fluffy Bunny layout: Components/ at the project root
+			IFolder fluffyBunny = project.getFolder("Components");
+			if (fluffyBunny.exists()) {
+				return fluffyBunny;
+			}
+		}
+		catch (CoreException e) {
+			// fall through
+		}
+		return null;
+	}
+
+	/**
+	 * Recursively searches for a folder named "components" (case-insensitive)
+	 * under the given container.
+	 */
+	private static IFolder findComponentsFolderIn(IContainer container) throws CoreException {
+		for (IResource member : container.members()) {
+			if (member.getType() == IResource.FOLDER) {
+				if ("components".equalsIgnoreCase(member.getName())) {
+					return (IFolder) member;
+				}
+				IFolder found = findComponentsFolderIn((IFolder) member);
+				if (found != null) {
+					return found;
+				}
+			}
+		}
+		return null;
 	}
 
 	// ---- Static convenience methods ----

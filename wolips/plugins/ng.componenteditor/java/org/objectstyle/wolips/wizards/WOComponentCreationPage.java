@@ -901,36 +901,14 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	}
 
 	/**
-	 * Searches for a folder named "components" under src/main/ in the given project.
+	 * Searches for a "components" folder in the given project.
 	 * Returns the full path of the first match, or null if none found.
-	 * Handles both WO layout (src/main/components) and ng layout
-	 * (src/main/ng/something/components or deeper).
+	 *
+	 * @see ParsleyProject#findComponentsFolder(IProject)
 	 */
 	private static IPath findComponentsFolder(IProject project) {
-		try {
-			IFolder srcMain = project.getFolder("src/main");
-			if (srcMain.exists()) {
-				return findComponentsFolderIn(srcMain);
-			}
-		} catch (CoreException e) {
-			// fall through
-		}
-		return null;
-	}
-
-	private static IPath findComponentsFolderIn(IContainer container) throws CoreException {
-		for (IResource member : container.members()) {
-			if (member.getType() == IResource.FOLDER) {
-				if ("components".equals(member.getName())) {
-					return member.getFullPath();
-				}
-				IPath found = findComponentsFolderIn((IFolder) member);
-				if (found != null) {
-					return found;
-				}
-			}
-		}
-		return null;
+		IFolder folder = ParsleyProject.findComponentsFolder(project);
+		return folder != null ? folder.getFullPath() : null;
 	}
 
 	/**

@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Support for Fluffy Bunny project layout
+
+- **Components folder discovery now supports the Fluffy Bunny layout.** The New Component wizard, Extract Component action, and Switch to API handler previously only searched for a `components` folder under `src/main/` (Maven layout). They now fall back to `Components/` at the project root, which is the convention used by "Fluffy Bunny" WebObjects projects.
+- The shared `ParsleyProject.findComponentsFolder()` method centralizes this logic — the three duplicate implementations have been replaced with calls to it.
+
 ### Convert between template formats
 
 - **New context menu action: "Convert to Standalone Template"** on `.wo` folders. Converts bundle templates from WOD-reference syntax (`<webobject name="X">`) to inline binding syntax (`<wo:Type binding="value">`), then moves the HTML file out of the `.wo` folder and deletes it.

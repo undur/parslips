@@ -186,35 +186,12 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 	}
 
 	/**
-	 * Searches for a folder named "components" under src/main/ in the project.
-	 * Same logic as {@code WOComponentCreationPage.findComponentsFolder()}.
+	 * Searches for a "components" folder in the given project.
+	 *
+	 * @see ParsleyProject#findComponentsFolder(IProject)
 	 */
 	private IFolder findComponentsFolder(IProject project) {
-		try {
-			IFolder srcMain = project.getFolder("src/main");
-			if (srcMain.exists()) {
-				return findComponentsFolderIn(srcMain);
-			}
-		}
-		catch (CoreException e) {
-			// fall through
-		}
-		return null;
-	}
-
-	private IFolder findComponentsFolderIn(IContainer container) throws CoreException {
-		for (IResource member : container.members()) {
-			if (member.getType() == IResource.FOLDER) {
-				if ("components".equals(member.getName())) {
-					return (IFolder) member;
-				}
-				IFolder found = findComponentsFolderIn((IFolder) member);
-				if (found != null) {
-					return found;
-				}
-			}
-		}
-		return null;
+		return ParsleyProject.findComponentsFolder(project);
 	}
 
 	/**
