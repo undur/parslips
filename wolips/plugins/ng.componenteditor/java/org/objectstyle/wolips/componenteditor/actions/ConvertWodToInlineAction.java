@@ -35,6 +35,12 @@ public class ConvertWodToInlineAction extends AbstractTemplateAction {
 				TemplateEditor templateEditor = getTemplateEditor();
 				WodEditor wodEditor = getWodEditor();
 				if (templateEditor != null && wodEditor != null && activeEditorPart == templateEditor) {
+					// Force a fresh parse of the HTML document so that offsets
+					// in the FuzzyXML tree match the current editor content.
+					// Without this, edits since the last save/reparse cause
+					// getElementByOffset() to look at stale positions.
+					templateEditor.getSourceEditor().getHtmlXmlDocument(true);
+
 					ITextSelection templateSelection = (ITextSelection) templateEditor.getSourceEditor().getSelectionProvider().getSelection();
 					int offset = templateSelection.getOffset();
 					WodParserCache cache = templateEditor.getSourceEditor().getParserCache();

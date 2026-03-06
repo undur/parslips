@@ -8,6 +8,7 @@ import java.util.List;
 
 import jp.aonir.fuzzyxml.FuzzyXMLDocument;
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
+import jp.aonir.fuzzyxml.FuzzyXMLNode;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -75,11 +76,13 @@ public class ConvertWodToInlineRefactoring implements IRunnableWithProgress {
 				return;
 			}
 
-			String tagName = element.getName();
-
-			// Only operate on WOD-reference tags (<webobject name="X"> or <wo name="X">),
-			// not on tags that are already inline (<wo:Type ...>)
-			if (!WodHtmlUtils.isWOTag(tagName) || WodHtmlUtils.isInline(tagName)) {
+			// getElementByOffset returns the innermost (smallest) element at the
+			// cursor position. If the cursor is inside a child element nested within
+			// a <webobject> tag (e.g. a <p>, <br>, or even an inline <wo:Type>),
+			// we get the child instead of the <webobject>. Walk up the parent chain
+			// to find the nearest WOD-reference ancestor.
+			element = findWodReferenceElement(element);
+			if (element == null) {
 				return;
 			}
 
@@ -228,5 +231,28 @@ public class ConvertWodToInlineRefactoring implements IRunnableWithProgress {
 		List<TextEdit> wodEdits = new LinkedList<>();
 		wodEdits.add(new DeleteEdit(startOffset, endOffset - startOffset));
 		WodDocumentUtils.applyEdits(wodDocument, wodEdits);
+	}
+
+	/**
+	 * Finds the nearest WOD-reference element ({@code <webobject>} or
+	 * {@code <wo name="...">}) at or above the given element in the tree.
+	 *
+	 * <p>{@code getElementByOffset} returns the innermost element at the cursor.
+	 * If the cursor is inside a child of a {@code <webobject>} tag, this method
+	 * walks up the parent chain to find the enclosing WOD-reference tag.
+	 *
+	 * @return the WOD-reference element, or {@code null} if none found
+	 */
+	private static FuzzyXMLElement findWodReferenceElement(FuzzyXMLElement element) {
+		FuzzyXMLNode current = element;
+		while (current instanceof FuzzyXMLElement) {
+			FuzzyXMLElement el = (FuzzyXMLElement) current;
+			String tagName = el.getName();
+			if (WodHtmlUtils.isWOTag(tagName) && !WodHtmlUtils.isInline(tagName)) {
+				return el;
+			}
+			current = current.getParentNode();
+		}
+		return null;
 	}
 }
