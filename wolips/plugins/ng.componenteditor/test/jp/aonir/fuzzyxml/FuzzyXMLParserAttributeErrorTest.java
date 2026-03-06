@@ -159,6 +159,55 @@ public class FuzzyXMLParserAttributeErrorTest {
 		assertEquals("true", attr.getValue());
 	}
 
+	// ---- Escaped quote tests ------------------------------------------------
+
+	@Test
+	public void escapedQuotes_parsedCorrectly() {
+		// value="\"Hello\"" — literal string with embedded quotes
+		FuzzyXMLDocument doc = parseDocument("<wo:str value=\"\\\"Hello\\\"\" />");
+		FuzzyXMLElement element = findElement(doc, "wo:str");
+		assertNotNull("Element should be parsed", element);
+
+		FuzzyXMLAttribute attr = findAttribute(element, "value");
+		assertNotNull("Should find attribute 'value'", attr);
+		assertEquals("Escaped quotes should be preserved in value",
+				"\"Hello\"", attr.getValue());
+	}
+
+	@Test
+	public void escapedQuotes_noError() {
+		List<FuzzyXMLErrorEvent> errors = parseAndCollectErrors(
+				"<wo:str value=\"\\\"Hello\\\"\" />");
+		assertEquals("Should not report errors for escaped quotes", 0, errors.size());
+	}
+
+	@Test
+	public void escapedQuotes_otherAttributesPreserved() {
+		// Escaped quotes in one attribute shouldn't corrupt subsequent attributes
+		FuzzyXMLDocument doc = parseDocument(
+				"<wo:WOGenericElement elementName=\"\\\"div\\\"\" class=\"$cssClass\" />");
+		FuzzyXMLElement element = findElement(doc, "wo:WOGenericElement");
+		assertNotNull(element);
+
+		FuzzyXMLAttribute nameAttr = findAttribute(element, "elementName");
+		assertNotNull("Should find 'elementName'", nameAttr);
+		assertEquals("\"div\"", nameAttr.getValue());
+
+		FuzzyXMLAttribute classAttr = findAttribute(element, "class");
+		assertNotNull("Should find 'class' after escaped-quote attribute", classAttr);
+		assertEquals("$cssClass", classAttr.getValue());
+	}
+
+	@Test
+	public void escapedQuotes_attributeCount() {
+		// Verify the parser doesn't split the tag at an embedded quote
+		FuzzyXMLDocument doc = parseDocument(
+				"<wo:str value=\"\\\"Hello\\\"\" />");
+		FuzzyXMLElement element = findElement(doc, "wo:str");
+		assertNotNull(element);
+		assertEquals("Should have exactly 1 attribute", 1, element.getAttributes().length);
+	}
+
 	// ---- Error offset tests -------------------------------------------------
 
 	@Test
