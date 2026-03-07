@@ -239,14 +239,20 @@ public class WOProjectCreator {
 		}
 
 		return String.format("""
-				package %s;
+				package %1$s;
 
 				import er.extensions.appserver.ERXApplication;
+				import er.extensions.routes.RouteTable;
+				import %1$s.components.Main;
 
 				public class Application extends ERXApplication {
 
 				    public static void main(String[] args) {
 				        ERXApplication.main(args, Application.class);
+				    }
+
+				    public Application() {
+				        RouteTable.defaultRouteTable().map( "/", Main.class );
 				    }
 				}
 				""", _packageName);
