@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix crash when navigating into binary types in Bindings Inspector
+
+- Clicking a key whose return type is a binary class (e.g. `java.util.List` from the JDK) caused a `NullPointerException` in `TypeCache.resolveType()`. The method called `declaringType.getCompilationUnit().getImports()` without checking for null — binary types have no compilation unit (they come from class files, not source).
+- The fix guards the import-scanning block with a null check on `getCompilationUnit()`. For binary types, the import scan is skipped and resolution falls through to the other strategies (java.lang lookup, package-local lookup, `JavaModelUtil.getResolvedTypeName`).
+
 ### Bindings Inspector: hide navigation arrow for empty types
 
 - The key browser no longer shows a navigation arrow on keys whose return type has no visible binding keys after filtering. Previously, the arrow was shown based on `isLeaf()` which only checked whether the return type was non-null and not String/Object. This caused arrows on types like `WOActionResults` — but navigating into them produced an empty column because the only method (`generateResponse`) is filtered as a system binding.

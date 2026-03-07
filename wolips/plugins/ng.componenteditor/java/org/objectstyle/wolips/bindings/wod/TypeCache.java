@@ -291,32 +291,37 @@ public class TypeCache {
   				dotExtensionTypeName = name.substring(dotIndex);
   			}
   			
-    		IImportDeclaration[] importDeclarations = declaringType.getCompilationUnit().getImports();
-    		// Loop over the imports and look for the import of our symbol
-    		for (IImportDeclaration declaration : importDeclarations) {
-    			String importName = declaration.getElementName();
-    			// If it's a .* import, then pop off the package name and lookup the type
-    			if (declaration.isOnDemand()) {
-    				String packageName = importName.substring(0, importName.lastIndexOf('.'));
-    				String possibleTypeName = packageName + dotTypeName;
-    				IType onDemandPackageType = javaProject.findType(possibleTypeName);
-    				if (onDemandPackageType != null) {
-    					return onDemandPackageType;
+    		// Scan import declarations for the unresolved type name.
+    		// getCompilationUnit() is null for binary types (e.g. java.util.List
+    		// from the JDK) — skip the import scan and fall through to the
+    		// other resolution strategies below.
+    		if (declaringType.getCompilationUnit() != null) {
+    			IImportDeclaration[] importDeclarations = declaringType.getCompilationUnit().getImports();
+    			for (IImportDeclaration declaration : importDeclarations) {
+    				String importName = declaration.getElementName();
+    				// If it's a .* import, then pop off the package name and lookup the type
+    				if (declaration.isOnDemand()) {
+    					String packageName = importName.substring(0, importName.lastIndexOf('.'));
+    					String possibleTypeName = packageName + dotTypeName;
+    					IType onDemandPackageType = javaProject.findType(possibleTypeName);
+    					if (onDemandPackageType != null) {
+    						return onDemandPackageType;
+    					}
     				}
-    			}
-    			// If it's not a .* import, then does the import end with our type name?
-    			else if (importName.endsWith(dotTypeName)) {
-    				IType importType = javaProject.findType(importName);
-    				if (importType != null) {
-    					return importType;
+    				// If it's not a .* import, then does the import end with our type name?
+    				else if (importName.endsWith(dotTypeName)) {
+    					IType importType = javaProject.findType(importName);
+    					if (importType != null) {
+    						return importType;
+    					}
     				}
-    			}
-    			// If it doesn't, check to see if we were a dotted type ("Outer.Inner") and check to see if Outer is imported
-    			else if (dotBaseTypeName != null && importName.endsWith(dotBaseTypeName)) {
-    				// ... then look for Outer.Inner
-    				IType importNestedType = javaProject.findType(importName + dotExtensionTypeName);
-    				if (importNestedType != null) {
-    					return importNestedType;
+    				// If it doesn't, check to see if we were a dotted type ("Outer.Inner") and check to see if Outer is imported
+    				else if (dotBaseTypeName != null && importName.endsWith(dotBaseTypeName)) {
+    					// ... then look for Outer.Inner
+    					IType importNestedType = javaProject.findType(importName + dotExtensionTypeName);
+    					if (importNestedType != null) {
+    						return importNestedType;
+    					}
     				}
     			}
     		}
