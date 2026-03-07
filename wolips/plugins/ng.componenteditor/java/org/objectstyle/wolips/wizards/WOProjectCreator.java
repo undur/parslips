@@ -272,7 +272,11 @@ public class WOProjectCreator {
 				    }
 
 				    public Application() {
+				        // Maps the default route "/" to the Main component
 				        RouteTable.defaultRouteTable().map( "/", Main.class );
+
+				        // ...and the default direct connect URL (something like "/cgi-bin/WebObjects/MyApp.woa")
+				        RouteTable.defaultRouteTable().map( "%%s/%%s.woa".formatted( adaptorPath(), name() ), Main.class );
 				    }
 				}
 				""", _packageName);
