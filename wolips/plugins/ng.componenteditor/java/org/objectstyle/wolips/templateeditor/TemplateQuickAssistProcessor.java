@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -16,6 +17,8 @@ import org.eclipse.jface.text.quickassist.IQuickAssistProcessor;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.MarkerAnnotation;
 import org.objectstyle.wolips.wodclipse.core.quickfix.KeypathQuickFixGenerator;
 import org.objectstyle.wolips.wodclipse.core.quickfix.ReplaceKeypathQuickFix;
@@ -45,8 +48,18 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
     if (annotation instanceof MarkerAnnotation) {
       try {
         IMarker marker = ((MarkerAnnotation) annotation).getMarker();
+
+        // Has replacement suggestions (keypath or element type typos)
         String suggestions = (String) marker.getAttribute("suggestions");
-        return suggestions != null && !suggestions.isEmpty();
+        if (suggestions != null && !suggestions.isEmpty()) {
+          return true;
+        }
+
+        // Keypath error without suggestions — can still offer "Create key"
+        String message = (String) marker.getAttribute(IMarker.MESSAGE);
+        if (KeypathQuickFixGenerator.extractInvalidKey(message) != null) {
+          return true;
+        }
       }
       catch (Exception e) {
         // Marker may have been deleted
@@ -74,6 +87,19 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
     }
     catch (BadLocationException e) {
       return new ICompletionProposal[0];
+    }
+
+    // Resolve the template file for "Create key" proposals
+    IFile file = null;
+    try {
+      org.eclipse.ui.IEditorPart editor = PlatformUI.getWorkbench()
+          .getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+      if (editor != null && editor.getEditorInput() instanceof FileEditorInput) {
+        file = ((FileEditorInput) editor.getEditorInput()).getFile();
+      }
+    }
+    catch (Exception e) {
+      // No editor available — "Create key" proposals won't be offered
     }
 
     List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
@@ -110,7 +136,7 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
       }
 
       IMarker marker = ((MarkerAnnotation) annotation).getMarker();
-      addProposalsForMarker(marker, document, proposals, seenProposals);
+      addProposalsForMarker(marker, document, file, proposals, seenProposals);
     }
 
     return proposals.toArray(new ICompletionProposal[proposals.size()]);
@@ -122,20 +148,19 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
    * ("There is no key 'nme'") and element type errors ("The class for 'Str'
    * is either missing"), including miscapitalized tag shortcuts which use
    * the same message format.
+   *
+   * <p>For keypath errors, also offers a "Create key" proposal that opens
+   * the Add Key dialog to generate the field/accessor on the Java class.
    */
-  private void addProposalsForMarker(IMarker marker, IDocument document,
+  private void addProposalsForMarker(IMarker marker, IDocument document, IFile file,
       List<ICompletionProposal> proposals, Set<String> seenProposals) {
     try {
-      String suggestionsStr = (String) marker.getAttribute("suggestions");
-      if (suggestionsStr == null || suggestionsStr.isEmpty()) {
-        return;
-      }
-
-      // Try to extract the invalid name from the error message.
-      // Could be a keypath segment or an element type name (including
-      // miscapitalized tag shortcuts, which use the same message format).
       String message = (String) marker.getAttribute(IMarker.MESSAGE);
-      String invalidName = KeypathQuickFixGenerator.extractInvalidKey(message);
+
+      // Determine whether this is a keypath error or an element type error.
+      // Only keypath errors get the "Create key" proposal.
+      String invalidKeyName = KeypathQuickFixGenerator.extractInvalidKey(message);
+      String invalidName = invalidKeyName;
       if (invalidName == null) {
         invalidName = KeypathQuickFixGenerator.extractInvalidElementType(message);
       }
@@ -143,42 +168,57 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
         return;
       }
 
-      // Read the document text at the marker range to find the
-      // invalid name within the marked region.
-      int charStart = marker.getAttribute(IMarker.CHAR_START, -1);
-      int charEnd = marker.getAttribute(IMarker.CHAR_END, -1);
-      if (charStart < 0 || charEnd < 0 || charEnd <= charStart) {
-        return;
-      }
+      // Add "Replace with" proposals if there are suggestions
+      String suggestionsStr = (String) marker.getAttribute("suggestions");
+      if (suggestionsStr != null && !suggestionsStr.isEmpty()) {
+        // Read the document text at the marker range to find the
+        // invalid name within the marked region.
+        int charStart = marker.getAttribute(IMarker.CHAR_START, -1);
+        int charEnd = marker.getAttribute(IMarker.CHAR_END, -1);
+        if (charStart >= 0 && charEnd >= 0 && charEnd > charStart) {
+          String markedText = document.get(charStart, charEnd - charStart);
+          int keyOffset = ReplaceKeypathQuickFix.findKeySegmentOffset(markedText, invalidName);
+          if (keyOffset >= 0) {
+            int replaceStart = charStart + keyOffset;
 
-      String markedText = document.get(charStart, charEnd - charStart);
-      int keyOffset = ReplaceKeypathQuickFix.findKeySegmentOffset(markedText, invalidName);
-      if (keyOffset < 0) {
-        return;
-      }
-
-      int replaceStart = charStart + keyOffset;
-
-      String[] suggestions = suggestionsStr.split(";");
-      for (String suggestion : suggestions) {
-        String trimmed = suggestion.trim();
-        if (!trimmed.isEmpty()) {
-          // Deduplicate: build a key from the replacement offset, length,
-          // and suggestion text. This prevents the same proposal from
-          // appearing twice when both the builder and reconciler create
-          // markers for the same error.
-          String proposalKey = replaceStart + ":" + invalidName.length() + ":" + trimmed;
-          if (seenProposals.add(proposalKey)) {
-            proposals.add(new CompletionProposal(
-                trimmed,
-                replaceStart,
-                invalidName.length(),
-                trimmed.length(),
-                null,
-                "Replace '" + invalidName + "' with '" + trimmed + "'",
-                null,
-                null));
+            String[] suggestions = suggestionsStr.split(";");
+            for (String suggestion : suggestions) {
+              String trimmed = suggestion.trim();
+              if (!trimmed.isEmpty()) {
+                // Deduplicate: build a key from the replacement offset, length,
+                // and suggestion text. This prevents the same proposal from
+                // appearing twice when both the builder and reconciler create
+                // markers for the same error.
+                String proposalKey = replaceStart + ":" + invalidName.length() + ":" + trimmed;
+                if (seenProposals.add(proposalKey)) {
+                  proposals.add(new CompletionProposal(
+                      trimmed,
+                      replaceStart,
+                      invalidName.length(),
+                      trimmed.length(),
+                      null,
+                      "Replace '" + invalidName + "' with '" + trimmed + "'",
+                      null,
+                      null));
+                }
+              }
+            }
           }
+        }
+      }
+
+      // For keypath errors on the component class itself, also offer
+      // "Create key" to generate the field/accessor via the Add Key dialog.
+      // Nested keypaths (e.g. "session.nme") use the message format
+      // "for the keypath '...'" — we don't offer key creation for those
+      // since it would require modifying a different class.
+      boolean isDirectKey = invalidKeyName != null
+          && message != null
+          && !message.contains("for the keypath");
+      if (isDirectKey && file != null) {
+        String createKeyProposalKey = "createKey:" + invalidKeyName;
+        if (seenProposals.add(createKeyProposalKey)) {
+          proposals.add(new CreateKeyCompletionProposal(invalidKeyName, file));
         }
       }
     }
