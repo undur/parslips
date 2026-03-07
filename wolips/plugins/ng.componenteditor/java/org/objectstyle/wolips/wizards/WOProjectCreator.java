@@ -133,14 +133,14 @@ public class WOProjectCreator {
 
 					    <dependencies>
 					        <dependency>
-					            <groupId>is.rebbi</groupId>
+					            <groupId>is.rebbi.ng</groupId>
 					            <artifactId>ng-appserver</artifactId>
-					            <version>0.1.0-SNAPSHOT</version>
+					            <version>0.1.0</version>
 					        </dependency>
 					        <dependency>
-					            <groupId>is.rebbi</groupId>
+					            <groupId>is.rebbi.ng</groupId>
 					            <artifactId>ng-adaptor-jetty</artifactId>
-					            <version>0.1.0-SNAPSHOT</version>
+					            <version>0.1.0</version>
 					        </dependency>
 					        <dependency>
 					            <groupId>org.slf4j</groupId>
