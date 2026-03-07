@@ -129,7 +129,35 @@ This is the direction the project is actually heading. Improving the Eclipse edi
 
 ## Live preview
 
-Side-by-side rendering of the template as you edit. Challenging for WO components since they render server-side with dynamic bindings, but even a static structural preview (showing component nesting and placeholder content) could be valuable.
+A Chromium-based preview tab in the component editor that renders the template as you edit. Two tiers, building on each other:
+
+### Tier 1: Static structural preview (no running app)
+
+Transform the template into renderable HTML by replacing `<wo:*>` tags with preview-friendly equivalents. The SWT `Browser` widget (Chromium-backed on all platforms) handles the rendering. Key capabilities:
+
+- **Standard HTML passes through unchanged** — `<div>`, `<h1>`, CSS classes, static text all render natively.
+- **`WOString`** → placeholder showing the binding key (e.g. `[name]`), styled to stand out from static text. Static string values render as literal text.
+- **`WOConditional`** → renders children with a subtle labeled border (`[if condition]`).
+- **`WORepetition`** → renders children once with a labeled border (`[loop items]`).
+- **`WOImage`** → resolves literal `filename` bindings against the project's webserver-resources and renders real images.
+- **`WOHyperlink`** → renders as a styled link with its children.
+- **Form elements** (`WOTextField`, `WOCheckBox`, `WOPopUpButton`, etc.) → render as their HTML equivalents with placeholder values.
+- **Unknown components** → render children inside a labeled box showing the component type name.
+- **Component nesting** → recursively render sub-components using their actual templates.
+- **Project CSS** → serve the project's webserver-resources so the preview reflects real styling.
+- **`.api` preview attribute** → components can declare custom preview HTML with binding substitution, giving component authors control over how their component appears in the preview.
+
+The old WOLips codebase (`org.objectstyle.wolips.htmlpreview`) had a working implementation of this tier with ~20 tag delegates. The FuzzyXML `RenderDelegate` pattern is a clean extension mechanism.
+
+### Tier 2: Live connected preview (running app)
+
+When the application is running locally, the preview tab points the Chromium browser directly at `localhost:port/ComponentName`. Combined with DCEVM hot-reload:
+
+- **Edit a binding in the template** → file saves → DCEVM hot-swaps → preview refreshes automatically.
+- **Bindings Inspector as a live property editor** — change a binding value in the inspector, see the result in the preview immediately.
+- **No context switching** — the entire edit-preview cycle happens inside the IDE.
+
+This tier requires detecting whether the app is running (checking for a known port or launch configuration) and auto-refreshing the browser on file save. The static preview serves as the fallback when the app isn't running.
 
 ## One-click deployment
 

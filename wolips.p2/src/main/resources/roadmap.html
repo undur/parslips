@@ -105,14 +105,17 @@
 					<p>Support for additional tag namespaces beyond <code>wo:</code>. The <code>html:</code> namespace for dynamic HTML tags with binding-valued attributes, and expanded <code>p:</code> parser control directives.</p>
 				</div>
 
-				<div class="roadmap-entry">
-					<h3>Live preview</h3>
-					<p>Side-by-side rendering of the template as you edit. Challenging for WO components since they render server-side with dynamic bindings, but even a static structural preview showing component nesting and placeholder content could be valuable.</p>
-				</div>
 			</div>
 
 			<div class="card">
 				<h2 class="section-header">Long-term direction</h2>
+
+				<div class="roadmap-entry">
+					<h3>Live preview</h3>
+					<p>A Chromium-based preview tab in the component editor that renders the template as you edit, in two tiers:</p>
+					<p><strong>Tier 1 (static):</strong> Transform <code>&lt;wo:*&gt;</code> tags into preview-friendly HTML &mdash; placeholders for dynamic values, labeled borders for conditionals and repetitions, resolved images from webserver-resources, real project CSS. Unknown components render their children in a labeled box. Components can declare custom preview HTML via the <code>.api</code> file&rsquo;s preview attribute.</p>
+					<p><strong>Tier 2 (live):</strong> When the app is running locally, the preview points the Chromium browser at <code>localhost</code>. Combined with DCEVM hot-reload, editing a binding updates the preview in real time &mdash; the Bindings Inspector becomes a live property editor. The static preview serves as fallback when the app isn&rsquo;t running.</p>
+				</div>
 
 				<div class="roadmap-entry">
 					<h3>IDE-independent core for LSP</h3>
