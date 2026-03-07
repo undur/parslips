@@ -134,7 +134,7 @@ public class WOProjectCreator {
 					    <groupId>%s</groupId>
 					    <artifactId>%s</artifactId>
 					    <version>1.0.0-SNAPSHOT</version>
-					    <packaging>jar</packaging>
+					    <packaging>woapplication</packaging>
 
 					    <properties>
 					        <maven.compiler.source>21</maven.compiler.source>
@@ -159,6 +159,17 @@ public class WOProjectCreator {
 					            <version>2.0.16</version>
 					        </dependency>
 					    </dependencies>
+
+					    <build>
+					        <plugins>
+					            <plugin>
+					                <groupId>is.rebbi</groupId>
+					                <artifactId>vermilingua-maven-plugin</artifactId>
+					                <version>1.0.5</version>
+					                <extensions>true</extensions>
+					            </plugin>
+					        </plugins>
+					    </build>
 					</project>
 					""", _packageName, _projectName);
 		}
