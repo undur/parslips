@@ -159,9 +159,20 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 		}
 		
 		IEditorInput standaloneHtmlInput = null;
-		if (allComponentInput.length == 0 && apiInput == null && originalFile.getName().toLowerCase().endsWith(".html")) {
+		if (allComponentInput.length == 0 && originalFile.getName().toLowerCase().endsWith(".html")) {
 			standaloneHtmlInput = new ComponentEditorFileEditorInput(originalFile);
 			name = originalFile.getName();
+
+			// For standalone templates, derive the sibling .api file
+			// (e.g. Main.html → Main.api) so the API tab is available
+			if (apiInput == null) {
+				String baseName = name.substring(0, name.lastIndexOf('.'));
+				IFile apiFile = originalFile.getParent().getFile(new Path(baseName + ".api"));
+				ComponentEditorFileEditorInput standaloneApiInput = new ComponentEditorFileEditorInput(apiFile);
+				allIds[inputNum] = EditorsPlugin.ApiEditorID;
+				allInput[inputNum] = standaloneApiInput;
+				apiInput = standaloneApiInput;
+			}
 		}
 		
 		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, apiInput, standaloneHtmlInput);
@@ -256,15 +267,27 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 	/**
 	 * Creates a ComponentEditorInput for a standalone HTML file (not inside a .wo folder).
 	 * This is used as a fallback when the locate system can't find a component structure.
+	 *
+	 * <p>Also creates an API editor input for the sibling {@code .api} file
+	 * (same name, different extension) so the API tab is available even for
+	 * standalone templates.
 	 */
 	public static ComponentEditorInput createStandaloneHtml(IFile file) {
 		String name = file.getName();
 		ComponentEditorFileEditorInput standaloneInput = new ComponentEditorFileEditorInput(file);
-		String[] allIds = new String[] { EditorsPlugin.HTMLEditorID };
-		ComponentEditorFileEditorInput[] allInput = new ComponentEditorFileEditorInput[] { standaloneInput };
+
+		// Derive the sibling .api file (e.g. Main.html → Main.api)
+		String htmlName = file.getName();
+		String baseName = htmlName.substring(0, htmlName.lastIndexOf('.'));
+		IFile apiFile = file.getParent().getFile(new Path(baseName + ".api"));
+		ComponentEditorFileEditorInput apiInput = new ComponentEditorFileEditorInput(apiFile);
+
+		String[] allIds = new String[] { EditorsPlugin.HTMLEditorID, EditorsPlugin.ApiEditorID };
+		ComponentEditorFileEditorInput[] allInput = new ComponentEditorFileEditorInput[] { standaloneInput, apiInput };
 		ComponentEditorFileEditorInput[] allComponentInput = new ComponentEditorFileEditorInput[0];
-		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, null, standaloneInput);
+		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, apiInput, standaloneInput);
 		standaloneInput.setComponentEditorInput(input);
+		apiInput.setComponentEditorInput(input);
 		return input;
 	}
 

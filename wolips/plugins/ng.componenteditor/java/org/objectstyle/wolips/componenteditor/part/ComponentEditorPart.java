@@ -232,8 +232,8 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 			tabIndex++;
 		}
 		
-		if (componentEditorInput.getStandaloneHtmlEditor() == null) {
-			// api tab
+		// API tab — shown for both bundle and standalone templates
+		if (componentEditorInput.getApiEditor() != null) {
 			IFileEditorInput apiInput = (IFileEditorInput) componentEditorInput.getApiEditor();
 			apiTab = new ApiTab(this, tabIndex, apiInput);
 			componentEditorTabsList.add(apiTab);

@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### API tab for standalone templates
+
+- Standalone HTML templates (not inside `.wo` folders) now show the tab bar with "HTML" and "Api" tabs, matching the bundle template editor layout. Previously, standalone templates had no tabs at all — the tab bar was hidden and there was no way to access the API editor.
+- Both creation paths are covered: the locate system path (`create(file, locateResult)`) and the fallback path (`createStandaloneHtml(file)`). Both derive the sibling `.api` file automatically.
+- The API tab guard in `ComponentEditorPart.createPages()` now checks `getApiEditor() != null` instead of `getStandaloneHtmlEditor() == null`, so it works for both bundle and standalone templates.
+
+### "Create key" quick-fix (Cmd+1)
+
+- When the cursor is on a validation error for a missing binding key (e.g. "There is no key 'nme'"), pressing Cmd+1 now offers a **"Create key"** proposal alongside the existing "Replace with" suggestions. Selecting it opens the Add Key dialog to generate the field/accessor on the component's Java class.
+- Only offered for direct keys on the component class — nested keypaths like `session.nme` don't offer key creation since it would target the wrong class.
+
 ### "Restore WOLips Keybindings" button on coexistence preference page
 
 - The WOLips Coexistence preference page (Preferences → Parsley → WOLips Coexistence) now has a **"Restore WOLips Keybindings"** button. Click it before uninstalling Parsley to remove all keybinding overrides and restore WOLips' original keyboard shortcuts. The button also unchecks the shadow preference so the overrides are not re-applied on next startup.
