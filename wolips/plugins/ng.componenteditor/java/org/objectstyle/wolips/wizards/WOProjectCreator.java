@@ -18,13 +18,20 @@ import java.nio.file.Path;
  *
  * <p>The generated project follows standard Maven conventions:
  * <pre>
- *   pom.xml                           — Maven project descriptor
- *   build.properties                   — Parsley framework detection (project.base=ng or project.base=wo)
- *   src/main/java/{package}/           — Application, Session, DirectAction
- *   src/main/java/{package}/components/ — Main.java
- *   src/main/components/              — Main.html, Main.wod, Main.woo (ng: standalone; WO: inside Main.wo/)
- *   src/main/resources/               — (Properties file for WO)
- *   src/main/webserver-resources/     — static web assets
+ *   pom.xml                              — Maven project descriptor
+ *   build.properties                      — Parsley framework detection (project.base=ng or project.base=wo)
+ *   src/main/java/{package}/              — Application, Session, DirectAction
+ *   src/main/java/{package}/components/   — Main.java
+ *
+ *   ng-objects:
+ *   src/main/resources/ng/app/components/          — Main.html, Main.wod, Main.woo (standalone)
+ *   src/main/resources/ng/app/app-resources/        — application resources
+ *   src/main/resources/ng/app/webserver-resources/  — static web assets
+ *
+ *   WebObjects:
+ *   src/main/components/Main.wo/          — Main.html, Main.wod, Main.woo (bundle template)
+ *   src/main/woresources/                 — Properties file
+ *   src/main/webserver-resources/         — static web assets
  * </pre>
  *
  * <p>File contents use Java text blocks with {@link String#format} — no Velocity templates.
@@ -65,16 +72,18 @@ public class WOProjectCreator {
 
 		Files.createDirectories(_projectDir.resolve("src/main/java/" + packagePath + "/components"));
 		if (_isNG) {
-			Files.createDirectories(_projectDir.resolve("src/main/components"));
+			// ng-objects: resources live under src/main/resources/ng/app/
+			Files.createDirectories(_projectDir.resolve("src/main/resources/ng/app/components"));
+			Files.createDirectories(_projectDir.resolve("src/main/resources/ng/app/app-resources"));
+			Files.createDirectories(_projectDir.resolve("src/main/resources/ng/app/webserver-resources"));
 		}
 		else {
+			// WebObjects: traditional WO folder layout under src/main/
 			Files.createDirectories(_projectDir.resolve("src/main/components/Main.wo"));
-		}
-		Files.createDirectories(_projectDir.resolve("src/main/resources"));
-		if (!_isNG) {
+			Files.createDirectories(_projectDir.resolve("src/main/resources"));
 			Files.createDirectories(_projectDir.resolve("src/main/woresources"));
+			Files.createDirectories(_projectDir.resolve("src/main/webserver-resources"));
 		}
-		Files.createDirectories(_projectDir.resolve("src/main/webserver-resources"));
 
 		// 2. Write files
 		writeFile("pom.xml", generatePomXml());
@@ -88,7 +97,9 @@ public class WOProjectCreator {
 		writeFile(javaBase + "components/Main.java", generateMainJava());
 
 		// Component template files
-		String componentBase = _isNG ? "src/main/components/" : "src/main/components/Main.wo/";
+		String componentBase = _isNG
+				? "src/main/resources/ng/app/components/"
+				: "src/main/components/Main.wo/";
 		writeFile(componentBase + "Main.html", generateMainHtml());
 		writeFile(componentBase + "Main.wod", "");
 		writeFile(componentBase + "Main.woo", generateMainWoo());
@@ -225,14 +236,23 @@ public class WOProjectCreator {
 	private String generateApplicationJava() {
 		if (_isNG) {
 			return String.format("""
-					package %s;
+					package %1$s;
 
 					import ng.appserver.NGApplication;
+					import ng.plugins.Routes;
+					import %1$s.components.Main;
 
 					public class Application extends NGApplication {
 
 					    public static void main(String[] args) {
 					        NGApplication.run(args, Application.class);
+					    }
+
+					    @Override
+					    public Routes routes() {
+					        return super
+					                .routes()
+					                .map( "/", Main.class );
 					    }
 					}
 					""", _packageName);

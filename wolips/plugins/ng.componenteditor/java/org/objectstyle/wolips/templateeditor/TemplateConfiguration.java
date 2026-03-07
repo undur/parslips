@@ -113,7 +113,15 @@ public class TemplateConfiguration extends HTMLConfiguration {
     try {
       IFile file = ((FileEditorInput) getEditorPart().getEditorInput()).getFile();
       WodParserCache parserCache = WodParserCache.parser(file);
-      ParsleyProject parsleyProject = (ParsleyProject)parserCache.getProject().getAdapter(ParsleyProject.class);
+
+      // The project can be null if the editor opens before m2e has
+      // finished importing the project (e.g. the wizard opens Main.html
+      // immediately after creation). Guard against NPE here.
+      ParsleyProject parsleyProject = null;
+      if (parserCache.getProject() != null) {
+        parsleyProject = (ParsleyProject) parserCache.getProject().getAdapter(ParsleyProject.class);
+      }
+
       return new TemplateAssistProcessor(getEditorPart(), parserCache, parsleyProject);
     }
     catch (Exception e) {

@@ -213,11 +213,11 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 					monitor.worked(1);
 
 					// Resolve the Main.html IFile within the imported project
+					// using the path returned by WOProjectCreator, which
+					// already knows the correct location for each framework.
 					if (project != null) {
-						String componentBase = isNG
-								? "src/main/components/"
-								: "src/main/components/Main.wo/";
-						result[0] = project.getFile(componentBase + "Main.html");
+						Path relativeMainPath = projectDir.relativize(mainTemplatePath);
+						result[0] = project.getFile(relativeMainPath.toString());
 					}
 					monitor.worked(1);
 					monitor.done();
