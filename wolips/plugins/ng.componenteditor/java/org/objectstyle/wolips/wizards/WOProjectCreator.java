@@ -241,7 +241,8 @@ public class WOProjectCreator {
 				project.base=%s
 				project.name=%s
 				project.type=application
-				""", _isNG ? "ng" : "wo", _projectName);
+				principalClass=%s.Application
+				""", _isNG ? "ng" : "wo", _projectName, _packageName);
 	}
 
 	private String generateApplicationJava() {
