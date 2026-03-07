@@ -26,9 +26,22 @@ public class TypeCache {
 
   private LimitedLRUCache<IType, TypeCacheEntry> _typeCacheEntries;
 
+  /**
+   * Caches whether a type has any visible binding keys (after filtering).
+   * Used by the Bindings Inspector's key browser to decide whether to show
+   * a navigation arrow on a key — only types that would actually produce
+   * a non-empty column get the arrow. Keyed by fully qualified type name
+   * to avoid holding IType references that prevent GC.
+   *
+   * <p>Populated lazily by {@link #hasVisibleBindingKeys}. Cleared when
+   * the type cache is cleared for a resource or type.
+   */
+  private Map<String, Boolean> _visibleKeysCache;
+
   public TypeCache() {
     _typeCacheEntries = new LimitedLRUCache<IType, TypeCacheEntry>(1000);
     _apiCache = new HashMap<IJavaProject, ApiCache>();
+    _visibleKeysCache = new HashMap<String, Boolean>();
   }
 
   private TypeCacheEntry getTypeCacheEntry(IType type) throws JavaModelException {
@@ -106,6 +119,11 @@ public class TypeCache {
     synchronized (_typeCacheEntries) {
       _typeCacheEntries.remove(declaringType);
     }
+    if (declaringType != null) {
+      synchronized (_visibleKeysCache) {
+        _visibleKeysCache.remove(declaringType.getFullyQualifiedName());
+      }
+    }
   }
 
   public IType getTypeForNameInType(String typeName, IType declaringType) throws JavaModelException {
@@ -116,6 +134,9 @@ public class TypeCache {
   private void clearCache() {
     synchronized (_typeCacheEntries) {
       _typeCacheEntries.clear();
+    }
+    synchronized (_visibleKeysCache) {
+      _visibleKeysCache.clear();
     }
   }
 
@@ -137,6 +158,37 @@ public class TypeCache {
       clearCacheForType(type);
       throw e;
     }
+  }
+
+  /**
+   * Returns whether the given type has any visible binding keys after
+   * system binding filtering. Used by the Bindings Inspector to decide
+   * whether a navigation arrow should be shown — only types that would
+   * produce a non-empty key column are navigable.
+   *
+   * <p>The result is cached per fully qualified type name. The first call
+   * for a given type performs a full {@link BindingReflectionUtils#getGroupedBindingValueKeys}
+   * introspection; subsequent calls return the cached result.
+   *
+   * @param type the type to check
+   * @return true if the type has at least one visible binding key
+   */
+  public boolean hasVisibleBindingKeys(IType type) throws JavaModelException {
+    String fqn = type.getFullyQualifiedName();
+    synchronized (_visibleKeysCache) {
+      Boolean cached = _visibleKeysCache.get(fqn);
+      if (cached != null) {
+        return cached;
+      }
+    }
+
+    // Compute outside the lock to avoid holding it during introspection
+    boolean hasKeys = !BindingReflectionUtils.getGroupedBindingValueKeys("", type, this).isEmpty();
+
+    synchronized (_visibleKeysCache) {
+      _visibleKeysCache.put(fqn, hasKeys);
+    }
+    return hasKeys;
   }
 
   public class TypeCacheEntry {

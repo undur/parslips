@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Bindings Inspector: hide navigation arrow for empty types
+
+- The key browser no longer shows a navigation arrow on keys whose return type has no visible binding keys after filtering. Previously, the arrow was shown based on `isLeaf()` which only checked whether the return type was non-null and not String/Object. This caused arrows on types like `WOActionResults` — but navigating into them produced an empty column because the only method (`generateResponse`) is filtered as a system binding.
+- The fix adds `TypeCache.hasVisibleBindingKeys(IType)` which performs a full `getGroupedBindingValueKeys` introspection (including system binding filtering) and caches the result per fully qualified type name. The cache is invalidated when types are cleared.
+- Both the label provider (arrow icon) and the browser (column creation on click) use this check, so clicking a key with no visible children no longer creates an empty column either.
+
 ### API tab for standalone templates
 
 - Standalone HTML templates (not inside `.wo` folders) now show the tab bar with "HTML" and "Api" tabs, matching the bundle template editor layout. Previously, standalone templates had no tabs at all — the tab bar was hidden and there was no way to access the API editor.

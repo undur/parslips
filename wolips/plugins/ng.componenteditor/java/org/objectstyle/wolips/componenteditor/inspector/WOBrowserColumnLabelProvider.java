@@ -14,6 +14,7 @@ import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.widgets.Display;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
+import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 /**
  * Label provider for WOBrowser columns. Three table columns:
@@ -76,11 +77,19 @@ public class WOBrowserColumnLabelProvider extends StyledCellLabelProvider {
 				cell.setText("");
 			}
 		} else if (column == 2) {
-			// Navigation arrow icon for non-leaf types
+			// Navigation arrow — only shown if the key's return type has
+			// visible binding keys after filtering. This prevents showing
+			// arrows for types like WOActionResults whose only method
+			// (generateResponse) is filtered out as a system binding.
 			try {
 				if (!key.isLeaf()) {
-					Image image = ComponenteditorPlugin.getDefault().getImage(ComponenteditorPlugin.TO_ONE_ICON);
-					cell.setImage(image);
+					IType nextType = key.getNextType();
+					if (nextType != null && WodParserCache.getTypeCache().hasVisibleBindingKeys(nextType)) {
+						Image image = ComponenteditorPlugin.getDefault().getImage(ComponenteditorPlugin.TO_ONE_ICON);
+						cell.setImage(image);
+					} else {
+						cell.setImage(null);
+					}
 				} else {
 					cell.setImage(null);
 				}

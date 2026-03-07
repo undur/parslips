@@ -191,7 +191,11 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 			try {
 				if (!selectedKey.isLeaf()) {
 					IType nextType = selectedKey.getNextType();
-					if (nextType != null) {
+					// Only create a new column if the type actually has
+					// visible binding keys. This prevents empty columns
+					// for types like WOActionResults whose methods are
+					// all filtered out.
+					if (nextType != null && WodParserCache.getTypeCache().hasVisibleBindingKeys(nextType)) {
 						addedColumn = addType(nextType);
 					}
 				}
