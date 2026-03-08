@@ -153,6 +153,18 @@ public class StringDistanceTest {
     assertEquals("userName", matches.get(0));
   }
 
+  @Test
+  public void closestMatches_excludesCaseOnlyMismatch() {
+    // Pure case mismatches have distance 0 after case-folding, so
+    // closestMatches() filters them out (dist > 0 check). Callers that
+    // want case-mismatch suggestions must handle them separately, as
+    // AbstractWodBinding.suggestKeysForInvalidKey() and
+    // AbstractWodElement.suggestElementTypeNames() do.
+    List<String> candidates = Arrays.asList("performSubmit", "performReset");
+    List<String> matches = StringDistance.closestMatches("performsubmit", candidates, 3);
+    assertTrue("Case-only mismatch should not appear in closestMatches", matches.isEmpty());
+  }
+
   // --- maxDistanceForLength: adaptive thresholds ---
 
   @Test

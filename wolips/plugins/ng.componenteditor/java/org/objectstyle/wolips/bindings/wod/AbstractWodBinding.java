@@ -446,7 +446,13 @@ public abstract class AbstractWodBinding implements IWodBinding {
    * valid keys on the type where resolution failed, then ranking by
    * Damerau–Levenshtein distance.
    *
-   * @return up to 3 suggestions sorted by distance, or an empty list
+   * <p>Case-only mismatches (e.g. "performsubmit" → "performSubmit") are
+   * checked first, since they are a common mistake and the distance algorithm
+   * (being case-insensitive) would report them as distance 0, excluding them
+   * from the typo-based results.
+   *
+   * @return up to 3 suggestions sorted by relevance (case-only first, then
+   *         by edit distance), or an empty list
    */
   private static List<String> suggestKeysForInvalidKey(BindingValueKeyPath keyPath, TypeCache cache) {
     IType invalidKeyType = keyPath.getInvalidKeyType();
@@ -462,7 +468,32 @@ public abstract class AbstractWodBinding implements IWodBinding {
       for (BindingValueKey key : validKeys) {
         candidateNames.add(key.getBindingName());
       }
-      return StringDistance.closestMatches(invalidKey, candidateNames, 3);
+
+      List<String> suggestions = new java.util.ArrayList<String>();
+
+      // Case-only mismatches: the distance algorithm is case-insensitive,
+      // so these would be distance 0 and filtered out by closestMatches().
+      // Check explicitly since capitalization errors are common.
+      for (String candidate : candidateNames) {
+        if (candidate.equalsIgnoreCase(invalidKey) && !candidate.equals(invalidKey)) {
+          suggestions.add(candidate);
+        }
+      }
+
+      // Typo-based suggestions via edit distance
+      List<String> typoSuggestions = StringDistance.closestMatches(invalidKey, candidateNames, 3);
+      for (String suggestion : typoSuggestions) {
+        if (!suggestions.contains(suggestion)) {
+          suggestions.add(suggestion);
+        }
+      }
+
+      // Cap at 3 total suggestions
+      if (suggestions.size() > 3) {
+        suggestions = suggestions.subList(0, 3);
+      }
+
+      return suggestions;
     }
     catch (JavaModelException e) {
       Activator.getDefault().log(e);
