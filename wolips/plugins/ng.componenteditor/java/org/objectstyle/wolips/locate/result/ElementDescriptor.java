@@ -30,6 +30,14 @@ import org.objectstyle.wolips.locate.LocatePlugin;
  * A non-null file may or may not exist on disk — callers should check
  * {@link IFile#exists()} when that matters.
  *
+ * <p><b>Staleness:</b> Because descriptors are immutable snapshots, a
+ * descriptor stored in a long-lived object (e.g. {@code ComponentEditorInput})
+ * can become stale if the component's files are renamed, deleted, or
+ * restructured while the editor is open. Short-lived usages (switch
+ * handlers, hyperlinks) are unaffected — they create a fresh descriptor
+ * on each invocation. For stored descriptors, closing and reopening the
+ * editor rebuilds the snapshot from the current disk state.
+ *
  * @see TemplateFormat
  * @see LocalizedComponentsLocateResult
  */
