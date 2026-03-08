@@ -130,15 +130,19 @@ public class ApiEditor extends FormEditor {
 				ApieditorPlugin.getDefault().debug(e);
 				addPage(new CreatePage(this, "Create"));
 			}
+
+			// Usages page — "who uses this element?" reverse dependency view.
+			// Derives the element name from the .api filename (e.g.
+			// "MyElement.api" → "MyElement"). Works for both components and
+			// non-component elements (WODynamicElement subclasses, NGElement
+			// implementations, etc.).
+			addPage(new UsagesFormPage(this, getElementName()));
 		} catch (PartInitException e) {
 			ApieditorPlugin.getDefault().debug(e);
 		}
 		CTabFolder ctf = (CTabFolder)getContainer();
 	    ctf.setTabPosition(SWT.TOP);
 		ctf.setBorderVisible(false);
-		if (getPageCount() <= 1) {
-			ctf.setTabHeight(0);
-		}
 	}
 
 	/**
@@ -298,6 +302,25 @@ public class ApiEditor extends FormEditor {
 
 	public void activateFirstPage() {
 		this.setActivePage(0);
+	}
+
+	/**
+	 * Derives the element name from the {@code .api} filename.
+	 * For example, {@code "MyElement.api"} → {@code "MyElement"}.
+	 *
+	 * @return the element name, or the full filename if no extension found
+	 */
+	String getElementName() {
+		FileEditorInput editorInput = (FileEditorInput) this.getEditorInput();
+		if (editorInput != null) {
+			String fileName = editorInput.getFile().getName();
+			int dot = fileName.lastIndexOf('.');
+			if (dot > 0) {
+				return fileName.substring(0, dot);
+			}
+			return fileName;
+		}
+		return "Unknown";
 	}
 
 }

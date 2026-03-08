@@ -135,6 +135,7 @@ This codebase was extracted from WOLips which had significant dead code. When yo
 - First line: imperative mood, concise summary
 - Body (if needed): explain the *why* and any non-obvious details
 - Do NOT include `Co-Authored-By` lines
+- **Never push to remote without asking first.** Commit locally, then let the user review and test before pushing. This keeps the remote history clean.
 
 ## CHANGES.md
 

@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Usages tab in standalone API editor — element-level reverse dependency view
+
+- Added a **Usages** tab to the standalone API editor (used for non-component elements like `WODynamicElement` subclasses and `NGElement` implementations). This provides the same "who uses this element?" reverse dependency view that was previously only available in the multi-tab component editor.
+- Extracted the usages UI (toolbar, table, scanning logic) into a reusable `UsagesComposite` shared by both `UsagesTab` (component editor) and `UsagesFormPage` (API editor).
+- The API editor now always shows its tab bar (previously hidden when there was only one page), with "Bindings" and "Usages" tabs.
+
 ### Fix Cmd+Alt+1 (switch to Java) failing for cross-project components
 
 - When WOLips is installed, pressing Cmd+Alt+1 in a component editor opened via F3 from a different project would silently fail. The handler checked `isParsleyProject()` on the component's project — which requires `project.base` to be set in `build.properties` — and delegated to WOLips when it wasn't. Unlike the HTML, WOD, and API handlers (which detect `ComponentEditor` and switch tabs directly), the Java handler always went through the project check. Fixed by using the already-resolved `LocalizedComponentsLocateResult` from the `ComponentEditorInput` when invoked from a ComponentEditor, bypassing the project check entirely.
