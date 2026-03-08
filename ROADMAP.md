@@ -64,24 +64,21 @@ This eliminates:
 - The switch handlers' project-type checks (the editor knows what it has)
 - Double-tab UI when features exist at both editor levels
 
-### Model layer: `ElementDescriptor`
+### ~~Model layer: `ElementDescriptor`~~ ✓
 
-Underneath the editor, a clean model abstraction replaces the ad-hoc file resolution scattered throughout the codebase. The object would know:
+Implemented. Immutable model object that captures "what files belong to this element?" — name, HTML, WOD, WOO, API, Java, project, and template format (`BUNDLE`, `STANDALONE`, `NONE`). Wraps `LocalizedComponentsLocateResult` without replacing it. Factory methods: `ElementDescriptor.forFile(IFile)` for on-demand resolution, `fromLocateResult()` for wrapping an existing locate result.
 
-- **Element name** — derived once, regardless of format
-- **HTML file** — the template (inside `.wo` or standalone), or `null` for non-component elements
-- **WOD file** — present for bundle templates, `null` otherwise
-- **WOO file** — present for bundle templates, `null` otherwise
-- **API file** — sibling `.api`, resolved once
-- **Java file** — the element class
-- **Project** — which project the element belongs to
-- **Template format** — bundle, standalone, or none (but callers rarely need to ask)
+Migrated consumers: all four switch handlers (Cmd+1/2/3/4), F3 hyperlink (`WodElementTypeHyperlink`), Open Component action, Rename Component action. Bridge methods on `WodParserCache` and `ComponentEditorInput` make the descriptor available to editor-context code.
 
-The closest existing thing is `LocalizedComponentsLocateResult`, but it's a mutable grab-bag populated by the locate system, has localization concerns mixed in, and doesn't cover standalone templates well (`createStandaloneHtml()` doesn't even set a locate result). `ComponentEditorInput` is another partial model, but it's tightly coupled to Eclipse editor lifecycle (editor IDs, `MultiEditorInput` inheritance, reveal flags).
+### Next: integrate `ElementDescriptor` into the editor itself
 
-An `ElementDescriptor` would be the shared currency between the editor, the switch handlers, the extract refactorings, the usages tab, the formatter action, the F3 handler, and the rename participant. Each of those currently has its own way of answering "what files belong to this element?" — a unified model replaces all of them.
+The descriptor is wired in but the editor doesn't depend on it yet. Concrete next steps, roughly in order:
 
-This is the highest-impact architectural change on the roadmap — it simplifies both the model and the UI, and makes every subsequent feature cheaper and less bug-prone.
+- **`SwitchToJavaHandler` fast-path cleanup** — the ComponentEditor fast-path still reaches into `ComponentEditorInput.getLocalizedComponentsLocateResult()` to get the Java file. Could use `getElementDescriptor().getJavaFile()` instead, removing the last place the editor needs the raw locate result for a simple file query.
+- **`ComponentEditorPart` tab decisions** — the editor inspects `getComponentEditors()`, `getApiEditor()`, `getStandaloneHtmlEditor()` to decide which tabs to create. The descriptor's `isBundle()` / `isStandalone()` / `hasTemplate()` could simplify that logic, making the tab setup more declarative.
+- **Remaining consumers** — `ApiUtils`, `WodEditor`, `WodModelUtils`, `RenameComponentProcessor`, `RenameBindingKeyProcessor` still call the locate system directly. These are deeper in the validation and refactoring layers, so migration needs more care (thread safety with `WodModelUtils`, the rename processors' name-based lookups).
+- **Name-based factory method** — `RenameComponentAction` and the rename processors resolve by `(IProject, String)` rather than by file. A `forComponent(IProject, String)` factory on `ElementDescriptor` would let them use the descriptor cleanly instead of wrapping a locate result.
+- **Toward the Unified Element Editor** — once all consumers go through `ElementDescriptor`, the `ComponentEditorInput.create()` / `createStandaloneHtml()` fork could potentially be collapsed into a single path that builds tabs based on what the descriptor reports. This is the big payoff but depends on the tab decision cleanup above.
 
 ## Component dependency graph
 
