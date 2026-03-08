@@ -46,6 +46,7 @@ package org.objectstyle.wolips.componenteditor.part;
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -242,8 +243,37 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 			this.setPageText(tabIndex, "Api");
 			tabIndex++;
 		}
-		
-		// HTML preview tab removed (htmlpreview plugin not included)
+
+		// Usages tab — "who uses this component?" reverse dependency view.
+		// Shown for both bundle and standalone templates.
+		{
+			// Derive the component name from the editor input name
+			String usagesName = componentEditorInput.getName();
+			int dotIdx = usagesName.lastIndexOf('.');
+			if (dotIdx > 0) {
+				usagesName = usagesName.substring(0, dotIdx);
+			}
+
+			// Get the project from the first available file input
+			IProject usagesProject = null;
+			if (htmlInput != null) {
+				usagesProject = htmlInput.getFile().getProject();
+			}
+			else if (componentEditorInput.getStandaloneHtmlEditor() != null) {
+				usagesProject = ((IFileEditorInput) componentEditorInput.getStandaloneHtmlEditor())
+						.getFile().getProject();
+			}
+
+			if (usagesProject != null) {
+				UsagesTab usagesTab = new UsagesTab(this, tabIndex,
+						usagesName, usagesProject);
+				componentEditorTabsList.add(usagesTab);
+				usagesTab.createTab();
+				this.addPage(usagesTab);
+				this.setPageText(tabIndex, "Usages");
+				tabIndex++;
+			}
+		}
 
 		componentEditorTabs = componentEditorTabsList.toArray(new ComponentEditorTab[componentEditorTabsList.size()]);
 		htmlWodTabs = htmlWodTabsList.toArray(new HtmlWodTab[htmlWodTabsList.size()]);

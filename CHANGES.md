@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Usages tab — reverse dependency view
+
+- New **Usages** tab in the component editor shows which other components in the workspace reference the current component as an element — a "who uses me?" view.
+- Shown for both standalone and bundle templates.
+- The tab contains a two-column table: **Component** (the name of the using component) and **Project** (which project it belongs to). Double-clicking a row opens that component's template.
+- The scan runs lazily on first tab activation using a background `Job` to avoid blocking the UI. A **Refresh** button triggers a manual re-scan.
+- Reuses the regex matching logic from `RenameComponentProcessor` (the same patterns that power the rename refactoring's cross-reference detection). Extracted `htmlContainsElementReference()` and `wodContainsElementReference()` as public static methods for shared use.
+
 ### Fix formatter not working in standalone templates
 
 - The "Format Template" action (`Cmd+Shift+F`) did nothing in standalone (non-bundle) templates. The action required both a template editor and a WOD editor to be present, but standalone templates have no WOD tab. The formatter operates purely on the HTML template and has no WOD dependency, so the WOD editor check was unnecessary.

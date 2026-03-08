@@ -230,6 +230,62 @@ public class RenameComponentProcessor {
 	}
 
 	// -----------------------------------------------------------------------
+	// Element reference detection (used by rename refactoring and Usages tab)
+	// -----------------------------------------------------------------------
+
+	/**
+	 * The regex pattern for matching a component name in an HTML inline binding
+	 * tag. Matches {@code <wo:Name} and {@code </wo:Name} with a case-insensitive
+	 * {@code wo:} prefix and a case-sensitive component name.
+	 *
+	 * <p>The lookahead ensures we don't match a prefix of a longer name —
+	 * the name must be followed by whitespace, {@code >}, {@code /}, or end
+	 * of string.
+	 */
+	private static Pattern htmlElementPattern(String componentName) {
+		return Pattern.compile(
+				"(?i:</?wo:)" + Pattern.quote(componentName) + "(?=[\\s>/$])", 0);
+	}
+
+	/**
+	 * The regex pattern for matching a component name in a WOD element type
+	 * declaration. Matches {@code : ComponentName &#123;} with optional
+	 * whitespace around the name.
+	 */
+	private static Pattern wodElementPattern(String componentName) {
+		return Pattern.compile(
+				":\\s*" + Pattern.quote(componentName) + "\\s*\\{");
+	}
+
+	/**
+	 * Returns whether the given HTML content contains an inline binding
+	 * reference to the named component (e.g. {@code <wo:ComponentName>}).
+	 *
+	 * <p>Used by the Usages tab to find which components reference a given
+	 * element type, and by the rename refactoring to detect references that
+	 * need updating.
+	 *
+	 * @param content the HTML file content
+	 * @param componentName the component name to search for (case-sensitive)
+	 * @return true if at least one reference is found
+	 */
+	public static boolean htmlContainsElementReference(String content, String componentName) {
+		return htmlElementPattern(componentName).matcher(content).find();
+	}
+
+	/**
+	 * Returns whether the given WOD content contains an element type
+	 * declaration referencing the named component (e.g. {@code Foo : ComponentName &#123; &#125;}).
+	 *
+	 * @param content the WOD file content
+	 * @param componentName the component name to search for (case-sensitive)
+	 * @return true if at least one reference is found
+	 */
+	public static boolean wodContainsElementReference(String content, String componentName) {
+		return wodElementPattern(componentName).matcher(content).find();
+	}
+
+	// -----------------------------------------------------------------------
 	// Cross-reference updating: rewrite element type references in templates
 	// -----------------------------------------------------------------------
 
@@ -336,15 +392,7 @@ public class RenameComponentProcessor {
 			return null;
 		}
 
-		// Match the element type name in wo: tag positions.
-		// Lookbehind: < or </ followed by wo: (case-insensitive)
-		// The element type name itself: case-sensitive match
-		// Lookahead: whitespace, >, /, or end of string (for edge cases)
-		Pattern pattern = Pattern.compile(
-				"(?i:</?wo:)" + Pattern.quote(oldName) + "(?=[\\s>/$])",
-				0);
-
-		Matcher matcher = pattern.matcher(content);
+		Matcher matcher = htmlElementPattern(oldName).matcher(content);
 		List<ReplaceEdit> edits = new ArrayList<>();
 
 		while (matcher.find()) {
@@ -383,12 +431,7 @@ public class RenameComponentProcessor {
 			return null;
 		}
 
-		// Match element type in WOD declaration: ": OldName {"
-		// The colon and braces are structural — we only replace the name
-		Pattern pattern = Pattern.compile(
-				":\\s*" + Pattern.quote(oldName) + "\\s*\\{");
-
-		Matcher matcher = pattern.matcher(content);
+		Matcher matcher = wodElementPattern(oldName).matcher(content);
 		List<ReplaceEdit> edits = new ArrayList<>();
 
 		while (matcher.find()) {
@@ -458,11 +501,13 @@ public class RenameComponentProcessor {
 
 	/**
 	 * Reads the full content of an IFile as a String.
-	 * Package-visible so {@link RenameBindingProcessor} can reuse it.
+	 *
+	 * <p>Public so callers like the Usages tab and {@link RenameBindingProcessor}
+	 * can reuse it.
 	 *
 	 * @return the file content, or null if the file can't be read
 	 */
-	static String readFileContent(IFile file) throws CoreException, IOException {
+	public static String readFileContent(IFile file) throws CoreException, IOException {
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(file.getContents(), StandardCharsets.UTF_8))) {
 			StringBuilder sb = new StringBuilder();
