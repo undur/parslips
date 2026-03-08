@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix ng project creation issues
+
+- **No more stray .wod/.woo files:** The project wizard was creating `Main.wod` and `Main.woo` in ng-objects projects. These files are only used by bundle templates (WebObjects) — standalone templates (ng-objects) are single `.html` files.
+- **Components folder resolution:** `ParsleyProject.findComponentsFolder()` searched all of `src/main/` for a folder named "components", but ng-objects projects have both `src/main/java/.../components/` (Java sources) and `src/main/resources/.../components/` (templates). The recursive search could find the Java source folder first, causing the "New WO Component" wizard to create templates alongside Java files. The fix narrows the search to `src/main/resources/` for ng projects.
+
 ### Fix crash when navigating into binary types in Bindings Inspector
 
 - Clicking a key whose return type is a binary class (e.g. `java.util.List` from the JDK) caused a `NullPointerException` in `TypeCache.resolveType()`. The method called `declaringType.getCompilationUnit().getImports()` without checking for null — binary types have no compilation unit (they come from class files, not source).

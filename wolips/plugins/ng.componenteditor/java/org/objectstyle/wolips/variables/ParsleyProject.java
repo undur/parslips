@@ -238,24 +238,51 @@ public class ParsleyProject {
 	 * Static variant of {@link #findComponentsFolder()} for callers that
 	 * don't have a {@link ParsleyProject} instance handy.
 	 *
+	 * <p>For ng-objects projects, the components folder is under
+	 * {@code src/main/resources/} (e.g. {@code src/main/resources/ng/app/components/}).
+	 * We must NOT search all of {@code src/main/} because that would also
+	 * match the Java source folder ({@code src/main/java/.../components/})
+	 * which contains {@code .java} files, not templates.
+	 *
+	 * <p>For WebObjects projects, the components folder is directly under
+	 * {@code src/main/} (e.g. {@code src/main/components/}), so the broader
+	 * search is correct.
+	 *
 	 * @param project the project to search in
 	 * @return the components folder, or {@code null} if not found
 	 */
 	public static IFolder findComponentsFolder(IProject project) {
 		try {
-			// 1. Maven layout: search under src/main/
-			IFolder srcMain = project.getFolder("src/main");
-			if (srcMain.exists()) {
-				IFolder found = findComponentsFolderIn(srcMain);
-				if (found != null) {
-					return found;
+			ParsleyProject pp = (ParsleyProject) project.getAdapter(ParsleyProject.class);
+			boolean isNG = pp != null && pp.isNGProject();
+
+			if (isNG) {
+				// ng-objects: search only under src/main/resources/ to avoid
+				// matching the Java source "components" package
+				IFolder srcMainResources = project.getFolder("src/main/resources");
+				if (srcMainResources.exists()) {
+					IFolder found = findComponentsFolderIn(srcMainResources);
+					if (found != null) {
+						return found;
+					}
 				}
 			}
+			else {
+				// WebObjects: search under all of src/main/ (components are in
+				// src/main/components/ which is not under resources/)
+				IFolder srcMain = project.getFolder("src/main");
+				if (srcMain.exists()) {
+					IFolder found = findComponentsFolderIn(srcMain);
+					if (found != null) {
+						return found;
+					}
+				}
 
-			// 2. Fluffy Bunny layout: Components/ at the project root
-			IFolder fluffyBunny = project.getFolder("Components");
-			if (fluffyBunny.exists()) {
-				return fluffyBunny;
+				// Fluffy Bunny layout: Components/ at the project root
+				IFolder fluffyBunny = project.getFolder("Components");
+				if (fluffyBunny.exists()) {
+					return fluffyBunny;
+				}
 			}
 		}
 		catch (CoreException e) {
