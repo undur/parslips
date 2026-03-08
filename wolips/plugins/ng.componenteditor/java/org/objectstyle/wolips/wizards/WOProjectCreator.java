@@ -24,7 +24,7 @@ import java.nio.file.Path;
  *   src/main/java/{package}/components/   — Main.java
  *
  *   ng-objects:
- *   src/main/resources/ng/app/components/          — Main.html, Main.wod, Main.woo (standalone)
+ *   src/main/resources/ng/app/components/          — Main.html (standalone template)
  *   src/main/resources/ng/app/app-resources/        — application resources
  *   src/main/resources/ng/app/webserver-resources/  — static web assets
  *
@@ -101,8 +101,13 @@ public class WOProjectCreator {
 				? "src/main/resources/ng/app/components/"
 				: "src/main/components/Main.wo/";
 		writeFile(componentBase + "Main.html", generateMainHtml());
-		writeFile(componentBase + "Main.wod", "");
-		writeFile(componentBase + "Main.woo", generateMainWoo());
+
+		// Bundle templates (.wo folders) need .wod and .woo files.
+		// Standalone templates (ng-objects) are single .html files — no .wod/.woo.
+		if (!_isNG) {
+			writeFile(componentBase + "Main.wod", "");
+			writeFile(componentBase + "Main.woo", generateMainWoo());
+		}
 
 		// WO-specific files
 		if (!_isNG) {
