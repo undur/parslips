@@ -60,6 +60,7 @@ import org.objectstyle.wolips.components.ComponentsPlugin;
 import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
+import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 
 public class ComponentEditorInput extends MultiEditorInput implements IPersistableElement {
@@ -73,6 +74,13 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 	private boolean displayWooPartOnReveal = false;
 
 	private LocalizedComponentsLocateResult localizedComponentsLocateResult;
+
+	/**
+	 * Immutable snapshot of the element's files, populated when the input
+	 * is created from a locate result.  May be null for inputs restored
+	 * from a memento (the locate result isn't available until re-opened).
+	 */
+	private ElementDescriptor _elementDescriptor;
 
 	private IEditorInput[] componentEditors;
 
@@ -177,6 +185,15 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 		
 		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, apiInput, standaloneHtmlInput);
 		input.localizedComponentsLocateResult = localizedComponentsLocateResult;
+		try {
+			input._elementDescriptor = ElementDescriptor.fromLocateResult(
+					localizedComponentsLocateResult, originalFile.getProject());
+		}
+		catch (CoreException e) {
+			// Non-fatal — the descriptor is a convenience accessor.
+			// Consumers should fall back to the locate result if needed.
+			ComponentsPlugin.getDefault().log(e);
+		}
 		for (int i = 0; i < allInput.length; i++) {
 			ComponentEditorFileEditorInput componentEditorFileEditorInput = allInput[i];
 			if(componentEditorFileEditorInput != null) {
@@ -286,6 +303,10 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 		ComponentEditorFileEditorInput[] allInput = new ComponentEditorFileEditorInput[] { standaloneInput, apiInput };
 		ComponentEditorFileEditorInput[] allComponentInput = new ComponentEditorFileEditorInput[0];
 		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, apiInput, standaloneInput);
+		// Build an ElementDescriptor for the standalone HTML file.
+		// forFile() may return null if the locate system can't resolve it,
+		// which is OK — the descriptor is a convenience accessor.
+		input._elementDescriptor = ElementDescriptor.forFile(file);
 		standaloneInput.setComponentEditorInput(input);
 		apiInput.setComponentEditorInput(input);
 		return input;
@@ -339,6 +360,15 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 
 	public LocalizedComponentsLocateResult getLocalizedComponentsLocateResult() {
 		return localizedComponentsLocateResult;
+	}
+
+	/**
+	 * Returns the immutable {@link ElementDescriptor} for this component,
+	 * or {@code null} if the descriptor could not be built (e.g. the input
+	 * was restored from a memento and hasn't been re-resolved yet).
+	 */
+	public ElementDescriptor getElementDescriptor() {
+		return _elementDescriptor;
 	}
 
 	public String getFactoryId() {

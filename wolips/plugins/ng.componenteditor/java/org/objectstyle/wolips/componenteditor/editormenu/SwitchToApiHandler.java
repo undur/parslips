@@ -20,9 +20,8 @@ import org.objectstyle.wolips.bindings.api.MutableApiModel;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.editors.EditorsPlugin;
-import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
-import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
@@ -75,18 +74,17 @@ public class SwitchToApiHandler extends AbstractHandler {
 			return WOLipsCommandDelegate.execute(WOLIPS_COMMAND_ID, event);
 		}
 
-		try {
-			LocalizedComponentsLocateResult result = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(file);
-			if (result == null) {
-				return null;
-			}
+		ElementDescriptor descriptor = ElementDescriptor.forFile(file);
+		if (descriptor == null) {
+			return null;
+		}
 
+		try {
 			// If a template exists, open the ComponentEditor with the API tab revealed.
 			// Opening via the .api file path triggers ComponentEditorInput.createWithDotApi(),
 			// which sets displayApiPartOnReveal=true to auto-switch to the API tab.
-			IFile htmlFile = result.getFirstHtmlFile();
-			if (htmlFile != null) {
-				IFile apiFile = result.getDotApi(true);
+			if (descriptor.hasTemplate()) {
+				IFile apiFile = descriptor.getApiFile();
 				if (apiFile != null) {
 					WorkbenchUtilities.open(apiFile, EditorsPlugin.ComponentEditorID);
 				}
@@ -95,10 +93,10 @@ public class SwitchToApiHandler extends AbstractHandler {
 
 			// No template — this is likely a non-component WOElement.
 			// Open the standalone ApiEditor, creating the .api file if needed.
-			IFile apiFile = result.getDotApi();
+			IFile apiFile = descriptor.getApiFile();
 
 			if (apiFile == null) {
-				// No .api file found by the locate system — derive a path.
+				// No .api file found or guessed — derive a path.
 				// Prefer the project's "components" folder (same heuristic as
 				// the New Component wizard); fall back to placing it next to
 				// the Java file if no components folder exists.
@@ -119,7 +117,7 @@ public class SwitchToApiHandler extends AbstractHandler {
 			}
 
 			WorkbenchUtilities.open(apiFile, EditorsPlugin.ApiEditorID);
-		} catch (CoreException | LocateException e) {
+		} catch (CoreException e) {
 			ComponenteditorPlugin.getDefault().log(e);
 		}
 		return null;

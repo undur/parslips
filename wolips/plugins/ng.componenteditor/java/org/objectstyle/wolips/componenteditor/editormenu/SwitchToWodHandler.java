@@ -4,18 +4,14 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
-import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.editors.EditorsPlugin;
-import org.objectstyle.wolips.locate.LocateException;
-import org.objectstyle.wolips.locate.LocatePlugin;
-import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
@@ -61,16 +57,9 @@ public class SwitchToWodHandler extends AbstractHandler {
 			return WOLipsCommandDelegate.execute(WOLIPS_COMMAND_ID, event);
 		}
 
-		try {
-			LocalizedComponentsLocateResult result = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(file);
-			if (result != null) {
-				IFile wodFile = result.getFirstWodFile();
-				if (wodFile != null) {
-					WorkbenchUtilities.open(wodFile, EditorsPlugin.ComponentEditorID);
-				}
-			}
-		} catch (CoreException | LocateException e) {
-			ComponenteditorPlugin.getDefault().log(e);
+		ElementDescriptor descriptor = ElementDescriptor.forFile(file);
+		if (descriptor != null && descriptor.getWodFile() != null) {
+			WorkbenchUtilities.open(descriptor.getWodFile(), EditorsPlugin.ComponentEditorID);
 		}
 		return null;
 	}

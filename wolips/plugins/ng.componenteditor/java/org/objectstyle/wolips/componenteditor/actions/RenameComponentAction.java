@@ -19,6 +19,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
+import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcessor;
@@ -143,9 +144,12 @@ public class RenameComponentAction implements IObjectActionDelegate {
 	 */
 	private IType findComponentJavaType(IProject project, String componentName) {
 		try {
-			LocalizedComponentsLocateResult result = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(project, componentName);
+			LocalizedComponentsLocateResult result =
+					LocatePlugin.getDefault().getLocalizedComponentsLocateResult(project, componentName);
 			if (result != null) {
-				return result.getDotJavaType();
+				ElementDescriptor descriptor =
+						ElementDescriptor.fromLocateResult(result, project);
+				return descriptor.getJavaType();
 			}
 		}
 		catch (CoreException | LocateException e) {

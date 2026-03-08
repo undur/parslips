@@ -30,6 +30,7 @@ import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.core.resources.types.LimitedLRUCache;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
+import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
@@ -255,6 +256,21 @@ public class WodParserCache implements ITypeOwner {
 
   public LocalizedComponentsLocateResult getComponentsLocateResults() {
     return _componentsLocateResults;
+  }
+
+  /**
+   * Returns an {@link ElementDescriptor} for the component managed by this
+   * cache. Triggers a locate if the results haven't been resolved yet.
+   *
+   * @return a descriptor, or {@code null} if the locate results or project
+   *         are not available
+   */
+  public ElementDescriptor getElementDescriptor() throws CoreException, LocateException {
+    checkLocateResults();
+    if (_componentsLocateResults != null && _project != null) {
+      return ElementDescriptor.fromLocateResult(_componentsLocateResults, _project);
+    }
+    return null;
   }
 
   public ApiCache getApiCache() {

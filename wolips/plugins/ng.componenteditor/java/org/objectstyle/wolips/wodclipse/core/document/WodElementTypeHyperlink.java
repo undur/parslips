@@ -1,6 +1,7 @@
 package org.objectstyle.wolips.wodclipse.core.document;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
@@ -14,8 +15,7 @@ import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.editors.EditorsPlugin;
-import org.objectstyle.wolips.locate.LocatePlugin;
-import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
@@ -51,11 +51,19 @@ public class WodElementTypeHyperlink implements IHyperlink {
         IJavaElement element = type.getPrimaryElement();
         if (element != null) {
           JavaUI.revealInEditor(JavaUI.openInEditor(element), element);
-          LocalizedComponentsLocateResult componentsLocateResults = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(element.getResource());
-          if (componentsLocateResults != null) {
-            IFile wodFile = componentsLocateResults.getFirstWodFile();
-            if (wodFile != null) {
-            	WorkbenchUtilities.open(wodFile, EditorsPlugin.ComponentEditorID);
+          IResource resource = element.getResource();
+          if (resource instanceof IFile) {
+            ElementDescriptor descriptor = ElementDescriptor.forFile((IFile) resource);
+            if (descriptor != null) {
+              // For bundle templates, open the WOD file in the ComponentEditor.
+              // For standalone templates, open the HTML file.
+              IFile templateFile = descriptor.getWodFile();
+              if (templateFile == null) {
+                templateFile = descriptor.getHtmlFile();
+              }
+              if (templateFile != null) {
+                WorkbenchUtilities.open(templateFile, EditorsPlugin.ComponentEditorID);
+              }
             }
           }
         }
