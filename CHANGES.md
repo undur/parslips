@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### ElementDescriptor: unified element file resolution model
+
+- New `ElementDescriptor` class — an immutable model object that captures "what files belong to this element?" (HTML, WOD, WOO, API, Java, project, template format). Replaces ad-hoc calls to the locate system scattered throughout the codebase.
+- New `TemplateFormat` enum — `BUNDLE`, `STANDALONE`, or `NONE`.
+- Factory methods: `ElementDescriptor.forFile(IFile)` resolves any component file to a descriptor via the locate system; `fromLocateResult()` wraps an existing `LocalizedComponentsLocateResult`.
+- Migrated all four switch handlers (`SwitchToHtmlHandler`, `SwitchToWodHandler`, `SwitchToJavaHandler`, `SwitchToApiHandler`) to use `ElementDescriptor` instead of calling `LocatePlugin.getLocalizedComponentsLocateResult()` directly.
+- This is the first step toward the Unified Element Editor described in the roadmap.
+
 ### Quick fix (Cmd+1): also fix closing tag for element type errors
 
 - When using the quick fix on an invalid inline element type like `<wo:container>`, the fix now corrects both the opening and closing tag. Previously only the opening tag was fixed, leaving the closing `</wo:container>` unchanged.
