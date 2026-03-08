@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix Cmd+2,R (Rename Tag) for standalone templates
+
+- `QuickRenameElementAction` required both the HTML editor and WOD editor to be present, silently doing nothing for standalone templates (which have no WOD file). Removed the WOD editor requirement — HTML tag rename only needs the HTML viewer. Same pattern previously fixed for `FormatAction` and `ExtractComponentAction`.
+- Added a defensive null guard in `QuickRenameRefactoring.renameHtmlSelection()` for the WOD element reference rename path, preventing an NPE if `wodViewer` is null.
+
 ### WOLips coexistence: "Let Parsley handle all elements" preference
 
 - New preference in **Preferences → Parsley → WOLips Coexistence**: "Let Parsley handle all elements by default". When enabled, Parsley activates its editors, decorators, and keyboard shortcuts for all recognized WO/NG projects — even those without `project.base` in `build.properties`.

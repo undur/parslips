@@ -49,7 +49,10 @@ public class QuickRenameRefactoring {
       if (tagName != null && element.getOffset() + element.getNameOffset() + 1 <= offset && element.getOffset() + element.getNameOffset() + element.getNameLength() >= offset) {
         QuickRenameRefactoring.renameHtmlTag(element, htmlViewer, cache);
       }
-      else if (WodHtmlUtils.isWOTag(tagName)) {
+      else if (WodHtmlUtils.isWOTag(tagName) && wodViewer != null) {
+        // WOD element reference rename — only possible when a WOD editor is
+        // available (bundle templates). Standalone templates won't have
+        // <webobject> tags, but guard against null wodViewer defensively.
         FuzzyXMLAttribute nameAttribute = element.getAttributeNode("name");
         if (nameAttribute != null) {
           String woElementName = nameAttribute.getValue();
