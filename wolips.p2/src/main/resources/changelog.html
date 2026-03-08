@@ -30,6 +30,22 @@
 				<p>Parsley is under active development, so you might want to try it in a fresh Eclipse installation to be safe (although testing it alongside WOLips is great for us too). Please report any problems you encounter &mdash; since we&rsquo;re in early development, reported bugs are usually fixed fast.</p>
 			</div>
 
+			<!-- March 7, 2026 -->
+			<div class="card">
+				<h2 class="date-header">March 7, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Extract Wrapper</h3>
+					<p>A new refactoring that is the inverse of Extract Component. Select the content that should <em>stay</em> in the current component, press <kbd>Cmd+2, X</kbd> (or Edit &gt; Refactor &gt; Extract Wrapper&hellip;), and enter a name. Everything <em>around</em> the selection &mdash; the surrounding page chrome &mdash; is extracted into a new wrapper component with <code>&lt;wo:content /&gt;</code> where the selection was. The original template becomes just the selection wrapped in the new component tag.</p>
+					<p>Typical use case: extracting a page layout (navigation, header, footer) into a reusable wrapper, leaving only the page-specific content in the original component.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Extract Component and Extract Wrapper: standalone template support</h3>
+					<p>Both Extract Component (<kbd>Cmd+2, E</kbd>) and Extract Wrapper (<kbd>Cmd+2, X</kbd>) now correctly handle ng-objects projects &mdash; creating standalone <code>.html</code> template files instead of <code>.wo</code> bundles, and placing them in the correct resource folder.</p>
+				</div>
+			</div>
+
 			<!-- March 6, 2026 -->
 			<div class="card">
 				<h2 class="date-header">March 6, 2026</h2>

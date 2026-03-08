@@ -181,7 +181,12 @@
 
 				<div class="feature-entry">
 					<h3>Extract Component</h3>
-					<p><kbd>Cmd+2, E</kbd> extracts the selected HTML into a new component &mdash; creating the <code>.wo</code> folder with all files, replacing the selection with a <code>&lt;wo:NewComponentName/&gt;</code> tag, and opening the new component for editing. The extracted HTML is automatically dedented to start at column 0.</p>
+					<p><kbd>Cmd+2, E</kbd> extracts the selected HTML into a new component &mdash; creating the component files, replacing the selection with a <code>&lt;wo:NewComponentName/&gt;</code> tag, and opening the new component for editing. The extracted HTML is automatically dedented to start at column 0. Creates standalone <code>.html</code> templates for ng-objects projects and <code>.wo</code> bundles for WebObjects projects.</p>
+				</div>
+
+				<div class="feature-entry">
+					<h3>Extract Wrapper</h3>
+					<p><kbd>Cmd+2, X</kbd> is the inverse of Extract Component &mdash; it extracts everything <em>around</em> the selection into a new wrapper component. The wrapper&rsquo;s template contains the original page structure with <code>&lt;wo:content /&gt;</code> where the selection was; the original template becomes just the selection wrapped in a <code>&lt;wo:WrapperName&gt;</code> tag. Ideal for extracting reusable page layouts (nav, header, footer) into wrapper components.</p>
 				</div>
 
 				<div class="feature-entry">
