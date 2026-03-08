@@ -179,6 +179,9 @@
       <command name="Extract Component..." description="Extract selected HTML into a new component"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.editors.command.extractComponent"/>
+      <command name="Extract Wrapper..." description="Extract wrapping HTML around selection into a new wrapper component"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.editors.command.extractWrapper"/>
       <command name="Format" description="Format"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.editors.command.format"/>
@@ -254,6 +257,10 @@
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
            sequence="M1+2 E"/>
+      <key commandId="ng.componenteditor.editors.command.extractWrapper"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+2 X"/>
       <key commandId="ng.componenteditor.editors.command.format"
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -324,6 +331,11 @@
                definitionId="ng.componenteditor.editors.command.extractComponent"
                id="ng.componenteditor.editors.action.extractComponent"
                label="Extract Component..."
+               menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
+         <action class="org.objectstyle.wolips.componenteditor.actions.ExtractWrapperAction"
+               definitionId="ng.componenteditor.editors.command.extractWrapper"
+               id="ng.componenteditor.editors.action.extractWrapper"
+               label="Extract Wrapper..."
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
          <action class="org.objectstyle.wolips.componenteditor.actions.InsertHtmlTagAction"
                icon="icons/anybasictag.png"

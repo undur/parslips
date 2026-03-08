@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Extract Wrapper refactoring
+
+- New refactoring action: **Extract Wrapper** (Edit > Refactor > Extract Wrapper..., `Cmd+2, X`). This is the inverse of Extract Component — instead of extracting the *selected* HTML into a new component, it extracts everything *around* the selection (the "wrapper" or "chrome") into a new component that uses `<wo:content />` as a placeholder. The original template is replaced with the selection wrapped in the new component tag.
+- Typical use case: extracting a page layout (nav, header, footer, page structure) into a reusable wrapper component, leaving only the page-specific content in the original template.
+
+### Extract Component and Extract Wrapper support standalone templates
+
+- Both Extract Component and Extract Wrapper now correctly handle ng-objects projects: they create standalone `.html` files instead of `.wo` bundles.
+
 ### Fix ng project creation issues
 
 - **No more stray .wod/.woo files:** The project wizard was creating `Main.wod` and `Main.woo` in ng-objects projects. These files are only used by bundle templates (WebObjects) — standalone templates (ng-objects) are single `.html` files.

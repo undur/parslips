@@ -37,29 +37,35 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcessor;
 
 /**
- * Editor action: extracts the selected HTML from the template into a new
- * WO component.
+ * Editor action: extracts the "wrapping" HTML around the selection into a new
+ * wrapper component, leaving the selection in place wrapped by the new component.
  *
- * <p>When triggered (via Edit &gt; Refactor &gt; Extract Component... or
- * {@code Cmd+2, E}):
+ * <p>This is the inverse of "Extract Component." Instead of extracting the
+ * <em>selected</em> HTML into a new component, it extracts everything
+ * <em>except</em> the selection — the surrounding "chrome" — into a new
+ * wrapper component that uses {@code <wo:content />} as a placeholder for
+ * the wrapped content.
+ *
+ * <p>When triggered:
  * <ol>
  *   <li>Prompts for a component name via an input dialog</li>
- *   <li>Creates a new {@code .wo} component (folder + .html + .wod + .woo + .java)
- *       alongside the current component</li>
- *   <li>Sets the new component's template to the selected HTML</li>
- *   <li>Replaces the selection in the parent template with
- *       {@code <wo:NewComponentName/>}</li>
- *   <li>Opens the new component for editing</li>
+ *   <li>Creates a new component whose template is the <em>entire current
+ *       template</em> with the selected region replaced by
+ *       {@code <wo:content />}</li>
+ *   <li>Replaces the <em>entire</em> current template with
+ *       {@code <wo:NewComponentName>} + selection + {@code </wo:NewComponentName>}</li>
+ *   <li>Opens the new wrapper component for editing</li>
  * </ol>
  *
- * <p>The selected HTML is placed as-is — no automatic binding detection.
- * The user wires up bindings manually afterward.
+ * <p>Typical use case: extracting a page layout (nav, header, footer) into a
+ * reusable wrapper, leaving only the page-specific content in the original
+ * component.
  *
- * <p>Follows the same pattern as {@link ConvertInlineToWodAction}: extends
- * {@link AbstractTemplateAction} to get access to the template editor and
- * its selection.
+ * @see ExtractComponentAction
  */
-public class ExtractComponentAction extends AbstractTemplateAction {
+public class ExtractWrapperAction extends AbstractTemplateAction {
+
+	private static final String DIALOG_TITLE = "Extract Wrapper";
 
 	@Override
 	public void run(IAction action) {
@@ -82,8 +88,9 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 
 			if (selectedText == null || selectedText.trim().isEmpty()) {
 				MessageDialog.openInformation(getShell(),
-						"Extract Component",
-						"Please select some HTML to extract into a new component.");
+						DIALOG_TITLE,
+						"Please select the content that should remain in this component.\n"
+						+ "Everything else will be extracted into the new wrapper.");
 				return;
 			}
 
@@ -94,8 +101,8 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 			// Show the name input dialog
 			InputDialog dialog = new InputDialog(
 					getShell(),
-					"Extract Component",
-					"Enter the name for the new component:",
+					DIALOG_TITLE,
+					"Enter the name for the new wrapper component:",
 					"",
 					new NewComponentNameValidator(project));
 
@@ -105,14 +112,13 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 
 			String newComponentName = dialog.getValue().trim();
 
-			// Determine the target folder for the new component.
-			// Place it alongside the current component's .wo folder.
+			// Determine target folder for the new component
 			IContainer woFolder = cache.getWoFolder();
 			IContainer targetFolder = determineTargetFolder(woFolder, project);
 
 			if (targetFolder == null || !targetFolder.exists()) {
 				MessageDialog.openError(getShell(),
-						"Extract Component",
+						DIALOG_TITLE,
 						"Could not determine where to create the new component.");
 				return;
 			}
@@ -120,36 +126,37 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 			// Determine the superclass and package for the new component
 			String superclassName = ParsleyProject.getComponentClass(project);
 			String packageName = determinePackageName(cache);
+
+			// Determine whether this is an ng-objects project (standalone templates)
 			boolean isNG = isNGProject(project);
 
-			// Dedent the selected HTML: strip the common leading whitespace
-			// from all lines so the new component's template starts at column 0.
-			// For example, if every line has at least 3 tabs of indentation,
-			// those 3 tabs are removed from all lines.
-			String dedentedHtml = dedent(selectedText);
+			// Build the wrapper template: the entire current template, but with
+			// the selection replaced by <wo:content />
+			IDocument document = templateEditor.getSourceEditor().getViewer().getDocument();
+			String fullTemplate = document.get();
+			int selectionOffset = selection.getOffset();
+			int selectionLength = selection.getLength();
 
-			// Create the new component files
+			// Calculate the indentation at the selection point so we can
+			// indent <wo:content /> to match
+			String indent = getLineIndent(fullTemplate, selectionOffset);
+			String wrapperTemplate = fullTemplate.substring(0, selectionOffset)
+					+ indent + "<wo:content />\n"
+					+ fullTemplate.substring(selectionOffset + selectionLength);
+
+			// Create the new wrapper component
 			IFile newHtmlFile = createComponent(project, targetFolder,
 					newComponentName, packageName, superclassName,
-					dedentedHtml, isNG);
+					wrapperTemplate, isNG);
 
-			// Replace the selection in the parent template with the new
-			// component tag. We want the tag placed at the indentation level
-			// of the first content line, not at the raw selection start
-			// (which may be in the middle of a blank line or leading whitespace).
-			IDocument document = templateEditor.getSourceEditor().getViewer().getDocument();
-			int replaceOffset = selection.getOffset();
-			int replaceLength = selection.getLength();
+			// Replace the entire current template with the selection wrapped
+			// in the new component tag
+			String wrappedContent = "<wo:" + newComponentName + ">\n"
+					+ selectedText + "\n"
+					+ "</wo:" + newComponentName + ">\n";
+			document.replace(0, fullTemplate.length(), wrappedContent);
 
-			// Calculate leading whitespace in the selection — the gap between
-			// the selection start and the first non-whitespace character.
-			// We preserve that whitespace and place the tag right after it.
-			String leadingWhitespace = getLeadingWhitespace(selectedText);
-			String replacement = leadingWhitespace + "<wo:" + newComponentName + "/>";
-
-			document.replace(replaceOffset, replaceLength, replacement);
-
-			// Open the new component's HTML file in the editor
+			// Open the new wrapper component's HTML file in the editor
 			if (newHtmlFile != null && newHtmlFile.exists()) {
 				IWorkbenchPage page = PlatformUI.getWorkbench()
 						.getActiveWorkbenchWindow().getActivePage();
@@ -159,9 +166,32 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 		catch (Exception e) {
 			ComponenteditorPlugin.getDefault().log(e);
 			MessageDialog.openError(getShell(),
-					"Extract Component",
-					"Failed to extract component: " + e.getMessage());
+					DIALOG_TITLE,
+					"Failed to extract wrapper: " + e.getMessage());
 		}
+	}
+
+	/**
+	 * Returns the indentation (leading whitespace) of the line containing the
+	 * given offset. Used to match the {@code <wo:content />} indent to the
+	 * selection's line.
+	 *
+	 * <p>Scans backward from the offset to find the start of the line, then
+	 * forward to collect whitespace characters.
+	 */
+	private String getLineIndent(String text, int offset) {
+		// Find the start of the line
+		int lineStart = offset;
+		while (lineStart > 0 && text.charAt(lineStart - 1) != '\n') {
+			lineStart--;
+		}
+
+		// Collect leading whitespace
+		int i = lineStart;
+		while (i < text.length() && (text.charAt(i) == ' ' || text.charAt(i) == '\t')) {
+			i++;
+		}
+		return text.substring(lineStart, i);
 	}
 
 	/**
@@ -174,32 +204,16 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 	 */
 	private IContainer determineTargetFolder(IContainer woFolder, IProject project) {
 		if (woFolder != null) {
-			// The .wo folder's parent is the components directory
 			IContainer parent = woFolder.getParent();
 			if (parent != null && parent.exists()) {
 				return parent;
 			}
 		}
-
-		// Fallback: search for a "components" folder in the project
-		return findComponentsFolder(project);
-	}
-
-	/**
-	 * Searches for a "components" folder in the given project.
-	 *
-	 * @see ParsleyProject#findComponentsFolder(IProject)
-	 */
-	private IFolder findComponentsFolder(IProject project) {
 		return ParsleyProject.findComponentsFolder(project);
 	}
 
 	/**
 	 * Determines the Java package name for the new component.
-	 *
-	 * <p>Uses the same package as the current component's Java class, if it has
-	 * one. Falls back to empty string (default package) if the type can't be
-	 * resolved.
 	 */
 	private String determinePackageName(WodParserCache cache) {
 		try {
@@ -227,7 +241,7 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 	}
 
 	/**
-	 * Creates a new component by writing each file directly.
+	 * Creates a new component with the given template content.
 	 *
 	 * <p>For ng-objects projects, creates a standalone {@code .html} file.
 	 * For WebObjects projects, creates a {@code .wo} bundle (folder + .html
@@ -238,18 +252,16 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 	 */
 	private IFile createComponent(IProject project, IContainer targetFolder,
 			String componentName, String packageName, String superclassName,
-			String selectedHtml, boolean isNG) throws Exception {
+			String templateHtml, boolean isNG) throws Exception {
 
 		IProgressMonitor monitor = new NullProgressMonitor();
 
-		// Find the Java source folder for the .java file
+		// Find and prepare the Java source folder
 		IJavaProject javaProject = JavaCore.create(project);
 		IPath javaPath = findJavaSourcePath(javaProject);
 		if (packageName != null && packageName.length() > 0) {
 			javaPath = javaPath.append(packageName.replace('.', '/'));
 		}
-
-		// Ensure the Java source folder exists
 		IPath projectRelativeJavaPath = javaPath.removeFirstSegments(
 				project.getLocation().segmentCount());
 		IFolder javaSourceFolder = project.getFolder(projectRelativeJavaPath);
@@ -265,7 +277,7 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 		if (isNG) {
 			// Standalone template: just a .html file alongside other templates
 			htmlFile = ((IFolder) targetFolder).getFile(componentName + ".html");
-			createFile(htmlFile, selectedHtml, monitor);
+			createFile(htmlFile, templateHtml, monitor);
 		}
 		else {
 			// Bundle template: .wo folder with .html, .wod, .woo
@@ -273,7 +285,7 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 			prepareFolder(componentFolder, monitor);
 
 			htmlFile = componentFolder.getFile(componentName + ".html");
-			createFile(htmlFile, selectedHtml, monitor);
+			createFile(htmlFile, templateHtml, monitor);
 
 			createFile(componentFolder.getFile(componentName + ".wod"),
 					"\n", monitor);
@@ -306,7 +318,6 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 		}
 
 		// Determine the context class from the superclass
-		// ng-objects uses NGContext, WebObjects uses WOContext
 		boolean isNg = superclassName.startsWith("ng.");
 		String contextClass = isNg
 				? "ng.appserver.NGContext"
@@ -323,7 +334,6 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 		if (lastDot > 0) {
 			superclassPackage = superclassName.substring(0, lastDot);
 			superclassShortName = superclassName.substring(lastDot + 1);
-			// Only import if in a different package
 			if (!superclassPackage.equals(packageName)) {
 				sb.append("import ").append(superclassName).append(";\n");
 			}
@@ -357,83 +367,7 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 	}
 
 	/**
-	 * Removes the common leading whitespace from all lines of the given text.
-	 *
-	 * <p>Finds the minimum indentation (tabs/spaces) across all non-empty
-	 * lines, then strips that prefix from every line. This way the extracted
-	 * HTML starts at column 0 in the new component's template, regardless
-	 * of how deeply it was nested in the parent.
-	 *
-	 * <p>Empty lines (or whitespace-only lines) are preserved but not
-	 * considered when calculating the minimum indent — otherwise a blank
-	 * line would always make the minimum zero.
-	 */
-	private String dedent(String text) {
-		String[] lines = text.split("\n", -1);
-
-		// Find the minimum indentation across all non-empty lines
-		int minIndent = Integer.MAX_VALUE;
-		for (String line : lines) {
-			if (line.trim().isEmpty()) {
-				continue; // skip blank lines
-			}
-			int indent = 0;
-			while (indent < line.length() && (line.charAt(indent) == ' ' || line.charAt(indent) == '\t')) {
-				indent++;
-			}
-			minIndent = Math.min(minIndent, indent);
-		}
-
-		// Nothing to strip
-		if (minIndent == 0 || minIndent == Integer.MAX_VALUE) {
-			return text;
-		}
-
-		// Strip the common prefix from each line
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < lines.length; i++) {
-			if (i > 0) {
-				sb.append('\n');
-			}
-			if (lines[i].length() >= minIndent) {
-				sb.append(lines[i].substring(minIndent));
-			}
-			else {
-				// Line is shorter than minIndent (blank/whitespace-only) — emit empty
-				sb.append(lines[i].trim());
-			}
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * Returns the leading whitespace characters (spaces and tabs) from the
-	 * beginning of the text, stopping at the first non-whitespace character
-	 * or newline. This is used to preserve the indentation level when
-	 * replacing extracted HTML with the new component tag.
-	 *
-	 * <p>For example, if the selection is {@code "\t\t\t<div>..."}, this
-	 * returns {@code "\t\t\t"}, so the replacement tag gets placed at the
-	 * same indent level as the original first line of content.
-	 */
-	private String getLeadingWhitespace(String text) {
-		int i = 0;
-		while (i < text.length()) {
-			char ch = text.charAt(i);
-			if (ch == ' ' || ch == '\t') {
-				i++;
-			}
-			else {
-				break;
-			}
-		}
-		return text.substring(0, i);
-	}
-
-	/**
 	 * Finds the first Java source folder in the project.
-	 * This is where the new component's .java file will be placed
-	 * (within the appropriate package subfolder).
 	 */
 	private IPath findJavaSourcePath(IJavaProject javaProject) throws Exception {
 		IPackageFragmentRoot[] roots = javaProject.getPackageFragmentRoots();
@@ -442,13 +376,11 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 				return root.getCorrespondingResource().getLocation();
 			}
 		}
-		// Fallback: project root
 		return javaProject.getProject().getLocation();
 	}
 
 	/**
 	 * Recursively creates folders if they don't exist.
-	 * Same pattern as {@code WOComponentCreator.prepareFolder()}.
 	 */
 	private void prepareFolder(IFolder folder, IProgressMonitor monitor) throws CoreException {
 		if (!folder.exists()) {
@@ -461,7 +393,7 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 	}
 
 	/**
-	 * Returns the active shell, falling back to the workbench window's shell.
+	 * Returns the active shell.
 	 */
 	private Shell getShell() {
 		Shell shell = Display.getCurrent().getActiveShell();
@@ -490,19 +422,16 @@ public class ExtractComponentAction extends AbstractTemplateAction {
 				return "Component name cannot be empty.";
 			}
 
-			// Must start with an uppercase letter (convention for component names)
 			if (!Character.isJavaIdentifierStart(name.charAt(0))) {
 				return "Component name must start with a letter or underscore.";
 			}
 
-			// Check all characters are valid Java identifier parts
 			for (int i = 1; i < name.length(); i++) {
 				if (!Character.isJavaIdentifierPart(name.charAt(i))) {
 					return "Component name contains invalid character: '" + name.charAt(i) + "'";
 				}
 			}
 
-			// Check for conflicts with existing components
 			if (RenameComponentProcessor.componentExists(_project, name)) {
 				return "A component named '" + name + "' already exists in this project.";
 			}
