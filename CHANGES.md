@@ -12,6 +12,10 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix formatter not working in standalone templates
+
+- The "Format Template" action (`Cmd+Shift+F`) did nothing in standalone (non-bundle) templates. The action required both a template editor and a WOD editor to be present, but standalone templates have no WOD tab. The formatter operates purely on the HTML template and has no WOD dependency, so the WOD editor check was unnecessary.
+
 ### Extract Wrapper refactoring
 
 - New refactoring action: **Extract Wrapper** (Edit > Refactor > Extract Wrapper..., `Cmd+2, X`). This is the inverse of Extract Component — instead of extracting the *selected* HTML into a new component, it extracts everything *around* the selection (the "wrapper" or "chrome") into a new component that uses `<wo:content />` as a placeholder. The original template is replaced with the selection wrapped in the new component tag.
