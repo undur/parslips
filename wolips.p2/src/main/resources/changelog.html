@@ -35,6 +35,13 @@
 				<h2 class="date-header">March 7, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Usages tab &mdash; &ldquo;Who uses this component?&rdquo;</h3>
+					<p>A new <strong>Usages</strong> tab in the component editor answers the question every developer eventually asks: <em>&ldquo;which other components use this one?&rdquo;</em></p>
+					<p>Click the tab and it scans all open workspace projects for templates that reference the current component as an element &mdash; both inline <code>&lt;wo:ComponentName&gt;</code> tags in HTML and <code>: ComponentName {</code> declarations in WOD files. Results appear in a two-column table showing the using component&rsquo;s name and its project. Double-click any row to jump straight to that component&rsquo;s template.</p>
+					<p>The scan runs in the background on first tab activation, so it never blocks your editing. Hit <strong>Refresh</strong> to re-scan after making changes. Works for both standalone and bundle templates, and catches cross-project references.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Extract Wrapper</h3>
 					<p>A new refactoring that is the inverse of Extract Component. Select the content that should <em>stay</em> in the current component, press <kbd>Cmd+2, X</kbd> (or Edit &gt; Refactor &gt; Extract Wrapper&hellip;), and enter a name. Everything <em>around</em> the selection &mdash; the surrounding page chrome &mdash; is extracted into a new wrapper component with <code>&lt;wo:content /&gt;</code> where the selection was. The original template becomes just the selection wrapped in the new component tag.</p>
 					<p>Typical use case: extracting a page layout (navigation, header, footer) into a reusable wrapper, leaving only the page-specific content in the original component.</p>
