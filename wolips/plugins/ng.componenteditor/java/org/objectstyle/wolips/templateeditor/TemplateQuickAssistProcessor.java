@@ -12,6 +12,9 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.eclipse.jface.text.contentassist.IContextInformation;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
 import org.eclipse.jface.text.quickassist.IQuickAssistProcessor;
 import org.eclipse.jface.text.source.Annotation;
@@ -181,6 +184,11 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
           if (keyOffset >= 0) {
             int replaceStart = charStart + keyOffset;
 
+            // Check for closing tag position (stored by InlineWodProblem
+            // for element type errors on tags with a close tag).
+            int closeTagStart = marker.getAttribute("closeTagStart", -1);
+            int closeTagEnd = marker.getAttribute("closeTagEnd", -1);
+
             String[] suggestions = suggestionsStr.split(";");
             for (String suggestion : suggestions) {
               String trimmed = suggestion.trim();
@@ -191,15 +199,44 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
                 // markers for the same error.
                 String proposalKey = replaceStart + ":" + invalidName.length() + ":" + trimmed;
                 if (seenProposals.add(proposalKey)) {
-                  proposals.add(new CompletionProposal(
-                      trimmed,
-                      replaceStart,
-                      invalidName.length(),
-                      trimmed.length(),
-                      null,
-                      "Replace '" + invalidName + "' with '" + trimmed + "'",
-                      null,
-                      null));
+                  if (closeTagStart >= 0 && closeTagEnd > closeTagStart) {
+                    // Element type error with a closing tag — replace both
+                    // the opening and closing tag names.
+                    String closeMarkedText = document.get(closeTagStart, closeTagEnd - closeTagStart);
+                    int closeKeyOffset = ReplaceKeypathQuickFix.findKeySegmentOffset(closeMarkedText, invalidName);
+                    if (closeKeyOffset >= 0) {
+                      proposals.add(new ReplaceTagPairProposal(
+                          trimmed, invalidName,
+                          replaceStart, invalidName.length(),
+                          closeTagStart + closeKeyOffset, invalidName.length()));
+                    }
+                    else {
+                      // Closing tag name doesn't match — fall back to
+                      // opening-tag-only replacement.
+                      proposals.add(new CompletionProposal(
+                          trimmed,
+                          replaceStart,
+                          invalidName.length(),
+                          trimmed.length(),
+                          null,
+                          "Replace '" + invalidName + "' with '" + trimmed + "'",
+                          null,
+                          null));
+                    }
+                  }
+                  else {
+                    // No closing tag (self-closing or keypath error) —
+                    // single replacement.
+                    proposals.add(new CompletionProposal(
+                        trimmed,
+                        replaceStart,
+                        invalidName.length(),
+                        trimmed.length(),
+                        null,
+                        "Replace '" + invalidName + "' with '" + trimmed + "'",
+                        null,
+                        null));
+                  }
                 }
               }
             }
@@ -233,5 +270,71 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
   @Override
   public String getErrorMessage() {
     return null;
+  }
+
+  /**
+   * Completion proposal that replaces both the opening and closing tag names
+   * in a single apply(). Used for element type quick-fixes on tags with a
+   * closing tag (e.g. {@code <wo:container>...</wo:container>}).
+   *
+   * <p>The closing tag is replaced first to preserve the opening tag's
+   * offset — replacing the opening tag first could shift the closing tag
+   * position if the replacement has a different length.
+   */
+  private static class ReplaceTagPairProposal implements ICompletionProposal {
+    private final String _replacement;
+    private final String _invalidName;
+    private final int _openOffset;
+    private final int _openLength;
+    private final int _closeOffset;
+    private final int _closeLength;
+
+    ReplaceTagPairProposal(String replacement, String invalidName,
+        int openOffset, int openLength, int closeOffset, int closeLength) {
+      _replacement = replacement;
+      _invalidName = invalidName;
+      _openOffset = openOffset;
+      _openLength = openLength;
+      _closeOffset = closeOffset;
+      _closeLength = closeLength;
+    }
+
+    @Override
+    public void apply(IDocument document) {
+      try {
+        // Replace closing tag first to preserve opening tag offset
+        document.replace(_closeOffset, _closeLength, _replacement);
+        document.replace(_openOffset, _openLength, _replacement);
+      }
+      catch (BadLocationException e) {
+        // Offsets may be stale after concurrent edits
+      }
+    }
+
+    @Override
+    public Point getSelection(IDocument document) {
+      // Place cursor at end of the replaced opening tag name
+      return new Point(_openOffset + _replacement.length(), 0);
+    }
+
+    @Override
+    public String getAdditionalProposalInfo() {
+      return null;
+    }
+
+    @Override
+    public String getDisplayString() {
+      return "Replace '" + _invalidName + "' with '" + _replacement + "'";
+    }
+
+    @Override
+    public Image getImage() {
+      return null;
+    }
+
+    @Override
+    public IContextInformation getContextInformation() {
+      return null;
+    }
   }
 }

@@ -95,6 +95,14 @@ public class InlineWodProblem {
             marker.setAttribute(IMarker.LINE_NUMBER, WodHtmlUtils.getLineAtOffset(_cache.getHtmlEntry().getContents(), offset));
             marker.setAttribute(IMarker.CHAR_START, offset);
             marker.setAttribute(IMarker.CHAR_END, offset + _element.getName().length());
+            // Store closing tag position so quick-fix can fix both tags.
+            // The FuzzyXMLElement already knows about closing tags — the same
+            // data is used by QuickRenameRefactoring.renameHtmlTag().
+            if (_element.hasCloseTag()) {
+              int closeNameStart = _element.getCloseTagOffset() + _element.getCloseNameOffset() + 1;
+              marker.setAttribute("closeTagStart", closeNameStart);
+              marker.setAttribute("closeTagEnd", closeNameStart + _element.getCloseNameLength());
+            }
           }
         }
       }

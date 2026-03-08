@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Quick fix (Cmd+1): also fix closing tag for element type errors
+
+- When using the quick fix on an invalid inline element type like `<wo:container>`, the fix now corrects both the opening and closing tag. Previously only the opening tag was fixed, leaving the closing `</wo:container>` unchanged.
+- `InlineWodProblem.createProblemMarkers()` now stores the closing tag position as custom marker attributes (`closeTagStart`/`closeTagEnd`) using the FuzzyXMLElement's existing close tag data.
+- New `ReplaceTagPairProposal` inner class in `TemplateQuickAssistProcessor` replaces both tag names in a single apply — closing tag first to preserve offsets.
+- Self-closing tags and keypath errors are unaffected (single replacement as before).
+
 ### Fix Cmd+2,R (Rename Tag) for standalone templates
 
 - `QuickRenameElementAction` required both the HTML editor and WOD editor to be present, silently doing nothing for standalone templates (which have no WOD file). Removed the WOD editor requirement — HTML tag rename only needs the HTML viewer. Same pattern previously fixed for `FormatAction` and `ExtractComponentAction`.
