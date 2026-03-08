@@ -114,6 +114,7 @@ Single-file `.html` templates (not inside `.wo` bundles) have full editor suppor
 
 ### Code style
 
+- **Tabs, not spaces** — use tabs for indentation everywhere: Java source, generated templates (HTML, XML, Java, WOD, WOO), and any other file we produce
 - Field names use underscore prefix: `_fieldName`
 - Constants use `UPPER_SNAKE_CASE`
 - Eclipse platform patterns: adapters, extension points, structured selections

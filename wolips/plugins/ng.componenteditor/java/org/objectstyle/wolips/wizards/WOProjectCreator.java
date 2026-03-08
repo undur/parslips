@@ -132,49 +132,49 @@ public class WOProjectCreator {
 			return String.format("""
 					<?xml version="1.0" encoding="UTF-8"?>
 					<project xmlns="http://maven.apache.org/POM/4.0.0"
-					         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-					         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-					    <modelVersion>4.0.0</modelVersion>
+					\t\txmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					\t\txsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+					\t<modelVersion>4.0.0</modelVersion>
 
-					    <groupId>%s</groupId>
-					    <artifactId>%s</artifactId>
-					    <version>1.0.0-SNAPSHOT</version>
-					    <packaging>woapplication</packaging>
+					\t<groupId>%s</groupId>
+					\t<artifactId>%s</artifactId>
+					\t<version>1.0.0-SNAPSHOT</version>
+					\t<packaging>woapplication</packaging>
 
-					    <properties>
-					        <maven.compiler.source>21</maven.compiler.source>
-					        <maven.compiler.target>21</maven.compiler.target>
-					        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-					    </properties>
+					\t<properties>
+					\t\t<maven.compiler.source>21</maven.compiler.source>
+					\t\t<maven.compiler.target>21</maven.compiler.target>
+					\t\t<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+					\t</properties>
 
-					    <dependencies>
-					        <dependency>
-					            <groupId>is.rebbi.ng</groupId>
-					            <artifactId>ng-appserver</artifactId>
-					            <version>0.1.0</version>
-					        </dependency>
-					        <dependency>
-					            <groupId>is.rebbi.ng</groupId>
-					            <artifactId>ng-adaptor-jetty</artifactId>
-					            <version>0.1.0</version>
-					        </dependency>
-					        <dependency>
-					            <groupId>org.slf4j</groupId>
-					            <artifactId>slf4j-simple</artifactId>
-					            <version>2.0.16</version>
-					        </dependency>
-					    </dependencies>
+					\t<dependencies>
+					\t\t<dependency>
+					\t\t\t<groupId>is.rebbi.ng</groupId>
+					\t\t\t<artifactId>ng-appserver</artifactId>
+					\t\t\t<version>0.1.0</version>
+					\t\t</dependency>
+					\t\t<dependency>
+					\t\t\t<groupId>is.rebbi.ng</groupId>
+					\t\t\t<artifactId>ng-adaptor-jetty</artifactId>
+					\t\t\t<version>0.1.0</version>
+					\t\t</dependency>
+					\t\t<dependency>
+					\t\t\t<groupId>org.slf4j</groupId>
+					\t\t\t<artifactId>slf4j-simple</artifactId>
+					\t\t\t<version>2.0.16</version>
+					\t\t</dependency>
+					\t</dependencies>
 
-					    <build>
-					        <plugins>
-					            <plugin>
-					                <groupId>is.rebbi</groupId>
-					                <artifactId>vermilingua-maven-plugin</artifactId>
-					                <version>1.0.5</version>
-					                <extensions>true</extensions>
-					            </plugin>
-					        </plugins>
-					    </build>
+					\t<build>
+					\t\t<plugins>
+					\t\t\t<plugin>
+					\t\t\t\t<groupId>is.rebbi</groupId>
+					\t\t\t\t<artifactId>vermilingua-maven-plugin</artifactId>
+					\t\t\t\t<version>1.0.5</version>
+					\t\t\t\t<extensions>true</extensions>
+					\t\t\t</plugin>
+					\t\t</plugins>
+					\t</build>
 					</project>
 					""", _packageName, _projectName);
 		}
@@ -183,60 +183,60 @@ public class WOProjectCreator {
 		return String.format("""
 				<?xml version="1.0" encoding="UTF-8"?>
 				<project xmlns="http://maven.apache.org/POM/4.0.0"
-				         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-				    <modelVersion>4.0.0</modelVersion>
+				\t\txmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				\t\txsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+				\t<modelVersion>4.0.0</modelVersion>
 
-				    <groupId>%s</groupId>
-				    <artifactId>%s</artifactId>
-				    <version>1.0.0-SNAPSHOT</version>
-				    <packaging>woapplication</packaging>
+				\t<groupId>%s</groupId>
+				\t<artifactId>%s</artifactId>
+				\t<version>1.0.0-SNAPSHOT</version>
+				\t<packaging>woapplication</packaging>
 
-				    <properties>
-				        <maven.compiler.source>25</maven.compiler.source>
-				        <maven.compiler.target>25</maven.compiler.target>
-				        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-				    </properties>
+				\t<properties>
+				\t\t<maven.compiler.source>25</maven.compiler.source>
+				\t\t<maven.compiler.target>25</maven.compiler.target>
+				\t\t<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+				\t</properties>
 
-				    <dependencies>
-				        <dependency>
-				            <groupId>wonder.core</groupId>
-				            <artifactId>ERExtensions</artifactId>
-				            <version>8.0.0.slim-SNAPSHOT</version>
-				        </dependency>
-				        <dependency>
-				            <groupId>wonder.core</groupId>
-				            <artifactId>ERLoggingReload4j</artifactId>
-				            <version>8.0.0.slim-SNAPSHOT</version>
-				        </dependency>
-				        <dependency>
-				            <groupId>wonder.ajax</groupId>
-				            <artifactId>Ajax</artifactId>
-				            <version>8.0.0.slim-SNAPSHOT</version>
-				        </dependency>
-				        <dependency>
-				            <groupId>com.webobjects</groupId>
-				            <artifactId>JavaWebObjects</artifactId>
-				            <version>5.4.3</version>
-				            <exclusions>
-				                <exclusion>
-				                    <groupId>com.webobjects</groupId>
-				                    <artifactId>JavaXML</artifactId>
-				                </exclusion>
-				            </exclusions>
-				        </dependency>
-				    </dependencies>
+				\t<dependencies>
+				\t\t<dependency>
+				\t\t\t<groupId>wonder.core</groupId>
+				\t\t\t<artifactId>ERExtensions</artifactId>
+				\t\t\t<version>8.0.0.slim-SNAPSHOT</version>
+				\t\t</dependency>
+				\t\t<dependency>
+				\t\t\t<groupId>wonder.core</groupId>
+				\t\t\t<artifactId>ERLoggingReload4j</artifactId>
+				\t\t\t<version>8.0.0.slim-SNAPSHOT</version>
+				\t\t</dependency>
+				\t\t<dependency>
+				\t\t\t<groupId>wonder.ajax</groupId>
+				\t\t\t<artifactId>Ajax</artifactId>
+				\t\t\t<version>8.0.0.slim-SNAPSHOT</version>
+				\t\t</dependency>
+				\t\t<dependency>
+				\t\t\t<groupId>com.webobjects</groupId>
+				\t\t\t<artifactId>JavaWebObjects</artifactId>
+				\t\t\t<version>5.4.3</version>
+				\t\t\t<exclusions>
+				\t\t\t\t<exclusion>
+				\t\t\t\t\t<groupId>com.webobjects</groupId>
+				\t\t\t\t\t<artifactId>JavaXML</artifactId>
+				\t\t\t\t</exclusion>
+				\t\t\t</exclusions>
+				\t\t</dependency>
+				\t</dependencies>
 
-				    <build>
-				        <plugins>
-				            <plugin>
-				                <groupId>is.rebbi</groupId>
-				                <artifactId>vermilingua-maven-plugin</artifactId>
-				                <version>1.0.5</version>
-				                <extensions>true</extensions>
-				            </plugin>
-				        </plugins>
-				    </build>
+				\t<build>
+				\t\t<plugins>
+				\t\t\t<plugin>
+				\t\t\t\t<groupId>is.rebbi</groupId>
+				\t\t\t\t<artifactId>vermilingua-maven-plugin</artifactId>
+				\t\t\t\t<version>1.0.5</version>
+				\t\t\t\t<extensions>true</extensions>
+				\t\t\t</plugin>
+				\t\t</plugins>
+				\t</build>
 				</project>
 				""", _packageName, _projectName);
 	}
@@ -261,16 +261,16 @@ public class WOProjectCreator {
 
 					public class Application extends NGApplication {
 
-					    public static void main(String[] args) {
-					        NGApplication.run(args, Application.class);
-					    }
+					\tpublic static void main(String[] args) {
+					\t\tNGApplication.run(args, Application.class);
+					\t}
 
-					    @Override
-					    public Routes routes() {
-					        return super
-					                .routes()
-					                .map( "/", Main.class );
-					    }
+					\t@Override
+					\tpublic Routes routes() {
+					\t\treturn super
+					\t\t\t\t.routes()
+					\t\t\t\t.map( "/", Main.class );
+					\t}
 					}
 					""", _packageName);
 		}
@@ -284,17 +284,17 @@ public class WOProjectCreator {
 
 				public class Application extends ERXApplication {
 
-				    public static void main(String[] args) {
-				        ERXApplication.main(args, Application.class);
-				    }
+				\tpublic static void main(String[] args) {
+				\t\tERXApplication.main(args, Application.class);
+				\t}
 
-				    public Application() {
-				        // Maps the default route "/" to the Main component
-				        RouteTable.defaultRouteTable().map( "/", Main.class );
+				\tpublic Application() {
+				\t\t// Maps the default route "/" to the Main component
+				\t\tRouteTable.defaultRouteTable().map( "/", Main.class );
 
-				        // ...and the default direct connect URL (something like "/cgi-bin/WebObjects/MyApp.woa")
-				        RouteTable.defaultRouteTable().map( "%%s/%%s.woa".formatted( adaptorPath(), name() ), Main.class );
-				    }
+				\t\t// ...and the default direct connect URL (something like "/cgi-bin/WebObjects/MyApp.woa")
+				\t\tRouteTable.defaultRouteTable().map( "%%s/%%s.woa".formatted( adaptorPath(), name() ), Main.class );
+				\t}
 				}
 				""", _packageName);
 	}
@@ -334,13 +334,13 @@ public class WOProjectCreator {
 
 					public class DirectAction extends NGDirectAction {
 
-					    public DirectAction(NGRequest request) {
-					        super(request);
-					    }
+					\tpublic DirectAction(NGRequest request) {
+					\t\tsuper(request);
+					\t}
 
-					    public NGActionResults defaultAction() {
-					        return pageWithName(%1$s.components.Main.class);
-					    }
+					\tpublic NGActionResults defaultAction() {
+					\t\treturn pageWithName(%1$s.components.Main.class);
+					\t}
 					}
 					""", _packageName);
 		}
@@ -355,13 +355,13 @@ public class WOProjectCreator {
 
 				public class DirectAction extends ERXDirectAction {
 
-				    public DirectAction(WORequest request) {
-				        super(request);
-				    }
+				\tpublic DirectAction(WORequest request) {
+				\t\tsuper(request);
+				\t}
 
-				    public WOActionResults defaultAction() {
-				        return pageWithName(%1$s.components.Main.class);
-				    }
+				\tpublic WOActionResults defaultAction() {
+				\t\treturn pageWithName(%1$s.components.Main.class);
+				\t}
 				}
 				""", _packageName);
 	}
@@ -376,9 +376,9 @@ public class WOProjectCreator {
 
 					public class Main extends NGComponent {
 
-					    public Main(NGContext context) {
-					        super(context);
-					    }
+					\tpublic Main(NGContext context) {
+					\t\tsuper(context);
+					\t}
 					}
 					""", _packageName);
 		}
@@ -391,9 +391,9 @@ public class WOProjectCreator {
 
 				public class Main extends WOComponent {
 
-				    public Main(WOContext context) {
-				        super(context);
-				    }
+				\tpublic Main(WOContext context) {
+				\t\tsuper(context);
+				\t}
 				}
 				""", _packageName);
 	}
@@ -402,13 +402,13 @@ public class WOProjectCreator {
 		return """
 				<!DOCTYPE html>
 				<html>
-				<head>
-				    <meta charset="UTF-8">
-				    <title>Main</title>
-				</head>
-				<body>
-				    <h1>Hello World!</h1>
-				</body>
+				\t<head>
+				\t\t<meta charset="UTF-8">
+				\t\t<title>Main</title>
+				\t</head>
+				\t<body>
+				\t\t<h1>Hello World!</h1>
+				\t</body>
 				</html>
 				""";
 	}
@@ -416,8 +416,8 @@ public class WOProjectCreator {
 	private String generateMainWoo() {
 		return """
 				{
-				    "WebObjects Release" = "WebObjects 5.0";
-				    encoding = "UTF-8";
+				\t"WebObjects Release" = "WebObjects 5.0";
+				\tencoding = "UTF-8";
 				}
 				""";
 	}
