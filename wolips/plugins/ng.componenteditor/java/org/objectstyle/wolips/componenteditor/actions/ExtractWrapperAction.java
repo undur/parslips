@@ -197,16 +197,26 @@ public class ExtractWrapperAction extends AbstractTemplateAction {
 	/**
 	 * Determines the folder where the new component should be created.
 	 *
-	 * <p>Uses the parent folder of the current component's .wo folder.
-	 * For standalone HTML templates (not inside .wo), falls back to
-	 * the file's parent directory. As a last resort, searches for a
-	 * "components" folder under src/main/.
+	 * <p>For bundle templates, the woFolder is the {@code .wo} folder itself
+	 * (e.g. {@code components/Main.wo/}), so we go up one level to get the
+	 * components directory. For standalone templates, the woFolder is the
+	 * file's parent directory, which <em>is</em> the components directory —
+	 * use it directly.
 	 */
 	private IContainer determineTargetFolder(IContainer woFolder, IProject project) {
 		if (woFolder != null) {
-			IContainer parent = woFolder.getParent();
-			if (parent != null && parent.exists()) {
-				return parent;
+			if (woFolder.getName().endsWith(".wo")) {
+				// Bundle template: go up from the .wo folder to get the
+				// components directory
+				IContainer parent = woFolder.getParent();
+				if (parent != null && parent.exists()) {
+					return parent;
+				}
+			}
+			else if (woFolder.exists()) {
+				// Standalone template: woFolder is already the components
+				// directory (the parent of the .html file)
+				return woFolder;
 			}
 		}
 		return ParsleyProject.findComponentsFolder(project);
