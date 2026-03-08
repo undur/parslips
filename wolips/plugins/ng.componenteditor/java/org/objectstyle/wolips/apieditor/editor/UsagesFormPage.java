@@ -1,5 +1,6 @@
 package org.objectstyle.wolips.apieditor.editor;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -25,15 +26,18 @@ public class UsagesFormPage extends FormPage {
 	public static final String PAGE_ID = "ng.componenteditor.api.UsagesPage";
 
 	private final String _elementName;
+	private final IProject _project;
 	private UsagesComposite _usagesComposite;
 
 	/**
 	 * @param editor      the parent API editor
 	 * @param elementName the name of the element whose usages to find
+	 * @param project     the project that owns this element
 	 */
-	public UsagesFormPage(ApiEditor editor, String elementName) {
+	public UsagesFormPage(ApiEditor editor, String elementName, IProject project) {
 		super(editor, PAGE_ID, "Usages");
 		_elementName = elementName;
+		_project = project;
 	}
 
 	@Override
@@ -46,7 +50,7 @@ public class UsagesFormPage extends FormPage {
 		Composite body = form.getBody();
 		body.setLayout(new FillLayout());
 
-		_usagesComposite = new UsagesComposite(body, SWT.NONE, _elementName);
+		_usagesComposite = new UsagesComposite(body, SWT.NONE, _elementName, _project);
 	}
 
 	/**

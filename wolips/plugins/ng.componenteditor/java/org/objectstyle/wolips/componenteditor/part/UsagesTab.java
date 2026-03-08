@@ -3,7 +3,6 @@ package org.objectstyle.wolips.componenteditor.part;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -22,20 +21,21 @@ import org.eclipse.ui.IEditorPart;
 public class UsagesTab extends ComponentEditorTab {
 
 	private final String _componentName;
+	private final IProject _project;
 	private UsagesComposite _usagesComposite;
 
 	/**
 	 * @param componentEditorPart the parent multi-tab editor
 	 * @param tabIndex            the tab position
 	 * @param componentName       the name of the component being edited
-	 * @param project             the project the component belongs to (unused
-	 *                            after extraction to UsagesComposite, kept for
-	 *                            API compatibility)
+	 * @param project             the project the component belongs to — the
+	 *                            scan covers this project and all dependents
 	 */
 	public UsagesTab(ComponentEditorPart componentEditorPart, int tabIndex,
 			String componentName, IProject project) {
 		super(componentEditorPart, tabIndex);
 		_componentName = componentName;
+		_project = project;
 	}
 
 	/**
@@ -44,7 +44,7 @@ public class UsagesTab extends ComponentEditorTab {
 	 */
 	public void createTab() {
 		Composite parent = getParentSashForm();
-		_usagesComposite = new UsagesComposite(parent, SWT.NONE, _componentName);
+		_usagesComposite = new UsagesComposite(parent, SWT.NONE, _componentName, _project);
 	}
 
 	/**

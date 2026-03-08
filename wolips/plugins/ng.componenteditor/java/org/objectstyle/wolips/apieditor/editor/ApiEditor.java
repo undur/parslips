@@ -132,7 +132,9 @@ public class ApiEditor extends FormEditor {
 			}
 
 			// Usages page — "who uses this element?" reverse dependency view.
-			addPage(new UsagesFormPage(this, getElementName()));
+			// Scoped to this project and projects that depend on it.
+			IProject project = ((FileEditorInput) getEditorInput()).getFile().getProject();
+			addPage(new UsagesFormPage(this, getElementName(), project));
 		} catch (PartInitException e) {
 			ApieditorPlugin.getDefault().debug(e);
 		}

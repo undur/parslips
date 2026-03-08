@@ -2,13 +2,14 @@ package org.objectstyle.wolips.componenteditor.part;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -41,8 +42,12 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcesso
 /**
  * Reusable composite that displays a "who uses this element?" reverse
  * dependency view. Contains a toolbar row (Refresh button + status label)
- * and a three-column {@link TableViewer} listing all workspace components
- * that reference the target element by name.
+ * and a three-column {@link TableViewer} listing components that reference
+ * the target element by name.
+ *
+ * <p>The scan is scoped to the element's own project and all projects that
+ * transitively depend on it — a component in a library shows usages from
+ * application projects that use that library, but not from unrelated projects.
  *
  * <p>This composite is shared by:
  * <ul>
@@ -63,6 +68,7 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcesso
 public class UsagesComposite extends Composite {
 
 	private final String _elementName;
+	private final IProject _project;
 
 	private TableViewer _tableViewer;
 	private Label _statusLabel;
@@ -72,10 +78,13 @@ public class UsagesComposite extends Composite {
 	 * @param parent      the parent composite
 	 * @param style       the SWT style bits
 	 * @param elementName the name of the element/component to search for
+	 * @param project     the project that owns this element — the scan covers
+	 *                    this project and all projects that depend on it
 	 */
-	public UsagesComposite(Composite parent, int style, String elementName) {
+	public UsagesComposite(Composite parent, int style, String elementName, IProject project) {
 		super(parent, style);
 		_elementName = elementName;
+		_project = project;
 		createContents();
 	}
 
@@ -223,8 +232,13 @@ public class UsagesComposite extends Composite {
 	private List<ComponentUsage> findUsages(IProgressMonitor monitor) {
 		List<ComponentUsage> usages = new ArrayList<>();
 
-		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-		for (IProject project : projects) {
+		// Scan the element's own project plus all projects that depend on
+		// it (transitively). A component in a library can be used by any
+		// application that depends on that library.
+		Set<IProject> projectsToScan = new HashSet<>();
+		collectDependentProjects(_project, projectsToScan);
+
+		for (IProject project : projectsToScan) {
 			if (monitor.isCanceled()) {
 				break;
 			}
@@ -315,6 +329,22 @@ public class UsagesComposite extends Composite {
 		});
 
 		return usages;
+	}
+
+	/**
+	 * Collects the given project and all projects that transitively depend on
+	 * it (via {@link IProject#getReferencingProjects()}).
+	 *
+	 * <p>Uses a visited set for cycle detection — project dependency graphs
+	 * can occasionally contain cycles due to misconfiguration.
+	 */
+	private static void collectDependentProjects(IProject project, Set<IProject> result) {
+		if (!result.add(project)) {
+			return; // already visited — prevents cycles
+		}
+		for (IProject dependent : project.getReferencingProjects()) {
+			collectDependentProjects(dependent, result);
+		}
 	}
 
 	/**
