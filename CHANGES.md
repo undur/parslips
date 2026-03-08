@@ -12,6 +12,10 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix Cmd+Alt+1 (switch to Java) failing for cross-project components
+
+- When WOLips is installed, pressing Cmd+Alt+1 in a component editor opened via F3 from a different project would silently fail. The handler checked `isParsleyProject()` on the component's project — which requires `project.base` to be set in `build.properties` — and delegated to WOLips when it wasn't. Unlike the HTML, WOD, and API handlers (which detect `ComponentEditor` and switch tabs directly), the Java handler always went through the project check. Fixed by using the already-resolved `LocalizedComponentsLocateResult` from the `ComponentEditorInput` when invoked from a ComponentEditor, bypassing the project check entirely.
+
 ### Usages tab — reverse dependency view
 
 - New **Usages** tab in the component editor shows which other components in the workspace reference the current component as an element — a "who uses me?" view.
