@@ -27,9 +27,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.SelectionDialog;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
-import org.objectstyle.wolips.locate.LocatePlugin;
-import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
+import org.objectstyle.wolips.editors.EditorsPlugin;
+import org.objectstyle.wolips.locate.result.ElementDescriptor;
 
 public class OpenComponentAction extends Action implements IWorkbenchWindowActionDelegate, IActionDelegate2 {
 	private Object _selectedObject;
@@ -117,10 +116,20 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 			IType type = javaProject.findType(typeName);
 			if (type != null) {
 				JavaUI.openInEditor(type, true, true);
-				LocalizedComponentsLocateResult componentsLocateResults = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(type.getUnderlyingResource());
-				IFile wodFile = componentsLocateResults.getFirstWodFile();
-				if (wodFile != null) {
-					WorkbenchUtilities.open(wodFile, ComponentEditor.ID);
+				IResource underlyingResource = type.getUnderlyingResource();
+				if (underlyingResource instanceof IFile) {
+					ElementDescriptor descriptor = ElementDescriptor.forFile((IFile) underlyingResource);
+					if (descriptor != null) {
+						// For bundle templates, open the WOD file in the ComponentEditor.
+						// For standalone templates, open the HTML file.
+						IFile templateFile = descriptor.getWodFile();
+						if (templateFile == null) {
+							templateFile = descriptor.getHtmlFile();
+						}
+						if (templateFile != null) {
+							WorkbenchUtilities.open(templateFile, EditorsPlugin.ComponentEditorID);
+						}
+					}
 				}
 			}
 		} catch (Throwable e1) {

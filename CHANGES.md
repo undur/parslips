@@ -17,7 +17,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 - New `ElementDescriptor` class — an immutable model object that captures "what files belong to this element?" (HTML, WOD, WOO, API, Java, project, template format). Replaces ad-hoc calls to the locate system scattered throughout the codebase.
 - New `TemplateFormat` enum — `BUNDLE`, `STANDALONE`, or `NONE`.
 - Factory methods: `ElementDescriptor.forFile(IFile)` resolves any component file to a descriptor via the locate system; `fromLocateResult()` wraps an existing `LocalizedComponentsLocateResult`.
+- `WodParserCache.getElementDescriptor()` — bridge method so editor-context consumers can get a descriptor without calling locate directly.
+- `ComponentEditorInput.getElementDescriptor()` — populated during input creation for both bundle and standalone templates.
 - Migrated all four switch handlers (`SwitchToHtmlHandler`, `SwitchToWodHandler`, `SwitchToJavaHandler`, `SwitchToApiHandler`) to use `ElementDescriptor` instead of calling `LocatePlugin.getLocalizedComponentsLocateResult()` directly.
+- Migrated `OpenComponentAction` — now uses `ElementDescriptor` and opens standalone templates correctly (falls back to HTML when no WOD file exists).
+- Migrated `WodElementTypeHyperlink` (F3 hyperlink) — same pattern, now handles standalone templates.
+- Migrated `RenameComponentAction.findComponentJavaType()` — uses `ElementDescriptor.getJavaType()`.
+- 15 unit tests for `ElementDescriptor` format detection, accessors, and convenience methods.
 - This is the first step toward the Unified Element Editor described in the roadmap.
 
 ### Quick fix (Cmd+1): also fix closing tag for element type errors
