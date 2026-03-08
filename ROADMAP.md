@@ -46,6 +46,27 @@ Requires type resolution through the keypath — resolving `selectedInvoice` to 
 
 Implemented. Hovering over a `<wo:ComponentName>` tag in the template editor now shows the component's API documentation — accepted bindings, required/settable markers, and defaults. Works for both project components (via `.api` files) and built-in WO components (via `WebObjectDefinitions.xml`). Validation errors take priority when both are available.
 
+## Unified component template abstraction
+
+The codebase has no single model for "a component and its files." Bundle templates (`.wo` folders with `.html`, `.wod`, `.woo`) and standalone templates (single `.html` files) are handled through ad-hoc forking logic everywhere — `ComponentEditorInput.create()` vs `createStandaloneHtml()`, checking `standaloneHtmlEditor != null`, deriving the component name from either the `.wo` folder name or the `.html` filename, guessing which sibling files exist. Every new feature rediscovers these rules, and the forks are a recurring source of bugs.
+
+A clean `ComponentTemplate` abstraction would unify this. The object would know:
+
+- **Component name** — derived once, regardless of format
+- **HTML file** — the template, whether inside `.wo` or standalone
+- **WOD file** — present for bundles, `null` for standalone
+- **WOO file** — present for bundles, `null` for standalone
+- **API file** — sibling `.api`, resolved once
+- **Java file** — the component class
+- **Project** — which project the component belongs to
+- **Template format** — bundle or standalone (but callers rarely need to ask)
+
+The closest existing thing is `LocalizedComponentsLocateResult`, but it's a mutable grab-bag populated by the locate system, has localization concerns mixed in, and doesn't cover standalone templates well (`createStandaloneHtml()` doesn't even set a locate result). `ComponentEditorInput` is another partial model, but it's tightly coupled to Eclipse editor lifecycle (editor IDs, `MultiEditorInput` inheritance, reveal flags).
+
+A `ComponentTemplate` would be the shared currency between `ComponentEditorInput`, the switch handlers, the extract refactorings, the usages tab, the formatter action, the F3 handler, and the rename participant. Each of those currently has its own way of answering "what files belong to this component?" — a unified model replaces all of them.
+
+This is foundational infrastructure — not user-visible, but it makes every subsequent feature cheaper and less bug-prone.
+
 ## Component dependency graph
 
 A navigable view of "this component uses these sub-components" — useful for understanding unfamiliar codebases and spotting circular dependencies.
