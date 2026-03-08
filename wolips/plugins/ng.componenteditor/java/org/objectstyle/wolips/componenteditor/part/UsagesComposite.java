@@ -41,7 +41,7 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcesso
 /**
  * Reusable composite that displays a "who uses this element?" reverse
  * dependency view. Contains a toolbar row (Refresh button + status label)
- * and a two-column {@link TableViewer} listing all workspace components
+ * and a three-column {@link TableViewer} listing all workspace components
  * that reference the target element by name.
  *
  * <p>This composite is shared by:
@@ -81,7 +81,7 @@ public class UsagesComposite extends Composite {
 
 	/**
 	 * Builds the UI: a toolbar row with Refresh button and status label,
-	 * and a two-column table below.
+	 * and a three-column table below (Component, Project, Count).
 	 */
 	private void createContents() {
 		GridLayout layout = new GridLayout(1, false);
@@ -137,6 +137,18 @@ public class UsagesComposite extends Composite {
 			@Override
 			public String getText(Object element) {
 				return ((ComponentUsage) element)._project.getName();
+			}
+		});
+
+		// Column: Reference count (how many times the element appears in
+		// that component's template)
+		TableViewerColumn countColumn = new TableViewerColumn(_tableViewer, SWT.RIGHT);
+		countColumn.getColumn().setText("Count");
+		countColumn.getColumn().setWidth(60);
+		countColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				return String.valueOf(((ComponentUsage) element)._count);
 			}
 		});
 
@@ -258,17 +270,17 @@ public class UsagesComposite extends Composite {
 								return false;
 							}
 
-							boolean found = false;
+							int count = 0;
 							if (isHtml) {
-								found = RenameComponentProcessor.htmlContainsElementReference(
+								count = RenameComponentProcessor.htmlCountElementReferences(
 										content, _elementName);
 							}
 							else if (isWod) {
-								found = RenameComponentProcessor.wodContainsElementReference(
+								count = RenameComponentProcessor.wodCountElementReferences(
 										content, _elementName);
 							}
 
-							if (found && ownerName != null) {
+							if (count > 0 && ownerName != null) {
 								// For WOD files, find the sibling HTML to open
 								IFile fileToOpen = file;
 								if (isWod) {
@@ -278,7 +290,7 @@ public class UsagesComposite extends Composite {
 									}
 								}
 								usages.add(new ComponentUsage(
-										ownerName, fileToOpen, project));
+										ownerName, fileToOpen, project, count));
 							}
 						}
 						catch (IOException e) {
@@ -348,17 +360,20 @@ public class UsagesComposite extends Composite {
 
 	/**
 	 * A single usage result: identifies a component that references the
-	 * target element.
+	 * target element, including how many times.
 	 */
 	static class ComponentUsage {
 		final String _componentName;
 		final IFile _file;
 		final IProject _project;
+		/** Number of references to the target element in this component. */
+		final int _count;
 
-		ComponentUsage(String componentName, IFile file, IProject project) {
+		ComponentUsage(String componentName, IFile file, IProject project, int count) {
 			_componentName = componentName;
 			_file = file;
 			_project = project;
+			_count = count;
 		}
 	}
 }

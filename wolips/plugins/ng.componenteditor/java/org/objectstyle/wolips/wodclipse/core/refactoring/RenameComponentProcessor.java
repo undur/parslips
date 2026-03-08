@@ -274,6 +274,28 @@ public class RenameComponentProcessor {
 	}
 
 	/**
+	 * Counts the number of element usages in the given HTML content.
+	 * Only counts opening tags ({@code <wo:ComponentName>} and self-closing
+	 * {@code <wo:ComponentName />}), not closing tags, so each logical
+	 * usage of the element is counted once.
+	 *
+	 * @param content the HTML file content
+	 * @param componentName the component name to search for (case-sensitive)
+	 * @return the number of element usages found
+	 */
+	public static int htmlCountElementReferences(String content, String componentName) {
+		// Only match opening tags: <wo:Name — exclude </wo:Name closing tags
+		Pattern openingOnly = Pattern.compile(
+				"(?i:<wo:)" + Pattern.quote(componentName) + "(?=[\\s>/$])", 0);
+		int count = 0;
+		Matcher matcher = openingOnly.matcher(content);
+		while (matcher.find()) {
+			count++;
+		}
+		return count;
+	}
+
+	/**
 	 * Returns whether the given WOD content contains an element type
 	 * declaration referencing the named component (e.g. {@code Foo : ComponentName &#123; &#125;}).
 	 *
@@ -283,6 +305,24 @@ public class RenameComponentProcessor {
 	 */
 	public static boolean wodContainsElementReference(String content, String componentName) {
 		return wodElementPattern(componentName).matcher(content).find();
+	}
+
+	/**
+	 * Counts the number of element type declarations referencing the named
+	 * component in the given WOD content. Each {@code : ComponentName &#123;}
+	 * declaration counts as one reference.
+	 *
+	 * @param content the WOD file content
+	 * @param componentName the component name to search for (case-sensitive)
+	 * @return the number of references found
+	 */
+	public static int wodCountElementReferences(String content, String componentName) {
+		int count = 0;
+		Matcher matcher = wodElementPattern(componentName).matcher(content);
+		while (matcher.find()) {
+			count++;
+		}
+		return count;
 	}
 
 	// -----------------------------------------------------------------------
