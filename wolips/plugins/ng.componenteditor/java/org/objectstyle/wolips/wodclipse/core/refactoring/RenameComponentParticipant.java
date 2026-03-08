@@ -59,9 +59,9 @@ public class RenameComponentParticipant extends RenameParticipant {
 		}
 		_type = (IType) element;
 
-		// When WOLips is installed, only participate for projects that have
-		// explicitly opted in via project.base in build.properties.
-		if (!ParsleyProject.isParsleyProject(_type.getJavaProject().getProject())) {
+		// Use shouldRefactor() instead of shouldHandleProject() to avoid
+		// double-fire with WOLips' refactoring participant (see javadoc).
+		if (!ParsleyProject.shouldRefactor(_type.getJavaProject().getProject())) {
 			return false;
 		}
 

@@ -9,6 +9,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
+import tk.eclipse.plugin.htmleditor.HTMLPlugin;
+
 /**
  * The project model for a WO or ng-objects project in the workspace.
  * Provides framework detection, element/component class resolution, and
@@ -165,23 +167,94 @@ public class ParsleyProject {
 	private static Boolean _wolipsInstalled;
 
 	/**
-	 * Returns {@code true} if Parsley should be active for this project.
+	 * Returns {@code true} if this is a recognized WO or NG project.
 	 *
-	 * <p>When WOLips is <b>not</b> installed, Parsley handles all recognized
-	 * projects (NG or WO) — the same as it always has.
-	 *
-	 * <p>When WOLips <b>is</b> installed, Parsley only activates for projects
-	 * that explicitly set {@code project.base} in {@code build.properties}.
-	 * Projects without this property are left to WOLips. This allows the user
-	 * to opt in per-project by adding {@code project.base=wo} (or {@code =ng}).
+	 * <p>This is a pure project type check — it does <b>not</b> consider
+	 * WOLips coexistence policy. Use {@link #shouldHandleProject()} to
+	 * determine whether Parsley should actually activate for this project.
 	 */
 	public boolean isParsleyProject() {
-		if (!isWOLipsInstalled()) {
-			// No WOLips — activate for any recognized project type
-			return getProjectType() != ProjectType.UNKNOWN;
+		return getProjectType() != ProjectType.UNKNOWN;
+	}
+
+	/**
+	 * Returns {@code true} if Parsley should activate for this project.
+	 *
+	 * <p>When WOLips is <b>not</b> installed, Parsley handles all recognized
+	 * projects (NG or WO).
+	 *
+	 * <p>When WOLips <b>is</b> installed, behavior depends on the global
+	 * "Let Parsley handle all elements" preference:
+	 * <ul>
+	 *   <li><b>Off</b> (default): only projects with explicit
+	 *       {@code project.base} in {@code build.properties}</li>
+	 *   <li><b>On</b>: all recognized projects, regardless of
+	 *       {@code project.base}</li>
+	 * </ul>
+	 *
+	 * @see #isParsleyProject()
+	 */
+	public boolean shouldHandleProject() {
+		if (!isParsleyProject()) {
+			return false;
 		}
-		// WOLips is present — only activate if project.base is explicitly set
+		if (!isWOLipsInstalled()) {
+			return true;
+		}
+		// Global preference: user wants Parsley for all recognized projects
+		if (HTMLPlugin.getDefault() != null
+				&& HTMLPlugin.getDefault().getPreferenceStore()
+					.getBoolean(HTMLPlugin.PREF_PARSLEY_HANDLES_ALL)) {
+			return true;
+		}
+		// Default: only activate if project.base is explicitly set
 		return _buildProperties.get(BuildProperties.Key.BASE) != null;
+	}
+
+	/**
+	 * Returns {@code true} if Parsley's refactoring participants should
+	 * activate for this project.
+	 *
+	 * <p>This is more conservative than {@link #shouldHandleProject()} because
+	 * WOLips has its own refactoring participants that skip only when
+	 * {@code project.base} is set. If we activated based on the global
+	 * "handle all elements" preference, both Parsley and WOLips would fire
+	 * for the same rename — causing duplicate or conflicting changes.
+	 *
+	 * <p>Therefore, refactoring only activates when {@code project.base} is
+	 * explicitly set (guaranteeing WOLips' participant skips), or when
+	 * WOLips is not installed at all.
+	 */
+	public boolean shouldRefactor() {
+		if (!isParsleyProject()) {
+			return false;
+		}
+		if (!isWOLipsInstalled()) {
+			return true;
+		}
+		// Only refactor when project.base is set — this is the signal
+		// that makes WOLips' participant skip, avoiding double-fire.
+		return _buildProperties.get(BuildProperties.Key.BASE) != null;
+	}
+
+	/**
+	 * Convenience method: checks if Parsley's refactoring participants should
+	 * activate for the given project.
+	 *
+	 * @return {@code true} if Parsley should refactor in this project
+	 * @see #shouldRefactor()
+	 */
+	public static boolean shouldRefactor(IProject project) {
+		if (project == null || !project.isOpen()) {
+			return false;
+		}
+		try {
+			ParsleyProject pp = (ParsleyProject) project.getAdapter(ParsleyProject.class);
+			return pp != null && pp.shouldRefactor();
+		}
+		catch (Exception e) {
+			return false;
+		}
 	}
 
 	/**
@@ -196,9 +269,10 @@ public class ParsleyProject {
 	}
 
 	/**
-	 * Convenience method: checks if the given project is a Parsley project.
+	 * Convenience method: checks if the given project is a recognized
+	 * WO or NG project.
 	 *
-	 * @return {@code true} if Parsley should be active for this project
+	 * @return {@code true} if this is a recognized Parsley project type
 	 * @see #isParsleyProject()
 	 */
 	public static boolean isParsleyProject(IProject project) {
@@ -208,6 +282,26 @@ public class ParsleyProject {
 		try {
 			ParsleyProject pp = (ParsleyProject) project.getAdapter(ParsleyProject.class);
 			return pp != null && pp.isParsleyProject();
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Convenience method: checks if Parsley should activate for the given
+	 * project, considering WOLips coexistence and the global preference.
+	 *
+	 * @return {@code true} if Parsley should handle this project
+	 * @see #shouldHandleProject()
+	 */
+	public static boolean shouldHandleProject(IProject project) {
+		if (project == null || !project.isOpen()) {
+			return false;
+		}
+		try {
+			ParsleyProject pp = (ParsleyProject) project.getAdapter(ParsleyProject.class);
+			return pp != null && pp.shouldHandleProject();
 		}
 		catch (Exception e) {
 			return false;

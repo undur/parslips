@@ -71,9 +71,9 @@ public class RenameBindingKeyParticipant extends RenameParticipant {
 			return false;
 		}
 
-		// When WOLips is installed, only participate for projects that have
-		// explicitly opted in via project.base in build.properties.
-		if (!ParsleyProject.isParsleyProject(_declaringType.getJavaProject().getProject())) {
+		// Use shouldRefactor() instead of shouldHandleProject() to avoid
+		// double-fire with WOLips' refactoring participant (see javadoc).
+		if (!ParsleyProject.shouldRefactor(_declaringType.getJavaProject().getProject())) {
 			return false;
 		}
 

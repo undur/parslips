@@ -182,10 +182,10 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 	 * Opens a .wo component bundle by finding the HTML template file inside
 	 * and opening it with an appropriate component editor.
 	 *
-	 * <p>For Parsley projects, uses the Parsley Template Editor. For non-Parsley
-	 * projects when WOLips is installed, delegates to WOLips' component editor.
-	 * If neither applies (no WOLips, no project.base), falls back to our
-	 * editor — still better than Eclipse's web browser for {@code .html}.
+	 * <p>For projects Parsley should handle, uses the Parsley Template Editor.
+	 * For other projects when WOLips is installed, delegates to WOLips'
+	 * component editor. If neither applies, falls back to our editor —
+	 * still better than Eclipse's web browser for {@code .html}.
 	 */
 	private void openComponentBundle(IFolder woFolder) {
 		String folderName = woFolder.getName();
@@ -194,7 +194,7 @@ public class NGPackageExplorerPart extends PackageExplorerPart {
 
 		// Pick the right component editor for this project
 		String editorId = EditorsPlugin.ComponentEditorID;
-		if (!ParsleyProject.isParsleyProject(woFolder.getProject()) && ParsleyProject.isWOLipsInstalled()) {
+		if (!ParsleyProject.shouldHandleProject(woFolder.getProject()) && ParsleyProject.isWOLipsInstalled()) {
 			editorId = WOLIPS_COMPONENT_EDITOR_ID;
 		}
 

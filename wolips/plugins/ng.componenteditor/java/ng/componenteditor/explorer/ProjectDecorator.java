@@ -58,9 +58,8 @@ public class ProjectDecorator implements ILabelDecorator {
 			return image;
 		}
 
-		// When WOLips is installed, only decorate projects that have
-		// explicitly opted in via project.base in build.properties.
-		if (!ParsleyProject.isParsleyProject(project)) {
+		// Only decorate projects that Parsley should handle.
+		if (!ParsleyProject.shouldHandleProject(project)) {
 			return image;
 		}
 

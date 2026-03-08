@@ -149,6 +149,11 @@ public class HTMLPlugin extends AbstractUIPlugin {
    *  WORKAROUND: WOLips coexistence. */
   public static final String PREF_SHADOW_WOLIPS_BINDINGS = "_pref_shadow_wolips_bindings";
 
+  /** When true and WOLips is installed, Parsley activates for all recognized
+   *  projects — not just those with an explicit {@code project.base} property.
+   *  WORKAROUND: WOLips coexistence. */
+  public static final String PREF_PARSLEY_HANDLES_ALL = "_pref_parsley_handles_all";
+
 	
 	public static final String[] SUPPORTED_IMAGE_TYPES = {
 			"gif","png","jpg","jpeg","bmp"

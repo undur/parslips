@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### WOLips coexistence: "Let Parsley handle all elements" preference
+
+- New preference in **Preferences → Parsley → WOLips Coexistence**: "Let Parsley handle all elements by default". When enabled, Parsley activates its editors, decorators, and keyboard shortcuts for all recognized WO/NG projects — even those without `project.base` in `build.properties`.
+- Default is off (unchanged behavior): Parsley defers to WOLips for projects without explicit `project.base`.
+- Refactoring participants (`RenameBindingKeyParticipant`, `RenameComponentParticipant`) are intentionally excluded from the preference — they still require `project.base` to avoid conflicts with WOLips' own refactoring participants, which skip based on the same property.
+- Refactored `ParsleyProject` to separate concerns: `isParsleyProject()` is now a pure project type check ("is this a WO or NG project?"), while the new `shouldHandleProject()` is the policy gate that considers WOLips installation and the preference. A separate `shouldRefactor()` gates refactoring participants conservatively.
+
 ### Usages tab in standalone API editor — element-level reverse dependency view
 
 - Added a **Usages** tab to the standalone API editor (used for non-component elements like `WODynamicElement` subclasses and `NGElement` implementations). This provides the same "who uses this element?" reverse dependency view that was previously only available in the multi-tab component editor.

@@ -64,6 +64,10 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 		// if WOLips is actually present, so this default is harmless when
 		// WOLips is not installed.
 		store.setDefault(HTMLPlugin.PREF_SHADOW_WOLIPS_BINDINGS, true);
+		// Default to false — when WOLips is installed, Parsley only activates
+		// for projects with explicit project.base, preserving the current
+		// non-intrusive coexistence behavior.
+		store.setDefault(HTMLPlugin.PREF_PARSLEY_HANDLES_ALL, false);
 
 		getContributions(store);
 	}

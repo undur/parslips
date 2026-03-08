@@ -17,18 +17,16 @@ import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 /**
  * Preference page for managing WOLips coexistence settings.
  *
- * <p>When WOLips and Parsley are both installed, their keybindings conflict
- * because both register the same key sequences (Cmd+Alt+1/2/3/5, Cmd+Shift+X,
- * etc.) for different commands. Eclipse shows a disambiguation popup every
- * time the user presses one of these keys.
- *
- * <p>This page provides:
+ * <p>This page provides two categories of settings:
  * <ul>
- *   <li>A checkbox that shadows WOLips' keybindings using Eclipse's USER-level
- *       binding mechanism, letting Parsley's bindings take over cleanly.</li>
- *   <li>A "Restore WOLips keybindings" button that removes all shadow bindings,
- *       restoring WOLips' original keybindings. Use this before uninstalling
- *       Parsley to ensure WOLips' shortcuts are not left broken.</li>
+ *   <li><b>Element handling:</b> Controls whether Parsley handles all
+ *       recognized WO/NG projects (editors, decorators, refactoring) or
+ *       only those with an explicit {@code project.base} in
+ *       {@code build.properties}.</li>
+ *   <li><b>Keyboard shortcuts:</b> Shadows WOLips' keybindings using
+ *       Eclipse's USER-level binding mechanism, letting Parsley's bindings
+ *       take over cleanly. Also provides a "Restore WOLips keybindings"
+ *       button for clean uninstallation.</li>
  * </ul>
  *
  * <p>WORKAROUND: WOLips coexistence.
@@ -54,7 +52,53 @@ public class WOLipsCoexistencePreferencePage extends FieldEditorPreferencePage i
 	protected void createFieldEditors() {
 		Composite parent = getFieldEditorParent();
 
-		// Explanatory text above the checkbox
+		// ---- Element handling section ----
+
+		Label elementExplanation = new Label(parent, SWT.WRAP);
+		elementExplanation.setText(
+			"By default, Parsley only handles projects that have project.base "
+			+ "set in their build.properties. Enable the option below to let "
+			+ "Parsley handle all WebObjects and ng-objects projects, even "
+			+ "those without project.base.");
+		GridData elementGd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		elementGd.horizontalSpan = 2;
+		elementGd.widthHint = 400;
+		elementExplanation.setLayoutData(elementGd);
+
+		// Spacer
+		Label elementSpacer = new Label(parent, SWT.NONE);
+		GridData elementSpacerGd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		elementSpacerGd.horizontalSpan = 2;
+		elementSpacerGd.heightHint = 10;
+		elementSpacer.setLayoutData(elementSpacerGd);
+
+		addField(new BooleanFieldEditor(
+			HTMLPlugin.PREF_PARSLEY_HANDLES_ALL,
+			"Let Parsley handle all elements by default",
+			parent));
+
+		// Spacer before keyboard shortcuts section
+		Label sectionSpacer = new Label(parent, SWT.NONE);
+		GridData sectionSpacerGd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		sectionSpacerGd.horizontalSpan = 2;
+		sectionSpacerGd.heightHint = 20;
+		sectionSpacer.setLayoutData(sectionSpacerGd);
+
+		// Separator between sections
+		Label sectionSep = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL);
+		GridData sectionSepGd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		sectionSepGd.horizontalSpan = 2;
+		sectionSep.setLayoutData(sectionSepGd);
+
+		// Spacer after separator
+		Label sectionSpacer2 = new Label(parent, SWT.NONE);
+		GridData sectionSpacer2Gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+		sectionSpacer2Gd.horizontalSpan = 2;
+		sectionSpacer2Gd.heightHint = 10;
+		sectionSpacer2.setLayoutData(sectionSpacer2Gd);
+
+		// ---- Keyboard shortcuts section ----
+
 		Label explanation = new Label(parent, SWT.WRAP);
 		explanation.setText(
 			"When both Parsley and WOLips are installed, their keyboard shortcuts "

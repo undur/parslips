@@ -90,7 +90,7 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 	 * in projects that have explicitly opted in via {@code project.base}.
 	 */
 	private boolean shouldUseComponentEditor(IFile file) {
-		if (!ParsleyProject.isParsleyProject(file.getProject())) {
+		if (!ParsleyProject.shouldHandleProject(file.getProject())) {
 			return false;
 		}
 		if (isInsideWoFolder(file)) {

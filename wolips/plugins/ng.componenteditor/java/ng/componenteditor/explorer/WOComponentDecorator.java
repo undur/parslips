@@ -41,11 +41,10 @@ public class WOComponentDecorator implements ILabelDecorator {
 			return image;
 		}
 
-		// When WOLips is installed, only decorate .wo folders in projects
-		// that have explicitly opted in via project.base in build.properties.
+		// Only decorate .wo folders in projects that Parsley should handle.
 		if (element instanceof IFolder) {
 			IProject project = ((IFolder) element).getProject();
-			if (!ParsleyProject.isParsleyProject(project)) {
+			if (!ParsleyProject.shouldHandleProject(project)) {
 				return image;
 			}
 		}

@@ -55,9 +55,9 @@ public class SwitchToWodHandler extends AbstractHandler {
 		IFile file = ((FileEditorInput) editorInput).getFile();
 
 		// WORKAROUND: WOLips coexistence.
-		// For non-Parsley projects, delegate to WOLips' command so
-		// WOLips behavior is preserved.
-		if (!ParsleyProject.isParsleyProject(file.getProject())) {
+		// For projects Parsley shouldn't handle, delegate to WOLips'
+		// command so WOLips behavior is preserved.
+		if (!ParsleyProject.shouldHandleProject(file.getProject())) {
 			return WOLipsCommandDelegate.execute(WOLIPS_COMMAND_ID, event);
 		}
 
