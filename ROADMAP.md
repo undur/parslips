@@ -18,6 +18,17 @@ Implemented. Keypath validation errors ("There is no key 'nme'") now include "Di
 
 Binding *name* validation quick-fixes (is "valu" a valid binding on WOString?) are deferred until the element API model is improved — most WO components accept arbitrary bindings beyond their `.api` definitions, making name validation too noisy.
 
+### "Create key" vs. "Create action" should be a user choice
+
+The quick-fix currently infers whether to open the Add Key or Add Action dialog based on the binding name (`action` or `*Action` → action method, everything else → key). This heuristic is dubious: a data binding might legitimately be called `action`, and an action binding might have a non-standard name. The dialog choice should really be presented to the user — either as two separate quick-fix entries ("Create key 'foo'" and "Create action 'foo'") or as a single entry that opens a chooser. The binding-name heuristic can still determine the default/ordering, but the user should always have both options available.
+
+### Add Action dialog improvements
+
+Two issues with the Add Action dialog:
+
+- **Missing "return null" option** — the generated action method has no way to produce a `return null;` body, which is the common case for actions that stay on the same page. The dialog should offer this as a default or a checkbox.
+- **Empty component popup in NG projects** — the return type combo's component list is likely populated by searching for subclasses of `WOComponent`, which finds nothing in an ng-objects project. Needs to search for `NGComponent` subclasses instead (same pattern as `ParsleyProject.getComponentClass()`).
+
 ## Refactoring across files
 
 ### ~~Rename component~~ ✓

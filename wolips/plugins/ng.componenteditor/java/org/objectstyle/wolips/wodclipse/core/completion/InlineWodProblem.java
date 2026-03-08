@@ -76,6 +76,9 @@ public class InlineWodProblem {
               marker.setAttribute(IMarker.LINE_NUMBER, WodHtmlUtils.getLineAtOffset(_cache.getHtmlEntry().getContents(), offset));
               marker.setAttribute(IMarker.CHAR_START, _element.getOffset() + attribute.getValueDataOffset() + 1);
               marker.setAttribute(IMarker.CHAR_END, _element.getOffset() + attribute.getValueDataOffset() + 1 + attribute.getValueDataLength());
+              // Store the binding name (e.g. "action") so the quick-fix
+              // can choose the right dialog (Add Action vs. Add Key).
+              marker.setAttribute("bindingName", name);
             }
           }
           else if (wodProblem instanceof WodBindingDeprecationProblem) {

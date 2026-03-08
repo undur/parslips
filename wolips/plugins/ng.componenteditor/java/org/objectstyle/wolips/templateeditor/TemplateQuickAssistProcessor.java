@@ -245,17 +245,18 @@ public class TemplateQuickAssistProcessor implements IQuickAssistProcessor {
       }
 
       // For keypath errors on the component class itself, also offer
-      // "Create key" to generate the field/accessor via the Add Key dialog.
-      // Nested keypaths (e.g. "session.nme") use the message format
-      // "for the keypath '...'" — we don't offer key creation for those
-      // since it would require modifying a different class.
+      // "Create key" (or "Create action" for action bindings) to generate
+      // code via the appropriate dialog. Nested keypaths (e.g. "session.nme")
+      // use the message format "for the keypath '...'" — we don't offer
+      // key creation for those since it would require modifying a different class.
       boolean isDirectKey = invalidKeyName != null
           && message != null
           && !message.contains("for the keypath");
       if (isDirectKey && file != null) {
+        String bindingName = (String) marker.getAttribute("bindingName");
         String createKeyProposalKey = "createKey:" + invalidKeyName;
         if (seenProposals.add(createKeyProposalKey)) {
-          proposals.add(new CreateKeyCompletionProposal(invalidKeyName, file));
+          proposals.add(new CreateKeyCompletionProposal(invalidKeyName, file, bindingName));
         }
       }
     }

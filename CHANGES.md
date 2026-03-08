@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Quick fix (Cmd+1): open Add Action dialog for action bindings
+
+- When using Cmd+1 on a missing key that's on an action binding (e.g. `action="$performSubmit"`), the quick fix now opens the "Add Action" dialog instead of the "Add Key" dialog. The Add Action dialog defaults to `WOActionResults` and generates the correct method stub — no extra keystrokes needed.
+- The binding name (e.g. `"action"`) is now stored on the problem marker so the quick-fix processor can determine the binding type. Detection uses the existing `ApiUtils.isActionBindingName()` — matches `"action"` and any name ending with `"Action"`.
+- The Cmd+1 menu now shows "Create action 'performSubmit'" instead of "Create key 'performSubmit'" for action bindings.
+
 ### ElementDescriptor: unified element file resolution model
 
 - New `ElementDescriptor` class — an immutable model object that captures "what files belong to this element?" (HTML, WOD, WOO, API, Java, project, template format). Replaces ad-hoc calls to the locate system scattered throughout the codebase.
