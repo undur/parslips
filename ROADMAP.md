@@ -46,26 +46,42 @@ Requires type resolution through the keypath — resolving `selectedInvoice` to 
 
 Implemented. Hovering over a `<wo:ComponentName>` tag in the template editor now shows the component's API documentation — accepted bindings, required/settable markers, and defaults. Works for both project components (via `.api` files) and built-in WO components (via `WebObjectDefinitions.xml`). Validation errors take priority when both are available.
 
-## Unified component template abstraction
+## Unified Element Editor
 
-The codebase has no single model for "a component and its files." Bundle templates (`.wo` folders with `.html`, `.wod`, `.woo`) and standalone templates (single `.html` files) are handled through ad-hoc forking logic everywhere — `ComponentEditorInput.create()` vs `createStandaloneHtml()`, checking `standaloneHtmlEditor != null`, deriving the component name from either the `.wo` folder name or the `.html` filename, guessing which sibling files exist. Every new feature rediscovers these rules, and the forks are a recurring source of bugs.
+The current editor architecture has a split personality: `ComponentEditorPart` (multi-page editor for components with templates) and `ApiEditor` (standalone form editor for `.api` files) are two completely separate editors. `NGEditorAssociationOverride` decides which one to use based on file extension, and features like the Usages tab have to be wired into both places separately. The result is redundancy (e.g. Usages tabs at two levels when the API editor is embedded inside the component editor) and gaps (dynamic elements that have no template get a degraded experience).
 
-A clean `ComponentTemplate` abstraction would unify this. The object would know:
+The fix is a single **Element Editor** that is always the entry point, regardless of which file you click (`.html`, `.wod`, `.api`, `.java`). It resolves the element identity first, then presents tabs based on what files and capabilities exist:
 
-- **Component name** — derived once, regardless of format
-- **HTML file** — the template, whether inside `.wo` or standalone
-- **WOD file** — present for bundles, `null` for standalone
-- **WOO file** — present for bundles, `null` for standalone
+- **Component with bundle template** → HTML, WOD, WOO, API, Usages
+- **Component with standalone template** → HTML, API, Usages
+- **Dynamic element (no template)** → API, Usages
+- **Element with no `.api` file** → just the relevant template tabs + Usages
+
+This eliminates:
+- The `ComponentEditorPart` vs `ApiEditor` fork
+- The `ComponentEditorInput.create()` vs `createStandaloneHtml()` fork
+- Conditional Usages tab logic (always present, once)
+- The switch handlers' project-type checks (the editor knows what it has)
+- Double-tab UI when features exist at both editor levels
+
+### Model layer: `ElementDescriptor`
+
+Underneath the editor, a clean model abstraction replaces the ad-hoc file resolution scattered throughout the codebase. The object would know:
+
+- **Element name** — derived once, regardless of format
+- **HTML file** — the template (inside `.wo` or standalone), or `null` for non-component elements
+- **WOD file** — present for bundle templates, `null` otherwise
+- **WOO file** — present for bundle templates, `null` otherwise
 - **API file** — sibling `.api`, resolved once
-- **Java file** — the component class
-- **Project** — which project the component belongs to
-- **Template format** — bundle or standalone (but callers rarely need to ask)
+- **Java file** — the element class
+- **Project** — which project the element belongs to
+- **Template format** — bundle, standalone, or none (but callers rarely need to ask)
 
 The closest existing thing is `LocalizedComponentsLocateResult`, but it's a mutable grab-bag populated by the locate system, has localization concerns mixed in, and doesn't cover standalone templates well (`createStandaloneHtml()` doesn't even set a locate result). `ComponentEditorInput` is another partial model, but it's tightly coupled to Eclipse editor lifecycle (editor IDs, `MultiEditorInput` inheritance, reveal flags).
 
-A `ComponentTemplate` would be the shared currency between `ComponentEditorInput`, the switch handlers, the extract refactorings, the usages tab, the formatter action, the F3 handler, and the rename participant. Each of those currently has its own way of answering "what files belong to this component?" — a unified model replaces all of them.
+An `ElementDescriptor` would be the shared currency between the editor, the switch handlers, the extract refactorings, the usages tab, the formatter action, the F3 handler, and the rename participant. Each of those currently has its own way of answering "what files belong to this element?" — a unified model replaces all of them.
 
-This is foundational infrastructure — not user-visible, but it makes every subsequent feature cheaper and less bug-prone.
+This is the highest-impact architectural change on the roadmap — it simplifies both the model and the UI, and makes every subsequent feature cheaper and less bug-prone.
 
 ## Component dependency graph
 
