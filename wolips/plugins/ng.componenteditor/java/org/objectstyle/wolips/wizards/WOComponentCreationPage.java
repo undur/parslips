@@ -148,7 +148,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 	private static final String API_CHECKBOX_KEY = "WOComponentCreationWizardSection.apiCheckbox";
 	private static final String HTML_DOCTYPE_KEY = "WOComponentCreationWizardSection.htmlDocType";
 	private static final String NSSTRING_ENCODING_KEY = "WOComponentCreationWizardSection.encoding";
-	private static final String SUPERCLASS_KEY = "WOComponentCreationWizardSection.superclass";
+
 	private static final String COMPONENT_FORMAT_KEY = "WOComponentCreationWizardSection.componentFormat";
 
 	/** Component format values for dialog settings persistence */
@@ -549,20 +549,16 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		_superclassDialogField.setStatusWidthHint(NewWizardMessages.NewTypeWizardPage_default);
 		_superclassDialogField.doFillIntoGrid(javaGroup, 4);
 
-		// Pre-fill superclass: use saved preference, or look up the project's
-		// configured component class from build.properties
-		String superclass = this.getDialogSettings().get(WOComponentCreationPage.SUPERCLASS_KEY);
-		if (superclass == null || superclass.length() == 0) {
-			IPath scContainerPath = getContainerFullPath();
-			if (scContainerPath != null && scContainerPath.segmentCount() > 0) {
-				IProject wizProject = ResourcesPlugin.getWorkspace().getRoot().getProject(scContainerPath.segment(0));
-				_superclassDialogField.setText(ParsleyProject.getComponentClass(wizProject));
-			} else {
-				_superclassDialogField.setText("");
-			}
-		}
-		else {
-			_superclassDialogField.setText(superclass);
+		// Pre-fill superclass from the target project's framework type.
+		// We always derive this from the project rather than using a saved
+		// preference — the preference would be stale when switching between
+		// ng-objects and WebObjects projects.
+		IPath scContainerPath = getContainerFullPath();
+		if (scContainerPath != null && scContainerPath.segmentCount() > 0) {
+			IProject wizProject = ResourcesPlugin.getWorkspace().getRoot().getProject(scContainerPath.segment(0));
+			_superclassDialogField.setText(ParsleyProject.getComponentClass(wizProject));
+		} else {
+			_superclassDialogField.setText("");
 		}
 		Text superclassText = _superclassDialogField.getTextControl(null);
 		LayoutUtil.setWidthHint(superclassText, convertWidthInCharsToPixels(40));
@@ -690,7 +686,7 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 		}
 
 		// Persist the user's choices so they're remembered next time
-		this.getDialogSettings().put(WOComponentCreationPage.SUPERCLASS_KEY, _superclassDialogField.getText());
+		// (superclass is not persisted — it's always derived from the project type)
 		this.getDialogSettings().put(WOComponentCreationPage.BODY_CHECKBOX_KEY, _bodyCheckbox.getSelection());
 		this.getDialogSettings().put(WOComponentCreationPage.HTML_DOCTYPE_KEY, _htmlCombo.getText());
 		this.getDialogSettings().put(WOComponentCreationPage.NSSTRING_ENCODING_KEY, _encodingCombo.getText());

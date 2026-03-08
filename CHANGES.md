@@ -16,6 +16,7 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 - **No more stray .wod/.woo files:** The project wizard was creating `Main.wod` and `Main.woo` in ng-objects projects. These files are only used by bundle templates (WebObjects) — standalone templates (ng-objects) are single `.html` files.
 - **Components folder resolution:** `ParsleyProject.findComponentsFolder()` searched all of `src/main/` for a folder named "components", but ng-objects projects have both `src/main/java/.../components/` (Java sources) and `src/main/resources/.../components/` (templates). The recursive search could find the Java source folder first, causing the "New WO Component" wizard to create templates alongside Java files. The fix narrows the search to `src/main/resources/` for ng projects.
+- **Superclass defaults to project type:** The component wizard pre-filled the superclass from a saved preference, which persisted across projects. Creating an ng component saved `NGComponent`, then creating a WO component would still default to `NGComponent`. The superclass is now always derived from the target project's framework type — no stale preference.
 
 ### Fix crash when navigating into binary types in Bindings Inspector
 
