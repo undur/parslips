@@ -132,20 +132,13 @@ public class ApiEditor extends FormEditor {
 			}
 
 			// Usages page — "who uses this element?" reverse dependency view.
-			// Only shown when the ApiEditor is opened standalone (not embedded
-			// inside the ComponentEditorPart, which has its own Usages tab).
-			if (!isEmbeddedInComponentEditor()) {
-				addPage(new UsagesFormPage(this, getElementName()));
-			}
+			addPage(new UsagesFormPage(this, getElementName()));
 		} catch (PartInitException e) {
 			ApieditorPlugin.getDefault().debug(e);
 		}
 		CTabFolder ctf = (CTabFolder)getContainer();
 	    ctf.setTabPosition(SWT.TOP);
 		ctf.setBorderVisible(false);
-		if (getPageCount() <= 1) {
-			ctf.setTabHeight(0);
-		}
 	}
 
 	/**
@@ -305,23 +298,6 @@ public class ApiEditor extends FormEditor {
 
 	public void activateFirstPage() {
 		this.setActivePage(0);
-	}
-
-	/**
-	 * Returns whether this ApiEditor is embedded inside a
-	 * {@link org.objectstyle.wolips.componenteditor.part.ComponentEditorPart}
-	 * (as the Api tab) rather than opened standalone.
-	 *
-	 * <p>When embedded, the component editor already provides its own Usages
-	 * tab, so the ApiEditor should not add a duplicate one.
-	 *
-	 * <p>Detection: when embedded via {@code ApiTab}, the editor site is a
-	 * {@link org.eclipse.ui.part.MultiPageEditorSite} whose
-	 * {@code getMultiPageEditor()} returns the parent. We detect this by
-	 * checking if the site is an instance of MultiPageEditorSite.
-	 */
-	private boolean isEmbeddedInComponentEditor() {
-		return getSite() instanceof org.eclipse.ui.part.MultiPageEditorSite;
 	}
 
 	/**
