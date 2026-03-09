@@ -326,6 +326,57 @@ public class RenameComponentProcessor {
 	}
 
 	// -----------------------------------------------------------------------
+	// Offset-only scanning (shared by refactoring and search)
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Finds all HTML inline binding tag references to the named element type
+	 * and returns their character offsets.
+	 *
+	 * <p>Only matches opening tags ({@code <wo:Name} and self-closing
+	 * {@code <wo:Name />}), not closing tags, so each logical usage is
+	 * reported once — matching the behavior of {@link #htmlCountElementReferences}.
+	 *
+	 * @param content the HTML file content
+	 * @param elementName the element type name to find
+	 * @return list of {@code [offset, length]} pairs for the element name
+	 */
+	public static List<int[]> findHtmlElementOffsets(String content, String elementName) {
+		// Only match opening tags: <wo:Name — exclude </wo:Name closing tags
+		Pattern openingOnly = Pattern.compile(
+				"(?i:<wo:)" + Pattern.quote(elementName) + "(?=[\\s>/$])", 0);
+		Matcher matcher = openingOnly.matcher(content);
+		List<int[]> offsets = new ArrayList<>();
+		while (matcher.find()) {
+			int nameStart = matcher.end() - elementName.length();
+			offsets.add(new int[] { nameStart, elementName.length() });
+		}
+		return offsets;
+	}
+
+	/**
+	 * Finds all WOD element type declarations referencing the named element
+	 * type and returns their character offsets.
+	 *
+	 * <p>Matches {@code : ElementName &#123;} declarations in WOD content.
+	 *
+	 * @param content the WOD file content
+	 * @param elementName the element type name to find
+	 * @return list of {@code [offset, length]} pairs for the element name
+	 */
+	public static List<int[]> findWodElementOffsets(String content, String elementName) {
+		Matcher matcher = wodElementPattern(elementName).matcher(content);
+		List<int[]> offsets = new ArrayList<>();
+		while (matcher.find()) {
+			String matchText = matcher.group();
+			int nameOffset = matchText.indexOf(elementName);
+			int nameStart = matcher.start() + nameOffset;
+			offsets.add(new int[] { nameStart, elementName.length() });
+		}
+		return offsets;
+	}
+
+	// -----------------------------------------------------------------------
 	// Cross-reference updating: rewrite element type references in templates
 	// -----------------------------------------------------------------------
 

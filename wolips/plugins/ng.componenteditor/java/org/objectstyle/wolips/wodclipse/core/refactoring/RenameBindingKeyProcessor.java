@@ -13,6 +13,10 @@ import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IMethod;
+import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
@@ -196,22 +200,11 @@ public class RenameBindingKeyProcessor {
 	 * @return list of ReplaceEdit objects
 	 */
 	static List<ReplaceEdit> findWodKeyEdits(String content, String oldKey, String newKey) {
-		// Match: = followed by optional whitespace, then the key, then a
-		// key-path terminator. The key is captured by its position within
-		// the overall match.
-		Pattern pattern = Pattern.compile(
-				"=\\s*" + Pattern.quote(oldKey) + "(?=[;\\s.|]|$)");
-
-		Matcher matcher = pattern.matcher(content);
+		List<int[]> offsets = findWodKeyOffsets(content, oldKey);
 		List<ReplaceEdit> edits = new ArrayList<>();
-
-		while (matcher.find()) {
-			// The match includes "= " prefix — the key starts at the end
-			// of the match minus the key length
-			int keyStart = matcher.end() - oldKey.length();
-			edits.add(new ReplaceEdit(keyStart, oldKey.length(), newKey));
+		for (int[] offset : offsets) {
+			edits.add(new ReplaceEdit(offset[0], offset[1], newKey));
 		}
-
 		return edits;
 	}
 
@@ -271,20 +264,140 @@ public class RenameBindingKeyProcessor {
 	 * @return list of ReplaceEdit objects
 	 */
 	static List<ReplaceEdit> findHtmlKeyEdits(String content, String oldKey, String newKey, String inlineBindingPrefix) {
-		// Match: the inline binding prefix followed immediately by the key,
-		// then a value terminator. Only the key portion is replaced.
-		Pattern pattern = Pattern.compile(
-				Pattern.quote(inlineBindingPrefix) + Pattern.quote(oldKey) + "(?=[\"'.\\s|]|$)");
-
-		Matcher matcher = pattern.matcher(content);
+		List<int[]> offsets = findHtmlKeyOffsets(content, oldKey, inlineBindingPrefix);
 		List<ReplaceEdit> edits = new ArrayList<>();
+		for (int[] offset : offsets) {
+			edits.add(new ReplaceEdit(offset[0], offset[1], newKey));
+		}
+		return edits;
+	}
 
+	// ---- Offset-only scanning (shared by refactoring and search) ----
+
+	/**
+	 * Finds all WOD binding key references in the given content and returns
+	 * their character offsets.
+	 *
+	 * <p>Uses the same regex as the rename refactoring: matches the key as
+	 * a binding value (right-hand side of {@code =}) at the start of a key
+	 * path.
+	 *
+	 * @param content the WOD file content
+	 * @param key the binding key to find
+	 * @return list of {@code [offset, length]} pairs
+	 */
+	public static List<int[]> findWodKeyOffsets(String content, String key) {
+		Pattern pattern = Pattern.compile(
+				"=\\s*" + Pattern.quote(key) + "(?=[;\\s.|]|$)");
+		Matcher matcher = pattern.matcher(content);
+		List<int[]> offsets = new ArrayList<>();
 		while (matcher.find()) {
-			// The match includes the prefix — the key starts after the prefix
+			int keyStart = matcher.end() - key.length();
+			offsets.add(new int[] { keyStart, key.length() });
+		}
+		return offsets;
+	}
+
+	/**
+	 * Finds all inline HTML binding key references in the given content and
+	 * returns their character offsets.
+	 *
+	 * <p>Uses the same regex as the rename refactoring: matches the inline
+	 * binding prefix (typically {@code $}) followed immediately by the key,
+	 * inside attribute values.
+	 *
+	 * @param content the HTML file content
+	 * @param key the binding key to find
+	 * @param inlineBindingPrefix the inline binding prefix (e.g. "$")
+	 * @return list of {@code [offset, length]} pairs
+	 */
+	public static List<int[]> findHtmlKeyOffsets(String content, String key, String inlineBindingPrefix) {
+		Pattern pattern = Pattern.compile(
+				Pattern.quote(inlineBindingPrefix) + Pattern.quote(key) + "(?=[\"'.\\s|]|$)");
+		Matcher matcher = pattern.matcher(content);
+		List<int[]> offsets = new ArrayList<>();
+		while (matcher.find()) {
 			int keyStart = matcher.start() + inlineBindingPrefix.length();
-			edits.add(new ReplaceEdit(keyStart, oldKey.length(), newKey));
+			offsets.add(new int[] { keyStart, key.length() });
+		}
+		return offsets;
+	}
+
+	// ---- Key derivation (shared by refactoring and search) ----
+
+	/**
+	 * Derives a binding key from a Java member (method or field) by stripping
+	 * KVC prefixes.
+	 *
+	 * @see #deriveBindingKeyFromMethodName(String)
+	 * @see #deriveBindingKeyFromFieldName(String)
+	 */
+	public static String deriveBindingKey(IMember member) {
+		String name = member.getElementName();
+		if (member instanceof IField) {
+			return deriveBindingKeyFromFieldName(name);
+		}
+		return deriveBindingKeyFromMethodName(name);
+	}
+
+	/**
+	 * Derives a binding key from a method name by stripping KVC getter/setter
+	 * prefixes and lowercasing the first letter.
+	 *
+	 * <p>Examples:
+	 * <ul>
+	 *   <li>{@code title()} → "title"</li>
+	 *   <li>{@code getTitle()} → "title"</li>
+	 *   <li>{@code isEnabled()} → "enabled"</li>
+	 *   <li>{@code setTitle()} → "title"</li>
+	 *   <li>{@code _getTitle()} → "title"</li>
+	 *   <li>{@code _title()} → "title"</li>
+	 * </ul>
+	 */
+	public static String deriveBindingKeyFromMethodName(String methodName) {
+		// 1. Try explicit getter prefixes (skip "" and bare "_")
+		for (String prefix : BindingReflectionUtils.GET_METHOD_PREFIXES) {
+			if (prefix.length() > 1 && methodName.startsWith(prefix) && methodName.length() > prefix.length()) {
+				String remainder = methodName.substring(prefix.length());
+				if (Character.isUpperCase(remainder.charAt(0))) {
+					return BindingReflectionUtils.toLowercaseFirstLetter(remainder);
+				}
+			}
 		}
 
-		return edits;
+		// 2. Try setter prefixes
+		for (String prefix : BindingReflectionUtils.SET_METHOD_PREFIXES) {
+			if (methodName.startsWith(prefix) && methodName.length() > prefix.length()) {
+				String remainder = methodName.substring(prefix.length());
+				if (Character.isUpperCase(remainder.charAt(0))) {
+					return BindingReflectionUtils.toLowercaseFirstLetter(remainder);
+				}
+			}
+		}
+
+		// 3. Bare "_" prefix
+		if (methodName.startsWith("_") && methodName.length() > 1) {
+			return methodName.substring(1);
+		}
+
+		// 4. No prefix — the method name IS the key
+		return methodName;
+	}
+
+	/**
+	 * Derives a binding key from a field name by stripping the underscore
+	 * prefix if present.
+	 *
+	 * <p>Examples:
+	 * <ul>
+	 *   <li>{@code title} → "title"</li>
+	 *   <li>{@code _title} → "title"</li>
+	 * </ul>
+	 */
+	public static String deriveBindingKeyFromFieldName(String fieldName) {
+		if (fieldName.startsWith("_") && fieldName.length() > 1) {
+			return fieldName.substring(1);
+		}
+		return fieldName;
 	}
 }

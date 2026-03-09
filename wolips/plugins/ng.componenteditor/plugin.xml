@@ -609,6 +609,15 @@
       </renameParticipant>
    </extension>
 
+   <!-- Search: contribute template binding references to "Find References" -->
+   <extension point="org.eclipse.jdt.ui.queryParticipants">
+      <queryParticipant
+            class="org.objectstyle.wolips.wodclipse.core.search.TemplateBindingQueryParticipant"
+            id="ng.componenteditor.templateBindingQueryParticipant"
+            name="Template Binding References"
+            nature="org.eclipse.jdt.core.javanature" />
+   </extension>
+
 <!-- =================================================================================== -->
 <!-- Preference Pages                                                                    -->
 <!-- =================================================================================== -->

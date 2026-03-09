@@ -53,6 +53,18 @@ When a method like `Invoice.customer()` is renamed to `Invoice.buyer()`, templat
 
 Requires type resolution through the keypath — resolving `selectedInvoice` to `Invoice`, then matching `.customer` against that type. The validation engine already does this for error checking, but that machinery is tightly coupled to the Eclipse workspace. Bridging JDT's type-aware rename with template scanning across all templates in the workspace is the main challenge. Scope is also much larger: unlike first-segment renames (local to one component), a type like `Invoice` could appear in keypaths across any template.
 
+### ~~Find references in templates~~ ✓
+
+Implemented. Eclipse's "Find References" (Ctrl+Shift+G) on a method or field in a component class now also finds binding key references in the component's own template files — both inline HTML bindings (`value="$name"`) and WOD binding values (`value = name;`). Results appear in the standard Search view alongside Java references. Implemented via the `org.eclipse.jdt.ui.queryParticipants` extension point.
+
+### Element type references should resolve tag shortcuts
+
+Find References on an element type (e.g. `WOConditional`) currently only finds templates that reference it by its class name — `<wo:WOConditional>` in HTML or `: WOConditional {` in WOD. Templates using a tag shortcut like `<wo:if>` are not found, even though `if` resolves to `WOConditional`. Once the tag shortcut mechanism is cleaned up (it's currently too fragile), Find References should resolve shortcuts to their target types and include those matches.
+
+### Deep keypath segment references
+
+The same challenge as deep keypath renaming, but for search: finding that `Customer.name()` is referenced via `$selectedObject.name` in another component's template requires type-resolving every keypath in every template in the project. This would need either a keypath index (expensive to build and maintain) or a brute-force scan with full type resolution per template. Deferred until the keypath indexing infrastructure exists.
+
 ## ~~Component documentation on hover~~ ✓
 
 Implemented. Hovering over a `<wo:ComponentName>` tag in the template editor now shows the component's API documentation — accepted bindings, required/settable markers, and defaults. Works for both project components (via `.api` files) and built-in WO components (via `WebObjectDefinitions.xml`). Validation errors take priority when both are available.

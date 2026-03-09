@@ -51,6 +51,21 @@
 					<p>Requires type resolution through the keypath chain &mdash; resolving each segment to its Java type, then matching the renamed method against that type. The validation engine already does this for error checking, but bridging it with the refactoring layer across all templates in the workspace is a significant piece of work.</p>
 				</div>
 
+				<!-- Find references in templates (Level 1): implemented. Eclipse's
+				     "Find References" (Ctrl+Shift+G) now includes template binding
+				     references from the component's own HTML and WOD files. -->
+
+				<div class="roadmap-entry">
+					<h3>Find References: resolve tag shortcuts</h3>
+					<p>Find References on an element type like <code>WOConditional</code> currently only finds templates that reference it by class name. Templates using a tag shortcut like <code>&lt;wo:if&gt;</code> are not found, even though <code>if</code> resolves to <code>WOConditional</code>. Once the tag shortcut mechanism is cleaned up, Find References should resolve shortcuts to their target types and include those matches.</p>
+				</div>
+
+				<div class="roadmap-entry">
+					<h3>Deep keypath segment references</h3>
+					<p>Eclipse&rsquo;s &ldquo;Find References&rdquo; now shows template binding references for a component&rsquo;s own keys (first segment only). The next level would find references to a method or field through keypath chains in <em>any</em> template &mdash; e.g. searching for <code>Customer.name()</code> should find <code>$selectedCustomer.name</code> in other components&rsquo; templates.</p>
+					<p>Same underlying requirement as deep keypath segment renaming: type-resolving every segment in every keypath across all templates in the workspace. Could share the same infrastructure once built.</p>
+				</div>
+
 				<div class="roadmap-entry">
 					<h3>Rename component: undo support</h3>
 					<p>Component renaming works but undo fails. The undo entry recorded by Eclipse's refactoring framework conflicts with the resource-level renames added by our LTK participant. Needs investigation into LTK's undo/redo machinery.</p>

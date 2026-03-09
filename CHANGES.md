@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Find References (Ctrl+Shift+G) includes template references
+
+- Eclipse's "Find References" for a method or field in a component class now includes binding key references from the component's own template files — both inline HTML bindings (`value="$name"`) and WOD binding values (`value = name;`).
+- "Find References" on a component or element class now includes template references across the project and all dependent projects — inline HTML tags (`<wo:MyComponent>`) and WOD element type declarations (`Foo : MyComponent { }`). The scan scope matches the Usages tab: the type's own project plus all projects that transitively depend on it.
+- New `TemplateBindingQueryParticipant` implements `IQueryParticipant` to contribute matches to JDT's search infrastructure. Matches appear in the standard Search view alongside Java callers, with clickable navigation to the template offset.
+- Extracted shared key derivation and offset scanning methods from `RenameBindingKeyParticipant` into `RenameBindingKeyProcessor`, and added offset-returning variants of element reference scanning to `RenameComponentProcessor`, so both refactoring and search share the same regex logic.
+- Binding key search is Level 1: first-segment keys in the component's own template. Level 2 (deep keypath references like `$selectedObject.name` across all templates) is deferred to the roadmap.
+
 ### Quick fix (Cmd+1): open Add Action dialog for action bindings
 
 - When using Cmd+1 on a missing key that's on an action binding (e.g. `action="$performSubmit"`), the quick fix now opens the "Add Action" dialog instead of the "Add Key" dialog. The Add Action dialog defaults to `WOActionResults` and generates the correct method stub — no extra keystrokes needed.

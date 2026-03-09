@@ -30,6 +30,19 @@
 				<p>Parsley is under active development, so you might want to try it in a fresh Eclipse installation to be safe (although testing it alongside WOLips is great for us too). Please report any problems you encounter &mdash; since we&rsquo;re in early development, reported bugs are usually fixed fast.</p>
 			</div>
 
+			<!-- March 9, 2026 -->
+			<div class="card">
+				<h2 class="date-header">March 9, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Find References includes template references</h3>
+					<p>Eclipse&rsquo;s <strong>Find References</strong> (<kbd>Ctrl+Shift+G</kbd>) now surfaces template references in the standard Search view, right alongside Java callers.</p>
+					<p><strong>Binding keys:</strong> Search for references to a method like <code>name()</code> in your component class and the Search view shows hits from inline HTML bindings (<code>value=&quot;$name&quot;</code>) and WOD binding values (<code>value = name;</code>). KVC getter/setter prefixes are handled automatically &mdash; searching for <code>getTitle()</code> finds references to key <code>title</code>.</p>
+					<p><strong>Element types:</strong> Search for references to a component or element class and the Search view shows every template that uses it &mdash; <code>&lt;wo:MyComponent&gt;</code> tags in HTML and <code>: MyComponent {</code> declarations in WOD files. The scan covers the element&rsquo;s own project and all projects that depend on it, so library components show usages from consuming applications.</p>
+					<p>Double-click any match to jump straight to the reference in the template file.</p>
+				</div>
+			</div>
+
 			<!-- March 8, 2026 -->
 			<div class="card">
 				<h2 class="date-header">March 8, 2026</h2>

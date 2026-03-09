@@ -13,7 +13,6 @@ import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
-import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.variables.ParsleyProject;
 
@@ -83,7 +82,7 @@ public class RenameBindingKeyParticipant extends RenameParticipant {
 		}
 
 		// Derive the binding key from the old member name
-		_oldKey = deriveBindingKey(_member);
+		_oldKey = RenameBindingKeyProcessor.deriveBindingKey(_member);
 
 		// If the key is empty or null, there's nothing to rename
 		return _oldKey != null && _oldKey.length() > 0;
@@ -126,17 +125,6 @@ public class RenameBindingKeyParticipant extends RenameParticipant {
 	}
 
 	/**
-	 * Derives a binding key from a member (method or field) using its current name.
-	 */
-	private static String deriveBindingKey(IMember member) {
-		String name = member.getElementName();
-		if (member instanceof IField) {
-			return deriveBindingKeyFromFieldName(name);
-		}
-		return deriveBindingKeyFromMethodName(name);
-	}
-
-	/**
 	 * Derives a binding key from a member type and a (possibly new) name.
 	 *
 	 * <p>Used for computing the new key: we know the member type (method or
@@ -144,82 +132,9 @@ public class RenameBindingKeyParticipant extends RenameParticipant {
 	 */
 	private static String deriveBindingKeyFromName(IMember member, String name) {
 		if (member instanceof IField) {
-			return deriveBindingKeyFromFieldName(name);
+			return RenameBindingKeyProcessor.deriveBindingKeyFromFieldName(name);
 		}
-		return deriveBindingKeyFromMethodName(name);
-	}
-
-	/**
-	 * Derives a binding key from a method name by stripping KVC getter/setter
-	 * prefixes and lowercasing the first letter.
-	 *
-	 * <p>Prefix stripping order:
-	 * <ol>
-	 *   <li>Explicit getter prefixes: {@code get}, {@code _get}, {@code is},
-	 *       {@code _is} — require uppercase after prefix</li>
-	 *   <li>Setter prefixes: {@code set}, {@code _set} — require uppercase
-	 *       after prefix</li>
-	 *   <li>Bare underscore: {@code _} — no uppercase requirement (KVC
-	 *       convention for private accessors)</li>
-	 *   <li>No prefix: the method name IS the key (e.g. {@code title()})</li>
-	 * </ol>
-	 *
-	 * <p>Examples:
-	 * <ul>
-	 *   <li>{@code title()} → "title"</li>
-	 *   <li>{@code getTitle()} → "title"</li>
-	 *   <li>{@code isEnabled()} → "enabled"</li>
-	 *   <li>{@code setTitle()} → "title"</li>
-	 *   <li>{@code _getTitle()} → "title"</li>
-	 *   <li>{@code _title()} → "title"</li>
-	 * </ul>
-	 */
-	static String deriveBindingKeyFromMethodName(String methodName) {
-		// 1. Try explicit getter prefixes (skip "" and bare "_")
-		// GET_METHOD_PREFIXES = { "get", "", "_get", "is", "_is", "_" }
-		for (String prefix : BindingReflectionUtils.GET_METHOD_PREFIXES) {
-			if (prefix.length() > 1 && methodName.startsWith(prefix) && methodName.length() > prefix.length()) {
-				String remainder = methodName.substring(prefix.length());
-				if (Character.isUpperCase(remainder.charAt(0))) {
-					return BindingReflectionUtils.toLowercaseFirstLetter(remainder);
-				}
-			}
-		}
-
-		// 2. Try setter prefixes: { "set", "_set" }
-		for (String prefix : BindingReflectionUtils.SET_METHOD_PREFIXES) {
-			if (methodName.startsWith(prefix) && methodName.length() > prefix.length()) {
-				String remainder = methodName.substring(prefix.length());
-				if (Character.isUpperCase(remainder.charAt(0))) {
-					return BindingReflectionUtils.toLowercaseFirstLetter(remainder);
-				}
-			}
-		}
-
-		// 3. Bare "_" prefix — doesn't require uppercase after stripping
-		if (methodName.startsWith("_") && methodName.length() > 1) {
-			return methodName.substring(1);
-		}
-
-		// 4. No recognized prefix — the method name IS the key
-		return methodName;
-	}
-
-	/**
-	 * Derives a binding key from a field name by stripping the underscore
-	 * prefix if present.
-	 *
-	 * <p>Examples:
-	 * <ul>
-	 *   <li>{@code title} → "title"</li>
-	 *   <li>{@code _title} → "title"</li>
-	 * </ul>
-	 */
-	static String deriveBindingKeyFromFieldName(String fieldName) {
-		if (fieldName.startsWith("_") && fieldName.length() > 1) {
-			return fieldName.substring(1);
-		}
-		return fieldName;
+		return RenameBindingKeyProcessor.deriveBindingKeyFromMethodName(name);
 	}
 
 	/**
@@ -229,8 +144,10 @@ public class RenameBindingKeyParticipant extends RenameParticipant {
 	 * <p>Only components have template files with binding keys. Plain
 	 * WOElement/WODynamicElement subclasses don't use template bindings
 	 * in the same way.
+	 *
+	 * <p>Public so that the search participant can reuse this check.
 	 */
-	private static boolean isComponent(IType type) {
+	public static boolean isComponent(IType type) {
 		try {
 			ITypeHierarchy hierarchy = type.newSupertypeHierarchy(null);
 			IType[] allSupertypes = hierarchy.getAllSupertypes(type);
