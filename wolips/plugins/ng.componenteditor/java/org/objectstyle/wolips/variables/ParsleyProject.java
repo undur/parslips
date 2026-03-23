@@ -81,7 +81,6 @@ public class ParsleyProject {
 	 * <ol>
 	 *   <li>{@code project.base=ng} in build.properties → {@link ProjectType#NG}</li>
 	 *   <li>{@code project.base=wo} in build.properties → {@link ProjectType#WO}</li>
-	 *   <li>{@code project.name} in build.properties (without explicit project.base) → {@link ProjectType#WO}</li>
 	 *   <li>Classpath probe: NGElement present and WOElement absent → {@link ProjectType#NG}</li>
 	 *   <li>Classpath probe: WOElement present → {@link ProjectType#WO}</li>
 	 *   <li>Neither marker class on classpath → {@link ProjectType#UNKNOWN}</li>
@@ -97,12 +96,7 @@ public class ParsleyProject {
 			return ProjectType.WO;
 		}
 
-		// 2. project.name without explicit base → legacy WO project
-		if (_buildProperties.get(BuildProperties.Key.PROJECT_NAME) != null) {
-			return ProjectType.WO;
-		}
-
-		// 3. Classpath probing
+		// 2. Classpath probing (uses JDT's in-memory type index, so essentially free)
 		boolean hasNG = classpathContains(NG_ELEMENT_CLASS);
 		boolean hasWO = classpathContains(WO_ELEMENT_CLASS);
 
