@@ -25,6 +25,17 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- April 10, 2026 -->
+			<div class="card">
+				<h2 class="date-header">April 10, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Fix: close-tag completion after self-closing tag with parentheses in attribute</h3>
+					<p>Fixed a bug where close-tag completion (<kbd>Ctrl+Space</kbd>) would suggest the wrong tag after a self-closing tag whose attribute value started with a delimiter character &mdash; typically a parenthesis, like <code>&lt;wo:str valueWhenEmpty=&quot;(empty) &quot;/&gt;</code>. The scanner&rsquo;s quoted-value tracking lost state when the first character inside the quote was a delimiter, which in turn broke the self-closing pop and left the tag sitting on the unclosed-tag stack. Subsequent close-tag completions would incorrectly suggest closing the stale tag.</p>
+					<p>Also affects values starting with other delimiter characters (<code>;</code>, <code>+</code>, etc.), not just <code>(</code>.</p>
+				</div>
+			</div>
+
 			<!-- March 9, 2026 -->
 			<div class="card">
 				<h2 class="date-header">March 9, 2026</h2>

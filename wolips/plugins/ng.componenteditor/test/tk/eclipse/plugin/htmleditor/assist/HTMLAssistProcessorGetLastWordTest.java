@@ -282,4 +282,55 @@ public class HTMLAssistProcessorGetLastWordTest {
 		// Several void elements in a row.
 		assertEquals("p", lastTag("<div><p><br><br><hr><img src=\"x\">"));
 	}
+
+	// =========================================================================
+	// Attribute values that start with (or contain) delimiter characters
+	// must not break the quoted-value tracking. A pre-existing bug caused
+	// the scanner to lose quote-tracking state when the first character of
+	// an attribute value was a delimiter like '(', because the length > 1
+	// guard on the "inside a quoted value" protection excluded the case
+	// where temp1 was just the opening '"' (length 1). That in turn caused
+	// self-closing detection to fail for tags like
+	// <wo:str valueWhenEmpty="(empty) "/> — the wo:str would stay on the
+	// stack and close-tag completion would suggest </wo:str> for whatever
+	// came after.
+	// =========================================================================
+
+	@Test
+	public void selfClosingTag_attrValueStartingWithParen() {
+		// The opening '(' must not break the quote-tracking. Without the
+		// length>=1 protection, this would leave wo:str on the stack.
+		assertEquals("div",
+				lastTag("<div><wo:str value=\"(paren)\"/>"));
+	}
+
+	@Test
+	public void selfClosingTag_followedByAnotherTag() {
+		// Exact shape of the bug from the field: a self-closing wo:str
+		// with a parenthesized attribute value, followed by a wo:if.
+		// The scanner must report wo:if as the innermost unclosed tag.
+		assertEquals("wo:if",
+				lastTag("<wo:str value=\"$x\" valueWhenEmpty=\"(nothing) \"/><wo:if condition=\"$y\">"));
+	}
+
+	@Test
+	public void selfClosingTag_attrValueStartingWithSemicolon() {
+		// ';' is also a delimiter — same class of bug.
+		assertEquals("div",
+				lastTag("<div><wo:str value=\";leading-semi\"/>"));
+	}
+
+	@Test
+	public void selfClosingTag_attrValueStartingWithPlus() {
+		// '+' is also a delimiter — same class of bug.
+		assertEquals("div",
+				lastTag("<div><wo:str value=\"+leading-plus\"/>"));
+	}
+
+	@Test
+	public void selfClosingTag_normalAttrValue_stillWorks() {
+		// Regression guard for the common case.
+		assertEquals("div",
+				lastTag("<div><wo:str value=\"regular\"/>"));
+	}
 }

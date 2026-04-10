@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: close-tag completion broken after self-closing tag with delimiter in attribute value
+
+- A self-closing tag like `<wo:str valueWhenEmpty="(empty) "/>` left the tag on the `TagStackAnalyzer` stack when the attribute value started with a delimiter character (`(`, `)`, `;`, `+`, etc.). Close-tag completion for whatever came after would then incorrectly suggest `</wo:str>`.
+- Root cause: the "inside a quoted attribute value" protection required `temp1.length() > 1`, but when the opening `"` had just been added to sb and the next character was a delimiter, temp1 was just `"` (length 1). The delimiter fell through as a regular delimiter, corrupting sb state and breaking the self-closing pop at the end of the tag.
+- Fix: extended the protection to handle `temp1.length() == 1` when temp1 is the opening quote itself. Added regression tests for `(`, `;`, `+` as leading delimiter characters.
+
+### Fix: project type detection no longer uses `project.name` heuristic
+
+- Removed the heuristic that classified projects with `project.name` but no `project.base` as WO. The heuristic existed as a perf shortcut, but classpath probing is cheap (it's a JDT index lookup) and the heuristic caused false positives for ng-objects projects that carried the legacy key.
+- Detection hierarchy is now: `project.base=ng` → NG, `project.base=wo` → WO, classpath probe for `NGElement`/`WOElement`, otherwise UNKNOWN.
+
 ### Find References (Ctrl+Shift+G) includes template references
 
 - Eclipse's "Find References" for a method or field in a component class now includes binding key references from the component's own template files — both inline HTML bindings (`value="$name"`) and WOD binding values (`value = name;`).

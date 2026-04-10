@@ -73,10 +73,24 @@ public class TagStackAnalyzer {
 			}
 			if (isDelimiter(c)) {
 				temp1 = sb.toString();
-				// Skip whitespace inside a quoted attribute value (e.g. value="hello world").
-				// Only when inside a tag — an apostrophe in body text (e.g. "what's")
-				// must not start quote tracking, or it swallows subsequent content.
-				if (!prevTag.equals("") && temp1.length() > 1 && ((temp1.startsWith("\"") && !temp1.endsWith("\"") && c != '"') || (temp1.startsWith("'") && !temp1.endsWith("'") && c != '\''))) {
+				// Skip delimiter characters inside a quoted attribute value
+				// (e.g. spaces in value="hello world", or parentheses in
+				// value="(ekkert skráð)"). Only when inside a tag — an
+				// apostrophe in body text (e.g. "what's") must not start
+				// quote tracking, or it swallows subsequent content.
+				//
+				// We must also handle the case where temp1 is just the
+				// opening quote itself (length 1) — this happens when the
+				// attribute value begins with a delimiter character. Without
+				// this, value="(paren)" loses its quote tracking on the '('
+				// and subsequent self-closing detection fails.
+				boolean insideDoubleQuote = temp1.startsWith("\"")
+						&& (temp1.length() == 1 || !temp1.endsWith("\""))
+						&& c != '"';
+				boolean insideSingleQuote = temp1.startsWith("'")
+						&& (temp1.length() == 1 || !temp1.endsWith("'"))
+						&& c != '\'';
+				if (!prevTag.equals("") && temp1.length() >= 1 && (insideDoubleQuote || insideSingleQuote)) {
 					sb.append(c);
 					continue;
 				}
