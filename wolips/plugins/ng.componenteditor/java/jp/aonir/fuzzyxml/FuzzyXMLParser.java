@@ -611,9 +611,6 @@ public class FuzzyXMLParser {
 	}
 
 	private void handleCloseTag(int offset, int end, String text, boolean showMismatchError) {
-		if (_stack.size() == 0) {
-			return;
-		}
 		String tagName = text.substring(1).trim();
 
 		// MS: Chuck does close tags like </webobject closing something else>
@@ -623,6 +620,19 @@ public class FuzzyXMLParser {
 			if (WodHtmlUtils.isWOTag(chuckWord)) {
 				tagName = chuckWord;
 			}
+		}
+
+		// Empty stack means we've seen a close tag with nothing on the
+		// open-tag stack — an extraneous close tag, e.g. </div> appearing
+		// after all open tags have already been properly closed, or at
+		// the very start of the document. Report it as a noStartTag error
+		// (unless we're in a suppress-errors recursive call) and return.
+		// We can't actually pop anything, but the user should see the mistake.
+		if (_stack.size() == 0) {
+			if (showMismatchError) {
+				fireErrorEvent(offset, end - offset, Messages.getMessage("error.noStartTag", tagName), null);
+			}
+			return;
 		}
 
 		FuzzyXMLElementImpl lastOpenElement = (FuzzyXMLElementImpl) _stack.pop();

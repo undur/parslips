@@ -30,6 +30,12 @@
 				<h2 class="date-header">April 10, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Fix: extraneous close tags are now reported</h3>
+					<p>Templates with stray close tags &mdash; e.g. <code>&lt;div&gt;&lt;/div&gt;&lt;/div&gt;</code> with more closes than opens &mdash; now correctly report each dangling close tag as a validation error (<em>&ldquo;&lt;div&gt; start tag is not found.&rdquo;</em>) in the Problems view and inline in the editor.</p>
+					<p>This was a long-standing bug inherited from the original WOLips parser: the FuzzyXML close-tag handler had a defensive early return whenever the open-tag stack was empty, which silently swallowed the exact case the validation was meant to catch. An empty stack on a close tag is precisely an extraneous close tag.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Fix: close-tag completion after self-closing tag with parentheses in attribute</h3>
 					<p>Fixed a bug where close-tag completion (<kbd>Ctrl+Space</kbd>) would suggest the wrong tag after a self-closing tag whose attribute value started with a delimiter character &mdash; typically a parenthesis, like <code>&lt;wo:str valueWhenEmpty=&quot;(empty) &quot;/&gt;</code>. The scanner&rsquo;s quoted-value tracking lost state when the first character inside the quote was a delimiter, which in turn broke the self-closing pop and left the tag sitting on the unclosed-tag stack. Subsequent close-tag completions would incorrectly suggest closing the stale tag.</p>
 					<p>Also affects values starting with other delimiter characters (<code>;</code>, <code>+</code>, etc.), not just <code>(</code>.</p>

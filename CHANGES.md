@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: extraneous close tags no longer silently swallowed
+
+- Templates with extraneous close tags — e.g. `<div></div></div></div>` — now report each dangling close tag as a validation error (`<div> start tag is not found.`).
+- Root cause: `FuzzyXMLParser.handleCloseTag()` had a defensive early return when the open-tag stack was empty, which silently swallowed the main case we want to report. A close tag encountered with nothing on the stack is *exactly* an extraneous close tag. The guard has been inherited from the original WOLips/FuzzyXML code since the initial ng import.
+- Fix: moved the tag-name extraction above the empty-stack check and replaced the silent return with an `error.noStartTag` event (unless the call is a recursive bookkeeping call that suppresses errors). Added 8 regression tests.
+
 ### Fix: close-tag completion broken after self-closing tag with delimiter in attribute value
 
 - A self-closing tag like `<wo:str valueWhenEmpty="(empty) "/>` left the tag on the `TagStackAnalyzer` stack when the attribute value started with a delimiter character (`(`, `)`, `;`, `+`, etc.). Close-tag completion for whatever came after would then incorrectly suggest `</wo:str>`.
