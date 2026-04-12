@@ -1059,10 +1059,20 @@ public class FuzzyXMLParser {
 		/** Parse errors detected during attribute scanning (e.g. missing '='). */
 		private ArrayList<TagError> errors = new ArrayList<TagError>();
 
+		/**
+		 * Adds an attribute to this tag's attribute list. If an attribute
+		 * with the same name already exists (case-insensitive), the duplicate
+		 * is dropped and an error is recorded — duplicate attributes are a
+		 * parse error per the HTML spec (the first occurrence wins).
+		 */
 		public void addAttr(AttrInfo attr) {
 			AttrInfo[] info = getAttrs();
 			for (int i = 0; i < info.length; i++) {
-				if (info[i].name.equals(attr.name)) {
+				if (info[i].name.equalsIgnoreCase(attr.name)) {
+					addError(attr.offset, attr.name.length(),
+							"Duplicate attribute '" + attr.name + "'"
+							+ (attr.name.equals(info[i].name) ? "" : " (same as '" + info[i].name + "')")
+							+ " — the first value will be used.");
 					return;
 				}
 			}

@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Validate duplicate attributes on tags
+
+- Tags with duplicate attributes (e.g. `<div class="a" class="b">`) now produce a validation error. The first occurrence wins (per the HTML spec) and the duplicate is dropped, but the user now sees the problem.
+- Detection is case-insensitive: `class` and `Class` are treated as the same attribute. When the case differs, the error message identifies both names.
+- Previously, `FuzzyXMLParser.TagInfo.addAttr()` silently dropped duplicates with no feedback.
+
 ### Fix: extraneous close tags no longer silently swallowed
 
 - Templates with extraneous close tags — e.g. `<div></div></div></div>` — now report each dangling close tag as a validation error (`<div> start tag is not found.`).
