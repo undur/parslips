@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: Parsley Explorer now refreshes when pulled-up folders are created
+
+- Creating a new folder under `src/main/` named `woresources`, `components`, or `webserver-resources` (or any folder with one of those names anywhere under `src/main/resources/`) caused the folder to vanish from its physical location (correctly — it gets pulled up to the project root) but the folder did not appear at the project root until F5 was pressed.
+- Root cause: the base JDT content provider refreshes the immediate parent of a created folder, not the project root. Our content provider's pull-up logic only runs when `getChildren(IJavaProject)` is invoked, so the new pulled-up folder was never recomputed.
+- Fix: new `PulledUpFolderRefresher` listens for workspace `POST_CHANGE` events, detects ADDED/REMOVED folders that match our pulled-up criteria, and dispatches `viewer.refresh(javaProject)` on the UI thread. Wired into both `NGPackageExplorerContentProvider` and `NGWorkingSetAwareContentProvider` via `inputChanged`/`dispose`.
+
 ### Validate duplicate attributes on tags
 
 - Tags with duplicate attributes (e.g. `<div class="a" class="b">`) now produce a validation error. The first occurrence wins (per the HTML spec) and the duplicate is dropped, but the user now sees the problem.

@@ -8,6 +8,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.ui.packageview.WorkingSetAwareContentProvider;
 import org.eclipse.jdt.internal.ui.workingsets.WorkingSetModel;
+import org.eclipse.jface.viewers.AbstractTreeViewer;
+import org.eclipse.jface.viewers.Viewer;
 
 /**
  * Working-set-aware variant of the content provider for the Parsley Explorer.
@@ -15,8 +17,32 @@ import org.eclipse.jdt.internal.ui.workingsets.WorkingSetModel;
  */
 public class NGWorkingSetAwareContentProvider extends WorkingSetAwareContentProvider {
 
+	/**
+	 * Watches the workspace for additions/removals of pulled-up folders and
+	 * refreshes the project node in the viewer. See
+	 * {@link NGPackageExplorerContentProvider} for full rationale.
+	 */
+	private PulledUpFolderRefresher _refresher;
+
 	public NGWorkingSetAwareContentProvider(boolean provideMembers, WorkingSetModel model) {
 		super(provideMembers, model);
+	}
+
+	@Override
+	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+		super.inputChanged(viewer, oldInput, newInput);
+		if (_refresher == null && viewer instanceof AbstractTreeViewer) {
+			_refresher = new PulledUpFolderRefresher((AbstractTreeViewer) viewer);
+		}
+	}
+
+	@Override
+	public void dispose() {
+		if (_refresher != null) {
+			_refresher.dispose();
+			_refresher = null;
+		}
+		super.dispose();
 	}
 
 	@Override

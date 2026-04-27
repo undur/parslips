@@ -11,6 +11,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerContentProvider;
+import org.eclipse.jface.viewers.AbstractTreeViewer;
+import org.eclipse.jface.viewers.Viewer;
 
 /**
  * Content provider for the Parsley Explorer. Extends the standard JDT content
@@ -62,8 +64,40 @@ public class NGPackageExplorerContentProvider extends PackageExplorerContentProv
 	 */
 	private static final String NG_RESOURCES_ROOT = "src/main/resources";
 
+	/**
+	 * Watches the workspace for additions/removals of pulled-up folders and
+	 * refreshes the project node in the viewer. Created in
+	 * {@link #inputChanged} once a viewer is available; disposed in
+	 * {@link #dispose}.
+	 */
+	private PulledUpFolderRefresher _refresher;
+
 	public NGPackageExplorerContentProvider(boolean provideMembers) {
 		super(provideMembers);
+	}
+
+	@Override
+	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+		super.inputChanged(viewer, oldInput, newInput);
+
+		// Set up the refresher the first time we get a viewer. The base
+		// class already triggers refreshes for changes to existing folders,
+		// but it doesn't know that adding a new folder under src/main/ or
+		// src/main/resources/ should cause the project node to refresh
+		// (so the new folder appears at the project root). The refresher
+		// fills that gap.
+		if (_refresher == null && viewer instanceof AbstractTreeViewer) {
+			_refresher = new PulledUpFolderRefresher((AbstractTreeViewer) viewer);
+		}
+	}
+
+	@Override
+	public void dispose() {
+		if (_refresher != null) {
+			_refresher.dispose();
+			_refresher = null;
+		}
+		super.dispose();
 	}
 
 	@Override
