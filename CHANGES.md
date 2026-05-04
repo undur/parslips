@@ -12,6 +12,20 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Default token foreground now follows Eclipse's editor theme
+
+- The HTML, embedded JavaScript, and embedded CSS scanners previously set their default return token's foreground to `PREF_COLOR_FG`, which had a hardcoded default of pure black. In Eclipse's dark mode this made all "default" content (HTML body text, JS identifiers, CSS selectors and braces) render black on a dark background — effectively invisible.
+- Switched all three scanners to use `new TextAttribute(null)` as the default token, so unmatched text inherits Eclipse's editor foreground color from the active theme. Same pattern already used by `HTMLTagScanner`.
+- Removed the now-unused "Foreground Color" field from the Parsley preference page. The corresponding setting is the standard Eclipse "Text Editors → Colors and Fonts → Text" foreground.
+- This is a first pass: explicit syntax colors (tag, attribute, OGNL, dynamic, etc.) are still tuned for light backgrounds and remain dim/dark in dark mode. Theme-aware defaults for those colors are tracked separately.
+
+### Expose Embedded CSS and Embedded JavaScript color preference pages
+
+- `CSSEditorPreferencePage` and `JavaScriptEditorPreferencePage` already existed in the codebase (inherited from the original Amateras HTML editor) with complete implementations and resource strings, but neither was registered in `plugin.xml` — so users had no UI to change CSS/JS color settings.
+- Registered both as sub-pages of the existing **Parsley** category: **Embedded CSS** (Comment / Property / Value) and **Embedded JavaScript** (Comment / String / Keyword).
+- Renamed the page titles from "CSS Editor" / "JavaScript Editor" to "Embedded CSS" / "Embedded JavaScript" to clarify these scanners apply to CSS/JS embedded inside HTML templates, not standalone files.
+- Removed dead commented-out `colorCssProperty` code from `HTMLEditorPreferencePage`.
+
 ### Fix: Parsley Explorer now refreshes when pulled-up folders are created
 
 - Creating a new folder under `src/main/` named `woresources`, `components`, or `webserver-resources` (or any folder with one of those names anywhere under `src/main/resources/`) caused the folder to vanish from its physical location (correctly — it gets pulled up to the project root) but the folder did not appear at the project root until F5 was pressed.

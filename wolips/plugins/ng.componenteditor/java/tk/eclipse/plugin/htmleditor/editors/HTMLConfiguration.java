@@ -250,12 +250,16 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 	
 	/**
 	 * Creates or Returns the scanner for HTML.
+	 *
+	 * <p>The default return token uses a {@code null} foreground so that
+	 * unmatched text (plain HTML body content) inherits Eclipse's editor
+	 * foreground color from the active theme — readable in both light and
+	 * dark modes. Same pattern as {@link HTMLTagScanner}.
 	 */
 	protected HTMLScanner getHTMLScanner() {
 		if (_scanner == null) {
 			_scanner = new HTMLScanner(_colorProvider);
-			_scanner.setDefaultReturnToken(
-					_colorProvider.getToken(HTMLPlugin.PREF_COLOR_FG));
+			_scanner.setDefaultReturnToken(new Token(new TextAttribute(null)));
 		}
 		return _scanner;
 	}
@@ -322,12 +326,14 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 	
 	/**
 	 * Creates or Returns the scanner for inner JavaScript.
+	 *
+	 * <p>Default token uses {@code null} foreground so unmatched text
+	 * (identifiers, operators, etc.) inherits Eclipse's editor foreground.
 	 */
 	protected RuleBasedScanner getJavaScriptScanner() {
 		if (_javaScriptScanner == null) {
 			_javaScriptScanner = new InnerJavaScriptScanner(_colorProvider);
-			_javaScriptScanner.setDefaultReturnToken(
-					_colorProvider.getToken(HTMLPlugin.PREF_COLOR_FG));
+			_javaScriptScanner.setDefaultReturnToken(new Token(new TextAttribute(null)));
 		}
 		return _javaScriptScanner;
 	}
@@ -349,12 +355,14 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 
 	/**
 	 * Creates or Returns the scanner for inner CSS.
+	 *
+	 * <p>Default token uses {@code null} foreground so unmatched text
+	 * (CSS selectors, braces, etc.) inherits Eclipse's editor foreground.
 	 */
 	protected RuleBasedScanner getCSSScanner() {
 		if (_cssScanner == null) {
 			_cssScanner = new InnerCSSScanner(_colorProvider);
-			_cssScanner.setDefaultReturnToken(
-					_colorProvider.getToken(HTMLPlugin.PREF_COLOR_FG));
+			_cssScanner.setDefaultReturnToken(new Token(new TextAttribute(null)));
 		}
 		return _cssScanner;
 	}

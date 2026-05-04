@@ -24,7 +24,6 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
  */
 public class HTMLEditorPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	
-	private ColorFieldEditor colorForeground;
 	private SystemColorFieldEditor colorBackground;
 	private ColorFieldEditor colorTag;
   private ColorFieldEditor colorWoTag;
@@ -55,11 +54,6 @@ public class HTMLEditorPreferencePage extends FieldEditorPreferencePage implemen
 		
 		Composite parent = getFieldEditorParent();
 		
-		colorForeground = new ColorFieldEditor(HTMLPlugin.PREF_COLOR_FG,
-				HTMLPlugin.getResourceString("HTMLEditorPreferencePage.ForegroundColor"),
-				parent); 
-		addField(colorForeground);
-
 		colorBackground = new SystemColorFieldEditor(HTMLPlugin.PREF_COLOR_BG,HTMLPlugin.PREF_COLOR_BG_DEF,
 				HTMLPlugin.getResourceString("HTMLEditorPreferencePage.BackgroundColor"),
 				parent); 
