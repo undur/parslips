@@ -633,6 +633,14 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.WodEditor"
             name="WOD Editor"/>
+      <page class="tk.eclipse.plugin.htmleditor.CSSEditorPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.EmbeddedCSS"
+            name="Embedded CSS"/>
+      <page class="tk.eclipse.plugin.htmleditor.JavaScriptEditorPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.EmbeddedJavaScript"
+            name="Embedded JavaScript"/>
       <page class="org.objectstyle.wolips.bindings.preferences.TagShortcutPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.TagShortcuts"

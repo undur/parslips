@@ -35,7 +35,6 @@ public class HTMLEditorPreferencePage extends FieldEditorPreferencePage implemen
 	private ColorFieldEditor colorDoctype;
 	private ColorFieldEditor colorString;
 	private ColorFieldEditor colorScriptlet;
-//	private ColorFieldEditor colorCssProperty;
 	private UseSoftTabFieldEditor useSoftTab;
 	private SoftTabWidthFieldEditor softTabWidth;
 	private RadioGroupFieldEditor editorType;
@@ -108,14 +107,9 @@ public class HTMLEditorPreferencePage extends FieldEditorPreferencePage implemen
 		
 		colorScriptlet = new ColorFieldEditor(HTMLPlugin.PREF_COLOR_SCRIPT,
 					HTMLPlugin.getResourceString("HTMLEditorPreferencePage.ScriptColor"),
-					parent); 
+					parent);
 		addField(colorScriptlet);
-		
-//		colorCssProperty = new ColorFieldEditor(HTMLPlugin.PREF_COLOR_CSSPROP,
-//					HTMLPlugin.getResourceString("HTMLEditorPreferencePage.CSSPropColor"),
-//					parent); //$NON-NLS-1$
-//		addField(colorCssProperty);
-		
+
 		highlightPair = new BooleanFieldEditor(HTMLPlugin.PREF_PAIR_CHAR,
 				HTMLPlugin.getResourceString("HTMLEditorPreferencePage.PairCharacter"), parent);
 		addField(highlightPair);
