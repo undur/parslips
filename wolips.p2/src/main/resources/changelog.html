@@ -25,6 +25,29 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- May 4, 2026 -->
+			<div class="card">
+				<h2 class="date-header">May 4, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Dark mode readability and new color preference pages</h3>
+					<p>Two improvements aimed at users running Eclipse in a dark theme:</p>
+
+					<p><strong>Plain text now follows Eclipse&rsquo;s editor theme.</strong> The HTML, embedded JavaScript, and embedded CSS scanners used to set the default text color to a hardcoded value (pure black by default), which made plain content &mdash; HTML body text, CSS selectors and braces, JavaScript identifiers &mdash; render black on a dark background and effectively disappear. These scanners now defer to Eclipse&rsquo;s standard editor foreground color, which is theme-aware. In dark mode the same text shows up in light gray; in light mode it stays dark, exactly as before.</p>
+
+					<p>As part of this change, the &ldquo;Foreground Color&rdquo; field in <strong>Preferences &rarr; Parsley</strong> has been removed &mdash; it was the setting that previously hardcoded the black default and is no longer needed. To customize the editor&rsquo;s default text color, use the standard Eclipse setting at <strong>Preferences &rarr; General &rarr; Editors &rarr; Text Editors &rarr; Colors and Fonts</strong>.</p>
+
+					<p><strong>New &ldquo;Embedded CSS&rdquo; and &ldquo;Embedded JavaScript&rdquo; preference pages</strong> under <strong>Preferences &rarr; Parsley</strong>, exposing color settings that previously had no UI:</p>
+					<ul>
+						<li><strong>Embedded CSS:</strong> Comment, Property, Value</li>
+						<li><strong>Embedded JavaScript:</strong> Comment, String, Keyword</li>
+					</ul>
+					<p>If you&rsquo;ve been irritated by the dark-blue CSS property color on a dark editor background, this is where to fix it.</p>
+
+					<p>This is a first readability pass. The remaining tag/attribute/binding colors and the <code>&lt;wo:&gt;</code> background tint are still tuned for light themes &mdash; theme-aware defaults for those are next.</p>
+				</div>
+			</div>
+
 			<!-- April 30, 2026 -->
 			<div class="card">
 				<h2 class="date-header">April 30, 2026</h2>
