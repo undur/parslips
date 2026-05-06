@@ -30,6 +30,12 @@
 				<h2 class="date-header">May 6, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Fix: problem markers now appear on pulled-up source folders</h3>
+					<p>Files with errors inside <code>src/main/components</code>, <code>src/main/woresources</code>, or any pulled-up ng-style resource folder were propagating their error markers up to the project, but the <strong>pulled-up folders themselves</strong> at the project root showed no marker &mdash; even though the error was clearly inside them. So you&rsquo;d see the red error decorator on the project, then nothing on any of its visible children, with no easy way to drill down to where the error actually was.</p>
+					<p>The cause was an icon-overlay slot collision: the small &ldquo;wo&rdquo;/&ldquo;ng&rdquo; badge that marks pulled-up source folders was using the same image overlay slot as Eclipse&rsquo;s standard problem-marker decorator. The badge was applied first, blocking the marker. The badge has been moved to the top-right corner of the folder icon, leaving the bottom-left slot free for the problem marker.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Fix: false validation errors on methods whose names start with an uppercase letter</h3>
 					<p>Action methods and other unprefixed methods whose names start with an uppercase letter &mdash; for example <code>HttpServerUpdateClicked()</code> or <code>HTTPServerUpdateClicked()</code> &mdash; were producing false <em>&ldquo;There is no key &lsquo;X&rsquo;&rdquo;</em> errors when bound from a template, even though <code>valueForKey(&quot;HttpServerUpdateClicked&quot;)</code> finds the method correctly at runtime.</p>
 					<p>The editor was lowercasing the first character of every method name to derive the binding key, which produced names like <code>hTTPServerUpdateClicked</code> or <code>httpServerUpdateClicked</code>. The runtime never finds methods by those keys (literal-method lookup is case-sensitive), so the editor's &ldquo;Did you mean...?&rdquo; suggestion was actually pointing at a key that wouldn't have worked.</p>

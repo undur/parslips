@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: problem markers now appear on pulled-up source folders in the Parsley Explorer
+
+- Files with errors inside `src/main/components`, `src/main/woresources`, etc. (or any pulled-up ng-style folder under `src/main/resources/`) propagated their error markers correctly to the project, but the **pulled-up folders themselves** showed no marker — even though the error was clearly inside them.
+- Root cause: the wo/ng badge in `SourceFolderDecorator` was overlaid in the `BOTTOM_LEFT` slot, which is the same slot Eclipse's standard problem-marker decorator uses. Our badge was applied first (as part of the inner label-provider's image), and the subsequent problem-marker overlay either lost the slot conflict or got obscured.
+- Fix: moved the wo/ng badge to the `TOP_RIGHT` slot. The problem-marker decorator now has its `BOTTOM_LEFT` slot back, and pulled-up folders show their error markers correctly.
+
 ### Fix: false validation errors on methods whose names start with an uppercase letter
 
 - Methods like `HttpServerUpdateClicked()` or `HTTPServerUpdateClicked()` (no `get`/`set`/`is` prefix, name starts uppercase) were being treated as binding key `httpServerUpdateClicked` / `hTTPServerUpdateClicked` (with lowercased first letter) instead of preserving their original case. Templates that bound to the actual method name produced false `There is no key 'X' — did you mean 'xYZ'?` errors, even though `valueForKey("HttpServerUpdateClicked")` finds the method correctly at runtime.

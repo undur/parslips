@@ -159,7 +159,11 @@ public class SourceFolderDecorator {
 
 			Point size = new Point(baseImage.getBounds().width, baseImage.getBounds().height);
 			ImageDescriptor[] overlays = new ImageDescriptor[5];
-			overlays[IDecoration.BOTTOM_LEFT] = overlay;
+			// Use TOP_RIGHT instead of BOTTOM_LEFT so we don't collide with
+			// Eclipse's problem-marker decorator (which uses BOTTOM_LEFT).
+			// Without this, problem markers on pulled-up source folders are
+			// hidden by our wo/ng badge.
+			overlays[IDecoration.TOP_RIGHT] = overlay;
 			Image composited = new DecorationOverlayIcon(baseImage, overlays, size).createImage(false);
 
 			if (composited != null) {
