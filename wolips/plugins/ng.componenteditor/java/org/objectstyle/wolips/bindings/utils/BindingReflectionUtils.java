@@ -605,10 +605,21 @@ public class BindingReflectionUtils {
         int prefixLength = prefix.length();
         if ((requireExactNameMatch && lowercaseMemberName.equals(nameStartingWith)) || (!requireExactNameMatch && lowercaseMemberName.startsWith(nameStartingWith))) {
         	final String bindingName;
-        	if(member instanceof IField) {
-        		bindingName = memberName.substring(prefixLength);
-        	} else {
-                bindingName = BindingReflectionUtils.toLowercaseFirstLetter(memberName.substring(prefixLength));
+        	String remainder = memberName.substring(prefixLength);
+        	if (member instanceof IField) {
+        		bindingName = remainder;
+        	}
+        	// For "" (bare method) and "_" (underscore-only) prefixes, the
+        	// remainder IS the binding key — preserve the case exactly. At
+        	// runtime, key K looks up method "K" or "_K" verbatim, so a
+        	// method named "HttpServer" is found by key "HttpServer", not
+        	// "httpServer". Only the bean-style "get"/"set"/"is" (and
+        	// underscore variants) trigger the lowercase-first transformation.
+        	else if (prefix.isEmpty() || "_".equals(prefix)) {
+        		bindingName = remainder;
+        	}
+        	else {
+        		bindingName = BindingReflectionUtils.toLowercaseFirstLetter(remainder);
         	}
           if (nameStartingWith.length() > 0 || !bindingName.startsWith("_")) {
           	if (visible == Visibility.MaybeVisible) {
@@ -632,26 +643,38 @@ public class BindingReflectionUtils {
   }
 
   /**
-   * Lowercases the first character of a string. Used to convert method
-   * names to KVC-style key names (e.g. "Name" → "name" after prefix
-   * stripping). Returns the input unchanged if it is empty or already
-   * starts with a lowercase letter.
+   * Converts a method name (with KVC prefix already stripped) to its
+   * binding-key form, following Cocoa / WebObjects KVC reverse-lookup
+   * convention.
+   *
+   * <p>Rules:
+   * <ul>
+   *   <li>Empty string → unchanged</li>
+   *   <li>First character already lowercase → unchanged</li>
+   *   <li>First character uppercase, second character also uppercase →
+   *       <b>unchanged</b> (preserves acronyms like {@code URL},
+   *       {@code HTTPServer}). At runtime, {@code valueForKey("URL")} finds
+   *       method {@code getURL()} or {@code URL()}; the binding key for
+   *       those methods is therefore {@code "URL"}, not {@code "uRL"}.</li>
+   *   <li>First character uppercase, second character not uppercase →
+   *       first character lowercased ({@code Title} → {@code title})</li>
+   * </ul>
    */
   public static String toLowercaseFirstLetter(String _memberName) {
-    String lowercaseFirstLetterMemberName;
-    if (_memberName.length() > 0) {
-      char firstChar = _memberName.charAt(0);
-      if (Character.isUpperCase(firstChar)) {
-        lowercaseFirstLetterMemberName = Character.toLowerCase(firstChar) + _memberName.substring(1);
-      }
-      else {
-        lowercaseFirstLetterMemberName = _memberName;
-      }
+    if (_memberName.isEmpty()) {
+      return _memberName;
     }
-    else {
-      lowercaseFirstLetterMemberName = _memberName;
+    char firstChar = _memberName.charAt(0);
+    if (!Character.isUpperCase(firstChar)) {
+      return _memberName;
     }
-    return lowercaseFirstLetterMemberName;
+    // Preserve acronym prefixes: if the second character is also uppercase
+    // (e.g. "URL", "HTTPServer"), leave the name as-is. This matches the
+    // KVC reverse-lookup convention used at runtime.
+    if (_memberName.length() > 1 && Character.isUpperCase(_memberName.charAt(1))) {
+      return _memberName;
+    }
+    return Character.toLowerCase(firstChar) + _memberName.substring(1);
   }
 
   /**

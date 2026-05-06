@@ -282,6 +282,64 @@ public class RenameBindingKeyProcessorTest {
 		assertEquals("title", deriveBindingKeyFromFieldName("_title"));
 	}
 
+	// ---- Case preservation for unprefixed and acronym methods ---------------
+	// At runtime, valueForKey(K) looks for getK_capitalized, then K literal,
+	// then isK_capitalized. So the "binding key" for a bare method
+	// HTTPServerUpdateClicked() is "HTTPServerUpdateClicked" — preserving the
+	// case exactly. Same for HttpServerUpdateClicked() — its key is
+	// "HttpServerUpdateClicked", NOT "httpServerUpdateClicked", because the
+	// runtime literal-method lookup is case-sensitive.
+
+	@Test
+	public void deriveKey_bareMethod_preservesAcronym() {
+		assertEquals("HTTPServerUpdateClicked",
+				deriveBindingKeyFromMethodName("HTTPServerUpdateClicked"));
+	}
+
+	@Test
+	public void deriveKey_bareMethod_preservesCamelCase() {
+		// The exact case from the user's second report — Camel-cased name
+		// starting with an uppercase letter must be preserved.
+		assertEquals("HttpServerUpdateClicked",
+				deriveBindingKeyFromMethodName("HttpServerUpdateClicked"));
+	}
+
+	@Test
+	public void deriveKey_bareMethod_preservesSimpleCapitalized() {
+		// Even a simple "Title()" method preserves its uppercase initial.
+		assertEquals("Title", deriveBindingKeyFromMethodName("Title"));
+	}
+
+	@Test
+	public void deriveKey_underscoreBareMethod_preservesCase() {
+		// _HttpServer() — strip the leading underscore but preserve case.
+		assertEquals("HttpServer", deriveBindingKeyFromMethodName("_HttpServer"));
+	}
+
+	@Test
+	public void deriveKey_getterAcronym_preserved() {
+		// getURL() → "URL" (acronym preserved by toLowercaseFirstLetter).
+		assertEquals("URL", deriveBindingKeyFromMethodName("getURL"));
+	}
+
+	@Test
+	public void deriveKey_getterCamelCase_lowercased() {
+		// getHttpServer() → "httpServer" (only first char lowercase, since
+		// 'H' is uppercase and 't' is lowercase — no acronym to preserve).
+		assertEquals("httpServer", deriveBindingKeyFromMethodName("getHttpServer"));
+	}
+
+	@Test
+	public void deriveKey_setterAcronym_preserved() {
+		assertEquals("URL", deriveBindingKeyFromMethodName("setURL"));
+	}
+
+	@Test
+	public void deriveKey_isAcronym_preserved() {
+		// Probably nonsense in practice, but exercises the rule.
+		assertEquals("URL", deriveBindingKeyFromMethodName("isURL"));
+	}
+
 	// ---- Helper methods -----------------------------------------------------
 
 	/**
@@ -308,72 +366,15 @@ public class RenameBindingKeyProcessorTest {
 	}
 
 	/**
-	 * Derives a binding key from a method name by stripping KVC getter/setter
-	 * prefixes and lowercasing the first letter.
-	 *
-	 * <p>This mirrors the logic that {@code RenameBindingKeyParticipant} will use.
-	 * The prefix lists come from {@link BindingReflectionUtils}.
-	 *
-	 * <p>Most prefixes (get, is, set, _get, _is, _set) require the character
-	 * after the prefix to be uppercase — this distinguishes {@code getTitle()}
-	 * (key "title") from {@code getter()} (key "getter"). The lone {@code _}
-	 * prefix is an exception: {@code _title()} maps to key "title" regardless
-	 * of case, matching KVC conventions for private accessor methods.
+	 * Delegates to the production helper. Kept as a thin wrapper so the
+	 * test methods read the same way they did before this method became
+	 * public on {@code RenameBindingKeyProcessor}.
 	 */
 	static String deriveBindingKeyFromMethodName(String methodName) {
-		// Try all explicit prefixes first (get, _get, is, _is, set, _set),
-		// then fall back to the bare "_" prefix last. This ensures that
-		// _setTitle matches "_set" (from SET_METHOD_PREFIXES) rather than
-		// "_" (from GET_METHOD_PREFIXES).
-		//
-		// Explicit prefixes require an uppercase letter after stripping
-		// (getTitle -> Title, not getter -> ter). The bare "_" prefix is
-		// a fallback that doesn't require uppercase (_title -> title).
-
-		// 1. Try getter prefixes (except the bare "_" and empty "")
-		// GET_METHOD_PREFIXES = { "get", "", "_get", "is", "_is", "_" }
-		for (String prefix : BindingReflectionUtils.GET_METHOD_PREFIXES) {
-			if (prefix.length() > 1 && methodName.startsWith(prefix) && methodName.length() > prefix.length()) {
-				String remainder = methodName.substring(prefix.length());
-				if (Character.isUpperCase(remainder.charAt(0))) {
-					return BindingReflectionUtils.toLowercaseFirstLetter(remainder);
-				}
-			}
-		}
-
-		// 2. Try setter prefixes: { "set", "_set" }
-		for (String prefix : BindingReflectionUtils.SET_METHOD_PREFIXES) {
-			if (methodName.startsWith(prefix) && methodName.length() > prefix.length()) {
-				String remainder = methodName.substring(prefix.length());
-				if (Character.isUpperCase(remainder.charAt(0))) {
-					return BindingReflectionUtils.toLowercaseFirstLetter(remainder);
-				}
-			}
-		}
-
-		// 3. Try the bare "_" prefix last — doesn't require uppercase
-		if (methodName.startsWith("_") && methodName.length() > 1) {
-			return methodName.substring(1);
-		}
-
-		// No recognized prefix — the method name IS the key (e.g. title())
-		return methodName;
+		return RenameBindingKeyProcessor.deriveBindingKeyFromMethodName(methodName);
 	}
 
-	/**
-	 * Derives a binding key from a field name by stripping the underscore
-	 * prefix if present.
-	 *
-	 * <p>This mirrors the logic that {@code RenameBindingKeyParticipant} will use.
-	 * The prefix list comes from {@link BindingReflectionUtils#FIELD_PREFIXES}.
-	 */
 	static String deriveBindingKeyFromFieldName(String fieldName) {
-		// FIELD_PREFIXES = { "", "_" }
-		// Try the non-empty prefix "_"
-		if (fieldName.startsWith("_") && fieldName.length() > 1) {
-			return fieldName.substring(1);
-		}
-		// No prefix — the field name IS the key
-		return fieldName;
+		return RenameBindingKeyProcessor.deriveBindingKeyFromFieldName(fieldName);
 	}
 }

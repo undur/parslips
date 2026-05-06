@@ -25,6 +25,23 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- May 6, 2026 -->
+			<div class="card">
+				<h2 class="date-header">May 6, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Fix: false validation errors on methods whose names start with an uppercase letter</h3>
+					<p>Action methods and other unprefixed methods whose names start with an uppercase letter &mdash; for example <code>HttpServerUpdateClicked()</code> or <code>HTTPServerUpdateClicked()</code> &mdash; were producing false <em>&ldquo;There is no key &lsquo;X&rsquo;&rdquo;</em> errors when bound from a template, even though <code>valueForKey(&quot;HttpServerUpdateClicked&quot;)</code> finds the method correctly at runtime.</p>
+					<p>The editor was lowercasing the first character of every method name to derive the binding key, which produced names like <code>hTTPServerUpdateClicked</code> or <code>httpServerUpdateClicked</code>. The runtime never finds methods by those keys (literal-method lookup is case-sensitive), so the editor's &ldquo;Did you mean...?&rdquo; suggestion was actually pointing at a key that wouldn't have worked.</p>
+					<p>The fix follows the standard Cocoa / WebObjects KVC convention:</p>
+					<ul>
+						<li>For methods <em>without</em> a <code>get</code>/<code>set</code>/<code>is</code> prefix, the binding key is the method name <strong>preserved exactly</strong>. <code>HttpServerUpdateClicked()</code> &rarr; key <code>HttpServerUpdateClicked</code>; <code>title()</code> &rarr; key <code>title</code>.</li>
+						<li>For methods <em>with</em> a bean-style prefix, the prefix is stripped and the first letter is lowercased &mdash; <em>unless</em> the first two characters are both uppercase, which preserves acronyms. <code>getURL()</code> &rarr; <code>URL</code>; <code>getTitle()</code> &rarr; <code>title</code>; <code>getHttpServer()</code> &rarr; <code>httpServer</code>.</li>
+					</ul>
+					<p>The same fix applies to the rename refactoring &mdash; renaming <code>HttpServerUpdateClicked()</code> on a Java class now correctly updates <code>HttpServerUpdateClicked</code> in bound templates.</p>
+				</div>
+			</div>
+
 			<!-- May 4, 2026 -->
 			<div class="card">
 				<h2 class="date-header">May 4, 2026</h2>

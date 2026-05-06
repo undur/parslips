@@ -12,6 +12,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: false validation errors on methods whose names start with an uppercase letter
+
+- Methods like `HttpServerUpdateClicked()` or `HTTPServerUpdateClicked()` (no `get`/`set`/`is` prefix, name starts uppercase) were being treated as binding key `httpServerUpdateClicked` / `hTTPServerUpdateClicked` (with lowercased first letter) instead of preserving their original case. Templates that bound to the actual method name produced false `There is no key 'X' — did you mean 'xYZ'?` errors, even though `valueForKey("HttpServerUpdateClicked")` finds the method correctly at runtime.
+- Root cause: two layered bugs. First, `BindingReflectionUtils.toLowercaseFirstLetter()` always lowercased the first character, ignoring the Cocoa/WebObjects KVC reverse-lookup convention that preserves acronym prefixes (`URL`, `HTTPServer`). Second, `BindingReflectionUtils.getBindingKeyIfMatches()` called `toLowercaseFirstLetter()` for **every** prefix path including the empty (`""`) and bare-underscore (`"_"`) prefixes — but at runtime, the literal-method-name lookup is case-sensitive, so a method `HttpServer()` is reachable via key `HttpServer` (not `httpServer`).
+- Fix:
+    - `toLowercaseFirstLetter()` now follows the Cocoa KVC rule: if the first two characters are both uppercase, leave the name as-is. Otherwise, lowercase the first character.
+    - `getBindingKeyIfMatches()` only applies that transformation for bean-style prefixes (`get`, `set`, `is`, `_get`, `_set`, `_is`). For the bare (`""`) and underscore-only (`"_"`) prefixes, the remainder is returned verbatim.
+- Both the validator and the rename refactoring (`RenameBindingKeyProcessor.deriveBindingKeyFromMethodName`) share this code path, so both are correct now.
+- New tests:
+    - `BindingReflectionUtilsTest` — 12 cases covering empty / single-char / lowercase / two-letter and longer acronyms.
+    - 8 new cases in `RenameBindingKeyProcessorTest` covering: bare method with acronym, bare method with CamelCase, simple capitalized bare method, underscore-prefixed bare method, `getURL`, `getHttpServer`, `setURL`, `isURL`.
+
 ### Default token foreground now follows Eclipse's editor theme
 
 - The HTML, embedded JavaScript, and embedded CSS scanners previously set their default return token's foreground to `PREF_COLOR_FG`, which had a hardcoded default of pure black. In Eclipse's dark mode this made all "default" content (HTML body text, JS identifiers, CSS selectors and braces) render black on a dark background — effectively invisible.
