@@ -380,12 +380,15 @@ public class TemplateSourceEditor extends HTMLSourceEditor implements ITextWOEdi
   }
 
   public IRegion getSelectionRegionForElementAtOffset(FuzzyXMLElement element, int offset, boolean regionForInsert) throws Exception {
-    IRegion region = null;
-    if (element != null) {
-      IDocument doc = getParserCache().getHtmlEntry().getDocument();
-      region = element.getRegionAtOffset(offset, doc, regionForInsert);
+    if (element == null) {
+      return null;
     }
-    return region;
+    // FuzzyXML is Eclipse-free — adapt at the boundary by handing it the
+    // raw document text and wrapping the returned TextRegion in an IRegion.
+    IDocument doc = getParserCache().getHtmlEntry().getDocument();
+    String source = doc != null ? doc.get() : null;
+    jp.aonir.fuzzyxml.TextRegion tr = element.getRegionAtOffset(offset, source, regionForInsert);
+    return tr != null ? new org.eclipse.jface.text.Region(tr.offset(), tr.length()) : null;
   }
 
   @Override

@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Decouple FuzzyXML from Eclipse APIs
+
+- The FuzzyXML parser package (`jp.aonir.fuzzyxml`) is now fully Eclipse-free. Previously, `FuzzyXMLElement.getRegionAtOffset()` returned `org.eclipse.jface.text.IRegion` and accepted an `IDocument` — both Eclipse types.
+- Introduced a pure-Java `TextRegion` record (offset + length) and changed the method to accept the document text as a plain `String`. The single Eclipse caller (`TemplateSourceEditor`) now adapts at the boundary by unwrapping `IDocument` to `String` and wrapping the returned `TextRegion` in an Eclipse `Region`.
+- Replaced the `IDocument.getLineInformationOfOffset()` lookup with a pure-Java end-of-line check that scans the source string directly.
+- Step 1 of the long-term plan to extract Parsley's editor intelligence into an IDE-independent library that can back an LSP server (VS Code / IntelliJ / Emacs support). The bindings/validation/refactoring layers are still Eclipse-coupled and will follow.
+
 ### Fix: `$application`/`$session` keypaths now resolve against user subclasses in NG projects
 
 - In NG projects, keypaths like `$application.formatters` or `$session.currentUser` were producing false `There is no key 'formatters'` validation errors. The runtime works correctly because `application()` returns the user's actual subclass instance — but the validator was checking the bare `NGApplication`/`NGSession` class instead of walking down to the user's `Application`/`Session` subclass.

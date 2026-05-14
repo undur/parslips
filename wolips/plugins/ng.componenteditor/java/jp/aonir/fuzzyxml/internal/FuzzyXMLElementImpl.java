@@ -6,10 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.text.Region;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 
 import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
@@ -18,6 +14,7 @@ import jp.aonir.fuzzyxml.FuzzyXMLException;
 import jp.aonir.fuzzyxml.FuzzyXMLNode;
 import jp.aonir.fuzzyxml.FuzzyXMLParser;
 import jp.aonir.fuzzyxml.FuzzyXMLText;
+import jp.aonir.fuzzyxml.TextRegion;
 import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 
 public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXMLElement {
@@ -710,37 +707,51 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
     }
   }
 
-  public Region getRegionAtOffset(int offset, IDocument doc, boolean regionForInsert) throws BadLocationException {
-    Region region;
+  @Override
+  public TextRegion getRegionAtOffset(int offset, String source, boolean regionForInsert) {
     int openTagOffset = getOffset();
     int openTagLength = getOpenTagLength() + 2;
     int openTagEndOffset = openTagOffset + openTagLength;
     if (hasCloseTag()) {
       int closeTagOffset = getCloseTagOffset();
       int closeTagEndOffset = closeTagOffset + getCloseTagLength();
-      //if (modelOffset > openTagEndOffset && modelOffset < getCloseTagOffset()) {
       if (!regionForInsert) {
-        region = new Region(openTagOffset, closeTagOffset - openTagOffset + getCloseTagLength() + 2);
+        return new TextRegion(openTagOffset, closeTagOffset - openTagOffset + getCloseTagLength() + 2);
       }
-      else if ((offset >= openTagOffset && offset < openTagEndOffset) || (offset >= closeTagOffset && offset < closeTagEndOffset)) {
-        if (doc != null) {
-          IRegion lineRegion = doc.getLineInformationOfOffset(openTagEndOffset);
-          int lineEndOffset = lineRegion.getOffset() + lineRegion.getLength();
-          if (openTagEndOffset == lineEndOffset) {
-            openTagEndOffset++;
-            openTagLength++;
-          }
+      if ((offset >= openTagOffset && offset < openTagEndOffset)
+          || (offset >= closeTagOffset && offset < closeTagEndOffset)) {
+        // If the open tag ends exactly at end-of-line (its '>' is the last
+        // character before the line terminator), extend the region by one
+        // character so the caret lands on the next line — preserving the
+        // visual line break the user expects.
+        if (source != null && isOffsetAtEndOfLine(source, openTagEndOffset)) {
+          openTagEndOffset++;
+          openTagLength++;
         }
-        region = new Region(openTagOffset, openTagLength);
+        return new TextRegion(openTagOffset, openTagLength);
       }
-      else {
-        region = new Region(offset, 0);
-      }
+      return new TextRegion(offset, 0);
     }
-    else {
-      region = new Region(getOffset(), getLength());
+    return new TextRegion(getOffset(), getLength());
+  }
+
+  /**
+   * Returns true if {@code offset} points just past the last non-terminator
+   * character of a line — i.e. the character at {@code offset - 1} is the
+   * last visible character before a line break.
+   *
+   * <p>Pure-Java replacement for {@code IDocument.getLineInformationOfOffset}
+   * — we only need the "is this offset at end of line?" predicate.
+   */
+  private static boolean isOffsetAtEndOfLine(String source, int offset) {
+    if (offset < 0 || offset > source.length()) {
+      return false;
     }
-    return region;
+    if (offset == source.length()) {
+      return true; // end of document counts as end of last line
+    }
+    char c = source.charAt(offset);
+    return c == '\n' || c == '\r';
   }
   
   /**

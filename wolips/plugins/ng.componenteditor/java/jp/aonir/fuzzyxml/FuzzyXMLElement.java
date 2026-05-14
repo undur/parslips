@@ -1,9 +1,5 @@
 package jp.aonir.fuzzyxml;
 
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IRegion;
-
 
 public interface FuzzyXMLElement extends FuzzyXMLNode, FuzzyXMLFormat {
 	
@@ -66,7 +62,19 @@ public interface FuzzyXMLElement extends FuzzyXMLNode, FuzzyXMLFormat {
 	
 	public void removeAllChildren();
 
-	public IRegion getRegionAtOffset(int offset, IDocument doc, boolean regionForInsert) throws BadLocationException;
+	/**
+	 * Computes a selection region for this element, given a cursor offset
+	 * and the source text of the containing document.
+	 *
+	 * @param offset the cursor offset, in characters from the start of the document
+	 * @param source the source text of the document, or {@code null} if no
+	 *               text is available (some line-end heuristics are skipped)
+	 * @param regionForInsert when true, returns a tight insertion-point region
+	 *                        appropriate for placing a caret rather than a
+	 *                        selection covering the element
+	 * @return the region to use
+	 */
+	public TextRegion getRegionAtOffset(int offset, String source, boolean regionForInsert);
 	
 	public boolean isSelfClosing();
   
