@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<element class="er.ajax.AjaxUpdateLink">
+
+	<shortcuts>
+		<shortcut>update-link</shortcut>
+		<shortcut>ajax-link</shortcut>
+	</shortcuts>
+
+	<description>
+		A hyperlink that fires an Ajax request when clicked, optionally updating
+		a region of the page with the response. The link's contents are wrapped
+		in an `<a>` tag in the rendered output.
+
+		Either an `action` (component action) or a `directActionName` (direct
+		action) must be bound. The response can either replace the contents of
+		an `updateContainerID`, replace an entire element by `replaceID`, or be
+		ignored entirely via `ignoreActionResponse`.
+	</description>
+
+	<usage>reusable</usage>
+	<accepts-content>true</accepts-content>
+	<unknown-bindings>passthrough</unknown-bindings>
+
+	<bindings>
+
+		<binding name="action" type="ng.appserver.NGActionResults" direction="pull">
+			<description>The component action to invoke when the link is clicked.</description>
+		</binding>
+
+		<binding name="directActionName" type="java.lang.String" direction="pull">
+			<description>
+				Name of a direct action to invoke instead of a component action.
+				Mutually exclusive with `action`.
+			</description>
+		</binding>
+
+		<binding name="updateContainerID" type="java.lang.String" direction="pull">
+			<description>
+				The DOM id of an element whose contents will be replaced with the
+				Ajax response. If omitted, the page itself does not change.
+			</description>
+		</binding>
+
+		<binding name="replaceID" type="java.lang.String" direction="pull">
+			<description>
+				The DOM id of an element that will be replaced entirely
+				(including the element itself) with the Ajax response.
+			</description>
+		</binding>
+
+		<binding name="ignoreActionResponse" type="java.lang.Boolean" direction="pull">
+			<description>
+				When true, the Ajax response is discarded. Used when the action's
+				side effects matter but the response body does not.
+			</description>
+			<default>false</default>
+		</binding>
+
+		<binding name="disabled" type="java.lang.Boolean" direction="pull">
+			<description>
+				When true, the link renders as plain text rather than an anchor,
+				and clicks do nothing.
+			</description>
+			<default>false</default>
+		</binding>
+
+		<binding name="asynchronous" type="java.lang.Boolean" direction="pull">
+			<description>Whether the Ajax request is asynchronous.</description>
+			<default>true</default>
+		</binding>
+
+		<binding name="evalScripts" type="java.lang.Boolean" direction="pull">
+			<description>
+				When true, &lt;script&gt; tags in the response are evaluated after
+				the DOM update.
+			</description>
+			<default>true</default>
+		</binding>
+
+		<binding name="elementName" type="java.lang.String" direction="pull">
+			<description>
+				HTML element to render. Defaults to `a`. Useful when the link
+				should be rendered as a `button` or `div` for layout reasons.
+			</description>
+			<default>a</default>
+			<values type="enum">
+				<value>a</value>
+				<value>button</value>
+				<value>div</value>
+				<value>span</value>
+			</values>
+		</binding>
+
+		<binding name="insertion" type="java.lang.String" direction="pull">
+			<description>
+				Insertion effect applied when the update container's content
+				is replaced. One of the predefined Scriptaculous effects.
+			</description>
+			<values type="enum">
+				<value>Effect.Appear</value>
+				<value>Effect.BlindDown</value>
+				<value>Effect.SlideDown</value>
+			</values>
+		</binding>
+
+		<binding name="effect" type="java.lang.String" direction="pull">
+			<description>Visual effect applied to the updated container.</description>
+		</binding>
+
+		<binding name="onClick" type="java.lang.String" direction="pull">
+			<description>
+				JavaScript code to run when the link is clicked, before the Ajax
+				request is sent.
+			</description>
+			<value-semantic>javascript</value-semantic>
+		</binding>
+
+		<binding name="onComplete" type="java.lang.String" direction="pull">
+			<description>JavaScript callback fired when the Ajax request completes (success or failure).</description>
+			<value-semantic>javascript</value-semantic>
+		</binding>
+
+		<binding name="onSuccess" type="java.lang.String" direction="pull">
+			<description>JavaScript callback fired on a successful Ajax response.</description>
+			<value-semantic>javascript</value-semantic>
+		</binding>
+
+		<binding name="onFailure" type="java.lang.String" direction="pull">
+			<description>JavaScript callback fired on a failed Ajax response.</description>
+			<value-semantic>javascript</value-semantic>
+		</binding>
+
+		<binding name="class" type="java.lang.String" direction="pull">
+			<description>CSS class(es) applied to the rendered element.</description>
+			<value-semantic>css-class</value-semantic>
+		</binding>
+
+		<binding name="style" type="java.lang.String" direction="pull">
+			<description>Inline CSS style applied to the rendered element.</description>
+			<value-semantic>css-inline</value-semantic>
+		</binding>
+
+		<binding name="id" type="java.lang.String" direction="pull">
+			<description>DOM id for the rendered element.</description>
+		</binding>
+
+		<binding name="title" type="java.lang.String" direction="pull">
+			<description>`title` attribute (tooltip text) for the rendered element.</description>
+		</binding>
+
+		<binding name="button" type="java.lang.Boolean" direction="pull" deprecated="true">
+			<description>
+				Renders the link as a `&lt;button&gt;` element instead of an `&lt;a&gt;`.
+			</description>
+			<deprecation-note>
+				Use `elementName="button"` instead. This binding will be removed
+				in a future release.
+			</deprecation-note>
+		</binding>
+
+		<binding name="function" type="java.lang.String" direction="pull">
+			<description>
+				Renders only the JavaScript expression for the Ajax call (not a
+				surrounding element). Used when the developer wants to wire up
+				the call from a custom handler.
+			</description>
+		</binding>
+
+		<binding name="functionName" type="java.lang.String" direction="pull">
+			<description>
+				When set, the Ajax call is exposed as a globally-named JavaScript
+				function so it can be invoked from outside this element.
+			</description>
+		</binding>
+
+	</bindings>
+
+	<rules>
+
+		<one-of message="Exactly one action source must be bound.">
+			<binding name="action"/>
+			<binding name="directActionName"/>
+			<binding name="function"/>
+		</one-of>
+
+		<mutually-exclusive message="Only one of these update strategies can be used at a time.">
+			<binding name="updateContainerID"/>
+			<binding name="replaceID"/>
+			<binding name="ignoreActionResponse"/>
+		</mutually-exclusive>
+
+		<requires message="`effect` requires an update container to operate on.">
+			<when-bound name="effect"/>
+			<then-bound name="updateContainerID"/>
+		</requires>
+
+		<requires message="`directActionName` requires a target element to replace.">
+			<when-bound name="directActionName"/>
+			<then-bound name="replaceID"/>
+		</requires>
+
+		<validation message="`effect` and `onSuccess` are both client-side reactions to a successful response; only bind one.">
+			<bound name="effect"/>
+			<bound name="onSuccess"/>
+		</validation>
+
+	</rules>
+
+	<preview>
+		<![CDATA[
+			<a href="#" class="parsley-preview-link">
+				[content]
+			</a>
+		]]>
+	</preview>
+
+</element>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Example Parsley project configuration. One per project (in
+  src/main/resources/parsley.xml); framework jars may ship their own
+  in META-INF/parsley.xml, which projects can override or extend.
+
+  This file covers project-level policy. Per-element shortcuts and
+  bindings are declared in each element's own .papi file.
+-->
+<parsley-config>
+
+	<!--
+	  Which tag namespaces this project recognizes, and what each one
+	  means to the parser.
+
+	  `lookup` is a closed set defined by the spec:
+	    - class-or-shortcut: look up the local name as either a shortcut
+	      declared in some .papi, or a class on the classpath.
+	    - parser-control: recognized as a parser directive (e.g. <p:raw>,
+	      <p:comment>). The spec defines the list of valid local names.
+	    - html-passthrough: render the local name as a literal HTML tag,
+	      but allow bindings via inline-binding prefixes on its attributes.
+	-->
+	<namespaces>
+		<namespace prefix="wo" lookup="class-or-shortcut"/>
+		<namespace prefix="p" lookup="parser-control"/>
+		<namespace prefix="html" lookup="html-passthrough"/>
+	</namespaces>
+
+	<!--
+	  Marker characters that distinguish dynamic binding values from
+	  literal strings in inline bindings.
+
+	  `type` is a closed set defined by the spec:
+	    - keypath: $foo.bar — KVC keypath against the component
+	    - ognl: ~foo + bar — OGNL expression
+	    - keypath-bracketed: [foo.bar] — alternative bracketed keypath
+	-->
+	<inline-bindings>
+		<prefix marker="$" type="keypath"/>
+		<prefix marker="~" type="ognl"/>
+		<prefix marker="[" terminator="]" type="keypath-bracketed"/>
+	</inline-bindings>
+
+	<!--
+	  Project-level shortcut policy. The default shortcut for an element
+	  lives in its .papi file (e.g. NGConditional.papi declares <shortcut>if</shortcut>).
+	  This section is for additions, overrides, and removals on top of
+	  those defaults.
+
+	  Resolution order for <wo:NAME>:
+	    1. Local <remove>, <override>, <shortcut> in this file
+	    2. <shortcut> declarations from .papi files in this project
+	    3. <shortcut> declarations from .papi files in dependency jars
+	    First match wins. Conflicts within step 2 or 3 are a startup error.
+	-->
+	<shortcuts>
+
+		<!-- Add a new project-specific shortcut. -->
+		<shortcut name="popover" element="com.example.ui.MyPopoverComponent"/>
+		<shortcut name="card" element="com.example.ui.MyCardComponent"/>
+
+		<!--
+		  Override a framework default. Use sparingly: this means a
+		  framework's `if` no longer points at NGConditional in this
+		  project. Useful when the project wraps a framework component
+		  to add logging/instrumentation.
+		-->
+		<override shortcut="if" element="com.example.ui.LoggingConditional">
+			<description>
+				Uses a logging variant of NGConditional that records every
+				evaluation. See com.example.ui.LoggingConditional for the
+				full rationale.
+			</description>
+		</override>
+
+		<!--
+		  Suppress a default shortcut entirely. <wo:loop> will be unresolved
+		  in this project; developers must use the full element name.
+		-->
+		<remove shortcut="loop"/>
+
+	</shortcuts>
+
+</parsley-config>
