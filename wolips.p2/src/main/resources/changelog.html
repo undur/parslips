@@ -25,6 +25,18 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- May 14, 2026 -->
+			<div class="card">
+				<h2 class="date-header">May 14, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Fix: <code>$application</code> and <code>$session</code> keypaths now resolve against user subclasses in NG projects</h3>
+					<p>In ng-objects projects, keypaths like <code>$application.formatters</code> or <code>$session.currentUser</code> were producing false <em>&ldquo;There is no key&rdquo;</em> validation errors, even though the runtime resolves them correctly. The validator was checking the bare <code>NGApplication</code> / <code>NGSession</code> class instead of walking down to the user&rsquo;s <code>Application</code> / <code>Session</code> subclass where the actual keys live.</p>
+					<p>The mechanism for &ldquo;when this is the declared type, look at subclasses in the current project instead&rdquo; has been in place for years for the classic WebObjects equivalents (<code>WOApplication</code>, <code>WOSession</code>, <code>WODirectAction</code>) &mdash; the ng-objects classes were just missing from the list. Now added: <code>NGApplication</code>, <code>NGSession</code>, <code>NGDirectAction</code>.</p>
+					<p>Detection is purely name-based and works regardless of which framework the project targets &mdash; the validator picks up whichever class appears in the supertype chain.</p>
+				</div>
+			</div>
+
 			<!-- May 6, 2026 -->
 			<div class="card">
 				<h2 class="date-header">May 6, 2026</h2>

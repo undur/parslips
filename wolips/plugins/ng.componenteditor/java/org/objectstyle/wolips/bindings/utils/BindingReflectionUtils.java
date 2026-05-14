@@ -95,6 +95,25 @@ public class BindingReflectionUtils {
   public static final int VOID_ONLY = 3;
 
   /**
+   * Framework supertypes that are commonly subclassed in user projects
+   * (Application, Session, DirectAction) and whose bindings should be
+   * resolved against the user's subclass rather than the base class.
+   *
+   * <p>When the keypath validator encounters one of these in the supertype
+   * chain (e.g. {@code $application} has static type {@code NGApplication}),
+   * it switches from walking supertypes to walking subtypes in the current
+   * project so that bindings defined on the user's {@code Application}
+   * class are found.
+   *
+   * <p>Includes both classic WebObjects and ng-objects names. The check
+   * uses simple class names, not fully qualified ones.
+   */
+  private static final Set<String> USUALLY_SUBCLASSED_SUPERTYPE_NAMES = Set.of(
+      "WOApplication", "WOSession", "WODirectAction",
+      "NGApplication", "NGSession", "NGDirectAction"
+  );
+
+  /**
    * Returns whether the given type name represents a boolean type
    * (primitive {@code boolean} or boxed {@code java.lang.Boolean}).
    */
@@ -367,15 +386,19 @@ public class BindingReflectionUtils {
       Set<String> additionalProposals = new HashSet<String>();
 
       // Walk the supertype hierarchy. For commonly-subclassed framework
-      // types (WOApplication, WOSession, WODirectAction), switch to
-      // walking the subtype hierarchy so user subclass keys are found.
+      // types (WOApplication/WOSession/WODirectAction and their ng-objects
+      // equivalents), switch to walking the subtype hierarchy so user
+      // subclass keys are found. Without this, validating $application.foo
+      // against a project that has Application extends NGApplication would
+      // only check NGApplication for "foo" — missing keys defined on the
+      // user's Application class.
       List<IType> types = cache.getSupertypesOf(type);
       if (types != null) {
         IType usuallySubclassedSupertype = null;
         IType nextType = null;
         for (int typeNum = 0; usuallySubclassedSupertype == null && typeNum < types.size(); typeNum++) {
           String typeName = types.get(typeNum).getElementName();
-          if ("WOApplication".equals(typeName) || "WOSession".equals(typeName) || "WODirectAction".equals(typeName)) {
+          if (USUALLY_SUBCLASSED_SUPERTYPE_NAMES.contains(typeName)) {
             usuallySubclassedSupertype = types.get(typeNum);
           }
           else if ("NSArray".equals(typeName)) {

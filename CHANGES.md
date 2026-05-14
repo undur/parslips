@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: `$application`/`$session` keypaths now resolve against user subclasses in NG projects
+
+- In NG projects, keypaths like `$application.formatters` or `$session.currentUser` were producing false `There is no key 'formatters'` validation errors. The runtime works correctly because `application()` returns the user's actual subclass instance — but the validator was checking the bare `NGApplication`/`NGSession` class instead of walking down to the user's `Application`/`Session` subclass.
+- Root cause: `BindingReflectionUtils.getBindingKeys()` has logic to detect "commonly-subclassed framework types" and, when one is found in the supertype chain, switch from walking supertypes to walking subtypes-in-the-project. The hardcoded list of those types only included `WOApplication`, `WOSession`, `WODirectAction` — missing the ng-objects equivalents.
+- Fix: added `NGApplication`, `NGSession`, `NGDirectAction` to the list. Extracted the inline string comparison into a named `USUALLY_SUBCLASSED_SUPERTYPE_NAMES` constant for clarity.
+
 ### Fix: problem markers now appear on pulled-up source folders in the Parsley Explorer
 
 - Files with errors inside `src/main/components`, `src/main/woresources`, etc. (or any pulled-up ng-style folder under `src/main/resources/`) propagated their error markers correctly to the project, but the **pulled-up folders themselves** showed no marker — even though the error was clearly inside them.
