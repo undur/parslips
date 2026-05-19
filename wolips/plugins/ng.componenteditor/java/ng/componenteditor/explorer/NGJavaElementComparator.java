@@ -4,7 +4,6 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.internal.ui.packageview.PackageFragmentRootContainer;
 import org.eclipse.jdt.ui.JavaElementComparator;
@@ -14,106 +13,130 @@ import org.eclipse.jface.viewers.Viewer;
  * Comparator for the Parsley Explorer that handles two special cases:
  * <ul>
  *   <li><b>Pulled-up source folders</b> ({@code components}, {@code woresources},
- *       {@code webserver-resources}) — positioned right after Java source roots
- *       ({@code src/main/java} etc.) and before classpath containers (JRE, Maven
- *       Dependencies). Sorted by name within the group.</li>
+ *       {@code webserver-resources}) — slotted into the classpath/source-root
+ *       group at the project root level, immediately after the {@code src/main/*}
+ *       source roots and before {@code src/test/*} and classpath containers.</li>
  *   <li><b>.wo bundles</b> — sorted alphabetically alongside regular files,
  *       after regular folders.</li>
  * </ul>
  *
- * Ordering at the project level:
- * <ol>
- *   <li>Java source roots (IPackageFragmentRoot with K_SOURCE) — classpath order</li>
- *   <li>Pulled-up source folders — alphabetical</li>
- *   <li>Classpath containers (JRE, Maven Dependencies, Referenced Libraries)</li>
- *   <li>Regular folders, .wo bundles, files — see rules above</li>
- * </ol>
+ * <p>Implementation note: pulled-up folders are given the same {@link #category}
+ * as Java source roots, package containers, etc. (the JDT "category 2" group).
+ * This ensures we don't violate the {@link java.util.Comparator} contract by
+ * disagreeing with JDT's category ordering — earlier versions tried to slot
+ * pulled-up folders between categories using a separate ordering for cases
+ * involving a pulled-up folder, but that meant
+ * {@code compare(JRE, java) < 0 < compare(java, components)} via our logic
+ * while {@code compare(components, JRE) < 0} via the same logic, producing a
+ * transitivity cycle that TimSort rejects with
+ * <em>"Comparison method violates its general contract!"</em>
+ *
+ * <p>With everything in one category, we override {@link #compare} only to
+ * decide the order <em>within</em> that category, using a fine-grained
+ * sub-category for slot ordering.
  */
 public class NGJavaElementComparator extends JavaElementComparator {
 
 	/**
-	 * Sort category for pulled-up source folders. Placed between source
-	 * roots (which use classpath ordering via super) and classpath
-	 * containers.
+	 * JDT's category number for source roots, classpath containers, and other
+	 * top-level classpath items. We slot pulled-up folders into this group so
+	 * the overall ordering is consistent with JDT's notion of categories.
 	 */
-	private static final int CATEGORY_PULLED_UP_SOURCE_FOLDER = 1;
-	private static final int CATEGORY_CLASSPATH_CONTAINER = 2;
-	private static final int CATEGORY_OTHER = 3;
+	private static final int CATEGORY_CLASSPATH = 2;
+
+	// ------------------------------------------------------------------------
+	// Sub-categories used for ordering within CATEGORY_CLASSPATH. Lower comes
+	// first. Items with equal sub-categories fall through to JDT's super
+	// comparator (which uses classpath order for IPackageFragmentRoot items).
+	// ------------------------------------------------------------------------
+
+	/** {@code src/main/*} source roots — first within the classpath group. */
+	private static final int SUB_SRC_MAIN = 10;
+
+	/** Pulled-up folders ({@code components}, {@code woresources}, etc.). */
+	private static final int SUB_PULLED_UP = 20;
+
+	/** Any other classpath-group item handled by JDT (containers, {@code src/test/*}, etc.). */
+	private static final int SUB_OTHER = 30;
+
+	@Override
+	public int category(Object element) {
+		// Pulled-up folders join the classpath group — same category as
+		// source roots / containers. Sub-category ordering happens in compare().
+		if (isPulledUpSourceFolder(element)) {
+			return CATEGORY_CLASSPATH;
+		}
+		return super.category(element);
+	}
 
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2) {
-		boolean isSource1 = isSourceFolder(e1);
-		boolean isSource2 = isSourceFolder(e2);
+		int cat1 = category(e1);
+		int cat2 = category(e2);
 
-		// If neither is a pulled-up source folder, fall through to
-		// the standard comparator (with .wo bundle handling)
-		if (!isSource1 && !isSource2) {
-			return compareStandard(viewer, e1, e2);
-		}
-
-		// At least one is a pulled-up source folder — use custom ordering
-		int cat1 = isSource1 ? CATEGORY_PULLED_UP_SOURCE_FOLDER : topLevelCategory(e1);
-		int cat2 = isSource2 ? CATEGORY_PULLED_UP_SOURCE_FOLDER : topLevelCategory(e2);
-
+		// Cross-category: JDT's category ordering is the source of truth.
 		if (cat1 != cat2) {
 			return cat1 - cat2;
 		}
 
-		// Both are pulled-up source folders — sort by name
-		if (isSource1 && isSource2) {
-			return ((IFolder) e1).getName().compareToIgnoreCase(((IFolder) e2).getName());
+		// Same category. If we're in the classpath group, apply our
+		// sub-category logic to slot pulled-up folders into the right place.
+		if (cat1 == CATEGORY_CLASSPATH) {
+			int sub1 = classpathSubCategory(e1);
+			int sub2 = classpathSubCategory(e2);
+			if (sub1 != sub2) {
+				return sub1 - sub2;
+			}
+			// Within a sub-category:
+			//   - pulled-up vs pulled-up: name compare
+			//   - everything else: defer to JDT (handles classpath order)
+			if (sub1 == SUB_PULLED_UP) {
+				return ((IFolder) e1).getName().compareToIgnoreCase(((IFolder) e2).getName());
+			}
+			return super.compare(viewer, e1, e2);
 		}
 
-		// Shouldn't reach here, but fall back to name comparison
-		return 0;
+		// Other categories (folders, files, etc.) — handle .wo bundles first,
+		// then defer to JDT.
+		return compareNonClasspath(viewer, e1, e2);
 	}
 
 	/**
-	 * Returns a category for non-source-folder top-level items that
-	 * determines their position relative to pulled-up source folders.
-	 * <p>
-	 * <b>Before</b> pulled-up source folders:
-	 * Source package fragment roots under {@code src/main/} (e.g.,
-	 * {@code src/main/java}, {@code src/main/resources}).
-	 * <p>
-	 * <b>After</b> pulled-up source folders:
-	 * Source roots under {@code src/test/}, classpath containers
-	 * (JRE, Maven Dependencies), and binary roots (JARs).
+	 * Sub-category for an element in the classpath group (category 2).
+	 * Used to slot pulled-up folders into the right position relative to
+	 * the {@code src/main/*} source roots and other classpath items.
 	 */
-	private int topLevelCategory(Object element) {
+	private static int classpathSubCategory(Object element) {
+		if (isPulledUpSourceFolder(element)) {
+			return SUB_PULLED_UP;
+		}
 		if (element instanceof IPackageFragmentRoot) {
+			IPackageFragmentRoot root = (IPackageFragmentRoot) element;
 			try {
-				IPackageFragmentRoot root = (IPackageFragmentRoot) element;
 				if (root.getKind() == IPackageFragmentRoot.K_SOURCE) {
-					// Check if this source root is under src/main/ or src/test/
-					IPath path = root.getResource() != null
+					org.eclipse.core.runtime.IPath path = root.getResource() != null
 							? root.getResource().getProjectRelativePath()
 							: null;
-					if (path != null && path.segmentCount() >= 2
+					if (path != null
+							&& path.segmentCount() >= 2
 							&& "src".equals(path.segment(0))
 							&& "main".equals(path.segment(1))) {
-						return 0; // src/main/* source roots before pulled-up folders
+						return SUB_SRC_MAIN;
 					}
-					// src/test/* and other source roots after pulled-up folders
-					return CATEGORY_PULLED_UP_SOURCE_FOLDER + 1;
 				}
-			} catch (Exception e) {
-				// fall through
 			}
-			return CATEGORY_CLASSPATH_CONTAINER; // binary roots after
+			catch (Exception e) {
+				// Fall through to SUB_OTHER
+			}
 		}
-		if (element instanceof PackageFragmentRootContainer) {
-			return CATEGORY_CLASSPATH_CONTAINER;
-		}
-		// Regular resources (folders, files) come after everything
-		return CATEGORY_OTHER;
+		return SUB_OTHER;
 	}
 
 	/**
-	 * Standard comparison for non-source-folder elements — handles .wo
-	 * bundles and delegates everything else to the JDT comparator.
+	 * Comparison for non-classpath-category elements. Handles .wo bundles,
+	 * then delegates to JDT.
 	 */
-	private int compareStandard(Viewer viewer, Object e1, Object e2) {
+	private int compareNonClasspath(Viewer viewer, Object e1, Object e2) {
 		if (e1 instanceof IResource && e2 instanceof IResource) {
 			String name1 = ((IResource) e1).getName();
 			String ext1 = getExtension(name1);
@@ -127,13 +150,16 @@ public class NGJavaElementComparator extends JavaElementComparator {
 			if (isBundle1) {
 				if (e2 instanceof IFile || isBundle2) {
 					return name1.compareTo(name2);
-				} else if (e2 instanceof IContainer) {
+				}
+				else if (e2 instanceof IContainer) {
 					return 1;
 				}
-			} else if (isBundle2) {
+			}
+			else if (isBundle2) {
 				if (e1 instanceof IFile) {
 					return name1.compareTo(name2);
-				} else if (e1 instanceof IContainer) {
+				}
+				else if (e1 instanceof IContainer) {
 					return -1;
 				}
 			}
@@ -142,7 +168,7 @@ public class NGJavaElementComparator extends JavaElementComparator {
 		return super.compare(viewer, e1, e2);
 	}
 
-	private static boolean isSourceFolder(Object element) {
+	private static boolean isPulledUpSourceFolder(Object element) {
 		return element instanceof IFolder
 				&& NGPackageExplorerContentProvider.isSourceFolder((IFolder) element);
 	}

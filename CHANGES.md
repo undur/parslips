@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: Parsley Explorer project node refused to expand for projects with many top-level children
+
+- Expanding a project in the Parsley Explorer silently failed for some projects — the expansion triangle would disappear and the tree never populated. The error log showed `Comparison method violates its general contract!` from inside JFace's tree-sort code, naming `NGJavaElementComparator` as the offender.
+- Root cause: `NGJavaElementComparator` delegated most comparisons to JDT's `JavaElementComparator` but took over the comparison whenever a pulled-up source folder was one of the operands. JDT places classpath containers (JRE, etc.) *before* `src/main/*` source roots; our logic placed pulled-up folders *between* source roots and containers. The two rules taken together produce a transitive cycle: `JRE < src/main/java < src/main/components < JRE`. With small child lists this can go undetected (sort happens to avoid the contradicting triple); with large lists, TimSort hits the contradiction during a merge and aborts, which propagates out as the failed expansion.
+- Fix: rewrote the comparator so all classpath-group items (source roots, classpath containers, and now pulled-up folders) live in JDT's category 2. Sub-category ordering inside that group places `src/main/*` source roots first, then pulled-up folders, then everything else handled by JDT (including `src/test/*` and classpath containers, which keep their classpath ordering). Cross-category decisions defer to JDT entirely, so we never disagree with JDT's category ordering.
+- The trigger that surfaced the long-latent bug for users: VisualVM, when attached, contributes instrumented class files that JDT surfaces as project-level children. That can push the child-count past whatever TimSort's threshold for noticing the cycle happens to be.
+
 ### Decouple FuzzyXML from Eclipse APIs
 
 - The FuzzyXML parser package (`jp.aonir.fuzzyxml`) is now fully Eclipse-free. Previously, `FuzzyXMLElement.getRegionAtOffset()` returned `org.eclipse.jface.text.IRegion` and accepted an `IDocument` — both Eclipse types.
