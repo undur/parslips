@@ -20,16 +20,25 @@ import org.eclipse.swt.widgets.Display;
 
 /**
  * Watches the workspace for resource changes that affect Parsley Explorer's
- * pulled-up source folders, and refreshes the corresponding project node in
- * the tree viewer when one is added, removed, or moved.
+ * pulled-up source folders, and refreshes the appropriate tree-viewer node
+ * when one is added, removed, moved, or has its contents change.
  *
- * <p>The base JDT content provider reacts to resource deltas on existing
- * folders, but it doesn't know that folders like {@code src/main/woresources}
- * or any {@code components} folder under {@code src/main/resources/} should
- * cause the project node itself to be refreshed (so they appear/disappear
- * at the project root level). Without this listener, creating a new
- * pulled-up folder leaves the tree showing a stale view until the user
- * presses F5.
+ * <p>Two kinds of changes need handling:
+ *
+ * <ul>
+ *   <li><b>The set of pulled-up folders changes</b> — e.g. someone creates
+ *       a new {@code src/main/woresources} or any {@code components} folder
+ *       under {@code src/main/resources/}, or deletes one. The project node
+ *       in the tree needs to be refreshed so the new folder appears (or the
+ *       deleted one disappears) at the project root level.</li>
+ *   <li><b>Contents of an existing pulled-up folder change</b> — e.g. the
+ *       user drops files into {@code src/main/components}. JDT's base
+ *       content provider reacts to the resource delta on the
+ *       <em>physical</em> location ({@code src/main} &gt; {@code components}),
+ *       which is not the same TreeItem as the pulled-up node at the project
+ *       root. So the pulled-up node's children never get refreshed unless
+ *       we do it ourselves.</li>
+ * </ul>
  *
  * <p>Lifecycle:
  * <ul>
@@ -62,10 +71,18 @@ class PulledUpFolderRefresher implements IResourceChangeListener {
 			return;
 		}
 
-		// Walk the delta and collect projects whose pulled-up folder set
-		// may have changed. We refresh each project's node in the viewer
-		// so getChildren(IJavaProject) is re-invoked.
-		Set<IProject> affected = new HashSet<>();
+		// Two disjoint sets of refresh targets:
+		//   - projectsToRefresh: project root nodes whose pulled-up folder
+		//     list may have changed (folder added/removed).
+		//   - foldersToRefresh: pulled-up folder nodes whose contents have
+		//     changed (descendants added/removed).
+		// We never need both for the same project at the same time, but
+		// processing them separately keeps the refresh as targeted as
+		// possible — refreshing the project root would also work for the
+		// folder-contents case, but it's a much heavier operation.
+		Set<IProject> projectsToRefresh = new HashSet<>();
+		Set<IFolder> foldersToRefresh = new HashSet<>();
+
 		try {
 			delta.accept(new IResourceDeltaVisitor() {
 				@Override
@@ -81,28 +98,40 @@ class PulledUpFolderRefresher implements IResourceChangeListener {
 						return true;
 					}
 
-					// Only interested in folder additions/removals/moves
 					if (!(resource instanceof IFolder)) {
 						// Continue descending into the workspace root and projects
 						return true;
 					}
 
+					IFolder folder = (IFolder) resource;
 					int kind = d.getKind();
-					if (kind != IResourceDelta.ADDED && kind != IResourceDelta.REMOVED) {
-						// CHANGED on folder content doesn't affect the pulled-up set;
-						// keep descending in case a child was added or removed
+
+					// Case 1: the pulled-up folder itself was added or removed.
+					// We need to refresh the project root so the pulled-up
+					// folder list is recomputed.
+					if (kind == IResourceDelta.ADDED || kind == IResourceDelta.REMOVED) {
+						if (isPulledUpCandidate(folder)) {
+							projectsToRefresh.add(folder.getProject());
+							return false; // children handled by the refresh
+						}
+						// Not a pulled-up folder — keep descending in case
+						// a pulled-up folder is nested deeper (e.g. an
+						// ng-style components/ folder under src/main/resources/).
 						return true;
 					}
 
-					IFolder folder = (IFolder) resource;
-					if (isPulledUpCandidate(folder)) {
-						affected.add(folder.getProject());
-						// No need to descend further into this subtree
-						return false;
+					// Case 2: the folder itself changed (its contents). If
+					// this folder is one of our pulled-up ones, refresh it
+					// directly so its visible children update.
+					if (kind == IResourceDelta.CHANGED && isPulledUpCandidate(folder)) {
+						foldersToRefresh.add(folder);
+						// Keep descending — JDT will handle deeper resource
+						// deltas on its own once the parent is refreshed, but
+						// we want to keep visiting for any nested pulled-up
+						// folders too.
+						return true;
 					}
 
-					// Keep descending — a new folder might contain a pulled-up
-					// folder as a child (e.g. someone pasted in a whole tree)
 					return true;
 				}
 			});
@@ -112,7 +141,7 @@ class PulledUpFolderRefresher implements IResourceChangeListener {
 			return;
 		}
 
-		if (affected.isEmpty()) {
+		if (projectsToRefresh.isEmpty() && foldersToRefresh.isEmpty()) {
 			return;
 		}
 
@@ -123,11 +152,22 @@ class PulledUpFolderRefresher implements IResourceChangeListener {
 			if (control == null || control.isDisposed()) {
 				return;
 			}
-			for (IProject project : affected) {
+
+			// Refresh project roots first (covers any pulled-up folder
+			// add/remove). If a folder is inside a project whose root we're
+			// refreshing anyway, no need to also refresh the folder.
+			for (IProject project : projectsToRefresh) {
 				IJavaProject javaProject = JavaCore.create(project);
 				if (javaProject != null) {
 					_viewer.refresh(javaProject);
 				}
+			}
+
+			for (IFolder folder : foldersToRefresh) {
+				if (projectsToRefresh.contains(folder.getProject())) {
+					continue; // already refreshed via project root
+				}
+				_viewer.refresh(folder);
 			}
 		});
 	}

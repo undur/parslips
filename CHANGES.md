@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: pulled-up folder contents now refresh when files are added or removed inside them
+
+- Dropping or deleting files inside an already-existing pulled-up folder (e.g. `src/main/components`) didn't update the tree — the pulled-up folder's node at the project root kept showing stale contents until the user pressed F5.
+- Root cause: JDT's base content provider reacts to the resource delta on the *physical* location (`src/main` → `components`), but our content provider reparents that folder to appear at the project root. The reparented TreeItem never received the children-changed signal.
+- Fix: `PulledUpFolderRefresher` now handles two cases. (1) Pulled-up folder added or removed → refresh project root, as before. (2) Pulled-up folder's contents changed → refresh that folder's node directly via `viewer.refresh(folder)`. The UI refresh avoids double work by skipping any folder whose project is already being refreshed.
+
 ### Fix: Parsley Explorer project node refused to expand for projects with many top-level children
 
 - Expanding a project in the Parsley Explorer silently failed for some projects — the expansion triangle would disappear and the tree never populated. The error log showed `Comparison method violates its general contract!` from inside JFace's tree-sort code, naming `NGJavaElementComparator` as the offender.
