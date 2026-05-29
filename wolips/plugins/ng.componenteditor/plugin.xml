@@ -662,6 +662,76 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.WOLipsCoexistence"
             name="WOLips Coexistence"/>
+
+      <!-- =============================================================== -->
+      <!-- Zombies                                                         -->
+      <!--                                                                 -->
+      <!-- The living dead. These pages were inherited from the Amateras   -->
+      <!-- HTML editor and were never wired into our UI. We surface them   -->
+      <!-- here (rather than leaving them invisible) so that during daily  -->
+      <!-- use we keep bumping into them and can decide each one's fate:   -->
+      <!-- delete outright, salvage the idea into something Parsley-shaped,-->
+      <!-- or (rarely) promote back to a real setting. Several control     -->
+      <!-- behaviour that still runs (e.g. the validators); others control -->
+      <!-- features we no longer ship (JSP). See GitHub issue #4 and the   -->
+      <!-- Zombie triage work.                                             -->
+      <!--                                                                 -->
+      <!-- Named "Zombies" so it sorts last (Eclipse orders sibling pages  -->
+      <!-- alphabetically) and so its status is unmistakable. DO NOT treat -->
+      <!-- anything under this category as a supported setting.            -->
+      <!-- =============================================================== -->
+      <page class="org.objectstyle.wolips.componenteditor.preferences.DeprecatedCategoryPage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.deprecated"
+            name="Zombies"/>
+      <page class="tk.eclipse.plugin.htmleditor.AssistPreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.deprecated.Assist"
+            name="Content Assist"/>
+      <page class="tk.eclipse.plugin.htmleditor.CustomAssistPreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.deprecated.CustomAssist"
+            name="Custom Assist"/>
+      <page class="tk.eclipse.plugin.htmleditor.DTDPreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.deprecated.DTD"
+            name="DTD"/>
+      <page class="tk.eclipse.plugin.htmleditor.TLDPreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.deprecated.TLD"
+            name="JSP TLD"/>
+      <page class="tk.eclipse.plugin.htmleditor.JSPEditorPreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.deprecated.JSPEditor"
+            name="JSP Editor"/>
+      <page class="tk.eclipse.plugin.htmleditor.tasktag.HTMLTaskTagPreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.deprecated.TaskTags"
+            name="HTML Task Tags"/>
+      <page class="tk.eclipse.plugin.htmleditor.template.HTMLTemplatePreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.deprecated.HTMLTemplates"
+            name="HTML Templates"/>
+   </extension>
+
+<!-- =================================================================================== -->
+<!-- Property Pages (project-level)                                                      -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.propertyPages">
+      <!--
+        Zombie: the Amateras-era per-project validation toggles
+        (HTML/JSP/DTD/XML/JavaScript). This is where the JavaScript
+        validation flag (HTMLProjectParams._validateJS) is set — it had
+        no UI at all until now. Surfaced for triage; see issue #4. The
+        validators it controls are themselves candidates for removal.
+      -->
+      <page class="tk.eclipse.plugin.htmleditor.HTMLProjectPropertyPage"
+            id="ng.componenteditor.properties.deprecated.HTMLProject"
+            name="Zombie: Validation">
+         <enabledWhen>
+            <adapt type="org.eclipse.core.resources.IProject"/>
+         </enabledWhen>
+      </page>
    </extension>
 
 <!-- =================================================================================== -->

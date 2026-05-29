@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Surface orphaned Amateras preference/property pages under a "Zombies" category
+
+- Eight preference/property pages inherited from the Amateras HTML editor existed in the codebase but were never registered in `plugin.xml` — invisible UI controlling behaviour that, in some cases, still runs (the legacy HTML/JS validators) and in others controls features we no longer ship (JSP). The JavaScript validation toggle in particular had no UI at all.
+- Rather than leave dead/half-dead code to rot unnoticed, surfaced all eight under a new **Parsley → Zombies** preference category (named so it sorts last, and so its status is unmistakable). The category's landing page (`DeprecatedCategoryPage`) explains it's a triage worklist, not supported settings — each page awaits a deliberate decision: delete, salvage, or promote.
+- Seven are preference pages (Content Assist, Custom Assist, DTD, JSP TLD, JSP Editor, HTML Task Tags, HTML Templates); the eighth is the per-project validation property page, surfaced via a new `org.eclipse.ui.propertyPages` extension as **project → Properties → Zombie: Validation**.
+- This is the "surface before deletion" philosophy: keep dead weight in view so we keep bumping into it and clean it out deliberately. See issue #4.
+
 ### JavaScript validation now defaults to OFF
 
 - The standalone JavaScript validator uses Mozilla Rhino, an ES3/ES5-era engine that flags modern JavaScript (arrow functions, `const`/`let`, template literals, `async`/`await`, optional chaining) as syntax errors even though it's valid in any real browser. Because it emits stock `IMarker.PROBLEM` markers — indistinguishable from Java errors on the project tree — valid vendor and project JS would make whole projects appear broken.
