@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### JavaScript validation now defaults to OFF
+
+- The standalone JavaScript validator uses Mozilla Rhino, an ES3/ES5-era engine that flags modern JavaScript (arrow functions, `const`/`let`, template literals, `async`/`await`, optional chaining) as syntax errors even though it's valid in any real browser. Because it emits stock `IMarker.PROBLEM` markers — indistinguishable from Java errors on the project tree — valid vendor and project JS would make whole projects appear broken.
+- Flipped `HTMLProjectParams._validateJS` to default OFF (both the field initializer and the persistent-property load fallback). Projects that previously stored an explicit "true" keep their setting; only the unset/default case changes. Users who want JS validation can still opt in via the project property page.
+- The broader question — whether we should provide standalone JS/CSS editors and validation at all (vs. keeping only inline `<script>`/`<style>` support and deferring standalone files to Eclipse's own JS/CSS tooling) — is tracked as a separate issue.
+
 ### Fix: pulled-up folder contents now refresh when files are added or removed inside them
 
 - Dropping or deleting files inside an already-existing pulled-up folder (e.g. `src/main/components`) didn't update the tree — the pulled-up folder's node at the project root kept showing stale contents until the user pressed F5.

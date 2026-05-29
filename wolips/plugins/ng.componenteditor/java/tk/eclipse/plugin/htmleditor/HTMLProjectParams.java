@@ -29,7 +29,15 @@ public class HTMLProjectParams {
 	private boolean _validateHTML = true;
 	private boolean _validateJSP = true;
 	private boolean _validateDTD = true;
-	private boolean _validateJS = true;
+	// JavaScript validation defaults to OFF. The validator uses Mozilla Rhino
+	// (an ES3/ES5-era engine) which flags modern JavaScript — arrow functions,
+	// const/let, template literals, async/await, optional chaining — as syntax
+	// errors even though it's valid in any real browser. Since the markers it
+	// produces are stock IMarker.PROBLEM markers (indistinguishable from Java
+	// errors on the project tree), this caused valid vendor and project JS to
+	// light up projects as broken. Users who want it can still opt in via the
+	// project property page.
+	private boolean _validateJS = false;
 	private boolean _removeMarkers = false;
 	private boolean _detectTaskTag = false;
 	private String[] _javaScripts = new String[0];
@@ -292,7 +300,10 @@ public class HTMLProjectParams {
 		this._validateHTML = getBooleanValue(validateHTML, true);
 		this._validateJSP = getBooleanValue(validateJSP, true);
 		this._validateDTD = getBooleanValue(validateDTD, true);
-		this._validateJS = getBooleanValue(validateJS, true);
+		// Default OFF — see the field declaration for the rationale (Rhino
+		// flags modern JS as errors). A project that previously stored an
+		// explicit "true" keeps it; only the unset/default case changes.
+		this._validateJS = getBooleanValue(validateJS, false);
 		this._removeMarkers = getBooleanValue(removeMarkers, false);
 		this._detectTaskTag = project.hasNature(HTMLProjectNature.HTML_NATURE_ID);
 		
