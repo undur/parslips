@@ -290,13 +290,21 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 			}
 
 		});
+		// Choose which part to reveal on open. The "display X part on reveal"
+		// flags are set by which file the user opened (a .wod sets the WOD
+		// flag, etc.), so an explicit open of a .wod/.woo/.api still lands on
+		// that part. When nothing specific is requested we default to HTML:
+		// opening a component is almost always about working on the template,
+		// not the (usually empty) WOD sidecar — so HTML-first is the sensible
+		// default. Without this final else the editor would fall through to
+		// whatever the SashForm happened to focus first (the WOD).
 		if (componentEditorInput.isDisplayWodPartOnReveal()) {
 			this.switchToWod();
 		} else if (componentEditorInput.isDisplayWooPartOnReveal()) {
 			this.switchToWoo();
 		} else if (componentEditorInput.isDisplayApiPartOnReveal()) {
 			this.switchToApi();
-		} else if (componentEditorInput.isDisplayHtmlPartOnReveal()) {
+		} else {
 			this.switchToHtml();
 		}
 		return;

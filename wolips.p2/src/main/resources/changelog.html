@@ -30,6 +30,12 @@
 				<h2 class="date-header">May 29, 2026</h2>
 
 				<div class="changelog-entry">
+					<h3>Components now open to the HTML template by default</h3>
+					<p>When you open a component, the editor now lands on the <strong>HTML template</strong> instead of the WOD editor. Opening a component is almost always about working on the template &mdash; and for inline-syntax components the WOD sidecar is usually empty &mdash; so HTML-first is the sensible default.</p>
+					<p>If you specifically open a <code>.wod</code> file (or <code>.woo</code> / <code>.api</code>), the editor still reveals that part &mdash; only the &ldquo;no specific request&rdquo; case (opening the component itself, via Open Component, double-clicking the <code>.wo</code> folder, or jumping in from an exception page) defaults to HTML.</p>
+				</div>
+
+				<div class="changelog-entry">
 					<h3>Dev server now enabled by default</h3>
 					<p>The dev server &mdash; which lets your running application drive Eclipse, most usefully so that clicking a stack-trace line on an exception page in the browser opens that source line in Eclipse &mdash; is now <strong>on by default and needs no setup</strong>. The feature has always existed (it came over from WOLips); it&rsquo;s just far more accessible now.</p>
 					<p>What changed:</p>

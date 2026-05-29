@@ -69,7 +69,15 @@ public class HtmlWodTab extends ComponentEditorTab {
 
 	private WodEditor wodEditor;
 
-	private boolean htmlActive;
+	/**
+	 * Which side of the HTML/WOD composite is "active" (the one outline,
+	 * focus, etc. follow). Defaults to true (HTML) so a component opened
+	 * without an explicit WOD request starts on the template — the part you
+	 * almost always want, since the WOD sidecar is usually empty for
+	 * inline-syntax components. An explicit .wod open flips this to false via
+	 * setWodActive() during the reveal step.
+	 */
+	private boolean htmlActive = true;
 
 	private IEditorInput htmlInput;
 

@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Component editor: open to the HTML template by default
+
+Opening a component now reveals the **HTML template** rather than the WOD editor. Opening a component is almost always about working on the template, and for inline-syntax components the WOD sidecar is usually empty — so HTML-first is the sensible default.
+
+- `ComponentEditorPart.createPages()` revealed a part based on the "display X part on reveal" flags (set by which file was opened), but the chain ended at `else if (isDisplayHtmlPartOnReveal())` with **no final else** — so when no flag was set (the common "open the component itself" case), it fell through to nothing and the editor landed on whatever the `SashForm` focused first (the WOD). Changed that branch to a bare `else { switchToHtml() }`, so "no specific request" explicitly reveals HTML. The `.wod`/`.woo`/`.api` checks remain ahead of it, so explicitly opening one of those still wins.
+- `HtmlWodTab.htmlActive` (the tab's internal "active side", which outline/focus/`getActiveEmbeddedEditor()` follow) defaulted to `false` (WOD). Defaulted it to `true` (HTML); an explicit `.wod` open flips it back via `setWodActive()` during reveal.
+- Net effect: Open Component, double-clicking a `.wo` folder or `.html`, and jumping in from an exception page all land on HTML; opening a `.wod` directly still lands on WOD.
+
 ### Dev server: no password, on by default, graceful port-conflict handling
 
 Follow-up to the dev server restore (below), removing the remaining setup friction so the exception-page-to-source loop works out of the box.
