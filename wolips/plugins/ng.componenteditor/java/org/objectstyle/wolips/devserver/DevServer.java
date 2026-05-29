@@ -28,24 +28,26 @@ import com.sun.net.httpserver.HttpServer;
  * the form:
  *
  * <pre>
- *   http://localhost:9485/openJavaFile?pw=PASS&amp;app=APP&amp;className=FQCN&amp;lineNumber=N
- *   http://localhost:9485/openComponent?pw=PASS&amp;app=APP&amp;component=NAME
- *   http://localhost:9485/refresh?pw=PASS&amp;path=PATH
+ *   http://localhost:9485/openJavaFile?app=APP&amp;className=FQCN&amp;lineNumber=N
+ *   http://localhost:9485/openComponent?app=APP&amp;component=NAME
+ *   http://localhost:9485/refresh?path=PATH
  * </pre>
  *
  * <h2>Security</h2>
- * <ul>
- *   <li><b>Loopback-only.</b> The server binds to {@code 127.0.0.1}, never to
- *       all interfaces. The original WOLips server bound to every interface,
- *       which exposed an "open arbitrary files in my IDE" endpoint to the
- *       local network. We never do that.</li>
- *   <li><b>Password.</b> When a password is configured, every request must
- *       carry a matching {@code pw} query parameter or it is rejected with
- *       401. The original only enforced this on GET (POST slipped through);
- *       here it applies uniformly. The runtime clients always send {@code pw},
- *       and Wonder's exception page refuses to even render links unless a
- *       password is set, so requiring it costs nothing in practice.</li>
- * </ul>
+ * <b>Loopback-only.</b> The server binds to {@code 127.0.0.1}, never to all
+ * interfaces. The original WOLips server bound to every interface, which
+ * exposed an "open arbitrary files in my IDE" endpoint to the local network.
+ * We never do that — and loopback binding <em>is</em> the security boundary.
+ * Anything that can reach a server on the loopback interface is already
+ * running code on the machine, at which point an IDE endpoint is the least of
+ * one's worries.
+ *
+ * <p>For that reason there is no password. The original server (and Wonder's
+ * exception page) used a {@code pw} query parameter, but on a loopback-only
+ * server it was pure friction with no security benefit: both the IDE and the
+ * runtime had to agree on a shared secret, and getting it wrong meant links
+ * silently 401'd. We simply ignore any {@code pw} parameter that legacy
+ * clients still send.
  *
  * <p>Note that query strings from the runtime may use either {@code &amp;} or
  * the HTML-escaped {@code &amp;amp;} as the parameter separator (the two
@@ -57,17 +59,13 @@ public class DevServer {
 	public static final int DEFAULT_PORT = 9485;
 
 	private final int _port;
-	private final String _password;
 	private HttpServer _httpServer;
 
 	/**
-	 * @param port     the TCP port to listen on (loopback only)
-	 * @param password the required password, or {@code null}/empty to disable
-	 *                 the password check (not recommended)
+	 * @param port the TCP port to listen on (loopback only)
 	 */
-	public DevServer(int port, String password) {
+	public DevServer(int port) {
 		_port = port;
-		_password = (password == null || password.isEmpty()) ? null : password;
 	}
 
 	public int getPort() {
@@ -83,9 +81,9 @@ public class DevServer {
 		InetAddress loopback = InetAddress.getLoopbackAddress();
 		_httpServer = HttpServer.create(new InetSocketAddress(loopback, _port), 0);
 
-		_httpServer.createContext("/openJavaFile", new GuardedHandler(new OpenJavaFileHandler()));
-		_httpServer.createContext("/openComponent", new GuardedHandler(new OpenComponentHandler()));
-		_httpServer.createContext("/refresh", new GuardedHandler(new RefreshHandler()));
+		_httpServer.createContext("/openJavaFile", new RequestHandler(new OpenJavaFileHandler()));
+		_httpServer.createContext("/openComponent", new RequestHandler(new OpenComponentHandler()));
+		_httpServer.createContext("/refresh", new RequestHandler(new RefreshHandler()));
 
 		// Use a small daemon thread pool. Requests are short-lived (open an
 		// editor, refresh a resource) and arrive one at a time in practice.
@@ -111,13 +109,15 @@ public class DevServer {
 	}
 
 	/**
-	 * Wraps a {@link DevServerHandler} with password enforcement and uniform
-	 * error/response handling, then adapts it to the JDK {@link HttpHandler}.
+	 * Adapts a {@link DevServerHandler} to the JDK {@link HttpHandler}, parsing
+	 * the query string and applying uniform response/error handling. Any
+	 * {@code pw} parameter that legacy clients send is simply ignored (see the
+	 * class-level note on why there is no password).
 	 */
-	private final class GuardedHandler implements HttpHandler {
+	private final class RequestHandler implements HttpHandler {
 		private final DevServerHandler _delegate;
 
-		GuardedHandler(DevServerHandler delegate) {
+		RequestHandler(DevServerHandler delegate) {
 			_delegate = delegate;
 		}
 
@@ -125,12 +125,6 @@ public class DevServer {
 		public void handle(HttpExchange exchange) throws IOException {
 			try {
 				Map<String, String> params = parseQuery(exchange.getRequestURI().getRawQuery());
-
-				if (_password != null && !_password.equals(params.get("pw"))) {
-					respond(exchange, 401, "Unauthorized");
-					return;
-				}
-
 				_delegate.handle(params);
 				respond(exchange, 200, "ok");
 			}

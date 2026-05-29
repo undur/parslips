@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: no password, on by default, graceful port-conflict handling
+
+Follow-up to the dev server restore (below), removing the remaining setup friction so the exception-page-to-source loop works out of the box.
+
+- **Removed the password entirely.** The server is loopback-only, which is the security boundary — anything that can reach it is already running code on the machine, where an IDE endpoint is the least concern. The password was pure friction: both the IDE and the runtime had to agree on a shared secret, and a mismatch meant links silently `401`'d. Dropped the constant, the preference, the page field, the default, and the enforcement check. Legacy clients that still send a `pw` query parameter (Wonder's `ERXExceptionPage`) keep working — the parameter is simply ignored.
+- **On by default.** `DEFAULT_ENABLED` flipped to `true`. A fresh Parsley install has the feature working with no configuration. Documented in the constant's javadoc why default-on is safe (loopback boundary).
+- **Graceful, quiet port-conflict handling.** With default-on, the "second Eclipse window" case (port 9485 already owned by the first instance) becomes routine. `DevServerManager` now catches `BindException` specifically and logs a calm `INFO` note rather than an alarming error-with-stack-trace; the server simply doesn't run in that instance (the first instance owns the port, which is the one the runtime talks to anyway). Any *other* startup exception still logs as a real error. Port fallback was considered and rejected — a server on a non-default port is one no runtime client would talk to.
+
 ### Restore the dev server (browser exception page → jump to source in Eclipse)
 
 - Brought back the old WOLips "click a stack-trace line in the browser to open the source in Eclipse" feature. A small HTTP server runs inside Eclipse; a running application's exception page links to it, and clicking a line opens that file in Eclipse at that line.

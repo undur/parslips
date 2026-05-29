@@ -3,7 +3,6 @@ package org.objectstyle.wolips.devserver;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
-import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -44,10 +43,9 @@ public class DevServerPreferencePage extends FieldEditorPreferencePage implement
 				+ "ERXExceptionPage, or ng-objects' equivalent) can link directly "
 				+ "to the offending source line — clicking a line number in the "
 				+ "browser opens that file in Eclipse at that line.\n\n"
-				+ "The runtime sends requests with the password below as a query "
-				+ "parameter; set the same value as the 'wolips.password' property "
-				+ "in your application. The server listens only on the loopback "
-				+ "interface (localhost).");
+				+ "The server listens only on the loopback interface (localhost), "
+				+ "which is its security boundary — there is no password to "
+				+ "configure on either side.");
 		GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
 		gd.horizontalSpan = 2;
 		gd.widthHint = 420;
@@ -70,11 +68,6 @@ public class DevServerPreferencePage extends FieldEditorPreferencePage implement
 				parent);
 		portEditor.setValidRange(1, 65535);
 		addField(portEditor);
-
-		addField(new StringFieldEditor(
-				DevServerPreferences.SERVER_PASSWORD,
-				"Password:",
-				parent));
 	}
 
 	@Override
@@ -84,7 +77,7 @@ public class DevServerPreferencePage extends FieldEditorPreferencePage implement
 			return false;
 		}
 		// Apply the new settings live: stop and (if still enabled) restart
-		// with the new port/password.
+		// with the new port and enabled state.
 		DevServerManager.getDefault().restart();
 		return true;
 	}

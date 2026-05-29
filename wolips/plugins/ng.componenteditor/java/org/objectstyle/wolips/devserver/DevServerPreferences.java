@@ -3,11 +3,11 @@ package org.objectstyle.wolips.devserver;
 /**
  * Preference keys and defaults for the Parsley dev server.
  *
- * <p>The defaults match the wire contract used by existing runtime clients
- * (Wonder's {@code ERXExceptionPage}, the {@code WOLips} framework): port
- * {@value #DEFAULT_PORT}, and a password that the runtime sends as the
- * {@code pw} query parameter (set on the runtime side via the
- * {@code wolips.password} system property).
+ * <p>The default port ({@value #DEFAULT_PORT}) matches {@code wolips.port}'s
+ * default on the runtime side, so existing runtime clients (Wonder's
+ * {@code ERXExceptionPage}, the {@code WOLips} framework) reach it without
+ * configuration. There is intentionally no password preference — the server
+ * is loopback-only, which is the security boundary; see {@link DevServer}.
  */
 public final class DevServerPreferences {
 
@@ -20,12 +20,16 @@ public final class DevServerPreferences {
 	/** Int — the loopback port to listen on. */
 	public static final String SERVER_PORT = "org.objectstyle.wolips.devserver.port";
 
-	/** String — the required password (matched against the request's {@code pw} param). */
-	public static final String SERVER_PASSWORD = "org.objectstyle.wolips.devserver.password";
-
 	/** Default port; matches {@code wolips.port}'s default on the runtime side. */
 	public static final int DEFAULT_PORT = DevServer.DEFAULT_PORT;
 
-	/** Default enabled state. Off by default — opt in via preferences. */
-	public static final boolean DEFAULT_ENABLED = false;
+	/**
+	 * Default enabled state. On by default — the server is loopback-only and
+	 * password-free, so it's safe to run for everyone, and having it always
+	 * available is what makes the "click an exception line to open the source"
+	 * loop just work without setup. If the port is already taken (e.g. a second
+	 * Eclipse is open), startup fails gracefully and the feature is simply
+	 * unavailable in that instance; see {@link DevServerManager}.
+	 */
+	public static final boolean DEFAULT_ENABLED = true;
 }

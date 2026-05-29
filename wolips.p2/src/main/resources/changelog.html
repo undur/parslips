@@ -25,6 +25,23 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- May 29, 2026 -->
+			<div class="card">
+				<h2 class="date-header">May 29, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Dev server now enabled by default</h3>
+					<p>The dev server &mdash; which lets your running application drive Eclipse, most usefully so that clicking a stack-trace line on an exception page in the browser opens that source line in Eclipse &mdash; is now <strong>on by default and needs no setup</strong>. The feature has always existed (it came over from WOLips); it&rsquo;s just far more accessible now.</p>
+					<p>What changed:</p>
+					<ul>
+						<li><strong>No password.</strong> The server listens only on <code>localhost</code>, which is its security boundary &mdash; anything that could reach it is already running on your machine. It previously required a shared password between the IDE and the app; that friction is gone, on both sides.</li>
+						<li><strong>On by default.</strong> Nothing to enable. Wonder&rsquo;s <code>ERXExceptionPage</code> (and ng-objects&rsquo; equivalent) already generate the links, so for most projects this simply starts working.</li>
+						<li><strong>Fails quietly on a port conflict.</strong> If port 9485 is already taken &mdash; most commonly because a second Eclipse window already owns it &mdash; the server just doesn&rsquo;t start in that instance and notes it calmly in the log. The first window owns the port, which is the one your app talks to anyway.</li>
+						<li><strong>Configurable.</strong> Enable/disable and port live under <strong>Preferences &rarr; Parsley &rarr; Dev Server</strong>; changes apply immediately without restarting Eclipse.</li>
+					</ul>
+				</div>
+			</div>
+
 			<!-- May 14, 2026 -->
 			<div class="card">
 				<h2 class="date-header">May 14, 2026</h2>

@@ -1,5 +1,9 @@
 package org.objectstyle.wolips.devserver;
 
+import java.net.BindException;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
@@ -50,7 +54,7 @@ public final class DevServerManager {
 	/**
 	 * Stops the server if running, then starts it again if currently enabled.
 	 * Used by the preference page when settings change so the new port /
-	 * password / enabled state takes effect immediately.
+	 * enabled state takes effect immediately.
 	 */
 	public synchronized void restart() {
 		stop();
@@ -73,18 +77,33 @@ public final class DevServerManager {
 		if (port <= 0) {
 			port = DevServerPreferences.DEFAULT_PORT;
 		}
-		String password = prefs().getString(DevServerPreferences.SERVER_PASSWORD);
 
-		DevServer server = new DevServer(port, password);
+		DevServer server = new DevServer(port);
 		try {
 			server.start();
 			_server = server;
 		}
+		catch (BindException e) {
+			// The port is already in use — almost always a second Eclipse
+			// with Parsley already running (the dev server is on by default,
+			// so this is a routine, expected situation for anyone who keeps
+			// more than one window open). The first instance owns the port
+			// and is the one the runtime talks to anyway, so there's nothing
+			// to fix here. Log a calm INFO note rather than an alarming error
+			// with a stack trace, and carry on — the feature is simply
+			// unavailable in this instance.
+			ComponenteditorPlugin.getDefault().log(new Status(
+					IStatus.INFO,
+					ComponenteditorPlugin.PLUGIN_ID,
+					"Parsley dev server: port " + port + " is already in use "
+							+ "(another Eclipse instance likely owns it). The dev "
+							+ "server will not run in this instance."));
+			_server = null;
+		}
 		catch (Exception e) {
-			// Most likely the port is already in use (another Eclipse, or a
-			// stale process). Log it; the user can pick a different port in
-			// preferences. We deliberately don't pop a dialog — startup
-			// shouldn't be interrupted by a modal error.
+			// Anything other than a port conflict is genuinely unexpected —
+			// log it as an error. We deliberately don't pop a dialog; startup
+			// shouldn't be interrupted by a modal.
 			ComponenteditorPlugin.getDefault().log(e);
 			_server = null;
 		}

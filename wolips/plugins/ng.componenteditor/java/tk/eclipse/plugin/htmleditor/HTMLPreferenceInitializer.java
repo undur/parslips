@@ -79,7 +79,6 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 				org.objectstyle.wolips.devserver.DevServerPreferences.DEFAULT_ENABLED);
 		store.setDefault(org.objectstyle.wolips.devserver.DevServerPreferences.SERVER_PORT,
 				org.objectstyle.wolips.devserver.DevServerPreferences.DEFAULT_PORT);
-		store.setDefault(org.objectstyle.wolips.devserver.DevServerPreferences.SERVER_PASSWORD, "");
 
 		getContributions(store);
 	}
