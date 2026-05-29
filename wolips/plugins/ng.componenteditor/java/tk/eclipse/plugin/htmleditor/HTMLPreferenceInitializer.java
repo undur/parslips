@@ -69,6 +69,18 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 		// non-intrusive coexistence behavior.
 		store.setDefault(HTMLPlugin.PREF_PARSLEY_HANDLES_ALL, false);
 
+		// Dev server (the loopback HTTP server that lets a running app open
+		// source/components in Eclipse). Off by default; opt in via
+		// Preferences > Parsley > Dev Server. Port matches the runtime's
+		// wolips.port default. HTMLPlugin and ComponenteditorPlugin share the
+		// same instance-scope preference node (same bundle), so these defaults
+		// are visible to the DevServer code that reads via ComponenteditorPlugin.
+		store.setDefault(org.objectstyle.wolips.devserver.DevServerPreferences.SERVER_ENABLED,
+				org.objectstyle.wolips.devserver.DevServerPreferences.DEFAULT_ENABLED);
+		store.setDefault(org.objectstyle.wolips.devserver.DevServerPreferences.SERVER_PORT,
+				org.objectstyle.wolips.devserver.DevServerPreferences.DEFAULT_PORT);
+		store.setDefault(org.objectstyle.wolips.devserver.DevServerPreferences.SERVER_PASSWORD, "");
+
 		getContributions(store);
 	}
 	

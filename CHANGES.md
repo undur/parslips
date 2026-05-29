@@ -12,6 +12,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Restore the dev server (browser exception page → jump to source in Eclipse)
+
+- Brought back the old WOLips "click a stack-trace line in the browser to open the source in Eclipse" feature. A small HTTP server runs inside Eclipse; a running application's exception page links to it, and clicking a line opens that file in Eclipse at that line.
+- Wire-compatible with existing runtime clients (Wonder's `ERXExceptionPage`, the `WOLips` framework's `WOLipsUtilities`): same endpoints (`/openJavaFile`, `/openComponent`, `/refresh`), same `pw`/`app`/`className`/`lineNumber`/`component`/`path` parameters, same default port (9485). Tolerates both `&` and `&amp;` query separators, since the two runtime code paths differ.
+- Modernized from the original hand-rolled `ServerSocket` implementation:
+    - Rebuilt on the JDK's built-in `com.sun.net.httpserver.HttpServer` (no new dependencies; far less code).
+    - **Loopback-only** binding — the original bound to all network interfaces, exposing an "open arbitrary files in my IDE" endpoint to the local network. We bind to `127.0.0.1`.
+    - Password check applied **uniformly** — the original skipped it on POST.
+    - Dropped the dead `/womodeler` stub and its JDOM dependency.
+    - The `app` parameter is now a hint, not a hard requirement: if it doesn't name a matching project, the handler falls back to a workspace-wide type/component search.
+- New package `org.objectstyle.wolips.devserver`. Configured at **Preferences → Parsley → Dev Server** (enabled, port, password); off by default, changes apply live without an Eclipse restart. Started on workbench launch via an `org.eclipse.ui.startup` hook when enabled.
+
 ### Surface orphaned Amateras preference/property pages under a "Zombies" category
 
 - Eight preference/property pages inherited from the Amateras HTML editor existed in the codebase but were never registered in `plugin.xml` — invisible UI controlling behaviour that, in some cases, still runs (the legacy HTML/JS validators) and in others controls features we no longer ship (JSP). The JavaScript validation toggle in particular had no UI at all.

@@ -14,6 +14,14 @@
    <extension-point id="tldLocator" name="tldLocator"/>
    <extension-point id="customTagValidator" name="customTagValidator"/>
    <extension-point id="preferenceContributer" name="preferenceContributer"/>
+
+<!-- =================================================================================== -->
+<!-- Dev Server — starts the loopback HTTP server on workbench launch (if enabled)       -->
+<!-- =================================================================================== -->
+   <extension point="org.eclipse.ui.startup">
+      <startup class="org.objectstyle.wolips.devserver.DevServerStartup"/>
+   </extension>
+
 <!-- =================================================================================== -->
 <!-- Content Types — uses the same IDs as WOLips so both plugins share file types       -->
 <!-- =================================================================================== -->
@@ -657,6 +665,10 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.Maven"
             name="Maven"/>
+      <page class="org.objectstyle.wolips.devserver.DevServerPreferencePage"
+            category="ng.componenteditor.preferences"
+            id="ng.componenteditor.preferences.DevServer"
+            name="Dev Server"/>
       <!-- WORKAROUND: WOLips coexistence -->
       <page class="org.objectstyle.wolips.componenteditor.preferences.WOLipsCoexistencePreferencePage"
             category="ng.componenteditor.preferences"
