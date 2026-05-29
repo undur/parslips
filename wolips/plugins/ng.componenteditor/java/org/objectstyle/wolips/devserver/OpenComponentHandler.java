@@ -15,12 +15,18 @@ import org.objectstyle.wolips.componenteditor.actions.OpenComponentAction;
  * <p>Request parameters:
  * <ul>
  *   <li>{@code component} — the component (type) name (required)</li>
+ *   <li>{@code lineNumber} — 1-based line in the component's HTML template to
+ *       reveal (optional; ignored for WOD-based bundle templates)</li>
  *   <li>{@code app} — application/project name (optional hint)</li>
  * </ul>
  *
  * <p>As with {@link OpenJavaFileHandler}, the {@code app} parameter is treated
  * as a hint: if it names an open Java project we use it, otherwise we fall
  * back to searching every open Java project for a matching component.
+ *
+ * <p>The optional {@code lineNumber} lets the browser exception page deep-link
+ * straight to the template line where a component render failed — the template
+ * counterpart of {@link OpenJavaFileHandler}'s line navigation.
  */
 class OpenComponentHandler implements DevServerHandler {
 
@@ -31,11 +37,12 @@ class OpenComponentHandler implements DevServerHandler {
 			return;
 		}
 		final String appName = params.get("app");
+		final int lineNumber = parseLineNumber(params.get("lineNumber"));
 
 		Display.getDefault().asyncExec(() -> {
 			IJavaProject javaProject = resolveProject(appName);
 			if (javaProject != null) {
-				OpenComponentAction.openComponentWithTypeNamed(javaProject, componentName);
+				OpenComponentAction.openComponentWithTypeNamed(javaProject, componentName, lineNumber);
 			}
 			else {
 				// No specific project — try each open one until the action
@@ -48,11 +55,27 @@ class OpenComponentHandler implements DevServerHandler {
 					}
 					IJavaProject jp = JavaCore.create(project);
 					if (jp != null && jp.exists()) {
-						OpenComponentAction.openComponentWithTypeNamed(jp, componentName);
+						OpenComponentAction.openComponentWithTypeNamed(jp, componentName, lineNumber);
 					}
 				}
 			}
 		});
+	}
+
+	/**
+	 * Parses the optional {@code lineNumber} parameter, returning {@code -1}
+	 * (meaning "no navigation") when it's absent or not a number.
+	 */
+	private static int parseLineNumber(String lineNumberStr) {
+		if (lineNumberStr == null || lineNumberStr.isEmpty()) {
+			return -1;
+		}
+		try {
+			return Integer.parseInt(lineNumberStr);
+		}
+		catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 
 	/**
