@@ -7,7 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import java.util.Objects;
-import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import org.objectstyle.wolips.baseforplugins.util.StringUtils;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.SimpleWodBinding;
@@ -77,7 +77,7 @@ public class RefactoringWodBinding {
 
   public String _changeValue(String oldValue, String value) throws CoreException, InvocationTargetException, InterruptedException {
     String newValue = value;
-    if (!ComparisonUtils.equals(oldValue, newValue, true)) {
+    if (!StringUtils.equals(oldValue, newValue, true)) {
       BuildProperties buildProperties = (BuildProperties)_cache.getProject().getAdapter(BuildProperties.class);
       newValue = RefactoringWodBinding.toBindingValue(_wodElement.isInline(), buildProperties.getInlineBindingPrefix(), buildProperties.getInlineBindingSuffix(), newValue);
       ChangeBindingValueRefactoring.run(newValue, _wodElement, _wodBinding, _cache, new NullProgressMonitor());

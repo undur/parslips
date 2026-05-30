@@ -2,6 +2,7 @@ package org.objectstyle.wolips.baseforplugins.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 public class StringUtils {
 
@@ -40,6 +41,19 @@ public class StringUtils {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Null-safe string equality where, when {@code blankIsNull} is true, a null
+	 * string and an empty string are treated as equal (both "blank"). For plain
+	 * null-safe equality, use {@link java.util.Objects#equals}.
+	 */
+	public static boolean equals(String s1, String s2, boolean blankIsNull) {
+		boolean equals = Objects.equals(s1, s2);
+		if (!equals && blankIsNull) {
+			equals = ((s1 == null || s1.length() == 0) && (s2 == null || s2.length() == 0));
+		}
+		return equals;
 	}
 
 	public static String getErrorMessage(Throwable _t) {

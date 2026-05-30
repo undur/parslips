@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.editors.text.TextEditor;
-import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import org.objectstyle.wolips.baseforplugins.util.StringUtils;
 import org.objectstyle.wolips.baseforuiplugins.utils.WOTextCellEditor;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
@@ -400,7 +400,7 @@ public class BindingsInspector extends Composite implements ISelectionProvider, 
 				try {
 					String elementTypeFieldText = getElementTypeField().getText();
 					String elementTypeModelText = getRefactoringElement().getElementType();
-					if (!ComparisonUtils.equals(elementTypeModelText, elementTypeFieldText, true)) {
+					if (!StringUtils.equals(elementTypeModelText, elementTypeFieldText, true)) {
 						// Reject blank or whitespace-containing type names
 						if (elementTypeFieldText == null || elementTypeFieldText.isEmpty() || elementTypeFieldText.contains(" ")) {
 							getElementTypeField().setText(elementTypeModelText);
