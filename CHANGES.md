@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Remove the dead XML editor / DTD cluster
+
+Deleted the orphaned Amateras XML editor and its DTD support — the "DTD" entry in the **Parsley → Zombies** preference category was the visible tip of it.
+
+- `XMLEditor` was never registered as an editor in `plugin.xml` and never instantiated; the live HTML/template path (`TemplateSourceEditor` → `HTMLSourceEditor`) has its own validation and never touched any of it. So the entire `tk.eclipse.plugin.xmleditor.editors` package (`XMLEditor`, `XMLConfiguration`, `XMLAssistProcessor`, `DTDResolver`/`IDTDResolver`, `XMLOutlinePage`, `XMLValidationHandler`, `SchemaGenerator`, `ElementSchemaMapping`, `ClassNameAssistProcessor`, `ClassNameHyperLinkProvider`, `CompilationProblemRequestor`, `XMLEditorContributor`, `format.xsl`) was dead.
+- Also removed the `DTDPreferencePage`, the three unregistered XML/DTD wizards (`XMLNewWizard`, `XMLNewWizardPage`, `XMLDTDWizardPage`), the `PREF_DTD_*` preference constants + their defaults, the `DTD` Zombies page registration, and a dangling `Format XML` command declaration (no handler, no binding) in `plugin.xml`.
+- Tidied orphaned i18n keys (`XMLEditor.*`, `XML*WizardPage.*`) from both resource bundles and stale `XMLEditor` mentions in `XMLPreferencePage`'s comments.
+
+The shared HTML base classes (`HTMLSourceEditor`, `HTMLConfiguration`, `HTMLAssistProcessor`) stay — the live `Template*` editors build on them. Verified by a clean build with all tests passing.
+
 ### Component editor: open to the HTML template by default
 
 Opening a component now reveals the **HTML template** rather than the WOD editor. Opening a component is almost always about working on the template, and for inline-syntax components the WOD sidecar is usually empty — so HTML-first is the sensible default.

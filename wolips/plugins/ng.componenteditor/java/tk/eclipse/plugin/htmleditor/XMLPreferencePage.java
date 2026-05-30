@@ -27,7 +27,7 @@ import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
  * <p>
  * Controls indentation style (tabs vs. spaces), indent size, and
  * spaces-around-equals in formatted output. These preferences are read by
- * {@code FormatRefactoring} and {@code XMLEditor} when formatting templates.
+ * {@code FormatRefactoring} when formatting templates.
  * <p>
  * The indentation preferences ({@code INDENT_TABS}, {@code INDENT_SIZE}) have
  * existed in {@link PreferenceConstants} since the WOLips era but were never
@@ -259,7 +259,7 @@ public class XMLPreferencePage extends PreferencePage implements IWorkbenchPrefe
 	@Override
 	public boolean performOk() {
 		// Save formatting preferences to the Activator's store (where
-		// FormatRefactoring and XMLEditor read them from).
+		// FormatRefactoring reads them from).
 		IPreferenceStore formattingPrefs = Activator.getDefault().getPreferenceStore();
 		formattingPrefs.setValue(PreferenceConstants.INDENT_TABS, _indentTabs.getSelection());
 		formattingPrefs.setValue(PreferenceConstants.INDENT_SIZE, _indentSize.getSelection());

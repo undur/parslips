@@ -113,9 +113,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	public static final String PREF_COLOR_CSSCOMMENT = "_pref_color_csscomment";
 	public static final String PREF_COLOR_CSSVALUE   = "_pref_color_cssvalue";
 	public static final String PREF_EDITOR_TYPE      = "_pref_editor_type";
-	public static final String PREF_DTD_URI          = "_pref_dtd_uri";
-	public static final String PREF_DTD_PATH         = "_pref_dtd_path";
-	public static final String PREF_DTD_CACHE        = "_pref_dtd_cache";
 	public static final String PREF_ASSIST_AUTO      = "_pref_assist_auto";
 	public static final String PREF_ASSIST_CHARS     = "_pref_assist_chars";
 	public static final String PREF_ASSIST_TIMES     = "_pref_assist_times";

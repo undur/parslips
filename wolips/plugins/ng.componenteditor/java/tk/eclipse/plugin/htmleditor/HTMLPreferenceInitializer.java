@@ -31,9 +31,6 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(HTMLPlugin.PREF_COLOR_CSSCOMMENT,StringConverter.asString(IHTMLColorConstants.CSS_COMMENT));
 		store.setDefault(HTMLPlugin.PREF_COLOR_CSSVALUE,StringConverter.asString(IHTMLColorConstants.CSS_VALUE));
 		store.setDefault(HTMLPlugin.PREF_EDITOR_TYPE,"noPreview");
-		store.setDefault(HTMLPlugin.PREF_DTD_URI,"");
-		store.setDefault(HTMLPlugin.PREF_DTD_PATH,"");
-		store.setDefault(HTMLPlugin.PREF_DTD_CACHE,true);
 		store.setDefault(HTMLPlugin.PREF_ASSIST_AUTO,false);
 		store.setDefault(HTMLPlugin.PREF_ASSIST_CHARS,"</\"");
 		store.setDefault(HTMLPlugin.PREF_ASSIST_CLOSE,true);

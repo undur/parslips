@@ -206,9 +206,6 @@
 <!-- Amateras HTML editor commands -->
       <category id="ng.componenteditor.htmleditor" name="HTML Editor"/>
       <command categoryId="ng.componenteditor.htmleditor"
-            id="ng.componenteditor.xmleditor.format"
-            name="Format XML"/>
-      <command categoryId="ng.componenteditor.htmleditor"
             id="ng.componenteditor.htmleditor.comment"
             name="Comment HTML"/>
    </extension>
@@ -704,10 +701,6 @@
             category="ng.componenteditor.preferences.deprecated"
             id="ng.componenteditor.preferences.deprecated.CustomAssist"
             name="Custom Assist"/>
-      <page class="tk.eclipse.plugin.htmleditor.DTDPreferencePage"
-            category="ng.componenteditor.preferences.deprecated"
-            id="ng.componenteditor.preferences.deprecated.DTD"
-            name="DTD"/>
       <page class="tk.eclipse.plugin.htmleditor.TLDPreferencePage"
             category="ng.componenteditor.preferences.deprecated"
             id="ng.componenteditor.preferences.deprecated.TLD"
