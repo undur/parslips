@@ -87,7 +87,7 @@
             contributorClass="org.objectstyle.wolips.templateeditor.TemplateEditorContributor"
             default="false"
             extensions="html,xhtml"
-            icon="icons/ComponentHTML.png"
+            icon="icons/html.png"
             id="ng.componenteditor.TemplateEditor"
             name="Parsley Template Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wohtml"/>
@@ -98,7 +98,7 @@
             class="org.objectstyle.wolips.wodclipse.editor.WodEditor"
             contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             default="false"
-            icon="icons/file-wod.png"
+            icon="icons/parsley16.png"
             id="ng.componenteditor.WodEditor"
             name="Parsley WOD Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wod"/>
