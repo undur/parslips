@@ -2,7 +2,6 @@ package tk.eclipse.plugin.htmleditor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -150,15 +149,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 			"gif","png","jpg","jpeg","bmp"
 	};
 	
-	private static Map<String, String> innerDTD = new LinkedHashMap<String, String>();
-	static {
-		innerDTD.put("http://java.sun.com/j2ee/dtds/web-app_2_2.dtd","/DTD/web-app_2_2.dtd");
-		innerDTD.put("http://java.sun.com/dtd/web-app_2_3.dtd","/DTD/web-app_2_3.dtd");
-		innerDTD.put("XMLSchema.dtd","/DTD/XMLSchema.dtd");
-		innerDTD.put("datatypes.dtd","/DTD/datatypes.dtd");
-		
-	}
-	
 	/**
 	 * The constructor.
 	 */
@@ -179,11 +169,7 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	public ColorProvider getColorProvider(){
 		return this.colorProvider;
 	}
-	
-	public static Map<String, String> getInnerDTD(){
-		return innerDTD;
-	}
-	
+
 	/**
 	 * This method is called upon plug-in activation
 	 */
