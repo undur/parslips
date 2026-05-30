@@ -40,9 +40,6 @@ public class HTMLPreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(HTMLPlugin.PREF_COLOR_FG,StringConverter.asString(IHTMLColorConstants.FOREGROUND));
 		store.setDefault(HTMLPlugin.PREF_COLOR_BG,StringConverter.asString(IHTMLColorConstants.BACKGROUND));
 		store.setDefault(HTMLPlugin.PREF_COLOR_BG_DEF,true);
-		store.setDefault(HTMLPlugin.PREF_JSP_COMMENT,StringConverter.asString(IHTMLColorConstants.JAVA_COMMENT));
-		store.setDefault(HTMLPlugin.PREF_JSP_STRING,StringConverter.asString(IHTMLColorConstants.JAVA_STRING));
-		store.setDefault(HTMLPlugin.PREF_JSP_KEYWORD,StringConverter.asString(IHTMLColorConstants.JAVA_KEYWORD));
 		store.setDefault(HTMLPlugin.PREF_PAIR_CHAR, true);
 		store.setDefault(HTMLPlugin.PREF_SHOW_XML_ERRORS, true);
 		store.setDefault(HTMLPlugin.PREF_COLOR_JSCOMMENT,StringConverter.asString(IHTMLColorConstants.JAVA_COMMENT));

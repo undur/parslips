@@ -46,7 +46,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	
 	public static final String ICON_HTML     = "_icon_html";
 	public static final String ICON_XML      = "_icon_xml";
-	public static final String ICON_JSP      = "_icon_jsp";
 	public static final String ICON_CSS      = "_icon_css";
 	public static final String ICON_WEB      = "_icon_web";
 	public static final String ICON_FILE     = "_icon_file";
@@ -123,11 +122,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	public static final String PREF_COLOR_BG         = "AbstractTextEditor.Color.Background";
 	public static final String PREF_COLOR_BG_DEF     = "AbstractTextEditor.Color.Background.SystemDefault";
 	public static final String PREF_COLOR_FG         = "__pref_color_foreground";
-	public static final String PREF_TLD_URI          = "__pref_tld_uri";
-	public static final String PREF_TLD_PATH         = "__pref_tld_path";
-	public static final String PREF_JSP_COMMENT      = "__pref_jsp_comment";
-	public static final String PREF_JSP_KEYWORD      = "__pref_jsp_keyword";
-	public static final String PREF_JSP_STRING       = "__pref_jsp_string";
 	public static final String PREF_PAIR_CHAR        = "__pref_pair_character";
 	public static final String PREF_SHOW_XML_ERRORS  = "__pref_show_xml_errors";
 	public static final String PREF_COLOR_JSSTRING   = "__pref_color_jsstring";
@@ -160,28 +154,9 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	static {
 		innerDTD.put("http://java.sun.com/j2ee/dtds/web-app_2_2.dtd","/DTD/web-app_2_2.dtd");
 		innerDTD.put("http://java.sun.com/dtd/web-app_2_3.dtd","/DTD/web-app_2_3.dtd");
-		innerDTD.put("http://java.sun.com/j2ee/dtds/web-jsptaglibrary_1_1.dtd","/DTD/web-jsptaglibrary_1_1.dtd");
-		innerDTD.put("http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd","/DTD/web-jsptaglibrary_1_2.dtd");
 		innerDTD.put("XMLSchema.dtd","/DTD/XMLSchema.dtd");
 		innerDTD.put("datatypes.dtd","/DTD/datatypes.dtd");
 		
-	}
-	
-	private static Map<String, String> innerTLD = new LinkedHashMap<String, String>();
-	static {
-		innerTLD.put("http://java.sun.com/jstl/core_rt","/TLD/c-1_0-rt.tld");
-		innerTLD.put("http://java.sun.com/jstl/core","/TLD/c-1_0.tld");
-		innerTLD.put("http://java.sun.com/jsp/jstl/core","/TLD/c.tld");
-		innerTLD.put("http://java.sun.com/jstl/fmt_rt","/TLD/fmt-1_0-rt.tld");
-		innerTLD.put("http://java.sun.com/jstl/fmt","/TLD/fmt-1_0.tld");
-		innerTLD.put("http://java.sun.com/jsp/jstl/fmt","/TLD/fmt.tld");
-//		innerTLD.put("http://java.sun.com/jsp/jstl/functions","/TLD/fn.tld");
-		innerTLD.put("http://java.sun.com/jstl/sql_rt","/TLD/sql-1_0-rt.tld");
-		innerTLD.put("http://java.sun.com/jstl/sql","/TLD/sql-1_0.tld");
-		innerTLD.put("http://java.sun.com/jsp/jstl/sql","/TLD/sql.tld");
-		innerTLD.put("http://java.sun.com/jstl/xml_rt","/TLD/x-1_0-rt.tld");
-		innerTLD.put("http://java.sun.com/jstl/xml","/TLD/x-1_0.tld");
-		innerTLD.put("http://java.sun.com/jsp/jstl/xml","/TLD/x.tld");
 	}
 	
 	/**
@@ -207,10 +182,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	
 	public static Map<String, String> getInnerDTD(){
 		return innerDTD;
-	}
-	
-	public static Map<String, String> getInnerTLD(){
-		return innerTLD;
 	}
 	
 	/**
@@ -261,7 +232,6 @@ public class HTMLPlugin extends AbstractUIPlugin {
 		super.initializeImageRegistry(reg);
 		reg.put(ICON_HTML,ImageDescriptor.createFromURL(getBundle().getEntry("/icons/html.png")));
 		reg.put(ICON_XML,ImageDescriptor.createFromURL(getBundle().getEntry("/icons/xml.png")));
-		reg.put(ICON_JSP,ImageDescriptor.createFromURL(getBundle().getEntry("/icons/jsp.png")));
 		reg.put(ICON_CSS,ImageDescriptor.createFromURL(getBundle().getEntry("/icons/css.png")));
 		reg.put(ICON_WEB,ImageDescriptor.createFromURL(getBundle().getEntry("/icons/web.gif")));
 		reg.put(ICON_FILE,ImageDescriptor.createFromURL(getBundle().getEntry("/icons/file.gif")));

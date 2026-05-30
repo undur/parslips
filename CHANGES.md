@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Remove dead JSP support
+
+Parsley doesn't support JSP — it's inherited dead weight from the Amateras HTML editor. Removed the JSP-specific pieces (two of which were visible in the **Parsley → Zombies** category: "JSP TLD" and "JSP Editor"):
+
+- Deleted `TLDPreferencePage`, `JSPEditorPreferencePage`, and the unregistered `JSPNewWizard` / `JSPNewWizardPage`.
+- Removed their two Zombies page registrations from `plugin.xml`.
+- Removed the JSP/TLD bits from `HTMLPlugin`: `PREF_TLD_*` / `PREF_JSP_*` constants, the `ICON_JSP` icon (constant + registry entry + the now-orphaned `icons/jsp.png`), the JSP-taglib DTD entries, and the entire `innerTLD` JSTL map + `getInnerTLD()` (its only reader was the deleted `TLDPreferencePage`; the `/TLD/*.tld` files it pointed at were never even shipped). Dropped the JSP colour defaults from `HTMLPreferenceInitializer` and the `.jsp` file-icon case from `FileAssistProcessor`.
+
+Deliberately left untouched for separate passes: the "Zombie: Validation" property page (`HTMLProjectPropertyPage` + `HTMLProjectParams._validateJSP`) — it carries HTML/XML/DTD/JS validation toggles too, so its JSP checkbox is a validation-Zombie concern, not a clean JSP deletion. Orphaned i18n strings and a couple of commented-out JSP lines in live template classes were also left as harmless. (JavaScript — the `.js` editor — is unrelated and untouched.)
+
 ### Remove the dead XML editor / DTD cluster
 
 Deleted the orphaned Amateras XML editor and its DTD support — the "DTD" entry in the **Parsley → Zombies** preference category was the visible tip of it.

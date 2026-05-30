@@ -92,11 +92,8 @@ public class FileAssistProcessor implements IFileAssistProcessor {
 		if(name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".shtml")){
 			return HTMLPlugin.getDefault().getImageRegistry().get(HTMLPlugin.ICON_HTML);
 		}
-		if(name.endsWith(".xml") || name.endsWith(".xhtml") || name.equals(".tld")){
+		if(name.endsWith(".xml") || name.endsWith(".xhtml")){
 			return HTMLPlugin.getDefault().getImageRegistry().get(HTMLPlugin.ICON_XML);
-		}
-		if(name.endsWith(".jsp")){
-			return HTMLPlugin.getDefault().getImageRegistry().get(HTMLPlugin.ICON_JSP);
 		}
 		if(name.endsWith(".css")){
 			return HTMLPlugin.getDefault().getImageRegistry().get(HTMLPlugin.ICON_CSS);

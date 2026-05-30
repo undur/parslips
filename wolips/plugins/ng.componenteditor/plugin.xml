@@ -701,14 +701,6 @@
             category="ng.componenteditor.preferences.deprecated"
             id="ng.componenteditor.preferences.deprecated.CustomAssist"
             name="Custom Assist"/>
-      <page class="tk.eclipse.plugin.htmleditor.TLDPreferencePage"
-            category="ng.componenteditor.preferences.deprecated"
-            id="ng.componenteditor.preferences.deprecated.TLD"
-            name="JSP TLD"/>
-      <page class="tk.eclipse.plugin.htmleditor.JSPEditorPreferencePage"
-            category="ng.componenteditor.preferences.deprecated"
-            id="ng.componenteditor.preferences.deprecated.JSPEditor"
-            name="JSP Editor"/>
       <page class="tk.eclipse.plugin.htmleditor.tasktag.HTMLTaskTagPreferencePage"
             category="ng.componenteditor.preferences.deprecated"
             id="ng.componenteditor.preferences.deprecated.TaskTags"
