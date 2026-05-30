@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Remove more orphaned Amateras code
+
+A follow-up dead-code sweep after the XML and JSP cluster removals turned up another batch of unreferenced inherited code:
+
+- 12 orphaned classes (no live referrer, no `plugin.xml` registration): `CSSInfo`, `AbstractHTMLContentDescriber`, `AbstractValidationDialog`, `WebAppClasspathVariableInitializer`, `PackageNameContentProposalProvider`, `TypeNameContentProposalProvider`, `MultiPageEditorOutlinePage`, `NonRuleBasedDamagerRepairer`, `TagNameDetector`, `ImageView`, and the unregistered `HTMLNewWizard` / `HTMLNewWizardPage`.
+- Two orphaned icons (`xsd.gif`, `file-api.png`) referenced nowhere.
+- Two dangling `plugin.xml` command declarations with no handler or key binding: `Switch to Preview` (`...editors.topreview`) and `Comment HTML` (`...htmleditor.comment`, the last member of the now-removed "Amateras HTML editor commands" category).
+
+Verified by a clean build with all tests passing. (Orphaned i18n keys for the deleted classes were left in place, as in the earlier passes — harmless, and pruning risks shared keys.)
+
 ### Remove dead JSP support
 
 Parsley doesn't support JSP — it's inherited dead weight from the Amateras HTML editor. Removed the JSP-specific pieces (two of which were visible in the **Parsley → Zombies** category: "JSP TLD" and "JSP Editor"):

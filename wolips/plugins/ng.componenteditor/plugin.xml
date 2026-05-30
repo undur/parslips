@@ -169,9 +169,6 @@
       <command name="Switch to Wod Editor" description="Switch to Wod Editor"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.editors.towod"/>
-      <command name="Switch to Preview" description="Switch to Preview"
-            categoryId="ng.componenteditor.commands"
-            id="ng.componenteditor.editors.topreview"/>
       <command name="Switch to Api Editor" description="Switch to Api Editor"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.editors.toapi"/>
@@ -202,12 +199,6 @@
       <command name="Open WO Declaration" description="Open WO Declaration"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.action.openDeclaration"/>
-
-<!-- Amateras HTML editor commands -->
-      <category id="ng.componenteditor.htmleditor" name="HTML Editor"/>
-      <command categoryId="ng.componenteditor.htmleditor"
-            id="ng.componenteditor.htmleditor.comment"
-            name="Comment HTML"/>
    </extension>
 
 <!-- Command handlers for switch-to actions (work from any editor, not just ComponentEditor) -->
