@@ -3,7 +3,7 @@ package org.objectstyle.wolips.bindings.api;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import java.util.Objects;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 
 /**
@@ -34,7 +34,7 @@ public class SimpleApiBinding implements IApiBinding {
 
 	@Override
 	public boolean equals(Object o) {
-		return o instanceof SimpleApiBinding && ComparisonUtils.equals(((SimpleApiBinding) o).getName(), getName());
+		return o instanceof SimpleApiBinding && Objects.equals(((SimpleApiBinding) o).getName(), getName());
 	}
 
 	@Override

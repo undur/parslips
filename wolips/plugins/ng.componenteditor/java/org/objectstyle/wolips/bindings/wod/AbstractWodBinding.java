@@ -55,7 +55,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
-import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import java.util.Objects;
 import org.objectstyle.wolips.baseforplugins.util.StringUtils;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.api.ApiCache;
@@ -101,7 +101,7 @@ public abstract class AbstractWodBinding implements IWodBinding {
 
   @Override
   public boolean equals(Object o) {
-    return o instanceof AbstractWodBinding && ComparisonUtils.equals(((AbstractWodBinding) o).getName(), getName());
+    return o instanceof AbstractWodBinding && Objects.equals(((AbstractWodBinding) o).getName(), getName());
   }
 
   @Override

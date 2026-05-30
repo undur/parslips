@@ -23,7 +23,7 @@ import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import java.util.Objects;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
@@ -290,7 +290,7 @@ public class WOBrowser extends ScrolledComposite implements ISelectionChangedLis
 				column.setSelection(new StructuredSelection());
 			} else {
 				try {
-					if (!ComparisonUtils.equals(selectedKeyPath, getSelectedKeyPath())) {
+					if (!Objects.equals(selectedKeyPath, getSelectedKeyPath())) {
 						BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(selectedKeyPath, _columns.get(0).getType(), WodParserCache.getTypeCache());
 						disposeToColumn(0);
 						if (bindingValueKeyPath != null && bindingValueKeyPath.isValid()) {

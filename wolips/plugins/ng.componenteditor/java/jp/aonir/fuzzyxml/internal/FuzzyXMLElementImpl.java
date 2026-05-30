@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import java.util.Objects;
 
 import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
@@ -469,7 +469,7 @@ public class FuzzyXMLElementImpl extends AbstractFuzzyXMLNode implements FuzzyXM
     
     FuzzyXMLAttribute[] attrs = getAttributes();
     for (int i = 0; i < attrs.length; i++) {
-      if (ComparisonUtils.equals(namespace, attrs[i].getNamespace()) && attrs[i].getName().equalsIgnoreCase(name)) {
+      if (Objects.equals(namespace, attrs[i].getNamespace()) && attrs[i].getName().equalsIgnoreCase(name)) {
         return attrs[i];
       }
     }

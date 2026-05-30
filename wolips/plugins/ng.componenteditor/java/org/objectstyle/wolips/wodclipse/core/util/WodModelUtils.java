@@ -55,7 +55,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
-import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
+import java.util.Objects;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.wod.ApiBindingValidationProblem;
 import org.objectstyle.wolips.bindings.wod.ApiElementValidationProblem;
@@ -188,7 +188,7 @@ public class WodModelUtils {
           hasValidationProblem = validationProblem.getValidation().isAffectedByBindingNamed(bindingName);
         } else if (problem instanceof WodBindingProblem) {
           WodBindingProblem validationProblem = (WodBindingProblem) problem;
-          hasValidationProblem = ComparisonUtils.equals(bindingName, validationProblem.getBindingName());
+          hasValidationProblem = Objects.equals(bindingName, validationProblem.getBindingName());
         }
         if (hasValidationProblem) {
           break;

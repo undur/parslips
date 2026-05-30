@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import java.util.Objects;
 import org.objectstyle.wolips.baseforplugins.util.ComparisonUtils;
 import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
@@ -98,7 +99,7 @@ public class RefactoringWodBinding {
     if (name == null || name.length() == 0) {
       name = RefactoringWodElement.findUnusedBindingName(_wodElement, name);
     }
-    if (!ComparisonUtils.equals(name, oldName)) {
+    if (!Objects.equals(name, oldName)) {
       ChangeBindingNameRefactoring.run(name, _wodElement, _wodBinding, _cache, new NullProgressMonitor());
       _wodBinding.setName(name);
       _propertyChange.firePropertyChange(RefactoringWodBinding.BINDING_NAME, oldName, name);
