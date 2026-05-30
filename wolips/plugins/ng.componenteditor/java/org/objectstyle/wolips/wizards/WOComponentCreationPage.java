@@ -206,7 +206,6 @@ public class WOComponentCreationPage extends WizardNewWOResourcePage {
 
 		private final int _templateIndex;
 
-		// template index is just to make things easier in velocity engine
 		HTML(String display, String html, int templateIndex) {
 			_displayString = display;
 			_html = html;

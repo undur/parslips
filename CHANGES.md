@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Remove the dead Velocity template engine
+
+The `org.objectstyle.wolips.templateengine` package (Velocity-based file generation for the New Component wizard) was fully dead. The live wizard path (`WOComponentCreator`) generates `.html`/`.java`/`.wod`/`.woo`/`.api` directly via text blocks — its own javadoc notes it does so "to avoid the commons-lang OSGi classloader issue," i.e. it deliberately superseded the Velocity engine, which was then left behind with zero references.
+
+Removed:
+- The six `templateengine` classes (`AbstractEngine`, `ComponentEngine`, `ResourceLoader`, `TemplateDefinition`, `TemplateEnginePlugin`, `WOLipsContext`).
+- The five `templates/wocomponent/*.vm` Velocity templates they rendered.
+- The vendored `lib/velocity-1.5.jar` and `lib/commons-collections-3.1.jar` (the latter used only by the Velocity engine), plus their `Bundle-ClassPath` (MANIFEST.MF) and `.classpath` entries. `commons-jxpath` was kept — it's used by the live FuzzyXML XPath code.
+
 ### Remove more orphaned Amateras code
 
 A follow-up dead-code sweep after the XML and JSP cluster removals turned up another batch of unreferenced inherited code:
