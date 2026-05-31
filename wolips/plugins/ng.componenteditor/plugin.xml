@@ -121,7 +121,7 @@
             extensions="woo"
             icon="icons/WooEditor.gif"
             id="ng.componenteditor.WooEditor"
-            class="org.objectstyle.wolips.wooeditor.WooEditor"
+            class="org.objectstyle.wolips.editor.woo.WooEditor"
             name="Parsley WOO Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.woo"/>
       </editor>
@@ -813,7 +813,7 @@
    <extension point="org.eclipse.ui.editors.documentProviders">
       <provider class="org.eclipse.ui.editors.text.TextFileDocumentProvider"
             id="ng.componenteditor.NullDocumentProvider"
-            inputTypes="org.objectstyle.wolips.wooeditor.NonExistingFileEditorInput"/>
+            inputTypes="org.objectstyle.wolips.editor.woo.NonExistingFileEditorInput"/>
    </extension>
 
 <!-- =================================================================================== -->

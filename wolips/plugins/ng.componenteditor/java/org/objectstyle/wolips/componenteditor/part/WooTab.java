@@ -50,7 +50,7 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.wooeditor.WooEditor;
+import org.objectstyle.wolips.editor.woo.WooEditor;
 
 public class WooTab extends ComponentEditorTab {
 

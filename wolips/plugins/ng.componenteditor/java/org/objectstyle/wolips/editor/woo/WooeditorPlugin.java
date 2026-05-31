@@ -54,7 +54,7 @@
  *
  */
 
-package org.objectstyle.wolips.wooeditor;
+package org.objectstyle.wolips.editor.woo;
 
 import java.util.ArrayList;
 

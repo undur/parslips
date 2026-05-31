@@ -54,7 +54,7 @@
  *
  */
 
-package org.objectstyle.wolips.wooeditor;
+package org.objectstyle.wolips.editor.woo;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
