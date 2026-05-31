@@ -1,6 +1,8 @@
 # Proposal: Centralize validation-severity interpretation (SeverityPolicy)
 
-**Status:** Proposal — discussion document. Not executed.
+**Status:** ✅ EXECUTED (May 2026). `SeverityPolicy` shipped and all validation-severity
+sites were routed through it (commits `75ceadbbf`, `5bfe3b0ab`), and the keypath
+Missing-Key severity bug was fixed (`9f3890012`). Kept as the design record.
 **Origin:** The keypath "no key in component" severity bug (a validation error that
 ignored the user's Missing-Key preference) turned out to be a *symptom*: the logic
 that interprets a severity preference is hand-copied at every validation site, and

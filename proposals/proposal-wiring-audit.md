@@ -1,6 +1,11 @@
 # Wiring Audit: accidentally-disabled, half-wired, and dead code in ng.componenteditor
 
-**Status:** Findings document — investigation only. Not executed.
+**Status:** 🔶 PARTIALLY EXECUTED. Findings document. Shipped so far (commit
+`68c9055c2`): **1.1** (component editors not closing on project close) and **2.7**
+(NSKVC clarifying comment). Still open: **2.1–2.4** the validation-staleness cluster
+(pairs with `proposal-revalidate.md`), **2.6** the Parsley Navigate menu (reframed as
+a feature), **3.1** the dead `HTMLProjectBuilder`/nature/task-tag cluster, and **4.1**
+`ContentDescriberWO` (verify-before-touch).
 
 **Method:** We enumerated every entry point Eclipse can reach — the 31 extension points and ~97 `class=` registrations in `plugin.xml`, the `Bundle-Activator` + lazy activation in `META-INF/MANIFEST.MF`, the custom `ng.componenteditor.fileAssistProcessor` point, and adapter-factory registrations — then ran the inverse query: classes that are *shaped* like live participants (extend `IncrementalProjectBuilder`, implement `IProjectNature` / `IResourceChangeListener`, look like handlers) but are not registered to run. Each candidate was diffed against the pre-extraction WOLips tree at `/Users/hugi/git/wolips-original/wolips/plugins` to distinguish "always dead" from "the wiring was silently dropped during extraction." Findings were produced by multiple agents and then independently re-verified adversarially — every claim below survived an explicit attempt to refute it (checking reflection, adapter factories, extension-point instantiation, and lazy activation before concluding "not reached"). Refuted findings were discarded; several survivors were downgraded in severity and are marked as such.
 

@@ -1074,8 +1074,9 @@ Standalone templates (`.html` files not inside `.wo` folders) now have full edit
 > (via `WodParserCache`) or when a Java/API change touches an *open* component editor
 > (via `JavaChangeRevalidator`). There is no project-wide build pass and no
 > build-triggered stale-marker sweep. Closed components are not revalidated until
-> reopened. See `proposal-revalidate.md` and `proposal-wiring-audit.md` (findings
-> 2.1–2.4) for the gap and the planned fix.
+> reopened. See [`proposals/proposal-revalidate.md`](proposals/proposal-revalidate.md)
+> and [`proposals/proposal-wiring-audit.md`](proposals/proposal-wiring-audit.md)
+> (findings 2.1–2.4) for the gap and the planned fix.
 
 **What works now:**
 - Inline `wo:` tag autocomplete with correct element type filtering (only WOElement/NGElement subclasses)

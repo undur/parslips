@@ -1,6 +1,12 @@
 # Proposal: Design Cleanup (precedes package restructuring)
 
-**Status:** APPROVED — executing. Decisions delegated to + owned by the specialist.
+**Status:** ✅ EXECUTED (May 2026). The `editor.*` consolidation shipped across
+commits `254f91b07`…`9ab586a8d`. Kept as the record of decisions taken. The root
+namespace rename (`wolips.*` → `parsley.*`) it flagged was deliberately deferred and
+is still pending — see `proposal-package-restructure.md`.
+
+*(Original status: "APPROVED — executing. Decisions delegated to + owned by the
+specialist.")*
 
 **Decisions taken (owned, not blank-check):**
 - **Accessor layer: YES, incremental.** Typed accessors introduced one feature at

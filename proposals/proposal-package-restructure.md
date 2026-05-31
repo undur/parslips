@@ -1,6 +1,10 @@
 # Proposal: Package Restructuring for `ng.componenteditor`
 
-**Status:** SUPERSEDED / PAUSED — see `proposal-design-cleanup.md`.
+**Status:** ⏸ SUPERSEDED / PARTIALLY DONE — the design-cleanup pivot
+(`proposal-design-cleanup.md`) absorbed and shipped the `editor.*` consolidation this
+proposal originally drove. What remains genuinely open is **Tier 2: the root
+namespace rename** (`org.objectstyle.wolips.*` → `parsley.*`), which was deliberately
+deferred and has not been done. Kept for that pending work.
 
 > **Pivot (discovered during execution):** Attempting Tier 1 (preferences first)
 > revealed that the structural confusions here are mostly **design smells wearing
