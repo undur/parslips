@@ -41,13 +41,14 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.components.editor;
+package org.objectstyle.wolips.editor.framework;
+
+import org.eclipse.jface.text.IDocument;
 
 /**
  * @author uli
  */
-public interface IWebobjectTagListener {
-	public abstract void webObjectChanged();
+public interface IHtmlDocumentProvider {
 
-	public abstract void webObjectTagSelected(String name);
+	public abstract IDocument getHtmlEditDocument();
 }

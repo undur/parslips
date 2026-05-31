@@ -3,7 +3,7 @@ package org.objectstyle.wolips.templateeditor;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.objectstyle.wolips.components.editor.ComponentEditorInteraction;
+import org.objectstyle.wolips.editor.framework.ComponentEditorInteraction;
 
 public class TemplateOutlineSelectionHandler implements ISelectionChangedListener {
   private TemplateEditor _editor;

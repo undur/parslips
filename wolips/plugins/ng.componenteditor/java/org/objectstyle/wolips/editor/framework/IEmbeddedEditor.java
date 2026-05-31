@@ -41,14 +41,14 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.components.editor;
-
-import org.eclipse.jface.text.IDocument;
+package org.objectstyle.wolips.editor.framework;
 
 /**
  * @author uli
  */
-public interface IHtmlDocumentProvider {
+public interface IEmbeddedEditor {
 
-	public abstract IDocument getHtmlEditDocument();
+	public abstract void initEditorInteraction(ComponentEditorInteraction editorInteraction);
+
+	public abstract ComponentEditorInteraction getEditorInteraction();
 }

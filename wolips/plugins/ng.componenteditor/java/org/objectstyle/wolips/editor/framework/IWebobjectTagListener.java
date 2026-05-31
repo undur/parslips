@@ -41,14 +41,13 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.components.editor;
+package org.objectstyle.wolips.editor.framework;
 
 /**
  * @author uli
  */
-public interface IEmbeddedEditor {
+public interface IWebobjectTagListener {
+	public abstract void webObjectChanged();
 
-	public abstract void initEditorInteraction(ComponentEditorInteraction editorInteraction);
-
-	public abstract ComponentEditorInteraction getEditorInteraction();
+	public abstract void webObjectTagSelected(String name);
 }

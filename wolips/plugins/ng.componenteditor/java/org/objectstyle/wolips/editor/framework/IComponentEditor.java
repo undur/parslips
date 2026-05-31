@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.components.editor;
+package org.objectstyle.wolips.editor.framework;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorPart;

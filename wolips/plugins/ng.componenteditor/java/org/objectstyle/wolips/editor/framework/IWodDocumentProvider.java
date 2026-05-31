@@ -41,7 +41,7 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.components.editor;
+package org.objectstyle.wolips.editor.framework;
 
 import org.eclipse.jface.text.IDocument;
 
