@@ -798,16 +798,34 @@ public class BindingReflectionUtils {
     if (bindingValueKey != null && bindingValueKey.getDeclaringType() != null) {
       String declaringTypeName = bindingValueKey.getDeclaringType().getElementName();
       String bindingName = bindingValueKey.getBindingName();
-      if (BindingReflectionUtils._systemTypeNames.contains(declaringTypeName)) {
+      // The underscore convention (private/internal members) must be checked
+      // FIRST, independent of the declaring type. WOComponent declares paired
+      // DirectToWeb plumbing members — e.g.
+      //   public Object _unroll() {...}          public void set_unroll(Object) {}
+      //   public Object _componentUnroll() {...}  public void set_componentUnroll(Object) {}
+      // These reach completion via TWO different derivations:
+      //   * the set_X *mutators* (MUTATORS_ONLY path) → "set" prefix stripped →
+      //     binding name "_unroll" / "_componentUnroll" (underscore preserved);
+      //   * the bare _X *accessors* (ACCESSORS_ONLY, "_" prefix) → binding name
+      //     "unroll" / "componentUnroll" (no underscore).
+      // The non-underscore forms are in _uselessSystemBindings (handled by the
+      // system-type branch below); the underscore forms are NOT, so when this
+      // check sat in an else-if *after* the system-type branch it was never
+      // reached for them — and they leaked into completion (the only survivors
+      // when a component has no .api file and few bindings of its own). A leading
+      // underscore means "internal" wherever it's declared, so filter it
+      // unconditionally. The two checks are complementary: this catches the
+      // mutator-derived names, the blocklist catches the accessor-derived ones.
+      if (bindingName.startsWith("_")) {
+        isSystemBinding = true;
+      }
+      else if (BindingReflectionUtils._systemTypeNames.contains(declaringTypeName)) {
         if (!showUsefulSystemBindings && BindingReflectionUtils._usefulSystemBindings.contains(bindingName)) {
           isSystemBinding = true;
         }
         else if (BindingReflectionUtils._uselessSystemBindings.contains(bindingName)) {
           isSystemBinding = true;
         }
-      }
-      else if (bindingName.startsWith("_")) {
-        isSystemBinding = true;
       }
     }
     return isSystemBinding;
