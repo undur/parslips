@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Position;
-import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
+import org.objectstyle.wolips.bindings.preferences.SeverityPolicy;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 
 public class HtmlProblem {
@@ -53,7 +53,7 @@ public class HtmlProblem {
       marker = _htmlFile.createMarker(Activator.TEMPLATE_PROBLEM_MARKER);
       marker.setAttribute(IMarker.MESSAGE, getMessage());
       int severity;
-      if (isWarning() || PreferenceConstants.WARNING.equals(severityPreference)) {
+      if (SeverityPolicy.isWarningOr(severityPreference, isWarning())) {
         severity = IMarker.SEVERITY_WARNING;
       }
       else {

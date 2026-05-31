@@ -10,6 +10,7 @@ import org.eclipse.jface.text.Position;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
+import org.objectstyle.wolips.bindings.preferences.SeverityPolicy;
 import org.objectstyle.wolips.bindings.wod.HtmlElementCache;
 import org.objectstyle.wolips.bindings.wod.HtmlElementName;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
@@ -44,7 +45,7 @@ public class WodCacheEntry extends AbstractCacheEntry<IWodModel> {
           WodModelUtils.createMarker(wodFile, wodProblem);
 
           String wodErrorsInHtmlSeverity = BindingValidationPreferences.severity(PreferenceConstants.WOD_ERRORS_IN_HTML_SEVERITY_KEY);
-          if (!PreferenceConstants.IGNORE.equals(wodErrorsInHtmlSeverity)) {
+          if (!SeverityPolicy.isIgnored(wodErrorsInHtmlSeverity)) {
 	          // We create HTML markers for WOD problems so that you can have the
 	          // wod view closed and still see errors
 	          if (createHtmlMarkers && wodProblem instanceof IWodElementProblem) {
@@ -54,7 +55,7 @@ public class WodCacheEntry extends AbstractCacheEntry<IWodModel> {
 	              if (htmlElementNames != null) {
 	                for (HtmlElementName htmlElementName : htmlElementNames) {
 	                  int lineNumber = WodHtmlUtils.getLineAtOffset(cache.getHtmlEntry().getContents(), htmlElementName.getStartOffset());
-	                  WodElementProblem htmlProblem = new WodElementProblem(element, "In the WOD, " + wodProblem.getMessage(), new Position(htmlElementName.getStartOffset(), htmlElementName.getEndOffset() - htmlElementName.getStartOffset() + 1), lineNumber, wodProblem.isWarning() || PreferenceConstants.WARNING.equals(wodErrorsInHtmlSeverity));
+	                  WodElementProblem htmlProblem = new WodElementProblem(element, "In the WOD, " + wodProblem.getMessage(), new Position(htmlElementName.getStartOffset(), htmlElementName.getEndOffset() - htmlElementName.getStartOffset() + 1), lineNumber, SeverityPolicy.isWarningOr(wodErrorsInHtmlSeverity, wodProblem.isWarning()));
 	                  WodModelUtils.createMarker(htmlFile, htmlProblem);
 	                }
 	              }

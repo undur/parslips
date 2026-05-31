@@ -65,6 +65,7 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
+import org.objectstyle.wolips.bindings.preferences.SeverityPolicy;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
@@ -296,33 +297,33 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     // but the shortcut is defined as "repetition"). Produce the same error
     // message format as a missing element type — the user shouldn't need to
     // know whether what they typed was a shortcut or a class name.
-    if (!PreferenceConstants.IGNORE.equals(wodMissingComponentSeverity) && this instanceof SimpleWodElement) {
+    if (!SeverityPolicy.isIgnored(wodMissingComponentSeverity) && this instanceof SimpleWodElement) {
       SimpleWodElement simpleElement = (SimpleWodElement) this;
       if (simpleElement.getTagShortcutCaseMismatch() != null) {
         String originalText = simpleElement.getTagShortcutCaseMismatch();
         String correctCase = simpleElement.getTagShortcutCorrectCase();
         List<String> suggestions = Collections.singletonList(correctCase);
         String message = "The class for '" + originalText + "' is either missing or does not extend a known element root type (NGElement/WOElement). Did you mean '" + correctCase + "'?";
-        WodElementProblem problem = new WodElementProblem(this, message, getElementTypePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodMissingComponentSeverity));
+        WodElementProblem problem = new WodElementProblem(this, message, getElementTypePosition(), lineNumber, SeverityPolicy.isWarning(wodMissingComponentSeverity));
         problem.setSuggestions(suggestions);
         problems.add(problem);
       }
     }
   	String unusedWodElementSeverity = BindingValidationPreferences.severity(PreferenceConstants.UNUSED_WOD_ELEMENT_SEVERITY_KEY);
-    if (!PreferenceConstants.IGNORE.equals(unusedWodElementSeverity) && !_inline && !htmlCache.containsElementNamed(elementName)) {
-      problems.add(new WodElementProblem(this, "There is no element named '" + elementName + "' in your component HTML file", getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(unusedWodElementSeverity)));
+    if (!SeverityPolicy.isIgnored(unusedWodElementSeverity) && !_inline && !htmlCache.containsElementNamed(elementName)) {
+      problems.add(new WodElementProblem(this, "There is no element named '" + elementName + "' in your component HTML file", getElementNamePosition(), lineNumber, SeverityPolicy.isWarning(unusedWodElementSeverity)));
     }
     
     String deprecationSeverity = BindingValidationPreferences.severity(PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY);
-    if (!PreferenceConstants.IGNORE.equals(deprecationSeverity)) {
+    if (!SeverityPolicy.isIgnored(deprecationSeverity)) {
       IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
       if (BindingReflectionUtils.memberIsDeprecated(elementType)) {
-        problems.add(new WodElementDeprecationProblem(this, "The component named '" + elementTypeName + "' is deprecated.", getElementTypePosition(), lineNumber, PreferenceConstants.WARNING.equals(deprecationSeverity)));
+        problems.add(new WodElementDeprecationProblem(this, "The component named '" + elementTypeName + "' is deprecated.", getElementTypePosition(), lineNumber, SeverityPolicy.isWarning(deprecationSeverity)));
       }
     }
 
     ApiSnapshot wo = null;
-    if (!PreferenceConstants.IGNORE.equals(wodMissingComponentSeverity)) {
+    if (!SeverityPolicy.isIgnored(wodMissingComponentSeverity)) {
     	IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
 	    if (elementType == null || (!elementType.getElementName().equals(elementTypeName) && !elementType.getFullyQualifiedName().equals(elementTypeName))) {
 	      // Compute "did you mean?" suggestions for the mistyped element type name.
@@ -343,13 +344,13 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 	          message += sb.toString();
 	        }
 	      }
-	      WodElementProblem problem = new WodElementProblem(this, message, getElementTypePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodMissingComponentSeverity));
+	      WodElementProblem problem = new WodElementProblem(this, message, getElementTypePosition(), lineNumber, SeverityPolicy.isWarning(wodMissingComponentSeverity));
 	      problem.setSuggestions(suggestions);
 	      problems.add(problem);
 	    }
 	    else {
 	    	String wodApiProblemSeverity = BindingValidationPreferences.severity(PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY);
-	    	if (!PreferenceConstants.IGNORE.equals(wodApiProblemSeverity)) {
+	    	if (!SeverityPolicy.isIgnored(wodApiProblemSeverity)) {
 		      try {
 		        wo = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
 		        if (wo != null) {
@@ -358,12 +359,12 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 		          for (IApiBinding binding : apiBindings) {
 		            String bindingName = binding.getName();
 		            if (binding.isExplicitlyRequired() && !bindingsMap.containsKey(bindingName)) {
-		              problems.add(new ApiBindingValidationProblem(this, binding, wo.getClassName(), getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodApiProblemSeverity)));
+		              problems.add(new ApiBindingValidationProblem(this, binding, wo.getClassName(), getElementNamePosition(), lineNumber, SeverityPolicy.isWarning(wodApiProblemSeverity)));
 		            }
 		          }
 		          List<ApiValidation> failedValidations = wo.getFailedValidations(bindingsMap);
 		          for (ApiValidation failedValidation : failedValidations) {
-		            problems.add(new ApiElementValidationProblem(this, failedValidation, getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(wodApiProblemSeverity)));
+		            problems.add(new ApiElementValidationProblem(this, failedValidation, getElementNamePosition(), lineNumber, SeverityPolicy.isWarning(wodApiProblemSeverity)));
 		          }
 		        }
 		      }
