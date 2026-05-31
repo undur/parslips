@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.inspector;
+package org.objectstyle.wolips.editor.inspector;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;

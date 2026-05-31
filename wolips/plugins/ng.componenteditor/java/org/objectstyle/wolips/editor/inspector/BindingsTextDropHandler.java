@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.inspector;
+package org.objectstyle.wolips.editor.inspector;
 
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;

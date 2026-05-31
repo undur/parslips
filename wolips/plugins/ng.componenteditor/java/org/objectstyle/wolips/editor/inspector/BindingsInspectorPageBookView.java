@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.inspector;
+package org.objectstyle.wolips.editor.inspector;
 
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;

@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.inspector;
+package org.objectstyle.wolips.editor.inspector;
 
 import java.util.List;
 

@@ -464,7 +464,7 @@
       <category name="Parsley" id="ng.componenteditor.views"/>
       <view name="Bindings Inspector"
             category="ng.componenteditor.views"
-            class="org.objectstyle.wolips.componenteditor.inspector.BindingsInspectorPageBookView"
+            class="org.objectstyle.wolips.editor.inspector.BindingsInspectorPageBookView"
             id="ng.componenteditor.inspector.BindingsInspectorPageBookView"/>
       <view name="Parsley Explorer"
             allowMultiple="false"
