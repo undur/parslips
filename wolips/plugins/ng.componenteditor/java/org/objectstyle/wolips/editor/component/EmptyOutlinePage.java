@@ -3,7 +3,7 @@
  * 
  * The ObjectStyle Group Software License, Version 1.0
  * 
- * Copyright (c) 2006 The ObjectStyle Group and individual authors of the
+ * Copyright (c) 2005 The ObjectStyle Group and individual authors of the
  * software. All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,68 +41,65 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IPropertyListener;
-import org.eclipse.ui.PartInitException;
-import org.objectstyle.wolips.editor.api.ApiEditor;
-import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
-public class ApiTab extends ComponentEditorTab {
+/**
+ * @author uli
+ */
+public class EmptyOutlinePage implements IContentOutlinePage {
+	private Composite control;
 
-	private ApiEditor apiEditor;
+	public EmptyOutlinePage() {
+		super();
 
-	private IEditorInput apiInput;
-
-	public ApiTab(ComponentEditorPart componentEditorPart, int tabIndex, IEditorInput apiInput) {
-		super(componentEditorPart, tabIndex);
-		this.apiInput = apiInput;
 	}
 
-	public IEditorPart getActiveEmbeddedEditor() {
-		return apiEditor;
+	public void createControl(Composite parent) {
+		control = new Composite(parent, SWT.NULL);
 	}
 
-	public void createTab() {
-		apiEditor = new ApiEditor();
-		IEditorSite apiSite = this.getComponentEditorPart().publicCreateSite(apiEditor);
-		try {
-			apiEditor.init(apiSite, apiInput);
-		} catch (PartInitException e) {
-			ComponenteditorPlugin.getDefault().log(e);
-		}
-		createInnerPartControl(this.getParentSashForm(), apiEditor);
-		apiEditor.addPropertyListener(new IPropertyListener() {
-			public void propertyChanged(Object source, int propertyId) {
-				ApiTab.this.getComponentEditorPart().publicHandlePropertyChange(propertyId);
-			}
-		});
-	}
-
-	public void doSave(IProgressMonitor monitor) {
-		apiEditor.doSave(monitor);
-	}
-
-	public void close(boolean save) {
-		apiEditor.close(save);
-	}
-	
-	@Override
 	public void dispose() {
-		apiEditor.dispose();
-		super.dispose();
-	}
-	
-	public IEditorInput getActiveEditorInput() {
-		return apiInput;
+		control = null;
 	}
 
-	public boolean isDirty() {
-		return apiEditor.isDirty();
+	public Control getControl() {
+		return control;
+	}
+
+	public void setActionBars(IActionBars actionBars) {
+		return;
+	}
+
+	public void setFocus() {
+		return;
+	}
+
+	public void addSelectionChangedListener(ISelectionChangedListener listener) {
+		return;
+	}
+
+	public ISelection getSelection() {
+		return new ISelection() {
+			public boolean isEmpty() {
+				return true;
+			}
+		};
+	}
+
+	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+		return;
+	}
+
+	public void setSelection(ISelection selection) {
+		return;
 	}
 
 }

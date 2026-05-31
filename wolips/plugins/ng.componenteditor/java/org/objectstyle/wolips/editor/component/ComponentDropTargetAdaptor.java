@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;

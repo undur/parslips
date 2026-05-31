@@ -41,7 +41,7 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;

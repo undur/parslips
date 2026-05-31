@@ -3,7 +3,7 @@ package org.objectstyle.wolips.componenteditor.actions;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ui.IEditorPart;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
+import org.objectstyle.wolips.editor.component.ComponentEditorPart;
 import org.objectstyle.wolips.editor.template.TemplateEditor;
 import org.objectstyle.wolips.editor.wod.WodEditor;
 

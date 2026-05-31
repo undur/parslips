@@ -35,7 +35,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
+import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
 import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.result.ElementDescriptor;

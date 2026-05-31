@@ -143,7 +143,7 @@ public class MutableApiModel {
 	 *
 	 * <p>After writing, refreshes the Eclipse resource (if backed by an
 	 * {@link IFile}) so that the workspace picks up the change and
-	 * {@link org.objectstyle.wolips.componenteditor.part.JavaChangeRevalidator}
+	 * {@link org.objectstyle.wolips.editor.component.JavaChangeRevalidator}
 	 * can trigger revalidation of open component editors.
 	 *
 	 * @throws ApiModelException if serialization or I/O fails

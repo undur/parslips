@@ -9,7 +9,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
-import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
+import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.variables.ParsleyProject;

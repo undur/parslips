@@ -18,7 +18,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.bindings.api.MutableApiModel;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
+import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.ElementDescriptor;

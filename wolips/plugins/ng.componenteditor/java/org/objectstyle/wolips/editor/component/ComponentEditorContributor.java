@@ -3,7 +3,7 @@
  * 
  * The ObjectStyle Group Software License, Version 1.0
  * 
- * Copyright (c) 2006 The ObjectStyle Group and individual authors of the
+ * Copyright (c) 2005 - 2006 The ObjectStyle Group and individual authors of the
  * software. All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,69 +41,49 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IEditorInput;
+import org.eclipse.jface.action.IAction;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.ide.IDEActionFactory;
+import org.eclipse.ui.part.MultiPageEditorActionBarContributor;
+import org.eclipse.ui.texteditor.ITextEditor;
+import org.eclipse.ui.texteditor.ITextEditorActionConstants;
 
-public abstract class ComponentEditorTab extends Composite {
+public class ComponentEditorContributor extends MultiPageEditorActionBarContributor {
+	private IEditorPart activeEditorPart;
 
-	private ComponentEditorPart componentEditorPart;
-
-	private SashForm parentSashForm;
-
-	private int tabIndex;
-	
-	private Color _sashColor;
-
-	public ComponentEditorTab(ComponentEditorPart componentEditorPart, int tabIndex) {
-		super(componentEditorPart.publicGetContainer(), SWT.NONE);
-		this.componentEditorPart = componentEditorPart;
-		parentSashForm = new SashForm(this, SWT.VERTICAL | SWT.SMOOTH);
-		parentSashForm.setSashWidth(4);
-		_sashColor = new Color(getDisplay(), 205, 205, 205);
-		parentSashForm.setBackground(_sashColor);
-
-		this.setLayout(new FillLayout());
-		this.tabIndex = tabIndex;
+	public ComponentEditorContributor() {
+		super();
 	}
 
-	public ComponentEditorPart getComponentEditorPart() {
-		return componentEditorPart;
+	protected IAction getAction(ITextEditor editor, String actionID) {
+		return (editor == null ? null : editor.getAction(actionID));
 	}
 
-	protected Composite createInnerPartControl(Composite parent, final IEditorPart e) {
-		Composite content = new Composite(parent, SWT.NONE);
-		content.setLayout(new FillLayout(SWT.VERTICAL));
-		e.createPartControl(content);
-		return content;
-	}
+	public void setActivePage(IEditorPart part) {
+		if (activeEditorPart == part)
+			return;
 
-	public abstract IEditorPart getActiveEmbeddedEditor();
+		activeEditorPart = part;
+		IActionBars actionBars = getActionBars();
+		if (actionBars != null) {
 
-	public SashForm getParentSashForm() {
-		return parentSashForm;
-	}
+			ITextEditor editor = (part instanceof ITextEditor) ? (ITextEditor) part : null;
 
-	public abstract boolean isDirty();
-
-	public abstract void doSave(IProgressMonitor monitor);
-
-	public abstract void close(boolean save);
-	
-	public void dispose() {
-		_sashColor.dispose();
-	}
-
-	public abstract IEditorInput getActiveEditorInput();
-
-	public int getTabIndex() {
-		return tabIndex;
+			actionBars.setGlobalActionHandler(ActionFactory.DELETE.getId(), getAction(editor, ITextEditorActionConstants.DELETE));
+			actionBars.setGlobalActionHandler(ActionFactory.UNDO.getId(), getAction(editor, ITextEditorActionConstants.UNDO));
+			actionBars.setGlobalActionHandler(ActionFactory.REDO.getId(), getAction(editor, ITextEditorActionConstants.REDO));
+			actionBars.setGlobalActionHandler(ActionFactory.CUT.getId(), getAction(editor, ITextEditorActionConstants.CUT));
+			actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(), getAction(editor, ITextEditorActionConstants.COPY));
+			actionBars.setGlobalActionHandler(ActionFactory.PASTE.getId(), getAction(editor, ITextEditorActionConstants.PASTE));
+			actionBars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(), getAction(editor, ITextEditorActionConstants.SELECT_ALL));
+			actionBars.setGlobalActionHandler(ActionFactory.FIND.getId(), getAction(editor, ITextEditorActionConstants.FIND));
+			actionBars.setGlobalActionHandler(IDEActionFactory.BOOKMARK.getId(), getAction(editor, IDEActionFactory.BOOKMARK.getId()));
+			actionBars.updateActionBars();
+			actionBars.getMenuManager().update();
+		}
 	}
 }

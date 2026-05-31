@@ -41,7 +41,7 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
 import java.util.ArrayList;
 
@@ -415,6 +415,7 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 
 	protected void pageChange(int newPageIndex) {
 		super.pageChange(newPageIndex);
+		componentEditorTabs[newPageIndex].editorSelected();
 	}
 
 	public ComponentEditorInput getComponentEditorInput() {

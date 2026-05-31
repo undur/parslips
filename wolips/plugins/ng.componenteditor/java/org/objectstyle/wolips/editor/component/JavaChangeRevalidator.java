@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
 import java.util.HashSet;
 import java.util.Set;

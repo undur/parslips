@@ -7,7 +7,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
-import org.objectstyle.wolips.componenteditor.part.UsagesComposite;
+import org.objectstyle.wolips.editor.component.UsagesComposite;
 
 /**
  * A {@link FormPage} that embeds a {@link UsagesComposite} to show

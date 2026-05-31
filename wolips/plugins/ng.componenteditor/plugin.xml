@@ -67,13 +67,13 @@
 <!-- =================================================================================== -->
    <extension point="org.eclipse.ui.editors">
       <editor
-            class="org.objectstyle.wolips.componenteditor.part.ComponentEditor"
-            contributorClass="org.objectstyle.wolips.componenteditor.part.ComponentEditorContributor"
+            class="org.objectstyle.wolips.editor.component.ComponentEditor"
+            contributorClass="org.objectstyle.wolips.editor.component.ComponentEditorContributor"
             default="true"
             extensions="wod,html,api,woo"
             icon="icons/parsley16.png"
             id="ng.componenteditor.ComponentEditor"
-            matchingStrategy="org.objectstyle.wolips.componenteditor.part.ComponentEditorMatchingStrategy"
+            matchingStrategy="org.objectstyle.wolips.editor.component.ComponentEditorMatchingStrategy"
             name="Parsley Component Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wohtml"/>
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.api"/>
@@ -841,7 +841,7 @@
    <extension point="org.eclipse.ui.ide.editorAssociationOverride">
       <editorAssociationOverride
             id="ng.componenteditor.editorAssociationOverride"
-            class="org.objectstyle.wolips.componenteditor.part.NGEditorAssociationOverride"/>
+            class="org.objectstyle.wolips.editor.component.NGEditorAssociationOverride"/>
    </extension>
 
 <!-- =================================================================================== -->

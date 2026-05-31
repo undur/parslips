@@ -41,7 +41,7 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorInput;
@@ -49,60 +49,60 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
+import org.objectstyle.wolips.editor.api.ApiEditor;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.editor.woo.WooEditor;
 
-public class WooTab extends ComponentEditorTab {
+public class ApiTab extends ComponentEditorTab {
 
-	private WooEditor wooEditor;
+	private ApiEditor apiEditor;
 
-	private IEditorInput wooInput;
+	private IEditorInput apiInput;
 
-	public WooTab(ComponentEditorPart componentEditorPart, int tabIndex, IEditorInput wooInput) {
+	public ApiTab(ComponentEditorPart componentEditorPart, int tabIndex, IEditorInput apiInput) {
 		super(componentEditorPart, tabIndex);
-		this.wooInput = wooInput;
+		this.apiInput = apiInput;
 	}
 
 	public IEditorPart getActiveEmbeddedEditor() {
-		return wooEditor;
+		return apiEditor;
 	}
 
 	public void createTab() {
-		wooEditor = new WooEditor();
-		IEditorSite wooSite = this.getComponentEditorPart().publicCreateSite(wooEditor);
+		apiEditor = new ApiEditor();
+		IEditorSite apiSite = this.getComponentEditorPart().publicCreateSite(apiEditor);
 		try {
-			wooEditor.init(wooSite, wooInput);
+			apiEditor.init(apiSite, apiInput);
 		} catch (PartInitException e) {
 			ComponenteditorPlugin.getDefault().log(e);
 		}
-		createInnerPartControl(this.getParentSashForm(), wooEditor);
-		wooEditor.addPropertyListener(new IPropertyListener() {
+		createInnerPartControl(this.getParentSashForm(), apiEditor);
+		apiEditor.addPropertyListener(new IPropertyListener() {
 			public void propertyChanged(Object source, int propertyId) {
-				WooTab.this.getComponentEditorPart().publicHandlePropertyChange(propertyId);
+				ApiTab.this.getComponentEditorPart().publicHandlePropertyChange(propertyId);
 			}
 		});
 	}
 
 	public void doSave(IProgressMonitor monitor) {
-		wooEditor.doSave(monitor);
+		apiEditor.doSave(monitor);
 	}
 
 	public void close(boolean save) {
-		wooEditor.close(save);
+		apiEditor.close(save);
 	}
-
+	
 	@Override
 	public void dispose() {
-		wooEditor.dispose();
+		apiEditor.dispose();
 		super.dispose();
 	}
 	
 	public IEditorInput getActiveEditorInput() {
-		return wooInput;
+		return apiInput;
 	}
 
 	public boolean isDirty() {
-		return wooEditor.isDirty();
+		return apiEditor.isDirty();
 	}
 
 }

@@ -1,6 +1,6 @@
 package org.objectstyle.wolips.componenteditor.actions;
 
-import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
+import org.objectstyle.wolips.editor.component.ComponentEditorPart;
 
 public class ComponentInserter extends InsertComponentAction {
 	private String _componentName;

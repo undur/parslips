@@ -17,7 +17,7 @@ import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.VisibleBinding;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
+import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.editor.framework.IWebobjectTagListener;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.util.ICursorPositionListener;

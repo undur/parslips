@@ -3,7 +3,7 @@
  * 
  * The ObjectStyle Group Software License, Version 1.0
  * 
- * Copyright (c) 2005 The ObjectStyle Group and individual authors of the
+ * Copyright (c) 2006 The ObjectStyle Group and individual authors of the
  * software. All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,65 +41,78 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.componenteditor.part;
+package org.objectstyle.wolips.editor.component;
 
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 
-/**
- * @author uli
- */
-public class EmptyOutlinePage implements IContentOutlinePage {
-	private Composite control;
+public abstract class ComponentEditorTab extends Composite {
 
-	public EmptyOutlinePage() {
-		super();
+	private ComponentEditorPart componentEditorPart;
 
+	private SashForm parentSashForm;
+
+	private int tabIndex;
+	
+	private Color _sashColor;
+
+	public ComponentEditorTab(ComponentEditorPart componentEditorPart, int tabIndex) {
+		super(componentEditorPart.publicGetContainer(), SWT.NONE);
+		this.componentEditorPart = componentEditorPart;
+		parentSashForm = new SashForm(this, SWT.VERTICAL | SWT.SMOOTH);
+		parentSashForm.setSashWidth(4);
+		_sashColor = new Color(getDisplay(), 205, 205, 205);
+		parentSashForm.setBackground(_sashColor);
+
+		this.setLayout(new FillLayout());
+		this.tabIndex = tabIndex;
 	}
 
-	public void createControl(Composite parent) {
-		control = new Composite(parent, SWT.NULL);
+	public ComponentEditorPart getComponentEditorPart() {
+		return componentEditorPart;
 	}
 
+	protected Composite createInnerPartControl(Composite parent, final IEditorPart e) {
+		Composite content = new Composite(parent, SWT.NONE);
+		content.setLayout(new FillLayout(SWT.VERTICAL));
+		e.createPartControl(content);
+		return content;
+	}
+
+	public abstract IEditorPart getActiveEmbeddedEditor();
+
+	public SashForm getParentSashForm() {
+		return parentSashForm;
+	}
+
+	public abstract boolean isDirty();
+
+	public abstract void doSave(IProgressMonitor monitor);
+
+	public abstract void close(boolean save);
+	
 	public void dispose() {
-		control = null;
+		_sashColor.dispose();
 	}
 
-	public Control getControl() {
-		return control;
+	/**
+	 * Called by {@link ComponentEditorPart} when this tab becomes the active
+	 * page. The base implementation does nothing; subclasses override to react
+	 * to activation (e.g. {@code UsagesTab} lazily scans on first activation).
+	 */
+	public void editorSelected() {
+		// No-op by default; overridden by tabs that need activation notifications.
 	}
 
-	public void setActionBars(IActionBars actionBars) {
-		return;
-	}
+	public abstract IEditorInput getActiveEditorInput();
 
-	public void setFocus() {
-		return;
+	public int getTabIndex() {
+		return tabIndex;
 	}
-
-	public void addSelectionChangedListener(ISelectionChangedListener listener) {
-		return;
-	}
-
-	public ISelection getSelection() {
-		return new ISelection() {
-			public boolean isEmpty() {
-				return true;
-			}
-		};
-	}
-
-	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
-		return;
-	}
-
-	public void setSelection(ISelection selection) {
-		return;
-	}
-
 }
