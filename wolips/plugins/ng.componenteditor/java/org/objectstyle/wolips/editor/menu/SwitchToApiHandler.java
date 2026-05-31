@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.editormenu;
+package org.objectstyle.wolips.editor.menu;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;

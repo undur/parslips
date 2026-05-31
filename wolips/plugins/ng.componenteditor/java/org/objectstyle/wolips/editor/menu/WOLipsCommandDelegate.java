@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.editormenu;
+package org.objectstyle.wolips.editor.menu;
 
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.ui.IWorkbenchWindow;

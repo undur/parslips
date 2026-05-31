@@ -204,13 +204,13 @@
 <!-- Command handlers for switch-to actions (work from any editor, not just ComponentEditor) -->
    <extension point="org.eclipse.ui.handlers">
       <handler commandId="ng.componenteditor.editors.tojava"
-            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToJavaHandler"/>
+            class="org.objectstyle.wolips.editor.menu.SwitchToJavaHandler"/>
       <handler commandId="ng.componenteditor.editors.tohtml"
-            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToHtmlHandler"/>
+            class="org.objectstyle.wolips.editor.menu.SwitchToHtmlHandler"/>
       <handler commandId="ng.componenteditor.editors.towod"
-            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToWodHandler"/>
+            class="org.objectstyle.wolips.editor.menu.SwitchToWodHandler"/>
       <handler commandId="ng.componenteditor.editors.toapi"
-            class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToApiHandler"/>
+            class="org.objectstyle.wolips.editor.menu.SwitchToApiHandler"/>
       <handler commandId="ng.componenteditor.action.openDeclaration"
             class="org.objectstyle.wolips.editor.template.OpenDeclarationHandler"/>
    </extension>

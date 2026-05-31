@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.editormenu;
+package org.objectstyle.wolips.editor.menu;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -15,20 +15,20 @@ import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
- * Command handler for switching to the WOD editor from any editor context.
- * If the active editor is the ComponentEditor, switches to the WOD tab.
- * Otherwise, locates the WOD file and opens it in the ComponentEditor.
+ * Command handler for switching to the HTML editor from any editor context.
+ * If the active editor is the ComponentEditor, switches to the HTML tab.
+ * Otherwise, locates the HTML file and opens it in the ComponentEditor.
  *
  * <p>For non-Parsley projects (when WOLips is installed), delegates to
  * WOLips' equivalent command so WOLips behavior is preserved.
  *
  * <p>WORKAROUND: WOLips coexistence — the project check and delegation.
  */
-public class SwitchToWodHandler extends AbstractHandler {
+public class SwitchToHtmlHandler extends AbstractHandler {
 
 	/** WOLips' equivalent command ID. */
 	private static final String WOLIPS_COMMAND_ID =
-		"org.objectstyle.wolips.componenteditor.editors.towod";
+		"org.objectstyle.wolips.componenteditor.editors.tohtml";
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -39,7 +39,7 @@ public class SwitchToWodHandler extends AbstractHandler {
 
 		// If we're already in the ComponentEditor, just switch tabs
 		if (editor instanceof ComponentEditor) {
-			((ComponentEditor) editor).switchToWod();
+			((ComponentEditor) editor).switchToHtml();
 			return null;
 		}
 
@@ -58,8 +58,8 @@ public class SwitchToWodHandler extends AbstractHandler {
 		}
 
 		ElementDescriptor descriptor = ElementDescriptor.forFile(file);
-		if (descriptor != null && descriptor.getWodFile() != null) {
-			WorkbenchUtilities.open(descriptor.getWodFile(), EditorsPlugin.ComponentEditorID);
+		if (descriptor != null && descriptor.getHtmlFile() != null) {
+			WorkbenchUtilities.open(descriptor.getHtmlFile(), EditorsPlugin.ComponentEditorID);
 		}
 		return null;
 	}
