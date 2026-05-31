@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.wizards;
+package org.objectstyle.wolips.preferences;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

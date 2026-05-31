@@ -625,7 +625,7 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.XML"
             name="Template Formatting"/>
-      <page class="org.objectstyle.wolips.wodclipse.core.preferences.WodEditorPreferencePage"
+      <page class="org.objectstyle.wolips.preferences.WodEditorPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.WodEditor"
             name="WOD Editor"/>
@@ -637,28 +637,28 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.EmbeddedJavaScript"
             name="Embedded JavaScript"/>
-      <page class="org.objectstyle.wolips.bindings.preferences.TagShortcutPreferencePage"
+      <page class="org.objectstyle.wolips.preferences.TagShortcutPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.TagShortcuts"
             name="Inline Binding Shortcuts"/>
-      <page class="org.objectstyle.wolips.bindings.preferences.BindingValidationRulePreferencePage"
+      <page class="org.objectstyle.wolips.preferences.BindingValidationRulePreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.ValidationRules"
             name="Validation Rules"/>
-      <page class="org.objectstyle.wolips.bindings.preferences.BindingValidationPreferencePage"
+      <page class="org.objectstyle.wolips.preferences.BindingValidationPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.Validation"
             name="Validation"/>
-      <page class="org.objectstyle.wolips.wizards.MavenPreferencePage"
+      <page class="org.objectstyle.wolips.preferences.MavenPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.Maven"
             name="Maven"/>
-      <page class="org.objectstyle.wolips.devserver.DevServerPreferencePage"
+      <page class="org.objectstyle.wolips.preferences.DevServerPreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.DevServer"
             name="Dev Server"/>
       <!-- WORKAROUND: WOLips coexistence -->
-      <page class="org.objectstyle.wolips.componenteditor.preferences.WOLipsCoexistencePreferencePage"
+      <page class="org.objectstyle.wolips.preferences.WOLipsCoexistencePreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.WOLipsCoexistence"
             name="WOLips Coexistence"/>
@@ -680,7 +680,7 @@
       <!-- alphabetically) and so its status is unmistakable. DO NOT treat -->
       <!-- anything under this category as a supported setting.            -->
       <!-- =============================================================== -->
-      <page class="org.objectstyle.wolips.componenteditor.preferences.DeprecatedCategoryPage"
+      <page class="org.objectstyle.wolips.preferences.DeprecatedCategoryPage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.deprecated"
             name="Zombies"/>

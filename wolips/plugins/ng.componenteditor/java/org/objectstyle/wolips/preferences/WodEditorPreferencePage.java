@@ -41,8 +41,9 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.wodclipse.core.preferences;
+package org.objectstyle.wolips.preferences;
 
+import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
 import org.eclipse.jface.preference.ColorFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbench;

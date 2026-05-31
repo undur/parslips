@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.componenteditor.preferences;
+package org.objectstyle.wolips.preferences;
 
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;

@@ -1,4 +1,7 @@
-package org.objectstyle.wolips.devserver;
+package org.objectstyle.wolips.preferences;
+
+import org.objectstyle.wolips.devserver.DevServerManager;
+import org.objectstyle.wolips.devserver.DevServerPreferences;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;

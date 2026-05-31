@@ -1,5 +1,6 @@
-package org.objectstyle.wolips.bindings.preferences;
+package org.objectstyle.wolips.preferences;
 
+import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,6 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.wod.BindingValidationRule;
 import org.objectstyle.wolips.core.CorePlugin;
-import org.objectstyle.wolips.preferences.TableViewerSupport;
 
 /**
  * The preference page to add / edit / remove BindingValidationRules.

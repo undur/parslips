@@ -41,8 +41,9 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.bindings.preferences;
+package org.objectstyle.wolips.preferences;
 
+import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;

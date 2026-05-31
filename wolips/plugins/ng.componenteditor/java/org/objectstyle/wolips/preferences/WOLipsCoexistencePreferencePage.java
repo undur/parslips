@@ -1,5 +1,6 @@
-package org.objectstyle.wolips.componenteditor.preferences;
+package org.objectstyle.wolips.preferences;
 
+import org.objectstyle.wolips.componenteditor.preferences.WOLipsBindingShadow;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.swt.SWT;
