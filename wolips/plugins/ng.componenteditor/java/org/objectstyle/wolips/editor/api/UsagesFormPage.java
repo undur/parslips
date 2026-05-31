@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.apieditor.editor;
+package org.objectstyle.wolips.editor.api;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;

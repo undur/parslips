@@ -18,7 +18,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
  * component, scans the project for references via {@link RenameBindingProcessor},
  * and presents the changes through Eclipse's standard refactoring preview dialog.
  *
- * <p>Used by {@link org.objectstyle.wolips.apieditor.editor.ApiEditor} when
+ * <p>Used by {@link org.objectstyle.wolips.editor.api.ApiEditor} when
  * saving an {@code .api} file with renamed bindings and the "Refactor on rename"
  * option enabled.
  */

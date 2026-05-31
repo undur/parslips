@@ -26,7 +26,7 @@ import org.objectstyle.wolips.locate.LocatePlugin;
  * synchronize on. The editor holds the only reference to its snapshot, mutations
  * are simple field assignments on POJOs, and serialization is a one-shot write.
  *
- * <p>Used by the {@code .api} editor ({@link org.objectstyle.wolips.apieditor.editor.ApiEditor})
+ * <p>Used by the {@code .api} editor ({@link org.objectstyle.wolips.editor.api.ApiEditor})
  * and by {@link org.objectstyle.wolips.wodclipse.action.GenerateAPIAction}.
  */
 public class MutableApiModel {

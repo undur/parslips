@@ -53,7 +53,7 @@
  * <http://objectstyle.org/>.
  *
  */
-package org.objectstyle.wolips.apieditor.editor;
+package org.objectstyle.wolips.editor.api;
 
 import java.util.Iterator;
 

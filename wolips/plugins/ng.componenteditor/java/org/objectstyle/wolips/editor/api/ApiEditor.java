@@ -53,7 +53,7 @@
  * <http://objectstyle.org/>.
  *
  */
-package org.objectstyle.wolips.apieditor.editor;
+package org.objectstyle.wolips.editor.api;
 
 import java.util.Collections;
 import java.util.Map;
@@ -76,7 +76,7 @@ import org.eclipse.ui.forms.editor.FormEditor;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.part.FileEditorInput;
-import org.objectstyle.wolips.apieditor.ApieditorPlugin;
+import org.objectstyle.wolips.editor.api.ApieditorPlugin;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.MutableApiModel;
 import org.objectstyle.wolips.wodclipse.core.refactoring.RenameBindingRefactoring;

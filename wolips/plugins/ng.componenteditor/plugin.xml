@@ -106,7 +106,7 @@
 
 <!-- API Editor -->
       <editor
-            class="org.objectstyle.wolips.apieditor.editor.ApiEditor"
+            class="org.objectstyle.wolips.editor.api.ApiEditor"
             default="false"
             extensions="api"
             icon="icons/parsley16.png"

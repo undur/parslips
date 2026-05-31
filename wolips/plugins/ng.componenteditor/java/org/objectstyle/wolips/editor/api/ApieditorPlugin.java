@@ -42,7 +42,7 @@
  *  
  */
 
-package org.objectstyle.wolips.apieditor;
+package org.objectstyle.wolips.editor.api;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;

@@ -52,7 +52,7 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcesso
  * <p>This composite is shared by:
  * <ul>
  *   <li>{@link UsagesTab} — the Usages tab in the multi-tab component editor</li>
- *   <li>{@link org.objectstyle.wolips.apieditor.editor.UsagesFormPage} —
+ *   <li>{@link org.objectstyle.wolips.editor.api.UsagesFormPage} —
  *       the Usages page in the standalone API editor</li>
  * </ul>
  *

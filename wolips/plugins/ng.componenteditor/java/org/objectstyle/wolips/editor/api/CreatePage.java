@@ -53,10 +53,11 @@
  * <http://objectstyle.org/>.
  *
  */
-package org.objectstyle.wolips.apieditor.editor;
+package org.objectstyle.wolips.editor.api;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.SelectionEvent;
@@ -65,17 +66,22 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.part.FileEditorInput;
+import org.objectstyle.wolips.editor.api.ApieditorPlugin;
+import org.objectstyle.wolips.baseforplugins.util.StringUtils;
+import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.MutableApiModel;
 
-public class DeletePage extends ApiFormPage {
+public class CreatePage extends ApiFormPage {
 
-	public static String PAGE_ID = "ng.componenteditor.api.DeletePage";
+	public static String PAGE_ID = "ng.componenteditor.api.CreatePage";
 
-	public DeletePage(ApiEditor apiEditor, String title) {
+	public CreatePage(ApiEditor apiEditor, String title) {
 		super(apiEditor, PAGE_ID, title);
 	}
 
@@ -92,7 +98,7 @@ public class DeletePage extends ApiFormPage {
 		sashForm.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		Section section = toolkit.createSection(sashForm, Section.DESCRIPTION);
-		section.setText("Delete Api");
+		section.setText("Create Api");
 		section.marginWidth = 10;
 		section.marginHeight = 5;
 		toolkit.createCompositeSeparator(section);
@@ -107,31 +113,64 @@ public class DeletePage extends ApiFormPage {
 		gd.widthHint = 100;
 
 		final ApiEditor apiEditor = (ApiEditor) this.getEditor();
-		Button createApiFileButton = toolkit.createButton(client, "Delete Api File", SWT.PUSH);
-		gd = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		createApiFileButton.setLayoutData(gd);
-		createApiFileButton.addSelectionListener(new SelectionListener() {
-
-			public void widgetSelected(SelectionEvent e) {
-				FileEditorInput fileEditorInput = (FileEditorInput) apiEditor.getEditorInput();
-				try {
-					fileEditorInput.getFile().delete(true, new NullProgressMonitor());
-				} catch (CoreException coreException) {
-					throw new RuntimeException("Failed to delete .api file.", coreException);
+		boolean brokenApiFile = false;
+		String brokenMessage = null;
+		MutableApiModel apiModel = null;
+		try {
+			apiModel = apiEditor.getModel();
+		} catch (Throwable throwable) {
+			brokenApiFile = true;
+			ApieditorPlugin.getDefault().debug(throwable);
+			brokenMessage = StringUtils.getErrorMessage(throwable);
+		}
+		if (apiModel == null) {
+			if (brokenApiFile) {
+				Label brokenLabel = new Label(client, SWT.WRAP);
+				brokenLabel.setBackground(client.getBackground());
+				brokenLabel.setText(brokenMessage);
+				GridData labelData = new GridData(GridData.FILL_HORIZONTAL);
+				labelData.horizontalSpan = 2;
+				brokenLabel.setLayoutData(labelData);
+			}
+			Button createApiFileButton;
+			if (brokenApiFile) {
+				createApiFileButton = toolkit.createButton(client, "Recreate Api File", SWT.PUSH);
+			}
+			else {
+				createApiFileButton = toolkit.createButton(client, "Create Api File", SWT.PUSH);
+			}
+			gd = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+			createApiFileButton.setLayoutData(gd);
+			createApiFileButton.addSelectionListener(new SelectionListener() {
+				public void widgetSelected(SelectionEvent e) {
+					FileEditorInput fileEditorInput = (FileEditorInput) apiEditor.getEditorInput();
+					try {
+						IFile file = fileEditorInput.getFile();
+						if (file.exists()) {
+							file.delete(false, null);
+						}
+						new MutableApiModel(file);
+						// Refresh the workspace resource so IFile.exists() returns
+						// true when ApiEditor.getModel() checks it during addPages().
+						// Without this, the file exists on disk but Eclipse's resource
+						// layer doesn't know about it yet.
+						file.refreshLocal(IResource.DEPTH_ZERO, null);
+					} catch (ApiModelException coreException) {
+						throw new RuntimeException("Failed to create .api file.", coreException);
+					} catch (CoreException coreException) {
+						throw new RuntimeException("Failed to delete existing .api file.", coreException);
+					}
+					apiEditor.dropModel();
+					apiEditor.removePage(0);
+					apiEditor.addPages();
+					apiEditor.activateFirstPage();
 				}
-				apiEditor.removePage(0);
-				apiEditor.removePage(0);
-				apiEditor.removePage(0);
-				apiEditor.removePage(0);
-				apiEditor.dropModel();
-				apiEditor.addPages();
-				apiEditor.activateFirstPage();
-			}
 
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// nothing to do
-			}
-		});
+				public void widgetDefaultSelected(SelectionEvent e) {
+					// nothing to do
+				}
+			});
+		}
 		section.setClient(client);
 		form.updateToolBar();
 	}

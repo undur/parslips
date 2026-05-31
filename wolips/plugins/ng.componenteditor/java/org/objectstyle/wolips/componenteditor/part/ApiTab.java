@@ -49,7 +49,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
-import org.objectstyle.wolips.apieditor.editor.ApiEditor;
+import org.objectstyle.wolips.editor.api.ApiEditor;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
 public class ApiTab extends ComponentEditorTab {

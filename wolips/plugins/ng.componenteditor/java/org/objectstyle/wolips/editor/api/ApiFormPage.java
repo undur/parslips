@@ -53,31 +53,57 @@
  * <http://objectstyle.org/>.
  *
  */
-package org.objectstyle.wolips.apieditor.editor;
+package org.objectstyle.wolips.editor.api;
 
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.forms.IManagedForm;
+import org.eclipse.ui.forms.editor.FormPage;
 
-public class BindingsPage extends ApiFormPage {
+public abstract class ApiFormPage extends FormPage {
 
-	/** Package-visible so {@link BindingDetailsPage} can refresh the list. */
-	BindingsPageBlock block;
-
-	public static String PAGE_ID = "ng.componenteditor.api.BindingsPage";
-
-	public BindingsPage(ApiEditor apiEditor, String title) {
-		super(apiEditor, PAGE_ID, title);
-		block = new BindingsPageBlock(this);
+	public ApiFormPage(ApiEditor apiEditor, String id, String title) {
+		super(apiEditor, id, title);
 	}
-
-	protected void createFormContent(final IManagedForm managedForm) {
-		//final ScrolledForm form = managedForm.getForm();
-		//form.setText("Bindings");
-		block.createContent(managedForm);
-	}
-
-	@Override
+	
 	protected void reloadModel() {
-		super.reloadModel();
-		block.reload();
+		// DO NOTHING
+	}
+
+	protected void createFormContent(IManagedForm managedForm) {
+		// nothing to do
+	}
+
+	private boolean canPerformDirectly(String id, Control control) {
+		if (control instanceof Text) {
+			Text text = (Text) control;
+			if (id.equals(ActionFactory.CUT.getId())) {
+				text.cut();
+				return true;
+			}
+			if (id.equals(ActionFactory.COPY.getId())) {
+				text.copy();
+				return true;
+			}
+			if (id.equals(ActionFactory.PASTE.getId())) {
+				text.paste();
+				return true;
+			}
+			if (id.equals(ActionFactory.SELECT_ALL.getId())) {
+				text.selectAll();
+				return true;
+			}
+			if (id.equals(ActionFactory.DELETE.getId())) {
+				int count = text.getSelectionCount();
+				if (count == 0) {
+					int caretPos = text.getCaretPosition();
+					text.setSelection(caretPos, caretPos + 1);
+				}
+				text.insert(""); //$NON-NLS-1$
+				return true;
+			}
+		}
+		return false;
 	}
 }
