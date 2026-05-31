@@ -12,6 +12,33 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: keypath "no key" errors now honor the Missing-Key severity preference
+
+A binding keypath error ("There is no key 'x' in &lt;Component&gt;") was always
+reported at Error severity and could not be suppressed, even with the relevant
+"Missing Key on…" validation preference set to Warning or Ignore. The validation
+site computed the correct warning flag but then passed a hardcoded `false` to the
+problem, and the plain invalid-key path had no Ignore gate at all.
+
+Now the "Missing Key on extends WOComponent" preference governs these errors: set
+it to Error → error marker, Warning → warning marker, Ignore → no marker. (The
+default remains Error — a missing key is normally a real error — but it's now
+honestly controllable.) The fix routes through the new `SeverityPolicy` so the
+warning/error level and the Ignore gate use the same interpretation as every other
+validation. The long-standing per-kind quirks (NSKeyValueCoding takes its level
+from the collection severity) are preserved deliberately.
+
+### Centralize validation-severity interpretation (SeverityPolicy)
+
+Introduced `org.objectstyle.wolips.bindings.preferences.SeverityPolicy` as the
+single place that interprets a validation-severity preference value (ignore /
+warning / error, plus the OR-combine used by wrapped/mirrored problems). The
+~15 validation sites that previously hand-rolled `IGNORE.equals(...)` /
+`WARNING.equals(...)` inline now route through it. This is what made the keypath
+bug above possible (one of 15 copies drifted) and what prevents the next one — a
+new validation can't forget the Ignore gate or hardcode the level. Behaviour at
+the other sites is unchanged; covered by a focused unit test (`SeverityPolicyTest`).
+
 ### Remove the dead Velocity template engine
 
 The `org.objectstyle.wolips.templateengine` package (Velocity-based file generation for the New Component wizard) was fully dead. The live wizard path (`WOComponentCreator`) generates `.html`/`.java`/`.wod`/`.woo`/`.api` directly via text blocks — its own javadoc notes it does so "to avoid the commons-lang OSGi classloader issue," i.e. it deliberately superseded the Velocity engine, which was then left behind with zero references.

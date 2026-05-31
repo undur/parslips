@@ -261,25 +261,40 @@ public abstract class AbstractWodBinding implements IWodBinding {
             BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(bindingValue, javaFileType, javaProject, cache);
             // NTS: Technically these need to be related to every java file name in the key path
             if (!bindingValueKeyPath.isValid() || (bindingValueKeyPath.isWOComponent() && !SeverityPolicy.isIgnored(missingComponentSeverity)) || (bindingValueKeyPath.isNSKeyValueCoding() && !SeverityPolicy.isIgnored(missingNSKVCSeverity) && !bindingValueKeyPath.isNSCollection())) {
-            	boolean warning;
-            	if (bindingValueKeyPath.isValid()) {
-            		warning = false;
-            	}
-            	else if (bindingValueKeyPath.isWOComponent()) {
-            		warning = SeverityPolicy.isWarning(missingComponentSeverity);
+            	// The severity preference governing this keypath problem, split into
+            	// two roles to faithfully match the original behaviour:
+            	//   - gate: whether to report at all (Ignore suppresses) — keyed the
+            	//     same way the enclosing condition gates each kind.
+            	//   - level: warning vs. error — keyed as the original code computed it
+            	//     (note the long-standing quirk: NSKeyValueCoding takes its level
+            	//     from the collection severity, not the NSKVC severity).
+            	// A plain invalid key (concrete type lacks the key) is treated as a
+            	// "missing key on the component" — controlled by the Missing Component
+            	// preference (the UI dropdown users reach for).
+            	final String gateSeverity;
+            	final String levelSeverity;
+            	if (bindingValueKeyPath.isWOComponent()) {
+            		gateSeverity = missingComponentSeverity;
+            		levelSeverity = missingComponentSeverity;
             	}
             	else if (bindingValueKeyPath.isNSKeyValueCoding()) {
-            		warning = SeverityPolicy.isWarning(missingCollectionSeverity);
+            		gateSeverity = missingNSKVCSeverity;
+            		levelSeverity = missingCollectionSeverity;
             	}
             	else {
-            		warning = false;
+            		gateSeverity = missingComponentSeverity;
+            		levelSeverity = missingComponentSeverity;
             	}
               String invalidKey = bindingValueKeyPath.getInvalidKey();
               String validKeyPath = bindingValueKeyPath.getValidKeyPath();
               if ((validKeyPath == null || validKeyPath.length() == 0) && htmlCache != null && htmlCache.getVars().contains(invalidKey)) {
                 // the value specified is a component var
               }
-              else if (validKeyPath != null) {
+              // Honor the governing severity preference: skip entirely when set to
+              // Ignore, and report at the configured warning/error level (previously
+              // this branch hardcoded error and ignored the preference).
+              else if (validKeyPath != null && !SeverityPolicy.isIgnored(gateSeverity)) {
+                boolean warning = SeverityPolicy.isWarning(levelSeverity);
                 // Compute "did you mean?" suggestions from the valid keys
                 // on the type where resolution failed.
                 List<String> suggestions = suggestKeysForInvalidKey(bindingValueKeyPath, cache);
@@ -290,10 +305,10 @@ public abstract class AbstractWodBinding implements IWodBinding {
 
                 WodBindingValueProblem problem;
                 if (validKeyPath.length() == 0) {
-                  problem = new WodBindingValueProblem(element, bindingName, "There is no key '" + invalidKey + "' in " + javaFileType.getElementName() + suggestionSuffix, getValuePosition(), lineNumber, false);
+                  problem = new WodBindingValueProblem(element, bindingName, "There is no key '" + invalidKey + "' in " + javaFileType.getElementName() + suggestionSuffix, getValuePosition(), lineNumber, warning);
                 }
                 else {
-                  problem = new WodBindingValueProblem(element, bindingName, "There is no key '" + invalidKey + "' for the keypath '" + validKeyPath + "' in " + javaFileType.getElementName() + suggestionSuffix, getValuePosition(), lineNumber, false);
+                  problem = new WodBindingValueProblem(element, bindingName, "There is no key '" + invalidKey + "' for the keypath '" + validKeyPath + "' in " + javaFileType.getElementName() + suggestionSuffix, getValuePosition(), lineNumber, warning);
                 }
                 problem.setSuggestions(suggestions);
                 problems.add(problem);
