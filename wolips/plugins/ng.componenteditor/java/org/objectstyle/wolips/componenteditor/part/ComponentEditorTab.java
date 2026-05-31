@@ -51,7 +51,6 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
-import org.objectstyle.wolips.components.editor.IEmbeddedEditorSelected;
 
 public abstract class ComponentEditorTab extends Composite {
 
@@ -100,15 +99,6 @@ public abstract class ComponentEditorTab extends Composite {
 	
 	public void dispose() {
 		_sashColor.dispose();
-	}
-
-	public void editorSelected() {
-		if (this.getActiveEmbeddedEditor() instanceof IEmbeddedEditorSelected) {
-			{
-				IEmbeddedEditorSelected embeddedEditorSelected = (IEmbeddedEditorSelected) this.getActiveEmbeddedEditor();
-				embeddedEditorSelected.editorSelected();
-			}
-		}
 	}
 
 	public abstract IEditorInput getActiveEditorInput();

@@ -415,7 +415,6 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 
 	protected void pageChange(int newPageIndex) {
 		super.pageChange(newPageIndex);
-		componentEditorTabs[newPageIndex].editorSelected();
 	}
 
 	public ComponentEditorInput getComponentEditorInput() {

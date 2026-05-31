@@ -49,6 +49,20 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
+ * Mediator / event bus between the embedded editors of a component editor.
+ *
+ * <p>It holds the HTML and WOD document providers and notifies registered
+ * {@link IWebobjectTagListener}s when a {@code <webobject>} tag changes, so the
+ * HTML and WOD sides of a bundle template stay in sync.
+ *
+ * <p><b>By design, only the HTML and WOD editors participate here.</b> They edit
+ * two views of the same artifact (the template + its bindings) and must track
+ * each other's changes. The API ({@code .api}) and WOO ({@code .woo}) tabs are
+ * deliberately <em>standalone</em>: they edit independent files, don't share the
+ * template/wod document model, and so neither register as listeners nor provide
+ * document providers. That asymmetry is intentional, not an incomplete
+ * abstraction — don't "fix" it by wiring API/WOO in.
+ *
  * @author uli
  */
 public class ComponentEditorInteraction {
