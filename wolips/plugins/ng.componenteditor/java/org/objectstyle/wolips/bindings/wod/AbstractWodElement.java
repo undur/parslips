@@ -64,6 +64,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
@@ -289,7 +290,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     String elementName = getElementName();
     int lineNumber = getLineNumber();
 
-  	String wodMissingComponentSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.WOD_MISSING_COMPONENT_SEVERITY_KEY);
+  	String wodMissingComponentSeverity = BindingValidationPreferences.severity(PreferenceConstants.WOD_MISSING_COMPONENT_SEVERITY_KEY);
 
     // Check for tag shortcut case mismatch (e.g. user wrote "Repetition"
     // but the shortcut is defined as "repetition"). Produce the same error
@@ -307,12 +308,12 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
         problems.add(problem);
       }
     }
-  	String unusedWodElementSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.UNUSED_WOD_ELEMENT_SEVERITY_KEY);
+  	String unusedWodElementSeverity = BindingValidationPreferences.severity(PreferenceConstants.UNUSED_WOD_ELEMENT_SEVERITY_KEY);
     if (!PreferenceConstants.IGNORE.equals(unusedWodElementSeverity) && !_inline && !htmlCache.containsElementNamed(elementName)) {
       problems.add(new WodElementProblem(this, "There is no element named '" + elementName + "' in your component HTML file", getElementNamePosition(), lineNumber, PreferenceConstants.WARNING.equals(unusedWodElementSeverity)));
     }
     
-    String deprecationSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY);
+    String deprecationSeverity = BindingValidationPreferences.severity(PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY);
     if (!PreferenceConstants.IGNORE.equals(deprecationSeverity)) {
       IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
       if (BindingReflectionUtils.memberIsDeprecated(elementType)) {
@@ -347,7 +348,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 	      problems.add(problem);
 	    }
 	    else {
-	    	String wodApiProblemSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY);
+	    	String wodApiProblemSeverity = BindingValidationPreferences.severity(PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY);
 	    	if (!PreferenceConstants.IGNORE.equals(wodApiProblemSeverity)) {
 		      try {
 		        wo = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));

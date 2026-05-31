@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.Position;
-import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.wod.HtmlElementCache;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
@@ -36,7 +36,7 @@ public class HtmlCacheEntry extends AbstractCacheEntry<FuzzyXMLDocument> impleme
     IFile htmlFile = getFile();
     FuzzyXMLDocument htmlXmlDocument = _getModel();
     if (htmlXmlDocument != null && (htmlFile == null || htmlFile.exists())) {
-      String htmlErrorsSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.HTML_ERRORS_SEVERITY_KEY);
+      String htmlErrorsSeverity = BindingValidationPreferences.severity(PreferenceConstants.HTML_ERRORS_SEVERITY_KEY);
       if (!PreferenceConstants.IGNORE.equals(htmlErrorsSeverity)) {
         if (htmlFile != null && htmlFile.exists()) {
           for (HtmlProblem problem : getParserProblems()) {

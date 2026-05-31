@@ -55,9 +55,8 @@ import java.util.Set;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
-import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 
 /**
  * @author mschrag
@@ -124,7 +123,7 @@ public abstract class AbstractWodModel implements IWodModel {
 
   public List<WodProblem> getProblems(IJavaProject javaProject, IType javaFileType, TypeCache typeCache, HtmlElementCache htmlCache) throws CoreException, IOException, ApiModelException {
     List<WodProblem> problems = new LinkedList<WodProblem>();
-    boolean checkBindingValues = Activator.getDefault().getPluginPreferences().getBoolean(PreferenceConstants.VALIDATE_BINDING_VALUES);
+    boolean checkBindingValues = BindingValidationPreferences.validateBindingValues();
     fillInProblems(javaProject, javaFileType, checkBindingValues, problems, typeCache, htmlCache);
     return problems;
   }

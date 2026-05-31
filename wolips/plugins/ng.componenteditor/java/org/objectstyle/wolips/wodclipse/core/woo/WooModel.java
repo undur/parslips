@@ -24,8 +24,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.objectstyle.wolips.baseforplugins.util.CharSetUtils;
-import org.objectstyle.wolips.bindings.Activator;
-import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.eomodeler.core.model.EOModelMap;
@@ -270,7 +269,7 @@ public class WooModel {
     if (_file == null) {
     	return problems;
     }
-    boolean validateWooEncodings = Activator.getDefault().getPluginPreferences().getBoolean(PreferenceConstants.VALIDATE_WOO_ENCODINGS_KEY);
+    boolean validateWooEncodings = BindingValidationPreferences.validateWooEncodings();
     if (validateWooEncodings) {
 	    try {
 	      String componentCharset = _file.getParent().getDefaultCharset();

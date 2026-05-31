@@ -8,8 +8,8 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 import org.eclipse.ui.part.FileEditorInput;
-import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.wod.HtmlElementCache;
 import org.objectstyle.wolips.bindings.wod.HtmlElementName;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
@@ -43,7 +43,7 @@ public class WodCacheEntry extends AbstractCacheEntry<IWodModel> {
         for (WodProblem wodProblem : wodProblems) {
           WodModelUtils.createMarker(wodFile, wodProblem);
 
-          String wodErrorsInHtmlSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.WOD_ERRORS_IN_HTML_SEVERITY_KEY);
+          String wodErrorsInHtmlSeverity = BindingValidationPreferences.severity(PreferenceConstants.WOD_ERRORS_IN_HTML_SEVERITY_KEY);
           if (!PreferenceConstants.IGNORE.equals(wodErrorsInHtmlSeverity)) {
 	          // We create HTML markers for WOD problems so that you can have the
 	          // wod view closed and still see errors

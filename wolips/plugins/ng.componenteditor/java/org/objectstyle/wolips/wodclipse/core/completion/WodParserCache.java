@@ -17,11 +17,11 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.text.TextViewerUndoManager;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
-import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.BindingValidationRule;
 import org.objectstyle.wolips.bindings.wod.ITypeOwner;
@@ -404,7 +404,7 @@ public class WodParserCache implements ITypeOwner {
       _wodEntry.deleteProblems();
       _wooEntry.deleteProblems();
 
-      boolean validateEnabled = Activator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.VALIDATE_TEMPLATES_KEY);
+      boolean validateEnabled = BindingValidationPreferences.validateTemplates();
 
       if (validateEnabled) {
         _htmlEntry.validate();

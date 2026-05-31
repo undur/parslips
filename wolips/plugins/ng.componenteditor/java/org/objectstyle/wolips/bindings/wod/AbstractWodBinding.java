@@ -58,6 +58,7 @@ import org.eclipse.jface.text.Position;
 import java.util.Objects;
 import org.objectstyle.wolips.baseforplugins.util.StringUtils;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
@@ -213,12 +214,12 @@ public abstract class AbstractWodBinding implements IWodBinding {
   }
 
   public void fillInBindingProblems(IWodElement element, IApiBinding apiBinding, IJavaProject javaProject, IType javaFileType, List<WodProblem> problems, TypeCache cache, HtmlElementCache htmlCache) throws JavaModelException {
-  	String missingCollectionSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.MISSING_COLLECTION_SEVERITY_KEY);
-  	String missingComponentSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.MISSING_COMPONENT_SEVERITY_KEY);
-  	String missingNSKVCSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.MISSING_NSKVC_SEVERITY_KEY);
-    String ambiguousSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.AMBIGUOUS_SEVERITY_KEY);
-    String atOperatorSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.AT_OPERATOR_SEVERITY_KEY);
-    String helperFunctionSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.HELPER_FUNCTION_SEVERITY_KEY);
+  	String missingCollectionSeverity = BindingValidationPreferences.severity(PreferenceConstants.MISSING_COLLECTION_SEVERITY_KEY);
+  	String missingComponentSeverity = BindingValidationPreferences.severity(PreferenceConstants.MISSING_COMPONENT_SEVERITY_KEY);
+  	String missingNSKVCSeverity = BindingValidationPreferences.severity(PreferenceConstants.MISSING_NSKVC_SEVERITY_KEY);
+    String ambiguousSeverity = BindingValidationPreferences.severity(PreferenceConstants.AMBIGUOUS_SEVERITY_KEY);
+    String atOperatorSeverity = BindingValidationPreferences.severity(PreferenceConstants.AT_OPERATOR_SEVERITY_KEY);
+    String helperFunctionSeverity = BindingValidationPreferences.severity(PreferenceConstants.HELPER_FUNCTION_SEVERITY_KEY);
     if (shouldValidate()) {
       String bindingNamespace = getNamespace();
       String bindingName = getName();
@@ -360,7 +361,7 @@ public abstract class AbstractWodBinding implements IWodBinding {
 
           }
         }
-        String deprecationSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY);
+        String deprecationSeverity = BindingValidationPreferences.severity(PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY);
         if (!PreferenceConstants.IGNORE.equals(deprecationSeverity)) {
           BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(bindingValue, javaFileType, javaProject, cache);
           if (bindingValueKeyPath.isValid() && bindingValueKeyPath.getBindingKeys() != null) {
@@ -373,7 +374,7 @@ public abstract class AbstractWodBinding implements IWodBinding {
           }
         }
 
-        String invalidOGNLSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.INVALID_OGNL_SEVERITY_KEY);
+        String invalidOGNLSeverity = BindingValidationPreferences.severity(PreferenceConstants.INVALID_OGNL_SEVERITY_KEY);
         if (!PreferenceConstants.IGNORE.equals(invalidOGNLSeverity) && isOGNL()) {
           boolean inQuotes = bindingValue.startsWith("\"");
           if (inQuotes) {

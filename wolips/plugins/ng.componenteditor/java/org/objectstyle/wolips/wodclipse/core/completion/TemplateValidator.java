@@ -9,7 +9,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.JavaModelException;
 import org.objectstyle.wolips.bindings.Activator;
-import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
+import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.wod.HtmlElementName;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodModel;
@@ -92,7 +92,7 @@ public class TemplateValidator {
       if (validate) {
         IWodElement wodElement = new FuzzyXMLWodElement(element, _parsleyProject);
         if (wodElement != null) {
-          boolean validateBindingValues = Activator.getDefault().getPluginPreferences().getBoolean(PreferenceConstants.VALIDATE_BINDING_VALUES);
+          boolean validateBindingValues = BindingValidationPreferences.validateBindingValues();
           //String invalidOGNLSeverity = Activator.getDefault().getPluginPreferences().getString(PreferenceConstants.INVALID_OGNL_SEVERITY_KEY);
           List<WodProblem> wodProblems = new LinkedList<WodProblem>();
           try {
