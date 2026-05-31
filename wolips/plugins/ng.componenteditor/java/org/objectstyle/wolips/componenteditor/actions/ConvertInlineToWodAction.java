@@ -10,7 +10,7 @@ import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.refactoring.ConvertInlineToWodRefactoring;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+import org.objectstyle.wolips.editor.wod.WodEditor;
 
 public class ConvertInlineToWodAction extends AbstractTemplateAction {
 	@Override

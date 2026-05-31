@@ -7,7 +7,7 @@ import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddActionDialog;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddActionInfo;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+import org.objectstyle.wolips.editor.wod.WodEditor;
 
 public class AddActionAction extends AbstractTemplateAction {
 	@Override

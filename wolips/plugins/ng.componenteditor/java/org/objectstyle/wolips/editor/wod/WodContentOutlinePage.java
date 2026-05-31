@@ -41,7 +41,7 @@
  * Group, please see <http://objectstyle.org/> .
  *  
  */
-package org.objectstyle.wolips.wodclipse.editor;
+package org.objectstyle.wolips.editor.wod;
 
 import java.util.ArrayList;
 import java.util.Iterator;

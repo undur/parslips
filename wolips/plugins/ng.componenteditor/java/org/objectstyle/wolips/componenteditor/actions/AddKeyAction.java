@@ -7,7 +7,7 @@ import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyDialog;
 import org.objectstyle.wolips.wodclipse.core.refactoring.AddKeyInfo;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+import org.objectstyle.wolips.editor.wod.WodEditor;
 
 public class AddKeyAction extends AbstractTemplateAction {
 	@Override

@@ -18,7 +18,7 @@ import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.preferences.WodFormattingPreferences;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+import org.objectstyle.wolips.editor.wod.WodEditor;
 
 /**
  * <P>

@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.wodclipse.editor;
+package org.objectstyle.wolips.editor.wod;
 
 import java.util.LinkedList;
 import java.util.List;

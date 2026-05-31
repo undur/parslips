@@ -14,7 +14,7 @@ import org.eclipse.ui.part.PageBookView;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.util.ICursorPositionListener;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+import org.objectstyle.wolips.editor.wod.WodEditor;
 
 public class BindingsInspectorPageBookView extends PageBookView implements ICursorPositionListener {
 	private TextEditor _lastEditor;

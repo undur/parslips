@@ -10,7 +10,7 @@ import org.objectstyle.wolips.templateeditor.TemplateEditor;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.refactoring.ConvertWodToInlineRefactoring;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+import org.objectstyle.wolips.editor.wod.WodEditor;
 
 /**
  * Editor action that converts a single WOD-reference tag

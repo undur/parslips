@@ -95,7 +95,7 @@
 
 <!-- WOD Editor (standalone) -->
       <editor
-            class="org.objectstyle.wolips.wodclipse.editor.WodEditor"
+            class="org.objectstyle.wolips.editor.wod.WodEditor"
             contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             default="false"
             icon="icons/parsley16.png"

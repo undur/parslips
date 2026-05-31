@@ -12,7 +12,7 @@ import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.part.FileEditorInput;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
-import org.objectstyle.wolips.wodclipse.editor.WodAnnotationHover;
+import org.objectstyle.wolips.editor.wod.WodAnnotationHover;
 
 import tk.eclipse.plugin.htmleditor.ColorProvider;
 import tk.eclipse.plugin.htmleditor.HTMLHyperlinkDetector;

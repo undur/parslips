@@ -7,7 +7,7 @@ import org.eclipse.ui.actions.ActionDelegate;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.componenteditor.part.HtmlWodTab;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
-import org.objectstyle.wolips.wodclipse.editor.WodEditor;
+import org.objectstyle.wolips.editor.wod.WodEditor;
 
 /**
  * This is the superclass of actions that need access to both the template

@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.wodclipse.editor;
+package org.objectstyle.wolips.editor.wod;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IWorkspace;
