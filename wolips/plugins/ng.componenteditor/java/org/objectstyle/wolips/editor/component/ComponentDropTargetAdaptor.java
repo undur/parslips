@@ -14,7 +14,7 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.graphics.Point;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.componenteditor.actions.ComponentInserter;
+import org.objectstyle.wolips.editor.actions.ComponentInserter;
 import org.objectstyle.wolips.editor.template.TemplateEditor;
 
 public class ComponentDropTargetAdaptor extends DropTargetAdapter {

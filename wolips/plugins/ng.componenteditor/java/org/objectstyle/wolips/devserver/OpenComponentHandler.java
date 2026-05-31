@@ -7,7 +7,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.swt.widgets.Display;
-import org.objectstyle.wolips.componenteditor.actions.OpenComponentAction;
+import org.objectstyle.wolips.editor.actions.OpenComponentAction;
 
 /**
  * Opens a component by name in the Parsley component editor.

@@ -24,7 +24,7 @@ import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
-import org.objectstyle.wolips.componenteditor.actions.RenameComponentAction;
+import org.objectstyle.wolips.editor.actions.RenameComponentAction;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;

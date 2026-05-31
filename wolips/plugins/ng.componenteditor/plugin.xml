@@ -303,37 +303,37 @@
             <separator name="group1"/>
             <separator name="group2"/>
          </menu>
-         <action class="org.objectstyle.wolips.componenteditor.actions.FormatAction"
+         <action class="org.objectstyle.wolips.editor.actions.FormatAction"
                definitionId="ng.componenteditor.editors.command.format"
                id="ng.componenteditor.editors.action.format"
                label="Format"
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.QuickRenameElementAction"
+         <action class="org.objectstyle.wolips.editor.actions.QuickRenameElementAction"
                definitionId="ng.componenteditor.editors.command.refactorRename"
                id="ng.componenteditor.editors.action.refactorRename"
                label="Rename..."
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertInlineToWodAction"
+         <action class="org.objectstyle.wolips.editor.actions.ConvertInlineToWodAction"
                definitionId="ng.componenteditor.editors.command.refactorConvertToWod"
                id="ng.componenteditor.editors.action.refactorConvertToWod"
                label="Convert Inline to WOD"
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertWodToInlineAction"
+         <action class="org.objectstyle.wolips.editor.actions.ConvertWodToInlineAction"
                definitionId="ng.componenteditor.editors.command.refactorConvertToInline"
                id="ng.componenteditor.editors.action.refactorConvertToInline"
                label="Convert WOD to Inline"
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.ExtractComponentAction"
+         <action class="org.objectstyle.wolips.editor.actions.ExtractComponentAction"
                definitionId="ng.componenteditor.editors.command.extractComponent"
                id="ng.componenteditor.editors.action.extractComponent"
                label="Extract Component..."
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.ExtractWrapperAction"
+         <action class="org.objectstyle.wolips.editor.actions.ExtractWrapperAction"
                definitionId="ng.componenteditor.editors.command.extractWrapper"
                id="ng.componenteditor.editors.action.extractWrapper"
                label="Extract Wrapper..."
                menubarPath="edit/ng.componenteditor.refactorMenuContribution/group1"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertHtmlTagAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertHtmlTagAction"
                icon="icons/anybasictag.png"
                id="ng.componenteditor.actions.InsertHtmlTagAction"
                label="Insert Tag"
@@ -341,7 +341,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert Tag"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertAnyComponentAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertAnyComponentAction"
                icon="icons/anycomponent.png"
                id="ng.componenteditor.actions.InsertAnyComponentAction"
                definitionId="ng.componenteditor.editors.command.InsertAnyComponentAction"
@@ -350,7 +350,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOFormAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOFormAction"
                icon="icons/form.png"
                id="ng.componenteditor.actions.InsertComponentWOForm"
                label="Insert WOForm Component"
@@ -358,7 +358,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOForm Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOBrowserAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOBrowserAction"
                icon="icons/browser.png"
                id="ng.componenteditor.actions.InsertComponentWOBrowser"
                label="Insert WOBrowser Component"
@@ -366,7 +366,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOBrowser Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOPopUpButtonAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOPopUpButtonAction"
                icon="icons/popup.png"
                id="ng.componenteditor.actions.InsertComponentWOPopUpButton"
                label="Insert WOPopUpButton Component"
@@ -374,7 +374,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOPopUpButton Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOTextAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOTextAction"
                icon="icons/textarea.png"
                id="ng.componenteditor.actions.InsertComponentWOText"
                label="Insert WOText Component"
@@ -382,7 +382,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOText Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOCheckBoxAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOCheckBoxAction"
                icon="icons/checkbox.png"
                id="ng.componenteditor.actions.InsertComponentWOCheckBox"
                label="Insert WOCheckBox Component"
@@ -390,7 +390,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOCheckBox Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWORadioButtonAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWORadioButtonAction"
                icon="icons/radio.png"
                id="ng.componenteditor.actions.InsertComponentWORadioButton"
                label="Insert WORadioButton Component"
@@ -398,7 +398,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WORadioButton Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOSubmitButtonAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOSubmitButtonAction"
                icon="icons/submit.png"
                id="ng.componenteditor.actions.InsertComponentWOSubmitButton"
                label="Insert WOSubmitButton Component"
@@ -406,7 +406,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOSubmitButton Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOImageAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOImageAction"
                icon="icons/image.png"
                id="ng.componenteditor.actions.InsertComponentWOImage"
                label="Insert WOImage Component"
@@ -414,7 +414,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOImage Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOTextFieldAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOTextFieldAction"
                icon="icons/textfield.png"
                id="ng.componenteditor.actions.InsertComponentWOTextField"
                label="Insert WOTextField Component"
@@ -422,7 +422,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOTextField Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOHyperlinkAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOHyperlinkAction"
                icon="icons/hyperlink.png"
                id="ng.componenteditor.actions.InsertComponentWOHyperlink"
                label="Insert WOHyperlink Component"
@@ -430,7 +430,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOHyperlink Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWORepetitionAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWORepetitionAction"
                icon="icons/repetition.png"
                id="ng.componenteditor.actions.InsertComponentWORepetition"
                label="Insert WORepetition Component"
@@ -438,7 +438,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WORepetition Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOConditionalAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOConditionalAction"
                icon="icons/conditional.png"
                id="ng.componenteditor.actions.InsertComponentWOConditional"
                label="Insert WOConditional Component"
@@ -446,7 +446,7 @@
                style="push"
                toolbarPath="/Normal/additions"
                tooltip="Insert WOConditional Component"/>
-         <action class="org.objectstyle.wolips.componenteditor.actions.InsertComponentWOStringAction"
+         <action class="org.objectstyle.wolips.editor.actions.InsertComponentWOStringAction"
                icon="icons/string.png"
                id="ng.componenteditor.actions.InsertComponentWOString"
                label="Insert WOString Component"
@@ -481,7 +481,7 @@
       <actionSet id="ng.componenteditor.actionSet"
             label="Parsley Action Sets"
             visible="true">
-         <action class="org.objectstyle.wolips.componenteditor.actions.OpenComponentAction"
+         <action class="org.objectstyle.wolips.editor.actions.OpenComponentAction"
                definitionId="ng.componenteditor.openComponent"
                icon="icons/parsley16.png"
                id="ng.componenteditor.openComponent"
@@ -535,7 +535,7 @@
             id="ng.componenteditor.renameComponent.woContribution"
             nameFilter="*.wo"
             objectClass="org.eclipse.core.resources.IFolder">
-         <action class="org.objectstyle.wolips.componenteditor.actions.RenameComponentAction"
+         <action class="org.objectstyle.wolips.editor.actions.RenameComponentAction"
                enablesFor="1"
                icon="icons/parsley16.png"
                id="ng.componenteditor.renameComponentAction"
@@ -546,7 +546,7 @@
             id="ng.componenteditor.convertBundleToInline.woContribution"
             nameFilter="*.wo"
             objectClass="org.eclipse.core.resources.IFolder">
-         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertBundleToInlineAction"
+         <action class="org.objectstyle.wolips.editor.actions.ConvertBundleToInlineAction"
                enablesFor="*"
                icon="icons/parsley16.png"
                id="ng.componenteditor.convertBundleToInlineAction"
@@ -556,7 +556,7 @@
       <objectContribution adaptable="false"
             id="ng.componenteditor.convertBundleToInline.folderContribution"
             objectClass="org.eclipse.core.resources.IFolder">
-         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertBundleToInlineAction"
+         <action class="org.objectstyle.wolips.editor.actions.ConvertBundleToInlineAction"
                enablesFor="1"
                icon="icons/parsley16.png"
                id="ng.componenteditor.convertAllBundlesToInlineAction"
@@ -567,7 +567,7 @@
             id="ng.componenteditor.convertInlineToBundle.htmlContribution"
             nameFilter="*.html"
             objectClass="org.eclipse.core.resources.IFile">
-         <action class="org.objectstyle.wolips.componenteditor.actions.ConvertInlineToBundleAction"
+         <action class="org.objectstyle.wolips.editor.actions.ConvertInlineToBundleAction"
                enablesFor="*"
                icon="icons/parsley16.png"
                id="ng.componenteditor.convertInlineToBundleAction"
