@@ -66,11 +66,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     prefs.setDefault(PreferenceConstants.COMMENT, "63,127,95");
     prefs.setDefault(PreferenceConstants.UNKNOWN, "0,0,0");
 
-    prefs.setDefault(PreferenceConstants.SPACES_AROUND_EQUALS, false);
-    prefs.setDefault(PreferenceConstants.INDENT_SIZE, 2);
-    prefs.setDefault(PreferenceConstants.INDENT_TABS, false);
-    prefs.setDefault(PreferenceConstants.LOWERCASE_ATTRIBUTES, true);
-    prefs.setDefault(PreferenceConstants.LOWERCASE_TAGS, true);
-    prefs.setDefault(PreferenceConstants.STICKY_WOTAGS, false);
+    // Formatting defaults are owned by WodFormattingPreferences (co-located with
+    // its typed accessors); reference them here so there's a single source of truth.
+    prefs.setDefault(PreferenceConstants.SPACES_AROUND_EQUALS, WodFormattingPreferences.DEFAULT_SPACES_AROUND_EQUALS);
+    prefs.setDefault(PreferenceConstants.INDENT_SIZE, WodFormattingPreferences.DEFAULT_INDENT_SIZE);
+    prefs.setDefault(PreferenceConstants.INDENT_TABS, WodFormattingPreferences.DEFAULT_INDENT_TABS);
+    prefs.setDefault(PreferenceConstants.LOWERCASE_ATTRIBUTES, WodFormattingPreferences.DEFAULT_LOWERCASE_ATTRIBUTES);
+    prefs.setDefault(PreferenceConstants.LOWERCASE_TAGS, WodFormattingPreferences.DEFAULT_LOWERCASE_TAGS);
+    prefs.setDefault(PreferenceConstants.STICKY_WOTAGS, WodFormattingPreferences.DEFAULT_STICKY_WOTAGS);
   }
 }

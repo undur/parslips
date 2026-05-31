@@ -19,8 +19,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.templateeditor.InlineWodTagInfo;
-import org.objectstyle.wolips.wodclipse.core.Activator;
-import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
+import org.objectstyle.wolips.wodclipse.core.preferences.WodFormattingPreferences;
 
 import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
 import jp.aonir.fuzzyxml.FuzzyXMLDocument;
@@ -242,7 +241,7 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
     String last = dim[2];
     String attr = dim[3];
     boolean inTag = false;
-    boolean spacesAroundEquals = Activator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.SPACES_AROUND_EQUALS);
+    boolean spacesAroundEquals = WodFormattingPreferences.spacesAroundEquals();
     String equals = spacesAroundEquals?" = ":"=";
 
     try {

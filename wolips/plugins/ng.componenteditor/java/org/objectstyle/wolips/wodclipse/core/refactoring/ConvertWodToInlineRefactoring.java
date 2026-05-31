@@ -17,9 +17,8 @@ import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.variables.ParsleyProject;
-import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
-import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
+import org.objectstyle.wolips.wodclipse.core.preferences.WodFormattingPreferences;
 import org.objectstyle.wolips.wodclipse.core.util.WodDocumentUtils;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
@@ -112,8 +111,7 @@ public class ConvertWodToInlineRefactoring implements IRunnableWithProgress {
 			}
 
 			// Read the "spaces around equals" formatting preference
-			boolean spacesAroundEquals = Activator.getDefault().getPreferenceStore()
-					.getBoolean(PreferenceConstants.SPACES_AROUND_EQUALS);
+			boolean spacesAroundEquals = WodFormattingPreferences.spacesAroundEquals();
 
 			// Build the inline open tag content (everything between < and >)
 			String elementType = wodElement.getElementType();

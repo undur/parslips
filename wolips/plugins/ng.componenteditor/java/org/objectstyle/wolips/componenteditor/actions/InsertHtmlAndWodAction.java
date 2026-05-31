@@ -17,8 +17,7 @@ import org.objectstyle.wolips.bindings.wod.SimpleWodBinding;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.templateeditor.TemplateEditor;
-import org.objectstyle.wolips.wodclipse.core.Activator;
-import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
+import org.objectstyle.wolips.wodclipse.core.preferences.WodFormattingPreferences;
 import org.objectstyle.wolips.wodclipse.editor.WodEditor;
 
 /**
@@ -142,8 +141,7 @@ public abstract class InsertHtmlAndWodAction extends AbstractTemplateAction {
 			ITextSelection teDocTSel = (ITextSelection) te.getSourceEditor().getSelectionProvider().getSelection();
 
 			// Read the "spaces around equals" formatting preference
-			boolean spacesAroundEquals = Activator.getDefault().getPreferenceStore()
-					.getBoolean(PreferenceConstants.SPACES_AROUND_EQUALS);
+			boolean spacesAroundEquals = WodFormattingPreferences.spacesAroundEquals();
 
 			// insert the WebObjects component into the template portion.
 			try {

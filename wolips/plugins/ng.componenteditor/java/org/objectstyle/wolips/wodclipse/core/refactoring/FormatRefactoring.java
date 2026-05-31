@@ -5,11 +5,9 @@ import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IDocument;
-import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
-import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
+import org.objectstyle.wolips.wodclipse.core.preferences.WodFormattingPreferences;
 
 import jp.aonir.fuzzyxml.FuzzyXMLDocType;
 import jp.aonir.fuzzyxml.FuzzyXMLDocument;
@@ -36,18 +34,17 @@ public class FormatRefactoring implements IRunnableWithProgress {
       FuzzyXMLElement documentElement = htmlModel.getDocumentElement();
       IDocument htmlDocument = _cache.getHtmlEntry().getDocument();
 
-      IPreferenceStore prefs = Activator.getDefault().getPreferenceStore();
       RenderContext renderContext = new RenderContext(true);
       renderContext.setShowNewlines(true);
-      renderContext.setIndentSize(prefs.getInt(PreferenceConstants.INDENT_SIZE));
-      renderContext.setIndentTabs(prefs.getBoolean(PreferenceConstants.INDENT_TABS));
+      renderContext.setIndentSize(WodFormattingPreferences.indentSize());
+      renderContext.setIndentTabs(WodFormattingPreferences.indentTabs());
       renderContext.setTrim(true);
-      renderContext.setLowercaseAttributes(prefs.getBoolean(PreferenceConstants.LOWERCASE_ATTRIBUTES));
-      renderContext.setLowercaseTags(prefs.getBoolean(PreferenceConstants.LOWERCASE_TAGS));
-      renderContext.setSpacesAroundEquals(prefs.getBoolean(PreferenceConstants.SPACES_AROUND_EQUALS));
+      renderContext.setLowercaseAttributes(WodFormattingPreferences.lowercaseAttributes());
+      renderContext.setLowercaseTags(WodFormattingPreferences.lowercaseTags());
+      renderContext.setSpacesAroundEquals(WodFormattingPreferences.spacesAroundEquals());
       renderContext.setSpaceInEmptyTags(true);
       renderContext.setAddMissingQuotes(true);
-      renderContext.setDelegate(new WOHTMLRenderDelegate(prefs.getBoolean(PreferenceConstants.STICKY_WOTAGS)));
+      renderContext.setDelegate(new WOHTMLRenderDelegate(WodFormattingPreferences.stickyWOTags()));
 
       StringBuffer htmlBuffer = new StringBuffer();
       FuzzyXMLDocType docType = htmlModel.getDocumentType();

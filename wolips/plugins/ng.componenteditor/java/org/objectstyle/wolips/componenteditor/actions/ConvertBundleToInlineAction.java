@@ -28,8 +28,7 @@ import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.variables.ParsleyProject;
-import org.objectstyle.wolips.wodclipse.core.Activator;
-import org.objectstyle.wolips.wodclipse.core.preferences.PreferenceConstants;
+import org.objectstyle.wolips.wodclipse.core.preferences.WodFormattingPreferences;
 import org.objectstyle.wolips.wodclipse.core.refactoring.ConvertBundleToInlineTransformer;
 import org.objectstyle.wolips.wodclipse.core.refactoring.ConvertBundleToInlineTransformer.ConversionResult;
 import org.objectstyle.wolips.wodclipse.core.util.WodModelUtils;
@@ -201,8 +200,7 @@ public class ConvertBundleToInlineAction implements IObjectActionDelegate {
 		}
 
 		// Read the "spaces around equals" formatting preference
-		boolean spacesAroundEquals = Activator.getDefault().getPreferenceStore()
-				.getBoolean(PreferenceConstants.SPACES_AROUND_EQUALS);
+		boolean spacesAroundEquals = WodFormattingPreferences.spacesAroundEquals();
 
 		// Transform HTML
 		ConversionResult result = ConvertBundleToInlineTransformer.convert(
