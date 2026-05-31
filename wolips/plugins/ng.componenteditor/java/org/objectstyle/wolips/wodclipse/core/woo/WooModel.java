@@ -27,7 +27,7 @@ import org.objectstyle.wolips.baseforplugins.util.CharSetUtils;
 import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
-import org.objectstyle.wolips.eomodeler.core.model.EOModelMap;
+import org.objectstyle.wolips.wodclipse.core.woo.eomodel.EOModelMap;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 public class WooModel {
   public static final String IS_DIRTY = "IS_DIRTY";
@@ -354,7 +354,7 @@ public class WooModel {
    */
   @SuppressWarnings("rawtypes")
   private static java.util.Map parseSimplePlist(String text) throws IOException {
-    java.util.Map<String, String> map = new org.objectstyle.wolips.eomodeler.core.model.PropertyListMap<>();
+    java.util.Map<String, String> map = new org.objectstyle.wolips.wodclipse.core.woo.eomodel.PropertyListMap<>();
     int i = 0;
     int len = text.length();
 

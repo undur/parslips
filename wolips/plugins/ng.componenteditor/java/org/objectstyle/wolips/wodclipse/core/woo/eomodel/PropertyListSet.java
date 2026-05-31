@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.eomodeler.core.model;
+package org.objectstyle.wolips.wodclipse.core.woo.eomodel;
 
 import java.util.Collection;
 import java.util.TreeSet;

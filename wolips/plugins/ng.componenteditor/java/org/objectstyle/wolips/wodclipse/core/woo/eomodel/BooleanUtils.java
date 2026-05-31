@@ -47,14 +47,32 @@
  * Group, please see <http://objectstyle.org/>.
  *  
  */
-package org.objectstyle.wolips.eomodeler.core.model;
+package org.objectstyle.wolips.wodclipse.core.woo.eomodel;
 
-public class EOModelException extends Exception {
-	public EOModelException(String message) {
-		this(message, null);
+public class BooleanUtils {
+	public static Boolean isTrue(String strValue) {
+		return "y".equalsIgnoreCase(strValue) || "yes".equalsIgnoreCase(strValue) || "true".equalsIgnoreCase(strValue);
+	}
+	
+	public static Boolean isFalse(String strValue) {
+		return "n".equalsIgnoreCase(strValue) || "no".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue);
+	}
+	
+	public static Boolean negate(Boolean _value) {
+		Boolean negatedValue;
+		if (_value == null) {
+			negatedValue = Boolean.TRUE;
+		} else {
+			negatedValue = Boolean.valueOf(!_value.booleanValue());
+		}
+		return negatedValue;
 	}
 
-	public EOModelException(String message, Throwable throwable) {
-		super(message, throwable);
+	public static boolean isTrue(Boolean _bool) {
+		return (_bool != null && _bool.booleanValue());
+	}
+
+	public static boolean isFalse(Boolean _bool) {
+		return (_bool == null || !_bool.booleanValue());
 	}
 }
