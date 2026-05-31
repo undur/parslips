@@ -12,7 +12,7 @@ import org.eclipse.ui.part.IPage;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.PageBookView;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditor;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.util.ICursorPositionListener;
 import org.objectstyle.wolips.editor.wod.WodEditor;
 

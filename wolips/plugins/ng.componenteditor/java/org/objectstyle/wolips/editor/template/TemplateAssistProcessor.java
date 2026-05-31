@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.templateeditor;
+package org.objectstyle.wolips.editor.template;
 
 import java.util.ArrayList;
 import java.util.HashMap;

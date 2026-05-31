@@ -19,7 +19,7 @@ import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.locate.LocateException;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
 /**

@@ -83,8 +83,8 @@
 
 <!-- Template Editor (standalone) -->
       <editor
-            class="org.objectstyle.wolips.templateeditor.TemplateEditor"
-            contributorClass="org.objectstyle.wolips.templateeditor.TemplateEditorContributor"
+            class="org.objectstyle.wolips.editor.template.TemplateEditor"
+            contributorClass="org.objectstyle.wolips.editor.template.TemplateEditorContributor"
             default="false"
             extensions="html,xhtml"
             icon="icons/html.png"
@@ -212,7 +212,7 @@
       <handler commandId="ng.componenteditor.editors.toapi"
             class="org.objectstyle.wolips.componenteditor.editormenu.SwitchToApiHandler"/>
       <handler commandId="ng.componenteditor.action.openDeclaration"
-            class="org.objectstyle.wolips.templateeditor.OpenDeclarationHandler"/>
+            class="org.objectstyle.wolips.editor.template.OpenDeclarationHandler"/>
    </extension>
 
    <extension point="org.eclipse.ui.bindings">

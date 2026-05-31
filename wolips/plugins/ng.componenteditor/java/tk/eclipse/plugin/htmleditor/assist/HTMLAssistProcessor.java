@@ -18,7 +18,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IFileEditorInput;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
-import org.objectstyle.wolips.templateeditor.InlineWodTagInfo;
+import org.objectstyle.wolips.editor.template.InlineWodTagInfo;
 import org.objectstyle.wolips.wodclipse.core.preferences.WodFormattingPreferences;
 
 import jp.aonir.fuzzyxml.FuzzyXMLAttribute;

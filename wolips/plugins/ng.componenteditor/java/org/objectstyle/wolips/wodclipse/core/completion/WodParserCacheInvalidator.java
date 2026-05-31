@@ -19,7 +19,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.swt.widgets.Display;
 import org.objectstyle.wolips.bindings.Activator;
-import org.objectstyle.wolips.templateeditor.TemplateAssistProcessor;
+import org.objectstyle.wolips.editor.template.TemplateAssistProcessor;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 
 public class WodParserCacheInvalidator implements IResourceChangeListener, IResourceDeltaVisitor {

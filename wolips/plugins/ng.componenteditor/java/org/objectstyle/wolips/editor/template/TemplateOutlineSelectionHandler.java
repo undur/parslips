@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.templateeditor;
+package org.objectstyle.wolips.editor.template;
 
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;

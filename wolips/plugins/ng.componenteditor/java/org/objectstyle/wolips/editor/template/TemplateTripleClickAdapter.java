@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.templateeditor;
+package org.objectstyle.wolips.editor.template;
 
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;

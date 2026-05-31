@@ -15,7 +15,7 @@ import org.eclipse.swt.graphics.Point;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.componenteditor.actions.ComponentInserter;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
 
 public class ComponentDropTargetAdaptor extends DropTargetAdapter {
 	private ComponentEditor _componentEditor;

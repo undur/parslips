@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.templateeditor;
+package org.objectstyle.wolips.editor.template;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;

@@ -12,7 +12,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Shell;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.document.ITextWOEditor;
 
 public class BindingsTextDropHandler extends AbstractBindingsDropHandler<IWodElement, IRegion, Annotation, StyledText> implements MenuListener {

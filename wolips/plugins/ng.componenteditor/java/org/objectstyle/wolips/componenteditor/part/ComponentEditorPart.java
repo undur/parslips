@@ -76,7 +76,7 @@ import org.objectstyle.wolips.baseforuiplugins.IEditorTarget;
 import org.objectstyle.wolips.editor.framework.ComponentEditorInteraction;
 import org.objectstyle.wolips.editor.framework.IComponentEditor;
 import org.objectstyle.wolips.components.input.ComponentEditorInput;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
 import org.objectstyle.wolips.editor.wod.WodEditor;
 
 /**

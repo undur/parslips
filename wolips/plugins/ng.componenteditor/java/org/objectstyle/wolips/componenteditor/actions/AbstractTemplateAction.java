@@ -6,7 +6,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.actions.ActionDelegate;
 import org.objectstyle.wolips.componenteditor.part.ComponentEditorPart;
 import org.objectstyle.wolips.componenteditor.part.HtmlWodTab;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
 import org.objectstyle.wolips.editor.wod.WodEditor;
 
 /**

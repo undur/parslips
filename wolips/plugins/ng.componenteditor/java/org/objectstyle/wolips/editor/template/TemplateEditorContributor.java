@@ -1,4 +1,4 @@
-package org.objectstyle.wolips.templateeditor;
+package org.objectstyle.wolips.editor.template;
 
 import tk.eclipse.plugin.htmleditor.editors.HTMLEditorContributor;
 

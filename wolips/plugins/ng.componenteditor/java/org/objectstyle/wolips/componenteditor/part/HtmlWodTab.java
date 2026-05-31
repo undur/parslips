@@ -58,7 +58,7 @@ import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.components.input.ComponentEditorFileEditorInput;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.editor.wod.WodEditor;
 

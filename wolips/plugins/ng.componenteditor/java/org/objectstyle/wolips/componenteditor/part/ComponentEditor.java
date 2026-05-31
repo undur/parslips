@@ -73,8 +73,8 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.components.input.ComponentEditorInput;
-import org.objectstyle.wolips.templateeditor.TemplateEditor;
-import org.objectstyle.wolips.templateeditor.TemplateSourceEditor;
+import org.objectstyle.wolips.editor.template.TemplateEditor;
+import org.objectstyle.wolips.editor.template.TemplateSourceEditor;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 import org.objectstyle.wolips.wodclipse.core.document.IWOEditor;
 
