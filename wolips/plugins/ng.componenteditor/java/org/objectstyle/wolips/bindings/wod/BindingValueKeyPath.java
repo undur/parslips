@@ -172,6 +172,13 @@ public class BindingValueKeyPath {
             // "did you mean?" suggestions via StringDistance.
             _invalidKeyType = currentType;
 
+            // NOTE: BindingReflectionUtils.isNSKeyValueCoding() is a deprecated
+            // stub that always returns false (ng-objects does not use
+            // NSKeyValueCoding type detection). So in practice this branch — and
+            // the downstream "missing NSKVC" severity wiring — fires ONLY for the
+            // java.lang.Object case below: untyped / Object-returning keypaths,
+            // where we can't statically know the key is invalid. It is NOT dead:
+            // java.lang.Object-typed keys are common. The NSKVC half is vestigial.
             if (BindingReflectionUtils.isNSKeyValueCoding(currentType, cache) || "java.lang.Object".equals(currentType.getFullyQualifiedName())) {
               _nsKVC = true;
               if (BindingReflectionUtils.isNSCollection(currentType, cache)) {

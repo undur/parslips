@@ -1066,6 +1066,17 @@ Fixed a long-standing intermittent bug where WOD validation would report false e
 
 Standalone templates (`.html` files not inside `.wo` folders) now have full editor support: **autocomplete**, **keypath validation**, and **build-time validation** — all on par with traditional `.wo` folder components. This is new territory beyond what WOLips ever supported, and a key enabler for ng-objects, where single-file templates are the primary component format.
 
+> **Correction (later):** the "build-time validation" described in this entry no
+> longer exists. The `WodBuilder.handleWoappResources()` / `handleSource()` methods
+> cited below were removed in *"Remove dead WOLips builder infrastructure"* (above),
+> because no builder was ever registered in this plugin to invoke them. Validation
+> is in fact **editor/save-time only**: it runs when a component is open in an editor
+> (via `WodParserCache`) or when a Java/API change touches an *open* component editor
+> (via `JavaChangeRevalidator`). There is no project-wide build pass and no
+> build-triggered stale-marker sweep. Closed components are not revalidated until
+> reopened. See `proposal-revalidate.md` and `proposal-wiring-audit.md` (findings
+> 2.1–2.4) for the gap and the planned fix.
+
 **What works now:**
 - Inline `wo:` tag autocomplete with correct element type filtering (only WOElement/NGElement subclasses)
 - Keypath completion against the component's Java class (or the base component class for classless templates)
