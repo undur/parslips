@@ -16,7 +16,12 @@ import org.objectstyle.wolips.editor.actions.OpenComponentAction;
  * <ul>
  *   <li>{@code component} — the component (type) name (required)</li>
  *   <li>{@code lineNumber} — 1-based line in the component's HTML template to
- *       reveal (optional; ignored for WOD-based bundle templates)</li>
+ *       reveal (optional)</li>
+ *   <li>{@code offset} — 0-based character offset into the HTML template to place
+ *       the caret on precisely; takes precedence over {@code lineNumber} when given
+ *       (optional). The render heat map's inspect mode sends this.</li>
+ *   <li>{@code length} — characters to select from {@code offset} (optional, default
+ *       0 = caret only); used to select the element's source span</li>
  *   <li>{@code app} — application/project name (optional hint)</li>
  * </ul>
  *
@@ -37,12 +42,17 @@ class OpenComponentHandler implements DevServerHandler {
 			return;
 		}
 		final String appName = params.get("app");
-		final int lineNumber = parseLineNumber(params.get("lineNumber"));
+		final int lineNumber = parseInt(params.get("lineNumber"), -1);
+		// Optional precise position: a character offset into the HTML template (and an
+		// optional selection length). When present it lands the caret exactly on the
+		// element rather than just its line; the render heat map's inspect mode sends it.
+		final int offset = parseInt(params.get("offset"), -1);
+		final int length = parseInt(params.get("length"), 0);
 
 		Display.getDefault().asyncExec(() -> {
 			IJavaProject javaProject = resolveProject(appName);
 			if (javaProject != null) {
-				OpenComponentAction.openComponentWithTypeNamed(javaProject, componentName, lineNumber);
+				OpenComponentAction.openComponentWithTypeNamed(javaProject, componentName, lineNumber, offset, length);
 			}
 			else {
 				// No specific project — try each open one until the action
@@ -55,7 +65,7 @@ class OpenComponentHandler implements DevServerHandler {
 					}
 					IJavaProject jp = JavaCore.create(project);
 					if (jp != null && jp.exists()) {
-						OpenComponentAction.openComponentWithTypeNamed(jp, componentName, lineNumber);
+						OpenComponentAction.openComponentWithTypeNamed(jp, componentName, lineNumber, offset, length);
 					}
 				}
 			}
@@ -63,18 +73,18 @@ class OpenComponentHandler implements DevServerHandler {
 	}
 
 	/**
-	 * Parses the optional {@code lineNumber} parameter, returning {@code -1}
-	 * (meaning "no navigation") when it's absent or not a number.
+	 * Parses an optional integer parameter, returning {@code fallback} when it's
+	 * absent or not a number.
 	 */
-	private static int parseLineNumber(String lineNumberStr) {
-		if (lineNumberStr == null || lineNumberStr.isEmpty()) {
-			return -1;
+	private static int parseInt(String value, int fallback) {
+		if (value == null || value.isEmpty()) {
+			return fallback;
 		}
 		try {
-			return Integer.parseInt(lineNumberStr);
+			return Integer.parseInt(value);
 		}
 		catch (NumberFormatException e) {
-			return -1;
+			return fallback;
 		}
 	}
 

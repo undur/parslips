@@ -185,6 +185,24 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 	 *                    {@code <= 0} to just open the component without navigating
 	 */
 	public static void openComponentWithTypeNamed(IJavaProject javaProject, String typeName, int lineNumber) {
+		openComponentWithTypeNamed(javaProject, typeName, lineNumber, -1, 0);
+	}
+
+	/**
+	 * As {@link #openComponentWithTypeNamed(IJavaProject, String, int)}, but able to
+	 * reveal an exact <em>character offset</em> (and optionally select a span) in the
+	 * HTML template rather than just a line.
+	 *
+	 * <p>An offset lands the cursor precisely on the element — not merely the line
+	 * containing it — and a non-zero {@code length} selects the element's source span
+	 * (e.g. its whole tag). When {@code offset >= 0} it takes precedence over
+	 * {@code lineNumber}; otherwise we fall back to line navigation (what the
+	 * exception page sends). Both being absent just opens the component.
+	 *
+	 * @param offset 0-based character offset into the HTML template, or {@code < 0} for none
+	 * @param length number of characters to select from {@code offset} (0 = caret only)
+	 */
+	public static void openComponentWithTypeNamed(IJavaProject javaProject, String typeName, int lineNumber, int offset, int length) {
 		try {
 			IType type = resolveType(javaProject, typeName);
 			if (type != null) {
@@ -195,13 +213,14 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 					if (descriptor != null) {
 						final IFile wodFile = descriptor.getWodFile();
 						final IFile htmlFile = descriptor.getHtmlFile();
-						final boolean revealLine = lineNumber > 0 && htmlFile != null;
+						// An offset or a line is a request to reveal a position in the HTML.
+						final boolean reveal = (offset >= 0 || lineNumber > 0) && htmlFile != null;
 
-						// With a line to reveal, open the HTML (the source the
-						// line refers to). Otherwise keep "Open Component"
+						// With a position to reveal, open the HTML (the source the
+						// offset/line refers to). Otherwise keep "Open Component"
 						// behaviour: WOD for a bundle, HTML for a standalone.
 						final IFile templateFile;
-						if (revealLine) {
+						if (reveal) {
 							templateFile = htmlFile;
 						}
 						else {
@@ -211,8 +230,8 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 						if (templateFile != null) {
 							IEditorPart editorPart = WorkbenchUtilities.open(templateFile, EditorsPlugin.ComponentEditorID);
 
-							if (revealLine && editorPart instanceof ComponentEditor) {
-								revealHtmlLine((ComponentEditor) editorPart, lineNumber);
+							if (reveal && editorPart instanceof ComponentEditor) {
+								revealHtmlPosition((ComponentEditor) editorPart, lineNumber, offset, length);
 							}
 						}
 					}
@@ -224,8 +243,12 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 	}
 
 	/**
-	 * Switches the component editor to its HTML view and reveals the given
-	 * 1-based line in the HTML template.
+	 * Switches the component editor to its HTML view and reveals a position in the
+	 * HTML template: an exact character {@code offset} (selecting {@code length}
+	 * chars) when {@code offset >= 0}, otherwise the 1-based {@code lineNumber}.
+	 *
+	 * <p>The offset path lands the caret precisely on the element and selects its
+	 * source span; the line path (used by the exception page) just reveals the line.
 	 *
 	 * <p><b>Why we target {@link ComponentEditor#getTemplateEditor()} directly
 	 * rather than {@code getActiveEditor()}.</b> In the component editor the
@@ -247,7 +270,7 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 	 * <p>Best-effort throughout: any failure leaves the editor open on the
 	 * template without navigating.
 	 */
-	private static void revealHtmlLine(ComponentEditor editor, int lineNumber) {
+	private static void revealHtmlPosition(ComponentEditor editor, int lineNumber, int offset, int length) {
 		// Defer until after the just-opened editor has laid out its inner parts.
 		Display.getDefault().asyncExec(() -> {
 			try {
@@ -261,7 +284,7 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 				ITextEditor templateEditor = editor.getTemplateEditor();
 				if (templateEditor == null) {
 					ComponenteditorPlugin.getDefault().log(new IllegalStateException(
-							"No template (HTML) editor available; cannot reveal line " + lineNumber));
+							"No template (HTML) editor available; cannot reveal position"));
 					return;
 				}
 
@@ -274,9 +297,20 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 					return;
 				}
 
-				// 1-based line numbers from the browser; IDocument lines are 0-based.
-				int lineStart = document.getLineOffset(lineNumber - 1);
-				templateEditor.selectAndReveal(lineStart, 0);
+				if (offset >= 0) {
+					// Precise: place the caret on the element and select its source
+					// span. Clamp to the document so a stale offset can't throw.
+					final int docLen = document.getLength();
+					final int safeOffset = Math.min(offset, docLen);
+					final int safeLength = Math.max(0, Math.min(length, docLen - safeOffset));
+					templateEditor.selectAndReveal(safeOffset, safeLength);
+				}
+				else {
+					// Line fallback (exception page): reveal the line's start.
+					// 1-based line numbers from the browser; IDocument lines are 0-based.
+					int lineStart = document.getLineOffset(lineNumber - 1);
+					templateEditor.selectAndReveal(lineStart, 0);
+				}
 			}
 			catch (BadLocationException x) {
 				// Line doesn't exist (template out of sync with what threw) —
