@@ -31,6 +31,7 @@ import com.sun.net.httpserver.HttpServer;
  *   http://localhost:9485/openJavaFile?app=APP&amp;className=FQCN&amp;lineNumber=N
  *   http://localhost:9485/openComponent?app=APP&amp;component=NAME
  *   http://localhost:9485/refresh?path=PATH
+ *   http://localhost:9485/refreshProject?project=NAME[&amp;build=false]
  * </pre>
  *
  * <h2>Security</h2>
@@ -84,6 +85,7 @@ public class DevServer {
 		_httpServer.createContext("/openJavaFile", new RequestHandler(new OpenJavaFileHandler()));
 		_httpServer.createContext("/openComponent", new RequestHandler(new OpenComponentHandler()));
 		_httpServer.createContext("/refresh", new RequestHandler(new RefreshHandler()));
+		_httpServer.createContext("/refreshProject", new RequestHandler(new RefreshProjectHandler()));
 
 		// Use a small daemon thread pool. Requests are short-lived (open an
 		// editor, refresh a resource) and arrive one at a time in practice.

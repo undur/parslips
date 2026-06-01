@@ -25,6 +25,18 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- June 1, 2026 -->
+			<div class="card">
+				<h2 class="date-header">June 1, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Dev server can now refresh &amp; rebuild a whole project on demand</h3>
+					<p>The dev server has a new endpoint &mdash; <code>/refreshProject?project=NAME</code> &mdash; that refreshes a project from disk and rebuilds it, all in one call. It&rsquo;s the programmatic equivalent of closing and reopening the project in Eclipse: it picks up file changes made <em>outside</em> the Eclipse editor and recompiles them. Add <code>&amp;build=false</code> to refresh without building, or omit <code>project</code> to refresh every open project.</p>
+					<p>Why this matters: Eclipse only notices edits it made itself. When something <em>else</em> changes your source on disk &mdash; a code generator, a script, or an AI coding assistant working in the repo &mdash; Eclipse doesn&rsquo;t know, so your running app keeps using the old compiled classes and the change seems to do nothing. You&rsquo;d normally fix that by manually closing and reopening the project. Now a single HTTP call does it.</p>
+					<p><strong>Why this is useful.</strong> It turns out to be the missing piece for working <em>with</em> an AI assistant on a live WebObjects/Parsley app. The assistant edits your source, calls <code>/refreshProject</code>, and the running app hot-swaps the change in immediately &mdash; so it can load a page and actually <em>see</em> the result of what it just wrote. No build/redeploy/restart cycle in between. The loop goes from &ldquo;edit, then a human babysits a rebuild&rdquo; to &ldquo;edit, refresh, observe&rdquo; &mdash; in seconds. The same applies to any external tool that edits your project and wants the running app to reflect it.</p>
+				</div>
+			</div>
+
 			<!-- May 29, 2026 -->
 			<div class="card">
 				<h2 class="date-header">May 29, 2026</h2>

@@ -12,6 +12,35 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: `/refreshProject` endpoint (refresh + rebuild a project from disk)
+
+Added a `/refreshProject?project=NAME[&build=false]` endpoint to the Eclipse dev
+server (`DevServer`, handled by the new `RefreshProjectHandler`). It is the
+programmatic equivalent of manually closing and reopening a project in Eclipse:
+it does an `IProject.refreshLocal(DEPTH_INFINITE)` to pick up file changes made on
+disk outside the Eclipse editor, then (unless `build=false`) an
+`INCREMENTAL_BUILD` so regenerated `.class` files are available to a running app.
+With no `project` parameter it refreshes every open project.
+
+Why it exists: Eclipse only auto-detects edits it mediated itself. When an
+external tool — a script, a code generator, or an AI coding agent — edits project
+source files directly, the workspace stays unaware and the running app keeps using
+stale classes, so the edit appears to do nothing. The previous `/refresh?path=…`
+endpoint refreshed a single file; this refreshes a whole project in one call,
+matching the close/reopen gesture it replaces.
+
+In practice this closes the edit→see-it-run loop for an external editor without a
+manual Eclipse refresh: edit source → `curl .../refreshProject?project=NAME` →
+the change is built and the running app's JVM hot-swaps it in. With DCEVM (an
+enhanced-hot-swap JVM, standard kit for WO development) even structural changes —
+new/removed methods or fields, changed signatures, new classes — swap in live, so
+there's effectively nothing the loop can't pick up without a restart.
+
+Loopback-only, like the rest of the dev server. The bootstrap caveat: because the
+endpoint lives in the editor plugin itself, getting the endpoint *itself* into a
+running Eclipse the first time still requires a restart — after that it's
+self-sustaining for the application projects it refreshes.
+
 ### Fix: keypath "no key" errors now honor the Missing-Key severity preference
 
 A binding keypath error ("There is no key 'x' in &lt;Component&gt;") was always
