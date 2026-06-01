@@ -22,6 +22,14 @@ disk outside the Eclipse editor, then (unless `build=false`) an
 `INCREMENTAL_BUILD` so regenerated `.class` files are available to a running app.
 With no `project` parameter it refreshes every open project.
 
+The order and the build kind both matter. The refresh runs first so Eclipse
+registers the change as a resource delta; the build is then *incremental* so it
+produces the per-type class delta that hot-swap reacts to (HotswapAgent watching
+the class files, or the IDE's hot-code-replace) — exactly the delta an in-editor
+save produces. A full/clean build recompiles everything but yields no such delta,
+so the running app never reloads the change. (`clean=true` forces a CLEAN+FULL
+rebuild for recovering a project from a bad build state; it will not hot-swap.)
+
 Why it exists: Eclipse only auto-detects edits it mediated itself. When an
 external tool — a script, a code generator, or an AI coding agent — edits project
 source files directly, the workspace stays unaware and the running app keeps using
