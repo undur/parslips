@@ -498,14 +498,9 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 					for (int i = 0; i < componentEditorInput.getInput().length; i++) {
 						if (((FileEditorInput) componentEditorInput.getInput()[i]).getFile().getProject().equals(event.getResource())) {
 							IWorkbenchPage[] pages = getSite().getWorkbenchWindow().getPages();
-							// Scan every workbench page for this editor and close it. The
-							// page is indexed by j (the page loop), NOT i (the input-file
-							// loop). The original used pages[i] here, which (a) threw
-							// ArrayIndexOutOfBounds when this editor had more input files
-							// than the window had pages, and (b) never looked past the
-							// first input-file index — so an editor shown on a second
-							// workbench page was left open when its project closed.
-							// Indexing by j closes the tab on whichever page it lives on.
+							// Scan every workbench page for this editor and close it on
+							// whichever page it lives on. Indexed by j (the page loop),
+							// independent of i (the input-file loop).
 							for (int j = 0; j < pages.length; j++) {
 								IEditorPart editorPart = pages[j].findEditor(componentEditorInput);
 								if (editorPart != null) {
