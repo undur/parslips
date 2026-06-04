@@ -57,7 +57,7 @@ import org.eclipse.core.runtime.jobs.Job;
 class RefreshProjectHandler implements DevServerHandler {
 
 	@Override
-	public void handle(Map<String, String> params) throws Exception {
+	public String handle(Map<String, String> params) throws Exception {
 		final IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		final String projectName = params.get("project");
 
@@ -97,6 +97,9 @@ class RefreshProjectHandler implements DevServerHandler {
 		// build/refresh job families blocks until the workspace is quiescent, so by the
 		// time the caller gets "ok" the new classes are genuinely in place.
 		waitForBuildToSettle();
+
+		// Fire-and-forget: success conveyed by the framework's plain "ok".
+		return null;
 	}
 
 	/**

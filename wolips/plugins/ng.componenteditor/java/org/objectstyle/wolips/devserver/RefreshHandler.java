@@ -25,10 +25,10 @@ import org.eclipse.core.runtime.Path;
 class RefreshHandler implements DevServerHandler {
 
 	@Override
-	public void handle(Map<String, String> params) throws Exception {
+	public String handle(Map<String, String> params) throws Exception {
 		final String pathStr = params.get("path");
 		if (pathStr == null || pathStr.isEmpty()) {
-			return;
+			return null;
 		}
 
 		Path path = new Path(pathStr);
@@ -51,5 +51,8 @@ class RefreshHandler implements DevServerHandler {
 				resource.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 			}
 		}
+
+		// Fire-and-forget: success conveyed by the framework's plain "ok".
+		return null;
 	}
 }

@@ -86,6 +86,7 @@ public class DevServer {
 		_httpServer.createContext("/openComponent", new RequestHandler(new OpenComponentHandler()));
 		_httpServer.createContext("/refresh", new RequestHandler(new RefreshHandler()));
 		_httpServer.createContext("/refreshProject", new RequestHandler(new RefreshProjectHandler()));
+		_httpServer.createContext("/validate", new RequestHandler(new ValidateComponentHandler()));
 
 		// Use a small daemon thread pool. Requests are short-lived (open an
 		// editor, refresh a resource) and arrive one at a time in practice.
@@ -127,8 +128,10 @@ public class DevServer {
 		public void handle(HttpExchange exchange) throws IOException {
 			try {
 				Map<String, String> params = parseQuery(exchange.getRequestURI().getRawQuery());
-				_delegate.handle(params);
-				respond(exchange, 200, "ok");
+				// A handler may return a response body (e.g. validation JSON); a null
+				// return is the fire-and-forget case, answered with a plain "ok".
+				String body = _delegate.handle(params);
+				respond(exchange, 200, body != null ? body : "ok");
 			}
 			catch (Exception e) {
 				ComponenteditorPlugin.getDefault().log(e);
@@ -147,10 +150,22 @@ public class DevServer {
 
 	private static void respond(HttpExchange exchange, int code, String body) throws IOException {
 		byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+		// Advertise JSON when the body is one, so clients (and curl | jq) treat it
+		// correctly; everything else is plain text.
+		String contentType = looksLikeJson(body) ? "application/json; charset=utf-8" : "text/plain; charset=utf-8";
+		exchange.getResponseHeaders().set("Content-Type", contentType);
 		exchange.sendResponseHeaders(code, bytes.length);
 		try (OutputStream os = exchange.getResponseBody()) {
 			os.write(bytes);
 		}
+	}
+
+	private static boolean looksLikeJson(String body) {
+		if (body == null || body.isEmpty()) {
+			return false;
+		}
+		char first = body.charAt(0);
+		return first == '{' || first == '[';
 	}
 
 	/**

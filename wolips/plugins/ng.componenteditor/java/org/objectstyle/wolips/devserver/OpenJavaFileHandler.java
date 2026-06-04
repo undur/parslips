@@ -39,13 +39,13 @@ import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 class OpenJavaFileHandler implements DevServerHandler {
 
 	@Override
-	public void handle(Map<String, String> params) {
+	public String handle(Map<String, String> params) {
 		final String className = params.get("className");
 		final String lineNumberStr = params.get("lineNumber");
 		final String appName = params.get("app");
 
 		if (className == null || lineNumberStr == null) {
-			return; // Required parameters missing — nothing to open.
+			return null; // Required parameters missing — nothing to open.
 		}
 
 		final int lineNumber;
@@ -53,10 +53,13 @@ class OpenJavaFileHandler implements DevServerHandler {
 			lineNumber = Integer.parseInt(lineNumberStr);
 		}
 		catch (NumberFormatException e) {
-			return;
+			return null;
 		}
 
 		Display.getDefault().asyncExec(() -> openType(className, lineNumber, appName));
+
+		// Fire-and-forget: the editor opens asynchronously; success is the plain "ok".
+		return null;
 	}
 
 	private static void openType(String className, int lineNumber, String appName) {

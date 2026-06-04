@@ -166,6 +166,29 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 	}
 
 	/**
+	 * Resolves a component (type) name to its {@link ElementDescriptor} — the
+	 * template/WOD/API/Java files that make up the component — within a project,
+	 * using the same name-resolution as {@link #openComponentWithTypeNamed}. Shared
+	 * so callers that need a component's files (rather than opening an editor), such
+	 * as the dev-server validate endpoint, resolve names exactly the same way the
+	 * "Open Component" action does.
+	 *
+	 * @return the descriptor, or {@code null} if the name doesn't resolve to a type
+	 *         in this project or the type has no associated component files
+	 */
+	public static ElementDescriptor descriptorForComponent(IJavaProject javaProject, String typeName) throws Exception {
+		IType type = resolveType(javaProject, typeName);
+		if (type == null) {
+			return null;
+		}
+		IResource underlyingResource = type.getUnderlyingResource();
+		if (!(underlyingResource instanceof IFile)) {
+			return null;
+		}
+		return ElementDescriptor.forFile((IFile) underlyingResource);
+	}
+
+	/**
 	 * Opens the named component in the Parsley component editor, optionally
 	 * revealing a specific line in its HTML template.
 	 *

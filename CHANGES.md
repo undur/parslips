@@ -12,6 +12,35 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: `/validate` endpoint (headless template validation as JSON)
+
+Added a `/validate?component=NAME[&project=APP]` endpoint to the Eclipse dev server
+(`DevServer`, handled by the new `ValidateComponentHandler`). It resolves a
+component by name (the same resolution "Open Component" uses), refreshes its files
+from disk, runs Parsley's template validator synchronously, and returns the problem
+markers as JSON (`severity`, `line`, `charStart`, `charEnd`, `message`, `file`).
+
+This fills a real gap: template validation in Parsley is editor- and
+Java-change-driven (`WodBuilder` / `WodParserCache`), **not** build-driven. So
+`/refreshProject` recompiles Java but never validates templates — a template error
+stayed invisible until a human opened the file. The endpoint exists so external
+tools and AI agents that edit templates on disk can read validation messages
+without rendering the page or opening the editor. An empty `problems` array means
+the template validated clean; `"found": false` means the name didn't resolve.
+
+Supporting changes:
+
+- **`DevServerHandler.handle(...)` now returns a `String`** (the response body) in
+  place of `void`. A `null` return preserves the previous fire-and-forget behaviour
+  (the framework answers a plain `"ok"`); a non-null return is sent as the body,
+  with `Content-Type: application/json` when it looks like JSON. The four existing
+  handlers (`RefreshHandler`, `RefreshProjectHandler`, `OpenComponentHandler`,
+  `OpenJavaFileHandler`) return `null` and are otherwise unchanged.
+- **`OpenComponentAction.descriptorForComponent(IJavaProject, typeName)`** — a new
+  public helper that resolves a component name to its `ElementDescriptor` (template/
+  WOD/API/Java files), shared so the validate endpoint resolves names exactly the
+  way the open-component action does.
+
 ### Dev server: `/refreshProject` endpoint (refresh + rebuild a project from disk)
 
 Added a `/refreshProject?project=NAME[&build=false]` endpoint to the Eclipse dev

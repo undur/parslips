@@ -36,10 +36,10 @@ import org.objectstyle.wolips.editor.actions.OpenComponentAction;
 class OpenComponentHandler implements DevServerHandler {
 
 	@Override
-	public void handle(Map<String, String> params) {
+	public String handle(Map<String, String> params) {
 		final String componentName = params.get("component");
 		if (componentName == null || componentName.isEmpty()) {
-			return;
+			return null;
 		}
 		final String appName = params.get("app");
 		final int lineNumber = parseInt(params.get("lineNumber"), -1);
@@ -70,6 +70,9 @@ class OpenComponentHandler implements DevServerHandler {
 				}
 			}
 		});
+
+		// Fire-and-forget: the editor opens asynchronously; success is the plain "ok".
+		return null;
 	}
 
 	/**

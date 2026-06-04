@@ -10,3 +10,5 @@ More information on the project is on its [website](https://undur.github.io/pars
 * [Roadmap](https://undur.github.io/parslips/repository/roadmap.html)
 * [Features](https://undur.github.io/parslips/repository/features.html)
 * [Non-Features](https://undur.github.io/parslips/repository/non-features.html)
+
+See [AGENTS.md](AGENTS.md) for driving the editor's dev server from an external tool or AI agent (refresh/rebuild, headless template validation, reading the running app's console).
