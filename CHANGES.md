@@ -12,6 +12,25 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: app port self-registration (`/registerApp`, `/apps`)
+
+Added an in-memory registry so running apps can announce their port to the dev
+server at startup, and external tools/agents can discover where an app runs by name
+instead of being told the port or guessing a per-developer convention.
+
+- `RegisterAppHandler` (`/registerApp?name=&port=&pid=`) records an app's location.
+- `AppsHandler` serves `/apps` (JSON array of all known apps) and `/apps?name=X`
+  (single lookup). Each entry carries `port`, `lastSeen` (epoch millis of the last
+  startup announcement), and optional `pid`.
+- `AppRegistry` holds the state: one entry per app name, latest write wins, with a
+  `lastSeen` timestamp so callers can judge staleness (it records when an app last
+  announced itself, not that it's still alive). In-memory, per-Eclipse-session.
+- `DevServerJson` centralises JSON string escaping for handlers that emit JSON.
+
+The app side lives in wonder-slim's ERExtensions (`ERXDevServerRegistration`), which
+pings `/registerApp` from `didFinishLaunching` in development mode — best-effort, on
+a background thread, so a missing dev server never affects startup.
+
 ### Dev server: `/validate` endpoint (headless template validation as JSON)
 
 Added a `/validate?component=NAME[&project=APP]` endpoint to the Eclipse dev server

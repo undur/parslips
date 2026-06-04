@@ -42,8 +42,25 @@ configurable in Eclipse prefs.
 | `/refreshProject` | `project?`, `build?`, `clean?` | Refresh project(s) from disk + incremental build. Use after editing. |
 | `/validate` | `component`, `project?` | Validate a component's template, return problems as JSON. |
 | `/refresh` | `path` | Refresh one resource path. |
+| `/apps` | `name?` | Discover running apps and their ports (so you don't have to be told the port). |
 | `/openComponent` | `app?`, `component`, `lineNumber?`, `offset?`, `length?` | Open a component, reveal a position. |
 | `/openJavaFile` | `className`, `lineNumber`, `app?` | Open a Java file at a line. |
+| `/registerApp` | `name`, `port`, `pid?` | (App-side, automatic) An app announces its port at startup. You won't call this. |
+
+### `/apps` — discover an app's port
+
+Apps register their port with the dev server at startup, so you can look up where one
+is running by name instead of being told the port or guessing:
+
+```bash
+curl -s 'http://localhost:9485/apps'                 # {"apps":[{"name":"MyApp","port":1200,"lastSeen":…,"pid":"…"}]}
+curl -s 'http://localhost:9485/apps?name=MyApp'      # {"found":true,"app":{…}} or {"found":false,…}
+```
+
+Use this to build the log URL (below) yourself: read the `port`, then hit
+`…:<port>/cgi-bin/WebObjects/<name>.woa/log`. `lastSeen` is epoch-millis of the app's
+last startup announcement — it's "last seen," not a liveness guarantee, so treat a
+stale entry (or a connection refusal on that port) as "that app isn't running now."
 
 ### `/refreshProject` — make Eclipse pick up disk edits
 
@@ -97,6 +114,9 @@ only** — 404 in production.
 ```
 http://localhost:<PORT>/cgi-bin/WebObjects/<App>.woa/log
 ```
+
+Get `<PORT>` and `<App>` from `/apps` (above) rather than guessing — e.g.
+`curl -s 'http://localhost:9485/apps'` returns each app's name and port.
 
 ```bash
 curl -s '.../log?tail=50'

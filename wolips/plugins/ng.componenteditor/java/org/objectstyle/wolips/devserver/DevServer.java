@@ -87,6 +87,8 @@ public class DevServer {
 		_httpServer.createContext("/refresh", new RequestHandler(new RefreshHandler()));
 		_httpServer.createContext("/refreshProject", new RequestHandler(new RefreshProjectHandler()));
 		_httpServer.createContext("/validate", new RequestHandler(new ValidateComponentHandler()));
+		_httpServer.createContext("/registerApp", new RequestHandler(new RegisterAppHandler()));
+		_httpServer.createContext("/apps", new RequestHandler(new AppsHandler()));
 
 		// Use a small daemon thread pool. Requests are short-lived (open an
 		// editor, refresh a resource) and arrive one at a time in practice.
