@@ -47,20 +47,41 @@ configurable in Eclipse prefs.
 | `/openJavaFile` | `className`, `lineNumber`, `app?` | Open a Java file at a line. |
 | `/registerApp` | `name`, `port`, `pid?` | (App-side, automatic) An app announces its port at startup. You won't call this. |
 
-### `/apps` — discover an app's port
+### `/apps` — discover an app's port and which dependencies you can read
 
 Apps register their port with the dev server at startup, so you can look up where one
 is running by name instead of being told the port or guessing:
 
 ```bash
-curl -s 'http://localhost:9485/apps'                 # {"apps":[{"name":"MyApp","port":1200,"lastSeen":…,"pid":"…"}]}
+curl -s 'http://localhost:9485/apps'                 # list of running apps
 curl -s 'http://localhost:9485/apps?name=MyApp'      # {"found":true,"app":{…}} or {"found":false,…}
 ```
 
-Use this to build the log URL (below) yourself: read the `port`, then hit
-`…:<port>/cgi-bin/WebObjects/<name>.woa/log`. `lastSeen` is epoch-millis of the app's
-last startup announcement — it's "last seen," not a liveness guarantee, so treat a
-stale entry (or a connection refusal on that port) as "that app isn't running now."
+Each app entry looks like:
+
+```json
+{
+  "name":"MyApp","port":1200,"lastSeen":1780611151951,"pid":"24067",
+  "dependencies":[
+    {"name":"ERExtensions","path":"/Users/you/git/wonder-slim/ERExtensions",
+     "sourceFolders":["/Users/you/git/wonder-slim/ERExtensions/src/main/java", …]},
+    …
+  ]
+}
+```
+
+Two things you get from this:
+
+- **Port** — build the log URL yourself: `…:<port>/cgi-bin/WebObjects/<name>.woa/log`.
+  `lastSeen` is epoch-millis of the app's last startup announcement — "last seen," not a
+  liveness guarantee, so treat a stale entry (or a connection refusal on that port) as
+  "that app isn't running now."
+- **`dependencies`** — the app's dependencies whose **source is open in the workspace**:
+  their project name, on-disk path, and source folders. These are the libraries you can
+  actually read and edit (e.g. to understand a framework's behavior, or fix a bug across
+  the boundary). Jar-only dependencies are deliberately omitted — if it's not here, you
+  don't have its source in this workspace. Computed live, so opening/closing a project in
+  Eclipse changes the list without restarting the app.
 
 ### `/refreshProject` — make Eclipse pick up disk edits
 

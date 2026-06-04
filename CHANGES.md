@@ -31,6 +31,14 @@ The app side lives in wonder-slim's ERExtensions (`ERXDevServerRegistration`), w
 pings `/registerApp` from `didFinishLaunching` in development mode — best-effort, on
 a background thread, so a missing dev server never affects startup.
 
+Each `/apps` entry also carries a `dependencies` array: the app's dependencies whose
+source is open in the workspace (`WorkspaceDependencies`), each with its project name,
+on-disk path, and source folders. This tells an external tool/agent which libraries it
+can actually read and edit versus the jar-only dependencies it can't — the developer's
+convention is that every dependency they have sources for is open as a workspace
+project. Resolved live from the app's JDT classpath (`CPE_PROJECT` entries pointing at
+open projects), so opening/closing a project changes the list without restarting the app.
+
 ### Dev server: `/validate` endpoint (headless template validation as JSON)
 
 Added a `/validate?component=NAME[&project=APP]` endpoint to the Eclipse dev server

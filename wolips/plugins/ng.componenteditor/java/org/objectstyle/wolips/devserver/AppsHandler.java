@@ -50,7 +50,7 @@ class AppsHandler implements DevServerHandler {
 	}
 
 	private static String toJson(AppRegistry.Entry e) {
-		final StringBuilder b = new StringBuilder(96);
+		final StringBuilder b = new StringBuilder(192);
 		b.append('{')
 				.append("\"name\":\"").append(DevServerJson.escape(e.name)).append('"')
 				.append(",\"port\":").append(e.port)
@@ -58,7 +58,38 @@ class AppsHandler implements DevServerHandler {
 		if (e.pid != null && !e.pid.isEmpty()) {
 			b.append(",\"pid\":\"").append(DevServerJson.escape(e.pid)).append('"');
 		}
+
+		// The app's dependencies that are open in the workspace with source — i.e. the
+		// ones an agent can actually read and edit (jar-only deps are omitted). Computed
+		// live from the workspace, since which projects are open can change between
+		// queries.
+		b.append(",\"dependencies\":[");
+		final List<WorkspaceDependencies.Dependency> deps = WorkspaceDependencies.forApp(e.name);
+		for (int i = 0; i < deps.size(); i++) {
+			if (i > 0) {
+				b.append(',');
+			}
+			b.append(depToJson(deps.get(i)));
+		}
+		b.append(']');
+
 		b.append('}');
+		return b.toString();
+	}
+
+	private static String depToJson(WorkspaceDependencies.Dependency d) {
+		final StringBuilder b = new StringBuilder(160);
+		b.append('{')
+				.append("\"name\":\"").append(DevServerJson.escape(d.name)).append('"')
+				.append(",\"path\":\"").append(DevServerJson.escape(d.path)).append('"')
+				.append(",\"sourceFolders\":[");
+		for (int i = 0; i < d.sourceFolders.size(); i++) {
+			if (i > 0) {
+				b.append(',');
+			}
+			b.append('"').append(DevServerJson.escape(d.sourceFolders.get(i))).append('"');
+		}
+		b.append("]}");
 		return b.toString();
 	}
 }
