@@ -48,8 +48,15 @@ final class AppRegistry {
 	/**
 	 * Records (or overwrites) an app's location. The caller supplies the timestamp so
 	 * registration time is the moment the announcement was received.
+	 *
+	 * <p>Any <em>other</em> app previously registered on the same port is evicted first.
+	 * Only one process can bind a port at a time, so if a new app is announcing this port
+	 * the prior occupant has necessarily exited — its entry is stale. This keeps the
+	 * common "always launch dev apps on :1200" workflow tidy: re-launching a different app
+	 * on 1200 drops the dead one instead of leaving two entries fighting over the port.
 	 */
 	static void register(String name, int port, String pid, long nowEpochMillis) {
+		_byName.entrySet().removeIf(e -> e.getValue().port == port && !e.getKey().equals(name));
 		_byName.put(name, new Entry(name, port, pid, nowEpochMillis));
 	}
 

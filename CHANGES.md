@@ -46,6 +46,9 @@ instead of being told the port or guessing a per-developer convention.
 - `AppRegistry` holds the state: one entry per app name, latest write wins, with a
   `lastSeen` timestamp so callers can judge staleness (it records when an app last
   announced itself, not that it's still alive). In-memory, per-Eclipse-session.
+  Registering an app also evicts any other app previously registered on the same
+  port — only one process can bind a port, so a prior occupant is necessarily dead.
+  This keeps the common "always launch dev apps on the same port" workflow tidy.
 - `DevServerJson` centralises JSON string escaping for handlers that emit JSON.
 
 The app side lives in wonder-slim's ERExtensions (`ERXDevServerRegistration`), which
