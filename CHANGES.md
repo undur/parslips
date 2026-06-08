@@ -12,6 +12,27 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: launch and stop applications (`/launch`, `/stop`)
+
+Added endpoints to start and stop applications from outside Eclipse, so an external
+tool or agent can manage the app lifecycle without the developer doing it by hand.
+
+- `LaunchHandler` (`/launch`): with no argument, lists launch configs as JSON
+  (`name`, `project`); with `config=`/`app=`, launches one via `DebugUITools.launch`
+  on the UI thread (so it behaves like the Run/Debug button — save, build, console).
+  `mode=` is `debug` (default) or `run`.
+- `LaunchConfigs`: resolution that avoids firing the wrong environment. An exact
+  config name wins; otherwise the query is treated as a project name, preferring a
+  config whose name contains `local`/`dev` when a project has several. When still
+  ambiguous it launches nothing and returns the candidates — guessing wrong could
+  start e.g. "AppName - Production".
+- `StopHandler` (`/stop?app=NAME`): default terminates the matching Eclipse launch
+  (clean), falling back to a graceful `kill` of the registered pid if Eclipse doesn't
+  own the launch. `force=true` does `kill -9` on the registered pid — for a JVM a
+  large hot-reload has wedged (DCEVM). The pid comes from the `/apps` registry.
+
+Added `org.eclipse.debug.core` to the bundle manifest (the handlers use it directly).
+
 ### Dev server: app port self-registration (`/registerApp`, `/apps`)
 
 Added an in-memory registry so running apps can announce their port to the dev

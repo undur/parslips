@@ -25,6 +25,23 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- June 5, 2026 -->
+			<div class="card">
+				<h2 class="date-header">June 5, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>A full dev loop for AI-assisted work on a running app</h3>
+					<p>Building on <code>/refreshProject</code>, the dev server gained a handful of endpoints that together let an external tool &mdash; most usefully an AI coding assistant working in your repo &mdash; drive the whole edit&rarr;build&rarr;run loop on a live WebObjects/Parsley application, without you relaying anything by hand. Everything is <code>localhost</code>-only, with no setup.</p>
+					<ul>
+						<li><strong>Validate a template without rendering it</strong> &mdash; <code>/validate?component=NAME</code> runs Parsley&rsquo;s template validator on a component and returns the problems (line, position, message) as JSON. Templates are long, error-prone strings whose mistakes usually don&rsquo;t surface until the page renders; now they can be caught up front. (Eclipse&rsquo;s own validation is editor-driven, so a plain refresh never checked templates &mdash; this fills that gap.)</li>
+						<li><strong>Read the running app&rsquo;s console over HTTP</strong> &mdash; the app (via wonder-slim&rsquo;s ERExtensions, in development) serves its recent log at <code>&hellip;/App.woa/log</code>, with <code>contains=</code> and <code>tail=</code> filters. No more copy-pasting the Eclipse console to share what the app printed.</li>
+						<li><strong>Discover what&rsquo;s running</strong> &mdash; apps announce themselves at startup, so <code>/apps</code> lists each running app, its port, and which of its dependencies have <em>source open in your workspace</em> (with paths). A tool can find an app by name &mdash; no guessing ports &mdash; and knows which libraries it can actually read and edit versus jar-only ones.</li>
+						<li><strong>Start and stop apps</strong> &mdash; <code>/launch</code> starts a launch configuration (listing them, and deliberately preferring a <em>local</em>/<em>dev</em> config so it never accidentally fires Production), and <code>/stop</code> shuts one down (cleanly, or with <code>force=true</code> for a JVM that a big hot-reload has wedged).</li>
+					</ul>
+					<p><strong>Why this matters.</strong> Each piece removes a manual hand-off. The result is that an assistant can launch your app, edit source and templates, validate them, refresh the running instance, read back the console to confirm, and restart when a change needs it &mdash; closing the loop end to end. There&rsquo;s a short guide for setting this up with an agent in the repo&rsquo;s <code>AGENTS.md</code>.</p>
+				</div>
+			</div>
+
 			<!-- June 1, 2026 -->
 			<div class="card">
 				<h2 class="date-header">June 1, 2026</h2>

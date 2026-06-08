@@ -43,9 +43,44 @@ configurable in Eclipse prefs.
 | `/validate` | `component`, `project?` | Validate a component's template, return problems as JSON. |
 | `/refresh` | `path` | Refresh one resource path. |
 | `/apps` | `name?` | Discover running apps and their ports (so you don't have to be told the port). |
+| `/launch` | `config?`/`app?`, `mode?` | List launch configs, or start one. |
+| `/stop` | `app`, `force?` | Stop a running app (terminate, or `force=true` to hard-kill). |
 | `/openComponent` | `app?`, `component`, `lineNumber?`, `offset?`, `length?` | Open a component, reveal a position. |
 | `/openJavaFile` | `className`, `lineNumber`, `app?` | Open a Java file at a line. |
 | `/registerApp` | `name`, `port`, `pid?` | (App-side, automatic) An app announces its port at startup. You won't call this. |
+
+### `/launch` and `/stop` — start and stop apps
+
+Start an app without the developer doing it by hand:
+
+```bash
+curl -s 'http://localhost:9485/launch'                       # list configs: {"configs":[{"name":…,"project":…}]}
+curl -s 'http://localhost:9485/launch?config=MyApp%20-%20Local'   # launch by exact config name
+curl -s 'http://localhost:9485/launch?app=MyApp'           # launch by project name
+curl -s 'http://localhost:9485/launch?app=MyApp&mode=run'  # run mode (default is debug)
+```
+
+Mode defaults to **debug** — the dev loop (hot-code-replace / HotswapAgent) needs a
+debug JVM, so launch in debug unless you have a reason not to.
+
+**Choosing the config matters.** A project often has several configs for different
+environments (e.g. `MyApp - Local`, `MyApp - Production`). Resolution: an exact
+config name wins; otherwise the query is treated as a project name, and when a project
+has several configs it prefers one whose name contains `local`/`dev`. If it still can't
+choose safely it launches **nothing** and returns the candidates — so you never
+accidentally fire Production. If you get `{"launched":false,"candidates":[…]}`, pick an
+exact name from that list.
+
+Stop a running app:
+
+```bash
+curl -s 'http://localhost:9485/stop?app=MyApp'             # clean terminate (Eclipse, or graceful kill)
+curl -s 'http://localhost:9485/stop?app=MyApp&force=true'  # kill -9 — for a wedged JVM (e.g. DCEVM choked on a big reload)
+```
+
+Default is a clean terminate via Eclipse (or a graceful `kill` of the registered pid if
+Eclipse doesn't own the launch). `force=true` hard-kills the registered pid — reach for
+it when a hot reload wedged the JVM and a clean stop won't take.
 
 ### `/apps` — discover an app's port and which dependencies you can read
 
