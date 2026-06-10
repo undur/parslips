@@ -12,6 +12,25 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Explorer: Link with Editor now lands on the `.wo` component
+
+With Link with Editor enabled, activating an editor on a file inside a `.wo` bundle
+used to select the wrong tree node — typically the (pulled-up, empty-looking)
+`src/main` source folder — and only find the component on a second try.
+
+Two causes, two fixes in `NGPackageExplorerPart`:
+
+- JDT's link reveal (`editorActivated`/`showInput`) is package-private and resolves
+  through the Java model, which can't place a non-Java file inside a `.wo`; it falls
+  back to selecting the file's physical parent. Since the clean hook is sealed, an
+  `IPartListener2` now post-corrects: on editor activation (linking enabled, editor
+  showing a `.wo`-internal file), it re-selects the `.wo` bundle, deferred so it runs
+  after JDT's own handler. The public `tryToReveal`/`selectReveal` overrides redirect
+  the reveal paths that do route through them.
+- On a freshly collapsed tree the pulled-up path isn't materialized, so reveals gave
+  up at the nearest materialized ancestor ("works on the second try"). `revealBundle`
+  now force-expands project → source folder → bundle before selecting.
+
 ### Dev server: launch and stop applications (`/launch`, `/stop`)
 
 Added endpoints to start and stop applications from outside Eclipse, so an external
