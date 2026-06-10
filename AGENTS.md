@@ -27,9 +27,9 @@ The hooks work the same for both runtimes; two things differ:
 
 - **Project type** — `project.base=ng` or `project.base=wo` in `build.properties`
   (selects component types, validation root, template format; absent → probed).
-- **Log endpoint** — lives in the app runtime, not this plugin. On WebObjects/Wonder
-  it ships in **wonder-slim's ERExtensions**; other runtimes may lack it (the dev
-  server and `/validate` still work).
+- **Log endpoint URL** — the endpoint lives in the app runtime, not this plugin, and
+  the URL form differs: on WebObjects/Wonder (wonder-slim's ERExtensions) it's
+  `…/<App>.woa/log`; on ng-objects it's `…/ng/dev/log`. Same parameters on both.
 
 ## Dev server
 
@@ -164,15 +164,17 @@ curl -s 'http://localhost:9485/validate?component=ASISearchPage&project=MyApp'
 
 ## Log endpoint
 
-From the app runtime (wonder-slim ERExtensions on WebObjects/Wonder). **Dev mode
-only** — 404 in production.
+From the app runtime. **Dev mode only.** The URL form depends on the runtime:
 
 ```
-http://localhost:<PORT>/cgi-bin/WebObjects/<App>.woa/log
+http://localhost:<PORT>/cgi-bin/WebObjects/<App>.woa/log    # WebObjects/Wonder (wonder-slim ERExtensions)
+http://localhost:<PORT>/ng/dev/log                          # ng-objects
 ```
 
 Get `<PORT>` and `<App>` from `/apps` (above) rather than guessing — e.g.
-`curl -s 'http://localhost:9485/apps'` returns each app's name and port.
+`curl -s 'http://localhost:9485/apps'` returns each app's name and port. (Probe
+`…/ng/dev/type` if you need to tell the runtimes apart: it returns `ng` on ng-objects
+and 404s on WO.)
 
 ```bash
 curl -s '.../log?tail=50'
