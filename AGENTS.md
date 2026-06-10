@@ -100,7 +100,7 @@ Each app entry looks like:
 
 ```json
 {
-  "name":"MyApp","port":1200,"lastSeen":1780611151951,"pid":"24067",
+  "name":"MyApp","port":1200,"running":true,"lastSeen":1780611151951,"pid":"24067",
   "dependencies":[
     {"name":"ERExtensions","path":"/Users/you/git/wonder-slim/ERExtensions",
      "sourceFolders":["/Users/you/git/wonder-slim/ERExtensions/src/main/java", …]},
@@ -112,9 +112,10 @@ Each app entry looks like:
 Two things you get from this:
 
 - **Port** — build the log URL yourself: `…:<port>/cgi-bin/WebObjects/<name>.woa/log`.
-  `lastSeen` is epoch-millis of the app's last startup announcement — "last seen," not a
-  liveness guarantee, so treat a stale entry (or a connection refusal on that port) as
-  "that app isn't running now."
+  `running` is a live reachability check done when you call `/apps` (a TCP probe of the
+  port), so the list only shows apps that are actually up — dead entries are dropped, since
+  apps don't deregister on shutdown. `lastSeen` (epoch-millis of the last startup
+  announcement) is just a recency hint alongside it.
 - **`dependencies`** — the app's dependencies whose **source is open in the workspace**:
   their project name, on-disk path, and source folders. These are the libraries you can
   actually read and edit (e.g. to understand a framework's behavior, or fix a bug across

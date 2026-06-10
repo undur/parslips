@@ -72,6 +72,12 @@ instead of being told the port or guessing a per-developer convention.
   Registering an app also evicts any other app previously registered on the same
   port — only one process can bind a port, so a prior occupant is necessarily dead.
   This keeps the common "always launch dev apps on the same port" workflow tidy.
+- Liveness is checked at query time: `/apps` TCP-probes each entry's port, adds a
+  `running` flag, and evicts entries it finds dead. Apps don't deregister on shutdown
+  (they're often killed abruptly or crash, which a shutdown hook would miss), so this
+  is how the list stays honest — it only shows what's actually reachable now. A single
+  `/apps?name=X` lookup of a just-died app returns it once with `running:false` before
+  evicting, so the caller learns "it was here, it's gone" rather than a bare not-found.
 - `DevServerJson` centralises JSON string escaping for handlers that emit JSON.
 
 The app side lives in wonder-slim's ERExtensions (`ERXDevServerRegistration`), which

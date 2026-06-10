@@ -15,10 +15,15 @@ import java.util.Map;
  *       nothing has registered under that name.</li>
  * </ul>
  *
- * <p>Each entry includes {@code lastSeen} (ISO-ish epoch millis) so callers can judge
- * staleness: the registry records when an app last <em>announced</em> itself, which
- * is not a guarantee it's still running. Treat an entry as a strong hint, freshest
- * first.
+ * <p>Liveness is checked at query time: each entry's port is probed, every entry carries
+ * a {@code running} flag, and entries found dead are evicted (apps don't deregister on
+ * shutdown — they're often killed abruptly or crash). So the list reflects what's actually
+ * up <em>now</em>, regardless of how an app died. A single lookup of a just-died app still
+ * returns it once with {@code running:false} (then evicts it), so the caller learns "it was
+ * here, it's gone" rather than a bare not-found.
+ *
+ * <p>{@code lastSeen} (epoch millis) records when the app last announced itself — useful as
+ * a recency hint alongside {@code running}.
  */
 class AppsHandler implements DevServerHandler {
 
@@ -32,28 +37,42 @@ class AppsHandler implements DevServerHandler {
 			if (entry == null) {
 				return "{\"found\":false,\"name\":\"" + DevServerJson.escape(name) + "\"}";
 			}
-			return "{\"found\":true,\"app\":" + toJson(entry) + "}";
+			final boolean running = AppRegistry.isReachable(entry);
+			if (!running) {
+				// Report it once as not-running so the caller sees "it was registered, it's
+				// gone now", then evict so later lookups cleanly return not-found.
+				AppRegistry.remove(entry.name);
+			}
+			return "{\"found\":true,\"app\":" + toJson(entry, running) + "}";
 		}
 
-		// Otherwise, list all known apps.
+		// Otherwise, list all known apps — probing each and evicting the dead, so the list
+		// only ever shows what's actually reachable.
 		final List<AppRegistry.Entry> all = AppRegistry.all();
 		final StringBuilder b = new StringBuilder(64 + all.size() * 96);
 		b.append("{\"apps\":[");
-		for (int i = 0; i < all.size(); i++) {
-			if (i > 0) {
+		boolean first = true;
+		for (final AppRegistry.Entry e : all) {
+			if (!AppRegistry.isReachable(e)) {
+				AppRegistry.remove(e.name);
+				continue; // dead — drop from the list entirely
+			}
+			if (!first) {
 				b.append(',');
 			}
-			b.append(toJson(all.get(i)));
+			first = false;
+			b.append(toJson(e, true));
 		}
 		b.append("]}");
 		return b.toString();
 	}
 
-	private static String toJson(AppRegistry.Entry e) {
+	private static String toJson(AppRegistry.Entry e, boolean running) {
 		final StringBuilder b = new StringBuilder(192);
 		b.append('{')
 				.append("\"name\":\"").append(DevServerJson.escape(e.name)).append('"')
 				.append(",\"port\":").append(e.port)
+				.append(",\"running\":").append(running)
 				.append(",\"lastSeen\":").append(e.lastSeenEpochMillis);
 		if (e.pid != null && !e.pid.isEmpty()) {
 			b.append(",\"pid\":\"").append(DevServerJson.escape(e.pid)).append('"');

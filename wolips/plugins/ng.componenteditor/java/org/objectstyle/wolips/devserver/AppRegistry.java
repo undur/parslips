@@ -13,12 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>The model is deliberately simple: <b>one entry per app name, latest write
  * wins</b>, each carrying the port, an optional pid, and a {@code lastSeen}
- * timestamp. That timestamp is the honesty in the design — an entry records when an
- * app <em>last announced itself</em>, not that it's still alive (a crashed app
- * lingers until something overwrites it). Callers use {@code lastSeen} to judge
- * staleness rather than trusting the entry blindly. No persistence and no
- * expiry: the registry is per-Eclipse-session scratch state, and an app re-announces
- * every time it starts.
+ * timestamp. An entry records when an app <em>last announced itself</em>, which is
+ * not a guarantee it's still alive. Apps don't deregister on shutdown — they're often
+ * killed abruptly, crash, or end up unreachable, so a shutdown hook would miss exactly
+ * the messy cases. Instead, liveness is checked at query time: {@link #isReachable}
+ * probes the registered port, and the {@code /apps} handler evicts entries it finds
+ * dead. No persistence and no time-based expiry; the registry is per-Eclipse-session
+ * scratch state, and an app re-announces every time it starts.
  *
  * <p>Backed by a {@link ConcurrentHashMap} because registrations arrive on dev-server
  * request threads while queries may read concurrently.
@@ -68,5 +69,29 @@ final class AppRegistry {
 	/** @return a snapshot of all known entries (order unspecified). */
 	static List<Entry> all() {
 		return new ArrayList<>(_byName.values());
+	}
+
+	/** Removes an entry (e.g. once it's been found unreachable). No-op if absent. */
+	static void remove(String name) {
+		if (name != null) {
+			_byName.remove(name);
+		}
+	}
+
+	/**
+	 * @return true if something is listening on the entry's port — a TCP connect on the
+	 *         loopback interface. Protocol-agnostic on purpose: it answers "is the app
+	 *         still up?" without assuming any particular endpoint, so it works for both
+	 *         WO and ng apps and for an app mid-restart. A short timeout keeps {@code /apps}
+	 *         responsive even when several entries are dead.
+	 */
+	static boolean isReachable(Entry entry) {
+		try (java.net.Socket socket = new java.net.Socket()) {
+			socket.connect(new java.net.InetSocketAddress(java.net.InetAddress.getLoopbackAddress(), entry.port), 250);
+			return true;
+		}
+		catch (Exception e) {
+			return false;
+		}
 	}
 }
