@@ -83,6 +83,11 @@ class StopHandler implements DevServerHandler {
 			if (config == null) {
 				continue;
 			}
+			// Only Java application launches qualify as "the app" — a running Maven build
+			// or JUnit run named like the app must not get terminated by a /stop.
+			if (!LaunchConfigs.isJavaApplication(config)) {
+				continue;
+			}
 			final boolean matches = name.equalsIgnoreCase(config.getName())
 					|| name.equalsIgnoreCase(LaunchConfigs.projectNameOf(config));
 			if (matches) {

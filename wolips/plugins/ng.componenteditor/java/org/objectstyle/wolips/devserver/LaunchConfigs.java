@@ -6,6 +6,7 @@ import java.util.Locale;
 
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
@@ -53,10 +54,18 @@ final class LaunchConfigs {
 	private LaunchConfigs() {
 	}
 
+	/**
+	 * All <b>Java application</b> launch configurations. Deliberately restricted to that
+	 * one type: the workspace's config pool also holds Maven builds, JUnit runs, etc.,
+	 * and a name match against one of those would "launch the app" by running something
+	 * entirely different (a Maven build config named like the app, say). Starting an
+	 * application means running its main class, so only Java application configs qualify.
+	 */
 	static List<ILaunchConfiguration> all() {
 		try {
 			final ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
-			final ILaunchConfiguration[] configs = manager.getLaunchConfigurations();
+			final ILaunchConfigurationType javaApplicationType = manager.getLaunchConfigurationType(IJavaLaunchConfigurationConstants.ID_JAVA_APPLICATION);
+			final ILaunchConfiguration[] configs = manager.getLaunchConfigurations(javaApplicationType);
 			final List<ILaunchConfiguration> result = new ArrayList<>(configs.length);
 			for (final ILaunchConfiguration c : configs) {
 				result.add(c);
@@ -66,6 +75,19 @@ final class LaunchConfigs {
 		catch (Exception e) {
 			ComponenteditorPlugin.getDefault().log(e);
 			return List.of();
+		}
+	}
+
+	/**
+	 * @return true if the config is a Java application launch — the only kind the dev
+	 *         server treats as "an application" (see {@link #all()}).
+	 */
+	static boolean isJavaApplication(ILaunchConfiguration config) {
+		try {
+			return IJavaLaunchConfigurationConstants.ID_JAVA_APPLICATION.equals(config.getType().getIdentifier());
+		}
+		catch (Exception e) {
+			return false;
 		}
 	}
 

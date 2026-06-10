@@ -63,6 +63,10 @@ curl -s 'http://localhost:9485/launch?app=MyApp&mode=run'  # run mode (default i
 Mode defaults to **debug** — the dev loop (hot-code-replace / HotswapAgent) needs a
 debug JVM, so launch in debug unless you have a reason not to.
 
+Only **Java application** launch configurations are considered (and listed) — Maven
+builds, JUnit runs etc. in the workspace's config pool are ignored, even on an exact
+name match, since "launching the app" means running its main class.
+
 **Choosing the config matters.** A project often has several configs for different
 environments (e.g. `MyApp - Local`, `MyApp - Production`). Resolution: an exact
 config name wins; otherwise the query is treated as a project name, and when a project

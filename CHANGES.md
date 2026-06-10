@@ -49,6 +49,10 @@ tool or agent can manage the app lifecycle without the developer doing it by han
   (clean), falling back to a graceful `kill` of the registered pid if Eclipse doesn't
   own the launch. `force=true` does `kill -9` on the registered pid — for a JVM a
   large hot-reload has wedged (DCEVM). The pid comes from the `/apps` registry.
+- Both `/launch` and `/stop` consider **Java application** launch configurations
+  only. The workspace's config pool also holds Maven builds, JUnit runs etc., and a
+  name match against one of those would run something entirely different than the
+  app (this actually happened: an exact-name match resolved to a Maven build config).
 
 Added `org.eclipse.debug.core` to the bundle manifest (the handlers use it directly).
 
