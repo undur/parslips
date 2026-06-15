@@ -12,6 +12,25 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: close-tag completion inside `<p:comment>` / `<p:raw>` blocks
+
+Typing an opening `<p:comment>` (or `<p:raw>`) and asking for completion offered
+nothing — no matching close tag — whenever the file had an as-yet-unbalanced
+directive. Cause: `<p:comment>`/`<p:raw>` get their own opaque document partition
+(`HTML_P_BLOCK`), and the partitioner's `MultiLineRule` greedily pairs a freshly
+opened directive with the *next* close further down the file, so the caret lands
+inside a p-block. That partition was routed to the general HTML assist processor,
+which reads the region as markup, finds nothing to complete, and proposes nothing.
+(In a balanced file every directive is its own tidy single-line block, so the
+"opened but not yet closed" caret position never arises — which is why it worked in
+most templates and confounded the diagnosis.)
+
+The content inside these directives is opaque by design (`p:comment` is ignored,
+`p:raw` is literal text), so the only meaningful completion there is the block's own
+close tag. New `PBlockAssistProcessor`, bound to the `HTML_P_BLOCK` partition,
+offers exactly that — the matching `</p:comment>` / `</p:raw>` for the directive the
+caret is in (skipping it when already closed).
+
 ### Explorer: Link with Editor now lands on the `.wo` component
 
 With Link with Editor enabled, activating an editor on a file inside a `.wo` bundle

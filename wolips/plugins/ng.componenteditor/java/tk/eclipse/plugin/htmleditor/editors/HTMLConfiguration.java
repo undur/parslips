@@ -33,6 +33,7 @@ import tk.eclipse.plugin.htmleditor.ColorProvider;
 import tk.eclipse.plugin.htmleditor.HTMLHyperlinkDetector;
 import tk.eclipse.plugin.htmleditor.HTMLPlugin;
 import tk.eclipse.plugin.htmleditor.assist.HTMLAssistProcessor;
+import tk.eclipse.plugin.htmleditor.assist.PBlockAssistProcessor;
 import tk.eclipse.plugin.htmleditor.assist.InnerCSSAssistProcessor;
 import tk.eclipse.plugin.htmleditor.assist.InnerJavaScriptAssistProcessor;
 
@@ -216,7 +217,10 @@ public class HTMLConfiguration extends SourceViewerConfiguration {
 			HTMLAssistProcessor processor = getAssistProcessor();
 			_assistant.setContentAssistProcessor(processor,IDocument.DEFAULT_CONTENT_TYPE);
 			_assistant.setContentAssistProcessor(processor,HTMLPartitionScanner.HTML_TAG);
-			_assistant.setContentAssistProcessor(processor,HTMLPartitionScanner.HTML_P_BLOCK);
+			// Inside a <p:comment>/<p:raw> block the content is opaque (no markup), so the
+			// only meaningful completion is the block's own close tag — a dedicated
+			// processor, not the general HTML one (which would offer nothing there).
+			_assistant.setContentAssistProcessor(new PBlockAssistProcessor(),HTMLPartitionScanner.HTML_P_BLOCK);
 			
 			InnerJavaScriptAssistProcessor jsProcessor = getJavaScriptAssistProcessor();
 			_assistant.setContentAssistProcessor(jsProcessor,HTMLPartitionScanner.JAVASCRIPT);
