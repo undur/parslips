@@ -20,6 +20,12 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: ./mvnw -B package --file pom.xml
+    - name: Add site root redirect
+      # GitHub Pages serves wolips.p2/target/, but the site (and the p2 update
+      # site) live under repository/, so the bare root (/parslips/) 404s. Drop a
+      # redirect at the served root so /parslips/ forwards to /parslips/repository/.
+      # The target is relative, so it works regardless of the Pages base path.
+      run: cp wolips.p2/site-root-redirect.html wolips.p2/target/index.html
     - name: Upload pages artifact
       id: deployment
       uses: actions/upload-pages-artifact@v3
