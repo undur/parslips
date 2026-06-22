@@ -17,7 +17,7 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 Reworked the badges in the hover header now that it renders reliably:
 
 - The "has content" hint (shown as small grey text) is now a distinct amber
-  "Container attribute" badge on its own row below the element name.
+  "Container element" badge on its own row below the element name.
 - The passthrough flag is a separate purple "Binding passthrough" badge next to
   it, instead of a generic "Passthrough" badge mixed in with the framework tag
   badges.

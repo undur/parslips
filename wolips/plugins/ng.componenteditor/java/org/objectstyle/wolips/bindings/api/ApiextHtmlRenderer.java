@@ -78,7 +78,7 @@ public final class ApiextHtmlRenderer {
 		if (model.isComponentContent() || model.isPassthrough()) {
 			b.append("<div class=\"status\">");
 			if (model.isComponentContent()) {
-				b.append("<span class=\"badge b-container\">Container attribute</span>");
+				b.append("<span class=\"badge b-container\">Container element</span>");
 			}
 			if (model.isPassthrough()) {
 				b.append("<span class=\"badge b-passthrough\">Binding passthrough</span>");
