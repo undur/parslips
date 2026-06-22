@@ -12,6 +12,34 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: rich `.apiext` element hover
+
+When a component has a parsable `.apiext` file (the extended element-API format being
+prototyped in AjaxSlim, alongside the classic `.api`), hovering its tag now shows a
+rich, rendered card instead of the plain-text `.api` preview: the element's Markdown
+role/description, framework tag badges, a passthrough badge, and a bindings table with
+accepted types, per-binding documentation, and required markers — the same visual
+language as AjaxSlim's rendered `/element-reference` page.
+
+It's strictly additive and gated on parsability: `.apiext` is read only when it exists
+next to the `.api` and parses cleanly (the format is in flux, so `ApiextModel.parse`
+returns null on any malformed/unexpected input). When it doesn't apply, the hover falls
+back to the existing `.api` preview, and `.api` continues to drive everything else
+(validation, completion, etc.). `.apiext` will replace `.api` only once the format
+stabilises.
+
+Implementation: `ApiextModel` (parse + parsability gate), `ApiextHtmlRenderer`
+(model → hover HTML, with an inline-Markdown subset), `ApiUtils.findApiextBytes`
+(locate the `.apiext` sibling — jar/folder/source), and `WodAnnotationHover` now renders
+HTML via `ITextHoverExtension2` + a `BrowserInformationControl` (with a plain-text
+`DefaultInformationControl` fallback). The hover is sticky (move into it) and opens at a
+usable fixed size.
+
+Known follow-up: the sticky hover does not yet reliably scroll content taller than the
+popup — content height can't be measured up front (the control lays HTML out as plain
+text to size itself, so tables collapse), so reliable overflow scrolling is a separate
+fix.
+
 ### Editor: close-tag completion inside `<p:comment>` / `<p:raw>` blocks
 
 Typing an opening `<p:comment>` (or `<p:raw>`) and asking for completion offered

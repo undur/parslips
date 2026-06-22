@@ -9,18 +9,29 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.IInformationControl;
+import org.eclipse.jface.text.IInformationControlCreator;
 import org.eclipse.jface.text.ITextHover;
+import org.eclipse.jface.text.ITextHoverExtension;
+import org.eclipse.jface.text.ITextHoverExtension2;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
+import org.eclipse.jface.text.AbstractReusableInformationControlCreator;
+import org.eclipse.jface.text.DefaultInformationControl;
+import org.eclipse.jface.internal.text.html.BrowserInformationControl;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.editors.text.EditorsUI;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
+import org.objectstyle.wolips.bindings.api.ApiextHtmlRenderer;
+import org.objectstyle.wolips.bindings.api.ApiextModel;
 import org.objectstyle.wolips.bindings.api.ApiValidation;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
@@ -48,7 +59,7 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
  * <p>Implements {@link IAnnotationHover} for the vertical ruler and
  * {@link ITextHover} for the editor body.
  */
-public class WodAnnotationHover implements IAnnotationHover, ITextHover {
+public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHoverExtension, ITextHoverExtension2 {
 	private IAnnotationModel _annotationModel;
 
 	/**
@@ -101,18 +112,196 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 		return hoverInfo;
 	}
 
+	/**
+	 * Legacy {@link ITextHover} entry. Kept for compatibility; the active path is
+	 * {@link #getHoverInfo2} (browsers size correctly only from a
+	 * {@code BrowserInformationControlInput}, not a raw String).
+	 */
 	@Override
 	public String getHoverInfo(ITextViewer textViewer, IRegion hoverRegion) {
-		String annotationText = getAnnotationInfo(hoverRegion);
-		String documentationText = getComponentDocumentation(textViewer, hoverRegion);
+		return buildHoverHtml(textViewer, hoverRegion);
+	}
 
-		if (annotationText != null && documentationText != null) {
-			return annotationText + "\n\n" + documentationText;
+	/**
+	 * Active hover entry. Returns an {@link ApiHoverInput} (a
+	 * {@code BrowserInformationControlInput}) rather than a String, because the browser
+	 * control only runs its content-measuring/auto-sizing path for that input type —
+	 * with a plain String it opens at a tiny default size.
+	 */
+	@Override
+	public Object getHoverInfo2(ITextViewer textViewer, IRegion hoverRegion) {
+		String html = buildHoverHtml(textViewer, hoverRegion);
+		return html == null ? null : new ApiHoverInput(html);
+	}
+
+	/**
+	 * Builds the single HTML document for a hover position: an optional validation-error
+	 * block (plain, escaped) followed by the component documentation — rich {@code .apiext}
+	 * HTML when available, otherwise the escaped plain-text {@code .api} preview.
+	 *
+	 * @return the HTML, or null if there's nothing to show at this position
+	 */
+	private String buildHoverHtml(ITextViewer textViewer, IRegion hoverRegion) {
+		String annotationText = getAnnotationInfo(hoverRegion);
+		HoverContent documentation = getComponentDocumentation(textViewer, hoverRegion);
+
+		if (annotationText == null && documentation == null) {
+			return null;
 		}
+
+		StringBuilder html = new StringBuilder();
+		html.append("<html><body style=\"font-family:-apple-system,system-ui,sans-serif;font-size:9pt;\">");
 		if (annotationText != null) {
-			return annotationText;
+			// Errors stay plain — escaped, whitespace preserved.
+			html.append("<pre style=\"margin:0 0 .5em;white-space:pre-wrap;color:#b00020;\">")
+					.append(escapeHtml(annotationText)).append("</pre>");
 		}
-		return documentationText;
+		if (documentation != null) {
+			if (documentation.isHtml) {
+				html.append(documentation.text);
+			}
+			else {
+				html.append("<pre style=\"margin:0;white-space:pre-wrap;\">")
+						.append(escapeHtml(documentation.text)).append("</pre>");
+			}
+		}
+		html.append("</body></html>");
+		return html.toString();
+	}
+
+	/**
+	 * Hover payload that knows whether it is already HTML (the rich {@code .apiext}
+	 * rendering) or plain text (the classic {@code .api} preview / error message, which
+	 * the caller escapes into a {@code <pre>}).
+	 */
+	private static final class HoverContent {
+		final String text;
+		final boolean isHtml;
+
+		HoverContent(String text, boolean isHtml) {
+			this.text = text;
+			this.isHtml = isHtml;
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// HTML hover control (ITextHoverExtension / ITextHoverExtension2)
+	// -----------------------------------------------------------------------
+
+	/**
+	 * The fixed size the hover opens at. See {@link SizedBrowserInformationControl} for
+	 * why a fixed size (rather than content-measured) is necessary. The enriched (sticky)
+	 * control is resizable and scrolls, so taller cards remain fully readable.
+	 */
+	private static final int HOVER_WIDTH = 640;
+	private static final int HOVER_HEIGHT = 440;
+
+	/**
+	 * Creator for the <em>transient</em> hover (shown on mouse-over). It's marked
+	 * enrichable via {@link #getInformationPresenterControlCreator()}, so moving the
+	 * mouse toward it promotes it to the sticky, scrollable, selectable control below
+	 * instead of dismissing it — the same UX as JDT's Javadoc hover.
+	 */
+	@Override
+	public IInformationControlCreator getHoverControlCreator() {
+		return new AbstractReusableInformationControlCreator() {
+			@Override
+			protected IInformationControl doCreateInformationControl(Shell parent) {
+				if (BrowserInformationControl.isAvailable(parent)) {
+					BrowserInformationControl control = new SizedBrowserInformationControl(parent, "-apple-system", false) {
+						@Override
+						public IInformationControlCreator getInformationPresenterControlCreator() {
+							return enrichedControlCreator();
+						}
+					};
+					control.setSizeConstraints(HOVER_WIDTH, HOVER_HEIGHT);
+					return control;
+				}
+				return new DefaultInformationControl(parent, EditorsUI.getTooltipAffordanceString());
+			}
+		};
+	}
+
+	/**
+	 * Creator for the <em>enriched</em> control — the persistent popup you get when you
+	 * move the mouse into the hover (or press the tooltip-focus key). It is resizable and
+	 * its content scrolls, so overflowing {@code .apiext} cards can be read in full and
+	 * text can be selected/copied. A non-null status field is what makes the control
+	 * resizable.
+	 */
+	private static IInformationControlCreator enrichedControlCreator() {
+		return new AbstractReusableInformationControlCreator() {
+			@Override
+			protected IInformationControl doCreateInformationControl(Shell parent) {
+				if (BrowserInformationControl.isAvailable(parent)) {
+					BrowserInformationControl control = new SizedBrowserInformationControl(parent, "-apple-system", EditorsUI.getTooltipAffordanceString());
+					control.setSizeConstraints(HOVER_WIDTH, HOVER_HEIGHT);
+					return control;
+				}
+				return new DefaultInformationControl(parent, true);
+			}
+		};
+	}
+
+	/**
+	 * A {@link BrowserInformationControl} that opens at a fixed, generous size.
+	 *
+	 * <p>We deliberately do <em>not</em> defer to the inherited content-measured size.
+	 * {@code BrowserInformationControl.computeSizeHint()} measures the content with an SWT
+	 * {@code TextLayout} (plain-text layout), not the rendered browser DOM — so our HTML
+	 * <em>tables</em> collapse to a couple of short text lines and the popup opens tiny,
+	 * clipping the bindings table. Since the measure can't see table layout, we return a
+	 * fixed size instead; the popup opens at a comfortable, consistent size and the
+	 * enriched (sticky) control scrolls anything taller.
+	 */
+	private static class SizedBrowserInformationControl extends BrowserInformationControl {
+		SizedBrowserInformationControl(Shell parent, String font, boolean resizable) {
+			super(parent, font, resizable);
+		}
+
+		SizedBrowserInformationControl(Shell parent, String font, String statusFieldText) {
+			super(parent, font, statusFieldText);
+		}
+
+		@Override
+		public org.eclipse.swt.graphics.Point computeSizeHint() {
+			return new org.eclipse.swt.graphics.Point(HOVER_WIDTH, HOVER_HEIGHT);
+		}
+
+		@Override
+		public void setSize(int width, int height) {
+			// The hover framework sizes the shell here using the content-measured height,
+			// which is computed by laying the HTML out as plain text — so our <table> (and
+			// any rich block content) collapses to a few short lines and the popup is far
+			// too short (computeSizeHint is consulted but its height is not honoured here).
+			// Enforce our intended size so the card opens fully; the sticky control stays
+			// user-resizable from there.
+			super.setSize(Math.max(width, HOVER_WIDTH), Math.max(height, HOVER_HEIGHT));
+		}
+	}
+
+	private static String escapeHtml(String s) {
+		if (s == null) {
+			return "";
+		}
+		StringBuilder b = new StringBuilder(s.length() + 16);
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			switch (c) {
+			case '&':
+				b.append("&amp;");
+				break;
+			case '<':
+				b.append("&lt;");
+				break;
+			case '>':
+				b.append("&gt;");
+				break;
+			default:
+				b.append(c);
+			}
+		}
+		return b.toString();
 	}
 
 	@Override
@@ -189,7 +378,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	 * @return formatted documentation, or null if not hovering over a wo: tag
 	 *         or if the component's API can't be resolved
 	 */
-	private String getComponentDocumentation(ITextViewer textViewer, IRegion hoverRegion) {
+	private HoverContent getComponentDocumentation(ITextViewer textViewer, IRegion hoverRegion) {
 		if (_parserCache == null) {
 			return null;
 		}
@@ -230,7 +419,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 	 *       built-in WO components</li>
 	 * </ol>
 	 */
-	private String resolveAndFormatDocumentation(String elementTypeName) {
+	private HoverContent resolveAndFormatDocumentation(String elementTypeName) {
 		try {
 			IJavaProject javaProject = _parserCache.getJavaProject();
 			if (javaProject == null) {
@@ -260,6 +449,20 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 				}
 			}
 
+			// .apiext first: if a parsable extended-API sibling exists for this element,
+			// render its richer content and use it INSTEAD of the .api preview. The format
+			// is in flux, so an unparsable .apiext yields null here and we fall through to
+			// the classic .api path below — .api still drives everything else.
+			if (elementType != null) {
+				byte[] apiextBytes = ApiUtils.findApiextBytes(elementType);
+				if (apiextBytes != null) {
+					ApiextModel apiext = ApiextModel.parse(apiextBytes);
+					if (apiext != null) {
+						return new HoverContent(ApiextHtmlRenderer.render(displayName, apiext), true);
+					}
+				}
+			}
+
 			ApiSnapshot api = null;
 
 			// Try project/classpath .api file first
@@ -284,10 +487,10 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover {
 			if (api == null) {
 				// No API found — just show the resolved name so the user at
 				// least sees what the shortcut maps to
-				return displayName;
+				return new HoverContent(displayName, false);
 			}
 
-			return formatApiDocumentation(displayName, api);
+			return new HoverContent(formatApiDocumentation(displayName, api), false);
 		}
 		catch (Exception e) {
 			return null;

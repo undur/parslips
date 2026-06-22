@@ -1,7 +1,9 @@
 package org.objectstyle.wolips.bindings.api;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -386,6 +388,72 @@ public class ApiUtils {
 			}
 		}
 
+		return null;
+	}
+
+	/**
+	 * Reads the raw bytes of the {@code .apiext} sibling for an element, if one exists
+	 * next to its {@code .api} file. The {@code .apiext} format is the in-flux extended
+	 * element API AjaxSlim is prototyping; this just <em>locates and reads</em> it — the
+	 * caller parses (and decides parsability, the in-flux gate).
+	 *
+	 * <p>Resolution mirrors {@link #findApiFile}: an {@code .apiext} lives in the same
+	 * place as the {@code .api} (jar {@code Resources/}, folder-style sibling, or source
+	 * sibling), with the extension swapped.
+	 *
+	 * @return the file bytes, or null if there is no readable {@code .apiext} sibling
+	 */
+	public static byte[] findApiextBytes(IType elementType) {
+		if (elementType == null) {
+			return null;
+		}
+		try {
+			final IOpenable typeContainer = elementType.getOpenable();
+
+			if (typeContainer instanceof IClassFile) {
+				final IJavaElement parent = ((IClassFile) typeContainer).getParent();
+				if (parent instanceof IPackageFragment) {
+					final IJavaElement parentParent = ((IPackageFragment) parent).getParent();
+
+					// jar-style framework: Resources/TypeName.apiext inside the jar
+					if (parentParent instanceof IPackageFragmentRoot && "jar".equalsIgnoreCase(parentParent.getPath().getFileExtension())) {
+						final String jarResourcePath = "Resources/" + elementType.getElementName() + ".apiext";
+						final File jarOSFile = new File(parentParent.getPath().toOSString());
+						if (jarOSFile.exists()) {
+							try (JarFile jarFile = new JarFile(jarOSFile)) {
+								final JarEntry je = jarFile.getJarEntry(jarResourcePath);
+								if (je != null && je.getSize() != 0) {
+									try (InputStream is = jarFile.getInputStream(je)) {
+										return is.readAllBytes();
+									}
+								}
+							}
+						}
+					}
+
+					// folder-style: TypeName.apiext sibling
+					final IPath packagePath = ((IPackageFragment) parent).getPath();
+					final IPath apiextPath = packagePath.removeLastSegments(2).append(elementType.getElementName()).addFileExtension("apiext");
+					final File apiextFile = apiextPath.toFile();
+					if (apiextFile.exists()) {
+						return Files.readAllBytes(apiextFile.toPath());
+					}
+				}
+			} else if (typeContainer instanceof ICompilationUnit) {
+				// Source file: the .apiext sits next to the located .api.
+				final LocalizedComponentsLocateResult locate = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(elementType.getJavaProject().getProject(), elementType.getElementName());
+				final IFile apiFile = locate.getDotApi();
+				if (apiFile != null) {
+					final IFile apiextFile = apiFile.getParent().getFile(new org.eclipse.core.runtime.Path(elementType.getElementName() + ".apiext"));
+					if (apiextFile.exists() && apiextFile.getLocation() != null) {
+						return Files.readAllBytes(apiextFile.getLocation().toFile().toPath());
+					}
+				}
+			}
+		}
+		catch (Exception e) {
+			// Locating/reading failed — treat as "no .apiext", caller falls back to .api.
+		}
 		return null;
 	}
 
