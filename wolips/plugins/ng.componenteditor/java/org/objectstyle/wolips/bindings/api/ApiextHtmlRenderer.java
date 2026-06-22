@@ -40,8 +40,22 @@ public final class ApiextHtmlRenderer {
 	 * @return a full HTML document suitable for a {@code BrowserInformationControl}
 	 */
 	public static String render(String displayName, ApiextModel model) {
+		return "<html><head><style>" + css() + "</style></head><body>" + renderBody(displayName, model) + "</body></html>";
+	}
+
+	/** @return the CSS for the {@code .apiext} card (without the surrounding {@code <style>} tag). */
+	public static String css() {
+		return CSS;
+	}
+
+	/**
+	 * Renders just the card's body content — no {@code <html>}/{@code <head>}/{@code <body>}
+	 * wrapper. Used by callers that compose their own document (the hover wraps this in a
+	 * single, scrollable {@code <body>} together with any error block), avoiding the nested
+	 * {@code <html>} that results from embedding a full document.
+	 */
+	public static String renderBody(String displayName, ApiextModel model) {
 		final StringBuilder b = new StringBuilder(2048);
-		b.append("<html><head><style>").append(css()).append("</style></head><body>");
 
 		// Header: element name + tag badges + passthrough badge.
 		b.append("<h3><code>").append(esc(displayName)).append("</code>");
@@ -89,7 +103,6 @@ public final class ApiextHtmlRenderer {
 			b.append("</div>");
 		}
 
-		b.append("</body></html>");
 		return b.toString();
 	}
 
@@ -255,8 +268,7 @@ public final class ApiextHtmlRenderer {
 	}
 
 	/** Hover-sized adaptation of the /element-reference page styling. */
-	private static String css() {
-		return "body{font-family:-apple-system,system-ui,sans-serif;font-size:9pt;color:#1a1a1a;line-height:1.5;margin:0;padding:4px 6px;}"
+	private static final String CSS = "body{font-family:-apple-system,system-ui,sans-serif;font-size:9pt;color:#1a1a1a;line-height:1.5;margin:0;padding:4px 6px;}"
 				+ "h3{margin:.1rem 0 .3rem;font-size:1.1em;display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;}"
 				+ "h3 code{background:none;padding:0;color:#1a4f8a;font-weight:700;}"
 				+ ".muted{color:#999;font-size:.8em;font-weight:normal;}"
@@ -280,5 +292,4 @@ public final class ApiextHtmlRenderer {
 				+ "pre.md-code code{background:none;padding:0;}"
 				+ ".valids{margin:.4rem 0 0;padding:.4rem .6rem;background:#fffbea;border-left:3px solid #f0c000;border-radius:4px;font-size:.85em;}"
 				+ ".valids .vmsg{margin:.1rem 0;color:#7a5b00;}";
-	}
 }

@@ -12,6 +12,28 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: scrollable, roomy `.apiext` hover (custom control)
+
+Follow-up to the rich `.apiext` hover below. That first version reused JFace's
+`BrowserInformationControl`, which is built for Javadoc tooltips: it disables JavaScript
+and sizes itself to its content by laying the HTML out as *plain text*. For our cards
+that's doubly wrong — the plain-text measure collapses the bindings table to a few lines
+(so the popup opened tiny), and there's no way to make it clip-and-scroll, so longer
+elements were unreadable past the first few bindings.
+
+Replaced it with `ApiHoverControl`, a custom `AbstractInformationControl` that hosts our
+own SWT `Browser`. The base class still provides the shell, focus, dispose, resize and
+hover→sticky→focus lifecycle; hosting our own browser gives us native scrolling and a
+size we control. The hover now opens at a roomy fixed size, the browser scrolls anything
+taller, and the sticky variant (move into it / F2) is freely resizable. Also fixed a
+structural bug — the renderer's full `<html>` document was being nested inside the
+hover's `<body>`; the renderer now emits a body fragment (`renderBody` + `css`) and the
+hover composes one well-formed document.
+
+(The operative sizing call turned out to be `setSize`, not `computeSizeHint`, which the
+framework treats as advisory and overrides with the content-measured height — so the open
+size is enforced in `setSize` for the transient variant only.)
+
 ### Editor: rich `.apiext` element hover
 
 When a component has a parsable `.apiext` file (the extended element-API format being
@@ -30,15 +52,9 @@ stabilises.
 
 Implementation: `ApiextModel` (parse + parsability gate), `ApiextHtmlRenderer`
 (model → hover HTML, with an inline-Markdown subset), `ApiUtils.findApiextBytes`
-(locate the `.apiext` sibling — jar/folder/source), and `WodAnnotationHover` now renders
-HTML via `ITextHoverExtension2` + a `BrowserInformationControl` (with a plain-text
-`DefaultInformationControl` fallback). The hover is sticky (move into it) and opens at a
-usable fixed size.
-
-Known follow-up: the sticky hover does not yet reliably scroll content taller than the
-popup — content height can't be measured up front (the control lays HTML out as plain
-text to size itself, so tables collapse), so reliable overflow scrolling is a separate
-fix.
+(locate the `.apiext` sibling — jar/folder/source), and `WodAnnotationHover` renders the
+HTML via `ITextHoverExtension2`. (The hover control was reworked shortly after — see the
+entry above.)
 
 ### Editor: close-tag completion inside `<p:comment>` / `<p:raw>` blocks
 
