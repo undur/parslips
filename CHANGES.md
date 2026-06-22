@@ -12,6 +12,21 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: unify `.api` and `.apiext` hover rendering
+
+The classic `.api` hover still used the old plain-text Unicode-table layout, which
+looked out of place next to the rich `.apiext` card. Since `.apiext` is a superset of
+`.api`, both now render through the same template: `ApiextModel.fromApiSnapshot` adapts a
+classic `ApiSnapshot` (from a `.api` file or the global `WebObjectDefinitions.xml`) into
+the shared model, leaving the `.apiext`-only fields — element/binding Markdown docs,
+accepted types, framework tags, passthrough — empty, which the renderer omits. An `.api`
+hover therefore shows the same header and bindings table (names + required markers) and
+any validation messages, just with the richer columns blank.
+
+A small monospace source badge in the header (`.api` grey, `.apiext` blue) shows which
+file the documentation was loaded from. Removed the now-dead plain-text formatter
+(`formatApiDocumentation` and its helpers).
+
 ### Editor: scrollable, roomy `.apiext` hover (custom control)
 
 Follow-up to the rich `.apiext` hover below. That first version reused JFace's

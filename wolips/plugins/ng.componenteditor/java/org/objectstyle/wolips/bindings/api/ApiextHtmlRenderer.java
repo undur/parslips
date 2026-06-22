@@ -57,8 +57,10 @@ public final class ApiextHtmlRenderer {
 	public static String renderBody(String displayName, ApiextModel model) {
 		final StringBuilder b = new StringBuilder(2048);
 
-		// Header: element name + tag badges + passthrough badge.
+		// Header: element name + source badge (.api / .apiext) + tag badges + passthrough badge.
 		b.append("<h3><code>").append(esc(displayName)).append("</code>");
+		b.append(" <span class=\"src src-").append(model.getSource() == ApiextModel.SourceKind.APIEXT ? "apiext" : "api")
+				.append("\">").append(esc(model.getSource().getLabel())).append("</span>");
 		for (final String tag : model.getTags()) {
 			b.append(" <span class=\"tag ").append(tagClass(tag)).append("\">").append(esc(cap(tag))).append("</span>");
 		}
@@ -272,6 +274,9 @@ public final class ApiextHtmlRenderer {
 				+ "h3{margin:.1rem 0 .3rem;font-size:1.1em;display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;}"
 				+ "h3 code{background:none;padding:0;color:#1a4f8a;font-weight:700;}"
 				+ ".muted{color:#999;font-size:.8em;font-weight:normal;}"
+				+ ".src{font-size:.66em;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:.05rem .35rem;border-radius:4px;white-space:nowrap;}"
+				+ ".src-apiext{background:#eef6ff;color:#1c4f8a;border:1px solid #c5dcf6;}"
+				+ ".src-api{background:#f1f3f5;color:#6c757d;border:1px solid #d3d8de;}"
 				+ ".tag{font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:.05rem .35rem;border-radius:4px;white-space:nowrap;}"
 				+ ".t-widget{background:#e6fbe6;color:#167a16;border:1px solid #b5e6b5;}"
 				+ ".t-update{background:#e3f0ff;color:#1c4f8a;border:1px solid #bcd8f5;}"

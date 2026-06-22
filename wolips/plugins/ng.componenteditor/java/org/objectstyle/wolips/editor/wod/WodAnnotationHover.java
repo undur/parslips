@@ -30,8 +30,6 @@ import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
 import org.objectstyle.wolips.bindings.api.ApiextHtmlRenderer;
 import org.objectstyle.wolips.bindings.api.ApiextModel;
-import org.objectstyle.wolips.bindings.api.ApiValidation;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -419,179 +417,14 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 				return new HoverContent(displayName, false);
 			}
 
-			return new HoverContent(formatApiDocumentation(displayName, api), false);
+			// Render the .api through the SAME template as .apiext (an .api is just an
+			// .apiext with the extension fields empty), so both hovers look identical apart
+			// from the source badge and the richer content .apiext can carry.
+			return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, ApiextModel.fromApiSnapshot(displayName, api)), true);
 		}
 		catch (Exception e) {
 			return null;
 		}
-	}
-
-	/**
-	 * Formats an {@link ApiSnapshot} definition into plain-text hover content
-	 * using Unicode characters for visual structure.
-	 *
-	 * <p>Layout:
-	 * <pre>
-	 * repetition → WORepetition  (has content)
-	 * ────────────────────────────────────────
-	 *  ▸ item                       — settable
-	 *  ▸ list
-	 *  ▸ count
-	 *    index
-	 *    identifier
-	 * ────────────────────────────────────────
-	 *  • 'list' must not be a constant
-	 *  • exactly one of 'count' or 'list' must be bound
-	 *  • 'item' must be bound when 'list' is bound
-	 * </pre>
-	 *
-	 * Required bindings are marked with ▸, optional with plain indent.
-	 * Validation rules are shown below a separator.
-	 */
-	private String formatApiDocumentation(String elementTypeName, ApiSnapshot api) {
-		List<IApiBinding> bindings = api.getBindings();
-
-		StringBuilder sb = new StringBuilder();
-
-		// Header line
-		sb.append(elementTypeName);
-		if (api.isComponentContent()) {
-			sb.append("  (has content)");
-		}
-
-		if (bindings.isEmpty()) {
-			sb.append("\n(no bindings defined)");
-			return sb.toString();
-		}
-
-		// Separator line below the header
-		sb.append('\n');
-		appendSeparator(sb, 40);
-
-		// Separate required from optional bindings
-		List<IApiBinding> required = new ArrayList<>();
-		List<IApiBinding> optional = new ArrayList<>();
-
-		for (IApiBinding binding : bindings) {
-			if (binding.isRequired()) {
-				required.add(binding);
-			}
-			else {
-				optional.add(binding);
-			}
-		}
-
-		// Find the longest binding name for alignment
-		int maxNameLen = 0;
-		for (IApiBinding binding : bindings) {
-			maxNameLen = Math.max(maxNameLen, binding.getName().length());
-		}
-
-		// Required bindings first (marked with ▸)
-		for (IApiBinding binding : required) {
-			sb.append('\n');
-			sb.append(" \u25B8 "); // ▸ right-pointing triangle
-			appendBindingLine(sb, binding, maxNameLen);
-		}
-
-		// Blank line between sections if both exist
-		if (!required.isEmpty() && !optional.isEmpty()) {
-			sb.append('\n');
-		}
-
-		// Optional bindings (plain indent)
-		for (IApiBinding binding : optional) {
-			sb.append('\n');
-			sb.append("   ");
-			appendBindingLine(sb, binding, maxNameLen);
-		}
-
-		// Validation rules
-		List<ApiValidation> validations = api.getValidations();
-		if (!validations.isEmpty()) {
-			boolean hasMessages = false;
-			for (ApiValidation validation : validations) {
-				String message = validation.getMessage();
-				if (message != null && !message.isEmpty()) {
-					if (!hasMessages) {
-						sb.append('\n');
-						appendSeparator(sb, 40);
-						hasMessages = true;
-					}
-					sb.append('\n');
-					sb.append(" \u2022 "); // bullet
-					sb.append(message);
-				}
-			}
-		}
-
-		return sb.toString();
-	}
-
-	/**
-	 * Appends a single binding line with the name left-aligned and
-	 * annotations (type info) right-aligned after padding.
-	 */
-	private void appendBindingLine(StringBuilder sb, IApiBinding binding, int maxNameLen) {
-		String name = binding.getName();
-		sb.append(name);
-
-		String typeInfo = getBindingTypeInfo(binding);
-		if (typeInfo != null) {
-			// Pad to align the annotation column
-			int padding = maxNameLen - name.length() + 2;
-			for (int i = 0; i < padding; i++) {
-				sb.append(' ');
-			}
-			sb.append("\u2014 "); // em dash
-			sb.append(typeInfo);
-		}
-	}
-
-	/**
-	 * Appends a horizontal separator line using box-drawing characters.
-	 */
-	private void appendSeparator(StringBuilder sb, int length) {
-		for (int i = 0; i < length; i++) {
-			sb.append('\u2500'); // ─ box drawing light horizontal
-		}
-	}
-
-	/**
-	 * Returns a short type/annotation string for a binding, combining the
-	 * defaults (value type) and settable flag.
-	 *
-	 * @return annotation like "Actions", "Boolean, settable", or null if
-	 *         no type information is available
-	 */
-	private String getBindingTypeInfo(IApiBinding binding) {
-		List<String> parts = new ArrayList<>();
-
-		if (binding.isRequired()) {
-			parts.add("required");
-		}
-
-		String defaults = binding.getDefaults();
-		if (defaults != null && !"Undefined".equals(defaults)) {
-			parts.add(defaults);
-		}
-
-		if (binding.isWillSet()) {
-			parts.add("settable");
-		}
-
-		if (parts.isEmpty()) {
-			return null;
-		}
-
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < parts.size(); i++) {
-			if (i > 0) {
-				sb.append(", ");
-			}
-			sb.append(parts.get(i));
-		}
-		return sb.toString();
 	}
 
 	/**

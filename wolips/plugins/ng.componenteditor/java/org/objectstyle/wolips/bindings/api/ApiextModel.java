@@ -2,7 +2,6 @@ package org.objectstyle.wolips.bindings.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +32,26 @@ import org.w3c.dom.NodeList;
  * table) is a separate concern — see {@code ApiextHtmlRenderer}.
  */
 public final class ApiextModel {
+
+	/**
+	 * Which on-disk format this model was loaded from. Both render through the same
+	 * template (an {@code .api} is just an {@code .apiext} with the extension fields
+	 * empty); the source drives only the little badge in the hover header.
+	 */
+	public enum SourceKind {
+		API(".api"), APIEXT(".apiext");
+
+		private final String _label;
+
+		SourceKind(String label) {
+			_label = label;
+		}
+
+		/** The badge label, e.g. {@code ".apiext"}. */
+		public String getLabel() {
+			return _label;
+		}
+	}
 
 	/** A single binding's extended definition. */
 	public static final class Binding {
@@ -80,6 +99,7 @@ public final class ApiextModel {
 		}
 	}
 
+	private final SourceKind _source;
 	private final String _className;
 	private final boolean _componentContent;
 	private final boolean _passthrough;
@@ -88,8 +108,9 @@ public final class ApiextModel {
 	private final List<Binding> _bindings;
 	private final List<Validation> _validations;
 
-	private ApiextModel(String className, boolean componentContent, boolean passthrough,
+	private ApiextModel(SourceKind source, String className, boolean componentContent, boolean passthrough,
 			String doc, List<String> tags, List<Binding> bindings, List<Validation> validations) {
+		_source = source;
 		_className = className;
 		_componentContent = componentContent;
 		_passthrough = passthrough;
@@ -97,6 +118,38 @@ public final class ApiextModel {
 		_tags = Collections.unmodifiableList(tags);
 		_bindings = Collections.unmodifiableList(bindings);
 		_validations = Collections.unmodifiableList(validations);
+	}
+
+	/** Which on-disk format this model was loaded from ({@code .api} or {@code .apiext}). */
+	public SourceKind getSource() {
+		return _source;
+	}
+
+	/**
+	 * Adapts a classic {@link ApiSnapshot} (parsed from a {@code .api} file or the global
+	 * {@code WebObjectDefinitions.xml}) into this model so both formats render through the
+	 * same template. The {@code .apiext}-only fields — element/binding Markdown docs,
+	 * accepted types, framework tags, the passthrough flag — are simply left empty, which
+	 * the renderer omits. Marked {@link SourceKind#API}.
+	 *
+	 * @param className the display/class name for the header
+	 * @param api       the snapshot to adapt
+	 */
+	public static ApiextModel fromApiSnapshot(String className, ApiSnapshot api) {
+		final List<Binding> bindings = new ArrayList<>();
+		for (final IApiBinding b : api.getBindings()) {
+			// No types/doc in .api — empty list and null, which the renderer renders as blank cells.
+			bindings.add(new Binding(b.getName(), new ArrayList<>(), null, b.isRequired()));
+		}
+		final List<Validation> validations = new ArrayList<>();
+		for (final ApiValidation v : api.getValidations()) {
+			final String message = v.getMessage();
+			if (message != null && !message.isEmpty()) {
+				validations.add(new Validation(message));
+			}
+		}
+		return new ApiextModel(SourceKind.API, className, api.isComponentContent(), false,
+				null, new ArrayList<>(), bindings, validations);
 	}
 
 	public String getClassName() {
@@ -217,7 +270,7 @@ public final class ApiextModel {
 			}
 		}
 
-		return new ApiextModel(className, componentContent, passthrough, emptyToNull(elementDoc), tags, bindings, validations);
+		return new ApiextModel(SourceKind.APIEXT, className, componentContent, passthrough, emptyToNull(elementDoc), tags, bindings, validations);
 	}
 
 	private static Binding parseBinding(Element bindingEl) {
