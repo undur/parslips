@@ -5,8 +5,8 @@ import java.util.List;
 /**
  * Renders an {@link ApiextModel} to the HTML shown in the template editor's element
  * hover. The visual language deliberately mirrors AjaxSlim's {@code /element-reference}
- * page — tag badges, a bindings table, a role/description block, a validation box — so
- * the {@code .apiext} look is consistent between the rendered reference and the hover.
+ * page — status badges, a bindings table, a role/description block, a validation box —
+ * so the {@code .apiext} look is consistent between the rendered reference and the hover.
  *
  * <p>Markdown in {@code <doc>} is rendered with an inline subset (inline {@code `code`},
  * {@code **bold**}, {@code *italic*}, {@code [links]()}, paragraph breaks, and fenced
@@ -15,23 +15,6 @@ import java.util.List;
 public final class ApiextHtmlRenderer {
 
 	private ApiextHtmlRenderer() {
-	}
-
-	/** Tag value → CSS class, matching the reference page's badge styling. */
-	private static String tagClass(String tag) {
-		switch (tag.toLowerCase()) {
-		case "update":
-			return "t-update";
-		case "widget":
-			return "t-widget";
-		case "trigger":
-		case "activity":
-			return "t-trigger";
-		case "server":
-			return "t-server";
-		default:
-			return "t-update";
-		}
 	}
 
 	/**
@@ -59,20 +42,16 @@ public final class ApiextHtmlRenderer {
 
 		// Header. The source marker (.api / .apiext) is pinned to the top-right corner,
 		// away from the element's own categorization badges. The title row carries the
-		// element name and its framework tag badges; a second "status" row below the name
-		// carries the structural badges (container attribute, binding passthrough).
+		// element name; a "status" row below the name carries the structural badges
+		// (container element, binding passthrough).
 		b.append("<div class=\"hdr\">");
 
 		// Source marker, top-right corner.
 		b.append("<span class=\"src src-").append(model.getSource() == ApiextModel.SourceKind.APIEXT ? "apiext" : "api")
 				.append("\">").append(esc(model.getSource().getLabel())).append("</span>");
 
-		// Title row: element name + framework tag badges.
-		b.append("<h3><code>").append(esc(displayName)).append("</code>");
-		for (final String tag : model.getTags()) {
-			b.append(" <span class=\"tag ").append(tagClass(tag)).append("\">").append(esc(cap(tag))).append("</span>");
-		}
-		b.append("</h3>");
+		// Title row: element name.
+		b.append("<h3><code>").append(esc(displayName)).append("</code></h3>");
 
 		// Status row: structural badges below the name (only if any apply).
 		if (model.isComponentContent() || model.isPassthrough()) {
@@ -143,13 +122,6 @@ public final class ApiextHtmlRenderer {
 	private static String simpleName(String type) {
 		final int dot = type.lastIndexOf('.');
 		return dot >= 0 ? type.substring(dot + 1) : type;
-	}
-
-	private static String cap(String s) {
-		if (s == null || s.isEmpty()) {
-			return s;
-		}
-		return Character.toUpperCase(s.charAt(0)) + s.substring(1);
 	}
 
 	// ---- minimal inline-Markdown → HTML ------------------------------------
@@ -293,11 +265,6 @@ public final class ApiextHtmlRenderer {
 				+ ".src{position:absolute;top:0;right:0;font-size:.66em;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:.05rem .35rem;border-radius:4px;white-space:nowrap;}"
 				+ ".src-apiext{background:#eef6ff;color:#1c4f8a;border:1px solid #c5dcf6;}"
 				+ ".src-api{background:#f1f3f5;color:#6c757d;border:1px solid #d3d8de;}"
-				+ ".tag{font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:.05rem .35rem;border-radius:4px;white-space:nowrap;}"
-				+ ".t-widget{background:#e6fbe6;color:#167a16;border:1px solid #b5e6b5;}"
-				+ ".t-update{background:#e3f0ff;color:#1c4f8a;border:1px solid #bcd8f5;}"
-				+ ".t-trigger{background:#fff3e0;color:#9a5b17;border:1px solid #f0d2a8;}"
-				+ ".t-server{background:#efe9ff;color:#5b3aa3;border:1px solid #d4c8f5;}"
 				+ ".status{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem;}"
 				+ ".badge{font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:.05rem .4rem;border-radius:4px;white-space:nowrap;}"
 				+ ".b-container{background:#fff3e0;color:#9a5b17;border:1px solid #f0d2a8;}"

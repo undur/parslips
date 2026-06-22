@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: drop `.apiext` `<tags>` support
+
+The `<tags>` element was removed from the `.apiext` format (a hand-maintained,
+runtime-unconsumed tag list per element wasn't pulling its weight). Removed tag
+parsing and the framework tag badges that rendered next to the element name, plus
+the now-dead `tagClass`/`cap` helpers and `.tag`/`.t-*` styles. A legacy `<tags>`
+element in an existing file is ignored rather than treated as a parse error, so
+old files keep rendering during the transition.
+
 ### Editor: refine the element hover header layout
 
 Reworked the badges in the hover header now that it renders reliably:

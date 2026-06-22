@@ -27,7 +27,7 @@ import org.w3c.dom.NodeList;
  * with a typo simply doesn't change behaviour rather than producing a broken hover.
  *
  * <p>What it captures (the .apiext additions over .api): an element-level Markdown
- * {@code <doc>}, framework {@code <tags>}, the {@code passthrough} flag, and per-binding
+ * {@code <doc>}, the {@code passthrough} flag, and per-binding
  * accepted {@code <type>}s plus a Markdown {@code <doc>}. Rendering (Markdown, badges,
  * table) is a separate concern — see {@code ApiextHtmlRenderer}.
  */
@@ -104,18 +104,16 @@ public final class ApiextModel {
 	private final boolean _componentContent;
 	private final boolean _passthrough;
 	private final String _doc; // raw Markdown, or null
-	private final List<String> _tags;
 	private final List<Binding> _bindings;
 	private final List<Validation> _validations;
 
 	private ApiextModel(SourceKind source, String className, boolean componentContent, boolean passthrough,
-			String doc, List<String> tags, List<Binding> bindings, List<Validation> validations) {
+			String doc, List<Binding> bindings, List<Validation> validations) {
 		_source = source;
 		_className = className;
 		_componentContent = componentContent;
 		_passthrough = passthrough;
 		_doc = doc;
-		_tags = Collections.unmodifiableList(tags);
 		_bindings = Collections.unmodifiableList(bindings);
 		_validations = Collections.unmodifiableList(validations);
 	}
@@ -129,7 +127,7 @@ public final class ApiextModel {
 	 * Adapts a classic {@link ApiSnapshot} (parsed from a {@code .api} file or the global
 	 * {@code WebObjectDefinitions.xml}) into this model so both formats render through the
 	 * same template. The {@code .apiext}-only fields — element/binding Markdown docs,
-	 * accepted types, framework tags, the passthrough flag — are simply left empty, which
+	 * accepted types, the passthrough flag — are simply left empty, which
 	 * the renderer omits. Marked {@link SourceKind#API}.
 	 *
 	 * @param className the display/class name for the header
@@ -149,7 +147,7 @@ public final class ApiextModel {
 			}
 		}
 		return new ApiextModel(SourceKind.API, className, api.isComponentContent(), false,
-				null, new ArrayList<>(), bindings, validations);
+				null, bindings, validations);
 	}
 
 	public String getClassName() {
@@ -167,11 +165,6 @@ public final class ApiextModel {
 	/** The element's Markdown documentation (role/description), or null. */
 	public String getDoc() {
 		return _doc;
-	}
-
-	/** Framework categorization tags (e.g. "update", "widget"); never null. */
-	public List<String> getTags() {
-		return _tags;
 	}
 
 	public List<Binding> getBindings() {
@@ -231,7 +224,6 @@ public final class ApiextModel {
 		final boolean passthrough = boolAttr(wo, "passthrough");
 
 		String elementDoc = null;
-		final List<String> tags = new ArrayList<>();
 		final List<Binding> bindings = new ArrayList<>();
 		final List<Validation> validations = new ArrayList<>();
 
@@ -248,16 +240,6 @@ public final class ApiextModel {
 					elementDoc = text(el);
 				}
 				break;
-			case "tags":
-				for (Node t = el.getFirstChild(); t != null; t = t.getNextSibling()) {
-					if (t.getNodeType() == Node.ELEMENT_NODE && "tag".equals(t.getNodeName())) {
-						final String tag = text((Element) t);
-						if (tag != null && !tag.isEmpty()) {
-							tags.add(tag);
-						}
-					}
-				}
-				break;
 			case "binding":
 				bindings.add(parseBinding(el));
 				break;
@@ -265,12 +247,13 @@ public final class ApiextModel {
 				validations.add(new Validation(attr(el, "message")));
 				break;
 			default:
-				// documentation (WO external pointer) and anything else: ignored for the preview.
+				// documentation (WO external pointer), legacy <tags>, and anything else:
+				// ignored for the preview.
 				break;
 			}
 		}
 
-		return new ApiextModel(SourceKind.APIEXT, className, componentContent, passthrough, emptyToNull(elementDoc), tags, bindings, validations);
+		return new ApiextModel(SourceKind.APIEXT, className, componentContent, passthrough, emptyToNull(elementDoc), bindings, validations);
 	}
 
 	private static Binding parseBinding(Element bindingEl) {
