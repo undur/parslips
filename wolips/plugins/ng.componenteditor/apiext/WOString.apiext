@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!DOCTYPE wodefinitions SYSTEM "apiext.dtd">
 <wodefinitions>
 	<wo class="WOString">
@@ -9,27 +9,27 @@ Use a `dateformat`, `numberformat`, or `formatter` to format non-string values, 
 		]]></doc>
 
 		<binding name="value" required="true">
-			<type>java.lang.Object</type>
-			<doc>The value to display. Required. Formatted to a string, then HTML-escaped unless `escapeHTML` is `false`.</doc>
+			<pull><type>java.lang.Object</type></pull>
+			<doc>The value to display. Required. **Pulled**, formatted to a string, then HTML-escaped unless `escapeHTML` is `false`. WOString is display-only — it never pushes anything back.</doc>
 		</binding>
 		<binding name="escapeHTML" defaults="YES/NO">
-			<type>java.lang.Boolean</type>
-			<doc>Whether to HTML-escape the rendered value. Defaults to `true`; set `false` only when `value` is already safe markup.</doc>
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc>Whether to HTML-escape the rendered value. Defaults to `true`; set falsy only when `value` is already safe markup.</doc>
 		</binding>
 		<binding name="dateformat" defaults="Date Format Strings">
-			<type>java.lang.String</type>
+			<pull><type>java.lang.String</type></pull>
 			<doc>A date format pattern used to render a date `value`. Mutually exclusive with `numberformat` and `formatter`.</doc>
 		</binding>
 		<binding name="numberformat" defaults="Number Format Strings">
-			<type>java.lang.String</type>
+			<pull><type>java.lang.String</type></pull>
 			<doc>A number format pattern used to render a numeric `value`. Mutually exclusive with `dateformat` and `formatter`.</doc>
 		</binding>
 		<binding name="formatter">
-			<type>java.text.Format</type>
+			<pull><type>java.text.Format</type></pull>
 			<doc>A `Format` instance used to render `value`. Mutually exclusive with `dateformat` and `numberformat`.</doc>
 		</binding>
 		<binding name="valueWhenEmpty">
-			<type>java.lang.Object</type>
+			<pull><type>java.lang.Object</type></pull>
 			<doc>Substituted when `value` is null or empty, so the element still renders something.</doc>
 		</binding>
 

@@ -12,6 +12,26 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: `.apiext` binding directionality and interpretation
+
+The `.apiext` format gained per-binding **directionality** and a type **interpretation**
+qualifier; the hover now renders both.
+
+- A binding's types are declared inside `<pull>` (the value the element reads/displays)
+  and/or `<push>` (the value it writes back). The Type cell shows a direction arrow:
+  a grey `↓` for pull (read — the norm, so it recedes), an orange `↑` for push (writes
+  back), and a red `↕` when a binding pulls and pushes the *same* type (two-way). When
+  the pull and push types differ, they render on separate rows (e.g. a checkbox's
+  `checked`: `↓ Object (truthy)` over `↑ Boolean`).
+- A `<type>` may carry an `interpretation` attribute — a reading rule applied without
+  changing the (validatable) type. The only value today is `truthy`, shown as a
+  qualifier, e.g. `Object (truthy)` (WOConditional's condition, a checkbox's `disabled`).
+- `<type>` is now only valid inside `<pull>`/`<push>`, never directly on `<binding>`
+  (matching the corrected DTD); the parser no longer accepts the latter.
+
+Updated `apiext/WOString.apiext` to the directional form and added
+`apiext/WOCheckBox.apiext` as the worked example of a genuine pull/push type split.
+
 ### Editor: bundled `.apiext` definitions for built-in elements
 
 Added an `apiext/` folder next to the plugin's `WebObjectDefinitions.xml`. When hovering

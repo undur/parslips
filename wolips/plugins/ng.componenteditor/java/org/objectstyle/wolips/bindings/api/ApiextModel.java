@@ -53,16 +53,71 @@ public final class ApiextModel {
 		}
 	}
 
-	/** A single binding's extended definition. */
+	/**
+	 * An accepted type for a binding: a fully-qualified Java class (or value-set name),
+	 * optionally carrying an {@code interpretation} — a reading rule applied to the value
+	 * <em>without</em> changing the type (the type stays the real, validatable constraint).
+	 * The only interpretation today is {@code "truthy"}. The interpretation is documentation,
+	 * shown as a qualifier — e.g. {@code "Object (truthy)"}.
+	 */
+	public static final class TypeRef {
+		private final String _name;
+		private final String _interpretation; // e.g. "truthy", or null
+
+		TypeRef(String name, String interpretation) {
+			_name = name;
+			_interpretation = interpretation;
+		}
+
+		/** The type name as declared (fully-qualified Java class or value-set name). */
+		public String getName() {
+			return _name;
+		}
+
+		/** The interpretation qualifier (e.g. {@code "truthy"}), or null. */
+		public String getInterpretation() {
+			return _interpretation;
+		}
+
+		/** Two TypeRefs are equal when both name and interpretation match (used to merge pull==push). */
+		@Override
+		public boolean equals(Object o) {
+			if (!(o instanceof TypeRef)) {
+				return false;
+			}
+			final TypeRef other = (TypeRef) o;
+			return java.util.Objects.equals(_name, other._name)
+					&& java.util.Objects.equals(_interpretation, other._interpretation);
+		}
+
+		@Override
+		public int hashCode() {
+			return java.util.Objects.hash(_name, _interpretation);
+		}
+	}
+
+	/**
+	 * A single binding's extended definition.
+	 *
+	 * <p>Types are declared with <b>directionality</b>: a {@code <pull>} type (the value the
+	 * element reads/displays) and/or a {@code <push>} type (the value it writes back). Types
+	 * may only appear inside {@code <pull>}/{@code <push>} — not directly on {@code <binding>}.
+	 * Many bindings pull and push the same type; some genuinely differ (a checkbox pulls a
+	 * truthy {@code Object} but pushes a {@code Boolean}). Bindings from a plain {@code .api}
+	 * file carry no type info at all (both lists empty). Rendering decides the direction
+	 * arrows from which lists are populated.
+	 */
 	public static final class Binding {
 		private final String _name;
-		private final List<String> _types;
+		private final List<TypeRef> _pullTypes; // <pull><type>… read by the element
+		private final List<TypeRef> _pushTypes; // <push><type>… written back by the element
 		private final String _doc; // raw Markdown, or null
 		private final boolean _required;
 
-		Binding(String name, List<String> types, String doc, boolean required) {
+		Binding(String name, List<TypeRef> pullTypes, List<TypeRef> pushTypes, String doc, boolean required) {
 			_name = name;
-			_types = Collections.unmodifiableList(types);
+			_pullTypes = Collections.unmodifiableList(pullTypes);
+			_pushTypes = Collections.unmodifiableList(pushTypes);
 			_doc = doc;
 			_required = required;
 		}
@@ -71,9 +126,14 @@ public final class ApiextModel {
 			return _name;
 		}
 
-		/** Accepted types (fully-qualified or value-set names), in declared order; never null. */
-		public List<String> getTypes() {
-			return _types;
+		/** Types the element pulls (reads), in declared order; never null, may be empty. */
+		public List<TypeRef> getPullTypes() {
+			return _pullTypes;
+		}
+
+		/** Types the element pushes (writes back), in declared order; never null, may be empty. */
+		public List<TypeRef> getPushTypes() {
+			return _pushTypes;
 		}
 
 		/** The binding's Markdown documentation, or null if none. */
@@ -136,8 +196,9 @@ public final class ApiextModel {
 	public static ApiextModel fromApiSnapshot(String className, ApiSnapshot api) {
 		final List<Binding> bindings = new ArrayList<>();
 		for (final IApiBinding b : api.getBindings()) {
-			// No types/doc in .api — empty list and null, which the renderer renders as blank cells.
-			bindings.add(new Binding(b.getName(), new ArrayList<>(), null, b.isRequired()));
+			// .api has no type/direction/doc info — empty pull/push lists and null doc, which
+			// the renderer renders as blank cells (no type, no direction arrow).
+			bindings.add(new Binding(b.getName(), new ArrayList<>(), new ArrayList<>(), null, b.isRequired()));
 		}
 		final List<Validation> validations = new ArrayList<>();
 		for (final ApiValidation v : api.getValidations()) {
@@ -259,24 +320,49 @@ public final class ApiextModel {
 	private static Binding parseBinding(Element bindingEl) {
 		final String name = attr(bindingEl, "name");
 		final boolean required = "true".equalsIgnoreCase(attr(bindingEl, "required")) || "yes".equalsIgnoreCase(attr(bindingEl, "required"));
-		final List<String> types = new ArrayList<>();
+		final List<TypeRef> pullTypes = new ArrayList<>(); // <pull><type>
+		final List<TypeRef> pushTypes = new ArrayList<>(); // <push><type>
 		String doc = null;
 		for (Node n = bindingEl.getFirstChild(); n != null; n = n.getNextSibling()) {
 			if (n.getNodeType() != Node.ELEMENT_NODE) {
 				continue;
 			}
 			final Element el = (Element) n;
-			if ("type".equals(el.getNodeName())) {
-				final String type = text(el);
-				if (type != null && !type.isEmpty()) {
-					types.add(type);
+			switch (el.getNodeName()) {
+			case "pull":
+				collectTypes(el, pullTypes);
+				break;
+			case "push":
+				collectTypes(el, pushTypes);
+				break;
+			case "doc":
+				if (doc == null) {
+					doc = text(el);
 				}
-			}
-			else if ("doc".equals(el.getNodeName()) && doc == null) {
-				doc = text(el);
+				break;
+			default:
+				// <type> directly under <binding> is no longer valid; ignored if present.
+				break;
 			}
 		}
-		return new Binding(name, types, emptyToNull(doc), required);
+		return new Binding(name, pullTypes, pushTypes, emptyToNull(doc), required);
+	}
+
+	/** Collects the {@code <type>} children of a {@code <pull>}/{@code <push>} block into {@code out}. */
+	private static void collectTypes(Element directionEl, List<TypeRef> out) {
+		for (Node n = directionEl.getFirstChild(); n != null; n = n.getNextSibling()) {
+			if (n.getNodeType() == Node.ELEMENT_NODE && "type".equals(n.getNodeName())) {
+				addType(out, (Element) n);
+			}
+		}
+	}
+
+	/** Parses one {@code <type [interpretation=...]>} element into {@code out} (skips empty types). */
+	private static void addType(List<TypeRef> out, Element typeEl) {
+		final String type = text(typeEl);
+		if (type != null && !type.isEmpty()) {
+			out.add(new TypeRef(type, emptyToNull(attr(typeEl, "interpretation"))));
+		}
 	}
 
 	// ---- small DOM helpers ----

@@ -82,7 +82,7 @@ public final class ApiextHtmlRenderer {
 					b.append("<span class=\"req\">&bull;</span> ");
 				}
 				b.append(esc(binding.getName())).append("</td>");
-				b.append("<td class=\"b-type\">").append(esc(joinTypes(binding.getTypes()))).append("</td>");
+				b.append("<td class=\"b-type\">").append(typeCell(binding)).append("</td>");
 				b.append("<td>").append(binding.getDoc() != null ? markdown(binding.getDoc()) : "").append("</td>");
 				b.append("</tr>");
 			}
@@ -103,8 +103,50 @@ public final class ApiextHtmlRenderer {
 		return b.toString();
 	}
 
-	/** Joins a binding's accepted types into a short, readable string (simple names, " | "-separated). */
-	private static String joinTypes(List<String> types) {
+	/**
+	 * Renders the Type cell for a binding, with directionality arrows:
+	 * <ul>
+	 *   <li>pull only &rarr; a grey {@code ↓} (read; the norm, so it recedes)</li>
+	 *   <li>push only &rarr; an orange {@code ↑} (writes back &mdash; a behaviour change)</li>
+	 *   <li>pull and push with the <em>same</em> type(s) &rarr; one row, red {@code ↕} (two-way)</li>
+	 *   <li>pull and push with <em>different</em> types &rarr; two rows ({@code ↓} pull, {@code ↑} push)</li>
+	 *   <li>no direction info (legacy {@code <type>} / {@code .api}) &rarr; the type(s), no arrow</li>
+	 * </ul>
+	 */
+	private static String typeCell(ApiextModel.Binding binding) {
+		final List<ApiextModel.TypeRef> pull = binding.getPullTypes();
+		final List<ApiextModel.TypeRef> push = binding.getPushTypes();
+
+		// No directionality (e.g. a binding from a plain .api file, which carries no type
+		// info): empty type cell, no arrow.
+		if (pull.isEmpty() && push.isEmpty()) {
+			return "";
+		}
+
+		// Both directions with identical type sets: a single two-way row.
+		if (!pull.isEmpty() && pull.equals(push)) {
+			return dirRow("dir-both", "↕", "Two-way: pulled (read) and pushed (written back)", pull);
+		}
+
+		// Otherwise each present direction gets its own row.
+		final StringBuilder sb = new StringBuilder();
+		if (!pull.isEmpty()) {
+			sb.append(dirRow("dir-pull", "↓", "Pulled (read by the element)", pull));
+		}
+		if (!push.isEmpty()) {
+			sb.append(dirRow("dir-push", "↑", "Pushed (written back by the element)", push));
+		}
+		return sb.toString();
+	}
+
+	/** One directionality row: an arrow (coloured by {@code dirClass}) followed by the joined types. */
+	private static String dirRow(String dirClass, String arrow, String title, List<ApiextModel.TypeRef> types) {
+		return "<div class=\"dir-row\"><span class=\"dir " + dirClass + "\" title=\"" + esc(title) + "\">"
+				+ arrow + "</span> " + esc(joinTypes(types)) + "</div>";
+	}
+
+	/** Joins type refs into a short, readable string (simple names + interpretation, " | "-separated). */
+	private static String joinTypes(List<ApiextModel.TypeRef> types) {
 		if (types == null || types.isEmpty()) {
 			return "";
 		}
@@ -113,7 +155,11 @@ public final class ApiextHtmlRenderer {
 			if (i > 0) {
 				sb.append(" | ");
 			}
-			sb.append(simpleName(types.get(i)));
+			final ApiextModel.TypeRef t = types.get(i);
+			sb.append(simpleName(t.getName()));
+			if (t.getInterpretation() != null) {
+				sb.append(" (").append(t.getInterpretation()).append(")");
+			}
 		}
 		return sb.toString();
 	}
@@ -277,6 +323,11 @@ public final class ApiextHtmlRenderer {
 				+ "table.bindings td{padding:.25rem .4rem;border-bottom:1px solid #f2f2f2;vertical-align:top;}"
 				+ "table.bindings td.b-name{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;color:#1a4f8a;font-size:.9em;}"
 				+ "table.bindings td.b-type{white-space:nowrap;color:#888;font-size:.85em;font-family:ui-monospace,monospace;}"
+				+ ".dir-row{white-space:nowrap;line-height:1.5;}"
+				+ ".dir{font-weight:400;}"
+				+ ".dir-pull{color:#c2c8d0;}"
+				+ ".dir-push{color:#e8730c;}"
+				+ ".dir-both{color:#e0142b;}"
 				+ "table.bindings td p{margin:0;} table.bindings td p+p{margin-top:.4rem;}"
 				+ ".req{color:#c0392b;font-weight:700;}"
 				+ "pre.md-code{background:#f7f8fa;border:1px solid #e6e8ec;border-left:3px solid #2b6cb0;border-radius:0 5px 5px 0;padding:.4rem .6rem;margin:.4rem 0;overflow-x:auto;font-size:.85em;}"
