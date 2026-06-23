@@ -12,6 +12,24 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: bundled `.apiext` definitions for built-in elements
+
+Added an `apiext/` folder next to the plugin's `WebObjectDefinitions.xml`. When hovering
+a built-in (framework-provided) element, the editor now checks this folder for an
+`<Element>.apiext` file *before* falling back to the terse `WebObjectDefinitions.xml`
+entry — so we can enrich the documentation for built-in elements (Markdown role doc,
+accepted binding types, per-binding docs) that the legacy XML can't express. A bundled
+`.apiext` fully replaces the XML entry for that element (safe: the built-in elements are
+frozen).
+
+Name resolution mirrors the global XML lookup (`ApiUtils.findGlobalApiextBytes`):
+fully-qualified name, then simple name, then the NG→WO bridge (so a `WOString.apiext`
+also documents `NGString`). Shipped one curated file, `apiext/WOString.apiext`, both as
+the working example and to exercise the mechanism.
+
+This is the staging ground for eventually moving element documentation out of the plugin
+and into the frameworks that serve the elements.
+
 ### Editor: drop `.apiext` `<tags>` support
 
 The `<tags>` element was removed from the `.apiext` format (a hand-maintained,

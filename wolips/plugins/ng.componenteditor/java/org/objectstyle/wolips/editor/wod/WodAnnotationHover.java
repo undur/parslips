@@ -390,6 +390,24 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 				}
 			}
 
+			// Bundled .apiext for a built-in element: a curated <Element>.apiext in the
+			// plugin's apiext/ folder takes precedence over BOTH the framework .api and the
+			// terse global WebObjectDefinitions.xml. It fully replaces them (the built-in
+			// elements are frozen, so a complete curated file is authoritative). This lets us
+			// enrich built-in element docs and is the staging ground for moving element
+			// documentation into the frameworks themselves. Try the resolved class name, then
+			// the original element name; an unparsable file falls through to the .api path.
+			byte[] globalApiext = ApiUtils.findGlobalApiextBytes(resolvedClassName);
+			if (globalApiext == null && !resolvedClassName.equals(elementTypeName)) {
+				globalApiext = ApiUtils.findGlobalApiextBytes(elementTypeName);
+			}
+			if (globalApiext != null) {
+				ApiextModel apiext = ApiextModel.parse(globalApiext);
+				if (apiext != null) {
+					return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, apiext), true);
+				}
+			}
+
 			ApiSnapshot api = null;
 
 			// Try project/classpath .api file first

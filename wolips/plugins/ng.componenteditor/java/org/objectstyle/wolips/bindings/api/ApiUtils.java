@@ -164,6 +164,79 @@ public class ApiUtils {
 		}
 	}
 
+	/**
+	 * Looks up a bundled {@code .apiext} definition for a framework-provided element
+	 * by class name. These live in an {@code apiext/} folder next to the global
+	 * {@code WebObjectDefinitions.xml} in the plugin, and let us enrich the documentation
+	 * for built-in elements (Markdown role doc, accepted binding types, per-binding docs)
+	 * beyond what the terse {@code WebObjectDefinitions.xml} carries.
+	 *
+	 * <p>This is the staging ground for moving element documentation out of the plugin and
+	 * into the frameworks that serve the elements: today we keep a small curated set here;
+	 * eventually a framework would ship its own {@code .apiext} files. Callers consult this
+	 * <em>before</em> {@link #findGlobalApiSnapshotByClassName} so a bundled {@code .apiext}
+	 * takes precedence over the plain {@code WebObjectDefinitions.xml} entry.
+	 *
+	 * <p>Name resolution mirrors the global XML lookup: the given name is tried first, then
+	 * the simple (unqualified) name (the files are named by short class name, e.g.
+	 * {@code WOString.apiext}), then the NG&rarr;WO bridge ({@code NGFoo} &rarr; {@code WOFoo}).
+	 *
+	 * @param className the class name to look up (fully-qualified or simple)
+	 * @return the raw {@code .apiext} bytes, or null if there's no bundled file for it
+	 */
+	public static byte[] findGlobalApiextBytes(String className) {
+		if (className == null || className.isEmpty()) {
+			return null;
+		}
+		try {
+			Bundle bundle = HTMLPlugin.getDefault().getBundle();
+			if (bundle == null) {
+				return null;
+			}
+
+			// Try the name as given, then the simple name, then the NG->WO bridge name.
+			byte[] bytes = readBundledApiext(bundle, className);
+			if (bytes != null) {
+				return bytes;
+			}
+
+			String simpleName = className;
+			int dotIndex = className.lastIndexOf('.');
+			if (dotIndex >= 0) {
+				simpleName = className.substring(dotIndex + 1);
+				bytes = readBundledApiext(bundle, simpleName);
+				if (bytes != null) {
+					return bytes;
+				}
+			}
+
+			// NG elements share their WO counterpart's definition (see the global XML
+			// lookup) — fall back to the WO name so a bundled WOFoo.apiext also documents NGFoo.
+			if (simpleName.startsWith("NG")) {
+				return readBundledApiext(bundle, "WO" + simpleName.substring(2));
+			}
+		} catch (Throwable t) {
+			// Any failure (missing folder, IO, etc.) just means "no bundled .apiext".
+		}
+		return null;
+	}
+
+	/**
+	 * Reads {@code apiext/<name>.apiext} from the plugin bundle, or returns null if the
+	 * entry doesn't exist or can't be read.
+	 */
+	private static byte[] readBundledApiext(Bundle bundle, String name) {
+		URL url = bundle.getEntry("/apiext/" + name + ".apiext");
+		if (url == null) {
+			return null;
+		}
+		try (InputStream in = url.openStream()) {
+			return in.readAllBytes();
+		} catch (Throwable t) {
+			return null;
+		}
+	}
+
 	// ---- Per-type API lookup (project .api files) --------------------------
 
 	/**
