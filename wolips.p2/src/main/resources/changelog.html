@@ -39,6 +39,24 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- June 23, 2026 -->
+			<div class="card">
+				<h2 class="date-header">June 23, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Detailed element documentation on hover</h3>
+					<p>Hovering a <code>&lt;wo:&hellip;&gt;</code> tag now shows detailed information about an element&rsquo;s API &mdash; some documentation, its bindings, which bindings are required, and so on.</p>
+					<img src="img/hover-apiext.png" alt="The element hover for WOCheckBox: a rendered card with a role description, a bindings table showing each binding&rsquo;s direction and type, and a validation note." />
+					<ul>
+						<li><strong>A real description.</strong> Elements and individual bindings can carry Markdown documentation (a role summary up top, a note per binding), rendered inline &mdash; so the hover explains <em>what</em> a binding is for, not just its name.</li>
+						<li><strong>Binding direction and type.</strong> Each binding shows whether the element <em>reads</em> it (a grey <span aria-hidden="true">&darr;</span> &ldquo;pull&rdquo;), <em>writes it back</em> (an orange <span aria-hidden="true">&uarr;</span> &ldquo;push&rdquo;), or both (a red <span aria-hidden="true">&harr;</span> two-way), along with the accepted Java type. When a binding reads one type and writes another &mdash; like a checkbox that reads any value by truthiness but writes back a <code>Boolean</code> &mdash; the two are shown separately.</li>
+						<li><strong>Status badges.</strong> Container elements and binding-passthrough elements are flagged with a badge in the header, and a small marker shows whether the documentation came from a project&rsquo;s own definition or a richer bundled one.</li>
+						<li><strong>Read it comfortably.</strong> The popup opens at a generous size, scrolls when an element has a lot of bindings, and stays open when you move into it so you can select and copy text.</li>
+					</ul>
+					<p>This richer documentation is driven by an experimental <code>.apiext</code> format. The editor uses it when a parsable definition is available (today for a small set of built-in elements and for AjaxSlim&rsquo;s components) and falls back to the classic definition otherwise &mdash; so existing projects keep working unchanged while the format settles.</p>
+				</div>
+			</div>
+
 			<!-- June 5, 2026 -->
 			<div class="card">
 				<h2 class="date-header">June 5, 2026</h2>
