@@ -109,6 +109,28 @@ public final class ApiextHtmlRenderer {
 	}
 
 	/**
+	 * Renders a tidy "no API" card for an element that has neither an {@code .api} nor an
+	 * {@code .apiext} definition: the element name, its origin (when known), and a muted
+	 * empty-state message — instead of a bare name floating in an empty popup. Reuses the
+	 * same {@code <body>} CSS via {@link #css()} so it looks consistent with real cards.
+	 *
+	 * @param displayName the element name (may include a "shortcut → Class" arrow)
+	 * @param origin      the originating framework/bundle, or null if unknown
+	 * @return the body-fragment HTML
+	 */
+	public static String renderNoApiBody(String displayName, String origin) {
+		final StringBuilder b = new StringBuilder(256);
+		b.append("<div class=\"hdr\">");
+		b.append("<h3><code>").append(esc(displayName)).append("</code></h3>");
+		if (origin != null && !origin.isEmpty()) {
+			b.append("<div class=\"origin\">from ").append(esc(origin)).append("</div>");
+		}
+		b.append("</div>");
+		b.append("<div class=\"no-api\">No API documentation available for this element.</div>");
+		return b.toString();
+	}
+
+	/**
 	 * Renders the Type cell for a binding, with directionality arrows:
 	 * <ul>
 	 *   <li>pull only &rarr; a grey {@code ↓} (read; the norm, so it recedes)</li>
@@ -317,6 +339,7 @@ public final class ApiextHtmlRenderer {
 				+ ".src-apiext{background:#eef6ff;color:#1c4f8a;border:1px solid #c5dcf6;}"
 				+ ".src-api{background:#f1f3f5;color:#6c757d;border:1px solid #d3d8de;}"
 				+ ".origin{color:#999;font-size:.82em;margin:.05rem 0 .1rem;}"
+				+ ".no-api{color:#9aa0a8;font-style:italic;font-size:.9em;margin:.6rem 0 .2rem;}"
 				+ ".status{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem;}"
 				+ ".badge{font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:.05rem .4rem;border-radius:4px;white-space:nowrap;}"
 				+ ".b-container{background:#fff3e0;color:#9a5b17;border:1px solid #f0d2a8;}"

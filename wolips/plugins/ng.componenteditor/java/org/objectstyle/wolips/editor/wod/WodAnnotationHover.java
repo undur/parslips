@@ -443,9 +443,9 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 			}
 
 			if (api == null) {
-				// No API found — just show the resolved name so the user at
-				// least sees what the shortcut maps to
-				return new HoverContent(displayName, false);
+				// No API at all — render a tidy "no API" card (name + origin + a muted
+				// message) rather than a bare name floating in an empty popup.
+				return new HoverContent(ApiextHtmlRenderer.renderNoApiBody(displayName, origin), true);
 			}
 
 			// Render the .api through the SAME template as .apiext (an .api is just an
