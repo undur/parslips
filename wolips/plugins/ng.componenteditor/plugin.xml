@@ -472,6 +472,11 @@
             class="ng.componenteditor.explorer.NGPackageExplorerPart"
             icon="icons/parsley16.png"
             id="ng.componenteditor.explorer.NGPackageExplorer"/>
+      <view name="Element Reference"
+            allowMultiple="false"
+            category="ng.componenteditor.views"
+            class="org.objectstyle.wolips.editor.help.ElementHelpView"
+            id="ng.componenteditor.help.ElementHelpView"/>
    </extension>
 
 <!-- =================================================================================== -->

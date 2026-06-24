@@ -12,6 +12,24 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: Element Reference view
+
+A new view (Window → Show View → Parsley → Element Reference) lists every element
+available to the active editor's project and shows each one's API documentation in the
+same card format as the editor hover. It follows the frontmost component editor,
+re-listing for that editor's project.
+
+- A filterable, sortable table (Element / Origin / API) on the left; the selected
+  element's rendered card on the right.
+- A per-row state chip doubles the view as a migration dashboard for the `.api` →
+  `.apiext` effort: blue `.apiext` (migrated), grey `.api` (legacy), or greyed-out when an
+  element has no definition. Sorting by the API column groups migrated elements first.
+- The Origin column shows each element's originating framework/bundle, aiding navigation.
+
+Backed by `ElementCatalog`, which enumerates the project's element types (the same set
+`<wo:…>` completion offers) and renders detail cards through the existing
+`ApiextHtmlRenderer`, using the same lookup precedence as the hover so the two always agree.
+
 ### Editor: `.apiext` binding directionality and interpretation
 
 The `.apiext` format gained per-binding **directionality** and a type **interpretation**
