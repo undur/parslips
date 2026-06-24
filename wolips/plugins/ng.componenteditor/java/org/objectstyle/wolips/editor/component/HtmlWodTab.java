@@ -47,9 +47,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -87,7 +89,19 @@ public class HtmlWodTab extends ComponentEditorTab {
 
 	private Composite _wodContainer;
 
-	private Label nonEmptyWodWarning;
+	/** Paint/mouse handlers drawing the collapsed bar on the WOD container; null when expanded. */
+	private org.eclipse.swt.events.PaintListener _barPainter;
+	private MouseAdapter _barMouse;
+
+	/** Whether the WOD pane is currently collapsed to its bar. */
+	private boolean _wodCollapsed;
+
+	/** Explicit grey fill / text colours for the collapsed bar (disposed with the tab). */
+	private Color _barBg;
+	private Color _barFg;
+
+	/** Height of the collapsed WOD bar, in pixels. */
+	private static final int COLLAPSED_BAR_HEIGHT = 24;
 
 	public HtmlWodTab(ComponentEditorPart componentEditorPart, int tabIndex, IEditorInput htmlInput, IEditorInput wodInput) {
 		super(componentEditorPart, tabIndex);
@@ -148,7 +162,15 @@ public class HtmlWodTab extends ComponentEditorTab {
 		}
 
 		restoreSashWeights();
-		hideWodIfNecessary();
+
+		// The WOD sidecar is usually empty for inline-binding (standalone) templates and
+		// rarely edited even when present. So start the pane collapsed to a thin bar when
+		// the .wod is empty, giving the template the full height; a .wod with content opens
+		// expanded so existing bindings are visible. Either way the bar/sash lets the user
+		// toggle it. (No _wodContainer at all means a standalone template — nothing to do.)
+		if (_wodContainer != null && wodEditor != null && wodEditor.getWodEditDocument().getLength() == 0) {
+			collapseWod();
+		}
 
 		_templateContainer.addControlListener(new ControlListener() {
 			public void controlMoved(ControlEvent e) {
@@ -156,8 +178,15 @@ public class HtmlWodTab extends ComponentEditorTab {
 			}
 
 			public void controlResized(ControlEvent e) {
-				HtmlWodTab.this.saveSashWeights();
-				HtmlWodTab.this.hideWodIfNecessary();
+				if (_wodCollapsed) {
+					// Keep the collapsed WOD row pinned to the bar height as the editor
+					// resizes (and on the first real layout, when the height is finally known).
+					// Don't persist weights while collapsed — the bar height isn't a
+					// user-chosen split and would otherwise overwrite the saved layout.
+					HtmlWodTab.this.sizeWodRowToBar();
+				} else {
+					HtmlWodTab.this.saveSashWeights();
+				}
 			}
 		});
 
@@ -175,37 +204,129 @@ public class HtmlWodTab extends ComponentEditorTab {
 		this.htmlActive = htmlActive;
 	}
 
-	private void hideWodIfNecessary() {
-		if (this._wodContainer == null) {
-			int[] weights = new int[] { 100 };
-			getParentSashForm().setWeights(weights);
+	/**
+	 * Collapses the WOD pane to a thin clickable bar, giving the template the full height.
+	 * The embedded WOD editor is hidden (not disposed) so expanding is instant. No-op for
+	 * standalone templates (no WOD pane) or if already collapsed.
+	 */
+	private void collapseWod() {
+		if (_wodContainer == null || _wodCollapsed || _wodContainer.isDisposed()) {
 			return;
 		}
-		
-		int[] weights = getParentSashForm().getWeights();
-		if (weights.length >= 2 && weights[1] < 132) {
-			if (this.nonEmptyWodWarning == null) {
-				this._wodContainer.getChildren()[0].setVisible(false);
-				this.nonEmptyWodWarning = new Label(this._wodContainer, SWT.CENTER);
-				this.nonEmptyWodWarning.setBackground(this._wodContainer.getBackground());
-				this.nonEmptyWodWarning.setForeground(this._wodContainer.getDisplay().getSystemColor(SWT.COLOR_GRAY));
-				if (this.wodEditor.getWodEditDocument().getLength() > 0) {
-					this.nonEmptyWodWarning.setText("wod file is not empty");
-				}
-				else {
-					this.nonEmptyWodWarning.setText("");
-				}
-				this.nonEmptyWodWarning.moveAbove(this._wodContainer.getChildren()[0]);
+		_wodCollapsed = true;
 
-				// MS: If the wod shrinks, force focus to the template
-				if (!isHtmlActive()) {
-					_templateContainer.forceFocus();
+		// Hide the embedded editor (kept, not disposed, so expanding is instant) and draw the
+		// bar directly onto the WOD container's own surface — no inset child Composite, so
+		// there's no white container margin showing around it and nothing to mis-center.
+		final Composite editorControl = (Composite) _wodContainer.getChildren()[0];
+		editorControl.setVisible(false);
+		installBarPainting();
+		_wodContainer.redraw();
+
+		// Size the WOD row to exactly the bar height. SashForm weights are proportional, not
+		// pixels, so derive them from the sash's current height — otherwise a fixed small
+		// weight clips the bar on a tall editor (what made it look "too collapsed").
+		sizeWodRowToBar();
+
+		// Focus belongs on the template when the WOD is tucked away.
+		if (!isHtmlActive()) {
+			_templateContainer.forceFocus();
+		}
+	}
+
+	/** Sets the sash weights so the collapsed WOD row is exactly {@link #COLLAPSED_BAR_HEIGHT} tall. */
+	private void sizeWodRowToBar() {
+		final int sashHeight = getParentSashForm().getClientArea().height;
+		if (sashHeight > COLLAPSED_BAR_HEIGHT * 2) {
+			getParentSashForm().setWeights(new int[] { sashHeight - COLLAPSED_BAR_HEIGHT, COLLAPSED_BAR_HEIGHT });
+		} else {
+			// Sash not laid out yet (or tiny) — fall back to a small proportional weight.
+			getParentSashForm().setWeights(new int[] { 95, 5 });
+		}
+	}
+
+	/**
+	 * Expands the WOD pane back to an editable split, restoring the embedded editor and the
+	 * user's last sash weights. No-op for standalone templates or if already expanded.
+	 */
+	private void expandWod() {
+		if (_wodContainer == null || !_wodCollapsed || _wodContainer.isDisposed()) {
+			return;
+		}
+		_wodCollapsed = false;
+
+		// Stop drawing the bar; show the editor again.
+		removeBarPainting();
+		final Composite editorControl = (Composite) _wodContainer.getChildren()[0];
+		editorControl.setVisible(true);
+		_wodContainer.setCursor(null);
+		_wodContainer.layout(true, true);
+		_wodContainer.redraw();
+
+		// Restore a sensible split: the user's saved weights, or a default if none/too small.
+		restoreSashWeights();
+		int[] weights = getParentSashForm().getWeights();
+		if (weights.length < 2 || weights[1] < 132) {
+			getParentSashForm().setWeights(new int[] { 70, 30 });
+		}
+	}
+
+	/**
+	 * Draws the collapsed bar directly on the WOD container's surface — a flat grey strip
+	 * (a fixed RGB, not a theme-dependent system colour, so it reads as inert chrome rather
+	 * than the editable white of an editor) with a hairline top separator and a muted label.
+	 *
+	 * <p>Painting straight onto the container, rather than nesting a child Composite, avoids
+	 * two macOS quirks at once: a child's {@code setBackground} not sticking (it stays white),
+	 * and the container's own white showing as a margin around an inset child.
+	 */
+	private void installBarPainting() {
+		if (_barBg == null) {
+			_barBg = new Color(_wodContainer.getDisplay(), 0xEC, 0xEC, 0xEC);
+		}
+		if (_barFg == null) {
+			_barFg = new Color(_wodContainer.getDisplay(), 0x70, 0x70, 0x70);
+		}
+		if (_barPainter == null) {
+			_barPainter = new org.eclipse.swt.events.PaintListener() {
+				public void paintControl(org.eclipse.swt.events.PaintEvent e) {
+					final org.eclipse.swt.graphics.Rectangle area = _wodContainer.getClientArea();
+					e.gc.setBackground(_barBg);
+					e.gc.fillRectangle(area);
+					final Color sep = new Color(e.gc.getDevice(), 0xCD, 0xCD, 0xCD);
+					e.gc.setForeground(sep);
+					e.gc.drawLine(0, 0, area.width, 0);
+					sep.dispose();
+					// Vertically-centered, left-padded label.
+					e.gc.setForeground(_barFg);
+					final String text = "No .wod bindings  —  click to add";
+					final org.eclipse.swt.graphics.Point ext = e.gc.textExtent(text);
+					e.gc.drawText(text, 10, (area.height - ext.y) / 2, true);
 				}
-			}
-		} else if (this.nonEmptyWodWarning != null) {
-			this.nonEmptyWodWarning.dispose();
-			this.nonEmptyWodWarning = null;
-			this._wodContainer.getChildren()[0].setVisible(true);
+			};
+			_wodContainer.addPaintListener(_barPainter);
+		}
+		if (_barMouse == null) {
+			_barMouse = new MouseAdapter() {
+				@Override
+				public void mouseUp(MouseEvent e) {
+					expandWod();
+				}
+			};
+			_wodContainer.addMouseListener(_barMouse);
+		}
+		_wodContainer.setCursor(_wodContainer.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+	}
+
+	/** Removes the bar's paint/mouse handlers from the WOD container (on expand). */
+	private void removeBarPainting() {
+		if (_barPainter != null) {
+			_wodContainer.removePaintListener(_barPainter);
+			_barPainter = null;
+		}
+		if (_barMouse != null) {
+			_wodContainer.removeMouseListener(_barMouse);
+			_barMouse = null;
 		}
 	}
 
@@ -277,6 +398,12 @@ public class HtmlWodTab extends ComponentEditorTab {
 			wodEditor.dispose();
 		}
 		templateEditor.dispose();
+		if (_barBg != null && !_barBg.isDisposed()) {
+			_barBg.dispose();
+		}
+		if (_barFg != null && !_barFg.isDisposed()) {
+			_barFg.dispose();
+		}
 		super.dispose();
 	}
 
