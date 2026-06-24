@@ -167,6 +167,14 @@ public final class ApiextModel {
 	private final List<Binding> _bindings;
 	private final List<Validation> _validations;
 
+	/**
+	 * Where the element comes from — its originating framework/bundle (e.g. "JavaWebObjects",
+	 * "AjaxSlim"), or null if unknown. This is not part of the {@code .apiext} file; it's
+	 * derived from the resolved {@code IType} and attached by the caller, because knowing the
+	 * source framework is useful both in the element-help list and in the rendered card.
+	 */
+	private String _origin;
+
 	private ApiextModel(SourceKind source, String className, boolean componentContent, boolean passthrough,
 			String doc, List<Binding> bindings, List<Validation> validations) {
 		_source = source;
@@ -181,6 +189,16 @@ public final class ApiextModel {
 	/** Which on-disk format this model was loaded from ({@code .api} or {@code .apiext}). */
 	public SourceKind getSource() {
 		return _source;
+	}
+
+	/** The originating framework/bundle (e.g. "AjaxSlim"), or null if unknown/unset. */
+	public String getOrigin() {
+		return _origin;
+	}
+
+	/** Attaches the originating framework/bundle name (derived from the resolved {@code IType}). */
+	public void setOrigin(String origin) {
+		_origin = origin;
 	}
 
 	/**

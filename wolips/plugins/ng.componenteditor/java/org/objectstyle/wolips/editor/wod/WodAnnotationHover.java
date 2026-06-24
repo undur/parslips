@@ -172,6 +172,15 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 	}
 
 	/**
+	 * Attaches the resolved origin to the model and renders it to an HTML hover card.
+	 * Centralizes the "set origin, then renderBody" step shared by all three lookup paths.
+	 */
+	private static HoverContent renderCard(String displayName, ApiextModel model, String origin) {
+		model.setOrigin(origin);
+		return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, model), true);
+	}
+
+	/**
 	 * Hover payload that knows whether it is already HTML (the rich {@code .apiext}
 	 * rendering) or plain text (the classic {@code .api} preview / error message, which
 	 * the caller escapes into a {@code <pre>}).
@@ -380,12 +389,16 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 			// render its richer content and use it INSTEAD of the .api preview. The format
 			// is in flux, so an unparsable .apiext yields null here and we fall through to
 			// the classic .api path below — .api still drives everything else.
+			// Where the element comes from (framework/bundle), shown in the card header.
+			// Resolved once from the type and attached to whichever model we render.
+			final String origin = ApiUtils.resolveOrigin(elementType);
+
 			if (elementType != null) {
 				byte[] apiextBytes = ApiUtils.findApiextBytes(elementType);
 				if (apiextBytes != null) {
 					ApiextModel apiext = ApiextModel.parse(apiextBytes);
 					if (apiext != null) {
-						return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, apiext), true);
+						return renderCard(displayName, apiext, origin);
 					}
 				}
 			}
@@ -404,7 +417,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 			if (globalApiext != null) {
 				ApiextModel apiext = ApiextModel.parse(globalApiext);
 				if (apiext != null) {
-					return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, apiext), true);
+					return renderCard(displayName, apiext, origin);
 				}
 			}
 
@@ -438,7 +451,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 			// Render the .api through the SAME template as .apiext (an .api is just an
 			// .apiext with the extension fields empty), so both hovers look identical apart
 			// from the source badge and the richer content .apiext can carry.
-			return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, ApiextModel.fromApiSnapshot(displayName, api)), true);
+			return renderCard(displayName, ApiextModel.fromApiSnapshot(displayName, api), origin);
 		}
 		catch (Exception e) {
 			return null;

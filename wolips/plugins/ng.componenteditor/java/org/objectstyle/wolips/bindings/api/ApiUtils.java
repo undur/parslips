@@ -237,6 +237,51 @@ public class ApiUtils {
 		}
 	}
 
+	/**
+	 * Derives a human-readable origin (framework/bundle/project name) for an element type —
+	 * where it comes from. Used by the element-help list and the rendered card so the user
+	 * can see which framework an element belongs to.
+	 *
+	 * <p>Resolution:
+	 * <ul>
+	 *   <li>Binary types (from a jar or a {@code .framework}) &rarr; the archive's base name,
+	 *       e.g. {@code "JavaWebObjects.jar"} &rarr; {@code "JavaWebObjects"}.</li>
+	 *   <li>Source types (in the workspace) &rarr; the containing project's name.</li>
+	 * </ul>
+	 *
+	 * @return the origin name, or null if it can't be determined
+	 */
+	public static String resolveOrigin(IType elementType) {
+		if (elementType == null) {
+			return null;
+		}
+		try {
+			IPackageFragmentRoot root = (IPackageFragmentRoot) elementType.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+			if (root != null) {
+				if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
+					// Jar / .framework: use the archive's base file name (strip path + extension).
+					IPath path = root.getPath();
+					if (path != null && path.lastSegment() != null) {
+						String last = path.lastSegment();
+						final int dot = last.lastIndexOf('.');
+						return dot > 0 ? last.substring(0, dot) : last;
+					}
+				}
+				// Source root: the element lives in this project.
+				if (root.getJavaProject() != null) {
+					return root.getJavaProject().getElementName();
+				}
+			}
+			// Fallback: the element type's own project.
+			if (elementType.getJavaProject() != null) {
+				return elementType.getJavaProject().getElementName();
+			}
+		} catch (Throwable t) {
+			// Best-effort only — origin is informational.
+		}
+		return null;
+	}
+
 	// ---- Per-type API lookup (project .api files) --------------------------
 
 	/**

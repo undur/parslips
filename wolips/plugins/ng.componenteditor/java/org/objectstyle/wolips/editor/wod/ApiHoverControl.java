@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 public class ApiHoverControl extends AbstractInformationControl implements IInformationControlExtension2 {
 
 	/** The popup's fixed size. Tall cards scroll within it; the resizable variant can grow. */
-	static final int WIDTH = 640;
+	static final int WIDTH = 670;
 	static final int HEIGHT = 560;
 
 	private Browser _browser;

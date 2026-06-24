@@ -53,6 +53,11 @@ public final class ApiextHtmlRenderer {
 		// Title row: element name.
 		b.append("<h3><code>").append(esc(displayName)).append("</code></h3>");
 
+		// Origin: which framework/bundle the element comes from (when known).
+		if (model.getOrigin() != null && !model.getOrigin().isEmpty()) {
+			b.append("<div class=\"origin\">from ").append(esc(model.getOrigin())).append("</div>");
+		}
+
 		// Status row: structural badges below the name (only if any apply).
 		if (model.isComponentContent() || model.isPassthrough()) {
 			b.append("<div class=\"status\">");
@@ -304,13 +309,14 @@ public final class ApiextHtmlRenderer {
 	}
 
 	/** Hover-sized adaptation of the /element-reference page styling. */
-	private static final String CSS = "body{font-family:-apple-system,system-ui,sans-serif;font-size:9pt;color:#1a1a1a;line-height:1.5;margin:0;padding:4px 6px;}"
+	private static final String CSS = "body{font-family:-apple-system,system-ui,sans-serif;font-size:10pt;color:#1a1a1a;line-height:1.5;margin:0;padding:4px 6px;}"
 				+ ".hdr{position:relative;padding-right:64px;margin:.1rem 0 .4rem;}"
 				+ "h3{margin:0;font-size:1.1em;display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;}"
 				+ "h3 code{background:none;padding:0;color:#1a4f8a;font-weight:700;}"
 				+ ".src{position:absolute;top:0;right:0;font-size:.66em;font-weight:600;font-family:ui-monospace,Menlo,monospace;padding:.05rem .35rem;border-radius:4px;white-space:nowrap;}"
 				+ ".src-apiext{background:#eef6ff;color:#1c4f8a;border:1px solid #c5dcf6;}"
 				+ ".src-api{background:#f1f3f5;color:#6c757d;border:1px solid #d3d8de;}"
+				+ ".origin{color:#999;font-size:.82em;margin:.05rem 0 .1rem;}"
 				+ ".status{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem;}"
 				+ ".badge{font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:.05rem .4rem;border-radius:4px;white-space:nowrap;}"
 				+ ".b-container{background:#fff3e0;color:#9a5b17;border:1px solid #f0d2a8;}"
