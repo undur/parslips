@@ -91,6 +91,28 @@ public class ElementHelpView extends ViewPart {
 		_filter.setMessage("Filter elements");
 		_filter.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		_filter.addModifyListener(e -> populateTable());
+		// The search field's cancel (X) icon doesn't clear the text by itself — clicking it
+		// fires SWT.Selection with detail == SWT.CANCEL. Clear the field ourselves so the icon
+		// works on a single click. (The search icon fires SWT.Selection with detail == SWT.ICON_SEARCH.)
+		// The native search-field cancel (X) icon should fire SWT.Selection with
+		// detail == SWT.CANCEL, but on this Eclipse/Cocoa build it doesn't fire at all
+		// (an Eclipse-wide bug — even the Error Log's own search box has it). We still want
+		// single-click-to-clear, so detect a click in the cancel icon's region ourselves:
+		// it sits at the right edge of the field and is only present when there's text.
+		_filter.addListener(SWT.Selection, e -> {
+			if (e.detail == SWT.CANCEL) {
+				_filter.setText(""); // honour the native event too, on platforms where it works
+			}
+		});
+		_filter.addListener(SWT.MouseDown, e -> {
+			if (_filter.getText().isEmpty()) {
+				return; // no cancel icon shown when the field is empty
+			}
+			final int cancelZone = 22; // approx. width of the cancel icon at the right edge
+			if (e.x >= _filter.getClientArea().width - cancelZone) {
+				_filter.setText("");
+			}
+		});
 
 		_table = new Table(left, SWT.FULL_SELECTION | SWT.BORDER);
 		_table.setHeaderVisible(true);
