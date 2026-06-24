@@ -465,6 +465,7 @@
       <view name="Bindings Inspector"
             category="ng.componenteditor.views"
             class="org.objectstyle.wolips.editor.inspector.BindingsInspectorPageBookView"
+            icon="icons/parsley16.png"
             id="ng.componenteditor.inspector.BindingsInspectorPageBookView"/>
       <view name="Parsley Explorer"
             allowMultiple="false"
@@ -476,6 +477,7 @@
             allowMultiple="false"
             category="ng.componenteditor.views"
             class="org.objectstyle.wolips.editor.help.ElementHelpView"
+            icon="icons/parsley16.png"
             id="ng.componenteditor.help.ElementHelpView"/>
    </extension>
 

@@ -24,8 +24,11 @@ import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.jface.text.Region;
 import org.objectstyle.wolips.bindings.api.ApiextHtmlRenderer;
 import org.objectstyle.wolips.bindings.api.ElementCatalog;
+import org.objectstyle.wolips.bindings.wod.TypeCache;
+import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
 
 /**
  * A help view that lists every element available to the active component editor's project
@@ -110,6 +113,8 @@ public class ElementHelpView extends ViewPart {
 		stateCol.addListener(SWT.Selection, e -> sortBy(2, stateCol));
 
 		_table.addListener(SWT.Selection, e -> showSelectedCard());
+		// Double-click opens the element — the same action as cmd-clicking it in a template.
+		_table.addListener(SWT.MouseDoubleClick, e -> openSelectedElement());
 
 		// ---- Right: detail card ----
 		_browser = new Browser(sash, SWT.NONE);
@@ -273,6 +278,25 @@ public class ElementHelpView extends ViewPart {
 		final ElementCatalog.Entry entry = (ElementCatalog.Entry) selection[0].getData();
 		final String body = ElementCatalog.renderCardBody(entry, _project);
 		_browser.setText("<html><head><style>" + ApiextHtmlRenderer.css() + "</style></head><body>" + body + "</body></html>");
+	}
+
+	/**
+	 * Opens the selected element — the same action as cmd-clicking the element in a
+	 * template. Reuses {@link WodElementTypeHyperlink#open()} so the open/reveal behaviour
+	 * (the type's source, or the component's template in the component editor) is identical.
+	 * Does nothing for elements that can't be resolved to a type.
+	 */
+	private void openSelectedElement() {
+		final TableItem[] selection = _table.getSelection();
+		if (selection.length == 0 || _project == null) {
+			return;
+		}
+		final ElementCatalog.Entry entry = (ElementCatalog.Entry) selection[0].getData();
+		if (entry.getType() == null) {
+			return;
+		}
+		// Region is only used for the in-editor link UI; opening doesn't need a real one.
+		new WodElementTypeHyperlink(new Region(0, 0), entry.getSimpleName(), _project, new TypeCache()).open();
 	}
 
 	@Override
