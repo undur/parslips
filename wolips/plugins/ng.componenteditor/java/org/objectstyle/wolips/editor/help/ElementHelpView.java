@@ -287,6 +287,32 @@ public class ElementHelpView extends ViewPart {
 		}
 	}
 
+	/**
+	 * Selects and shows the element with the given simple name in the list (clearing any
+	 * active filter so it's visible), and renders its card. Used by the "Show in Element
+	 * Reference" command to reveal the element under the template editor's cursor.
+	 *
+	 * @param elementName the element's simple name (e.g. "WOString")
+	 */
+	public void revealElement(String elementName) {
+		if (elementName == null || _table == null || _table.isDisposed()) {
+			return;
+		}
+		// Clear the filter so the target row isn't hidden (setText repopulates the table).
+		if (!_filter.getText().isEmpty()) {
+			_filter.setText("");
+		}
+		for (final TableItem item : _table.getItems()) {
+			final ElementCatalog.Entry entry = (ElementCatalog.Entry) item.getData();
+			if (entry != null && elementName.equalsIgnoreCase(entry.getSimpleName())) {
+				_table.setSelection(item);
+				_table.showSelection();
+				showSelectedCard();
+				return;
+			}
+		}
+	}
+
 	/** Renders the selected entry's card into the browser. */
 	private void showSelectedCard() {
 		if (_browser == null || _browser.isDisposed()) {

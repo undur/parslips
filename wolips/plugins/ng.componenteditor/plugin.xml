@@ -199,6 +199,10 @@
       <command name="Open WO Declaration" description="Open WO Declaration"
             categoryId="ng.componenteditor.commands"
             id="ng.componenteditor.action.openDeclaration"/>
+      <command name="Show in Element Reference"
+            description="Reveal the element under the cursor in the Element Reference view"
+            categoryId="ng.componenteditor.commands"
+            id="ng.componenteditor.action.showInElementReference"/>
    </extension>
 
 <!-- Command handlers for switch-to actions (work from any editor, not just ComponentEditor) -->
@@ -213,6 +217,8 @@
             class="org.objectstyle.wolips.editor.menu.SwitchToApiHandler"/>
       <handler commandId="ng.componenteditor.action.openDeclaration"
             class="org.objectstyle.wolips.editor.template.OpenDeclarationHandler"/>
+      <handler commandId="ng.componenteditor.action.showInElementReference"
+            class="org.objectstyle.wolips.editor.template.ShowInElementReferenceHandler"/>
    </extension>
 
    <extension point="org.eclipse.ui.bindings">
@@ -257,6 +263,10 @@
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
            sequence="M1+2 X"/>
+      <key commandId="ng.componenteditor.action.showInElementReference"
+           contextId="ng.componenteditor.componentEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="M1+M3+9"/>
       <key commandId="ng.componenteditor.editors.command.format"
            contextId="ng.componenteditor.componentEditorScope"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
