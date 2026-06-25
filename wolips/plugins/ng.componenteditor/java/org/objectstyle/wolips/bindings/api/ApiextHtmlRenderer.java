@@ -77,8 +77,10 @@ public final class ApiextHtmlRenderer {
 			b.append("<div class=\"role\">").append(markdown(model.getDoc())).append("</div>");
 		}
 
-		// Bindings table.
-		final List<ApiextModel.Binding> bindings = model.getBindings();
+		// Bindings table, listed alphabetically by name (a copy — we don't reorder the model).
+		// (Required-first ordering is a possible future tweak; alphabetical is the default.)
+		final List<ApiextModel.Binding> bindings = new java.util.ArrayList<>(model.getBindings());
+		bindings.sort(java.util.Comparator.comparing(bd -> bd.getName() == null ? "" : bd.getName().toLowerCase()));
 		if (!bindings.isEmpty()) {
 			b.append("<table class=\"bindings\"><thead><tr><th>Binding</th><th>Type</th><th>Description</th></tr></thead><tbody>");
 			for (final ApiextModel.Binding binding : bindings) {
