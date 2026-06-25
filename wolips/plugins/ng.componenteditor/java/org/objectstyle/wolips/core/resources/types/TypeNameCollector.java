@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
@@ -153,6 +154,13 @@ public class TypeNameCollector extends TypeNameRequestor {
 		try {
 			IType type = _project.findType(className);
 			if (type != null) {
+				// Skip abstract types: an abstract element (e.g. AjaxDynamicElement) can never
+				// be instantiated as a tag, so it has no place in completion or the element
+				// reference. Checking the resolved type's flags is authoritative across binary
+				// and source types. Filtering here covers every consumer of this enumeration.
+				if (Flags.isAbstract(type.getFlags())) {
+					return;
+				}
 				boolean typeMatches = true;
 				if (_requireTypeInProject) {
 					IResource correspondingResource = type.getResource();
