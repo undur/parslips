@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
+import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
 
@@ -45,18 +46,28 @@ public final class ElementCatalog {
 		private final IType _type;
 		private final String _origin;
 		private final DefinitionKind _definitionKind;
+		private final List<String> _tags;
 
-		Entry(String simpleName, String qualifiedName, IType type, String origin, DefinitionKind definitionKind) {
+		Entry(String simpleName, String qualifiedName, IType type, String origin, DefinitionKind definitionKind, List<String> tags) {
 			_simpleName = simpleName;
 			_qualifiedName = qualifiedName;
 			_type = type;
 			_origin = origin;
 			_definitionKind = definitionKind;
+			_tags = java.util.Collections.unmodifiableList(tags);
 		}
 
 		/** Short element name (e.g. "WOString"). */
 		public String getSimpleName() {
 			return _simpleName;
+		}
+
+		/**
+		 * Tag shortcuts that resolve to this element (e.g. "repetition" for WORepetition),
+		 * excluding the element's own class name; sorted, never null, may be empty.
+		 */
+		public List<String> getTags() {
+			return _tags;
 		}
 
 		/** Fully-qualified class name. */
@@ -98,6 +109,10 @@ public final class ElementCatalog {
 			return entries;
 		}
 		try {
+			// Reverse-map element class name -> tag shortcuts that resolve to it (e.g.
+			// "repetition" -> WORepetition). Keyed by simple class name; computed once.
+			final java.util.Map<String, List<String>> shortcutsByElement = shortcutsByElement();
+
 			// Same enumeration the <wo:…> completion uses: every element type on the classpath.
 			final TypeNameCollector collector = new TypeNameCollector(project, false);
 			BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, null);
@@ -107,13 +122,45 @@ public final class ElementCatalog {
 				final String simpleName = BindingReflectionUtils.getShortClassName(qualifiedName);
 				final String origin = ApiUtils.resolveOrigin(type);
 				final DefinitionKind kind = definitionKindFor(type, simpleName, project);
-				entries.add(new Entry(simpleName, qualifiedName, type, origin, kind));
+				final List<String> tags = shortcutsByElement.getOrDefault(simpleName, java.util.Collections.emptyList());
+				entries.add(new Entry(simpleName, qualifiedName, type, origin, kind, tags));
 			}
 		} catch (Throwable t) {
 			// Best-effort enumeration — return whatever we gathered.
 		}
 		entries.sort(Comparator.comparing(e -> e.getSimpleName().toLowerCase()));
 		return entries;
+	}
+
+	/**
+	 * Builds a map from element simple class name to the tag shortcuts that resolve to it
+	 * (e.g. {@code "WORepetition" -> ["repetition"]}), excluding any shortcut equal to the
+	 * element name itself. Shortcuts per element are sorted. Project-wide (shortcuts are a
+	 * global preference), so it's computed once per enumeration.
+	 */
+	private static java.util.Map<String, List<String>> shortcutsByElement() {
+		final java.util.Map<String, List<String>> map = new java.util.HashMap<>();
+		try {
+			for (final TagShortcut shortcut : ApiCache.getTagShortcuts()) {
+				final String name = shortcut.getShortcut();
+				final String actual = shortcut.getActual();
+				if (name == null || actual == null) {
+					continue;
+				}
+				final int dot = actual.lastIndexOf('.');
+				final String element = dot >= 0 ? actual.substring(dot + 1) : actual;
+				if (name.equalsIgnoreCase(element)) {
+					continue; // skip a "shortcut" that is just the element name
+				}
+				map.computeIfAbsent(element, k -> new ArrayList<>()).add(name);
+			}
+			for (final List<String> tags : map.values()) {
+				tags.sort(String.CASE_INSENSITIVE_ORDER);
+			}
+		} catch (Throwable t) {
+			// Best-effort — no tags column if shortcuts can't be read.
+		}
+		return map;
 	}
 
 	/**

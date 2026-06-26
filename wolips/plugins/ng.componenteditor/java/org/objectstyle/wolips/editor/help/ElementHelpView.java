@@ -128,11 +128,15 @@ public class ElementHelpView extends ViewPart {
 		final TableColumn stateCol = new TableColumn(_table, SWT.CENTER);
 		stateCol.setText("API");
 		stateCol.setWidth(70);
+		final TableColumn tagsCol = new TableColumn(_table, SWT.LEFT);
+		tagsCol.setText("Tags");
+		tagsCol.setWidth(160);
 
 		// Click a header to sort by that column; click again to reverse.
 		nameCol.addListener(SWT.Selection, e -> sortBy(0, nameCol));
 		originCol.addListener(SWT.Selection, e -> sortBy(1, originCol));
 		stateCol.addListener(SWT.Selection, e -> sortBy(2, stateCol));
+		tagsCol.addListener(SWT.Selection, e -> sortBy(3, tagsCol));
 
 		_table.addListener(SWT.Selection, e -> showSelectedCard());
 		// Double-click opens the element — the same action as cmd-clicking it in a template.
@@ -233,6 +237,12 @@ public class ElementHelpView extends ViewPart {
 					.comparingInt((ElementCatalog.Entry e) -> e.getDefinitionKind().ordinal())
 					.thenComparing(e -> e.getSimpleName().toLowerCase());
 			break;
+		case 3:
+			// Tags: elements with shortcuts first (by their first tag), tagless last; name tiebreaker.
+			cmp = java.util.Comparator
+					.comparing((ElementCatalog.Entry e) -> e.getTags().isEmpty() ? "￿" : e.getTags().get(0).toLowerCase())
+					.thenComparing(e -> e.getSimpleName().toLowerCase());
+			break;
 		case 0:
 		default:
 			cmp = java.util.Comparator.comparing(e -> e.getSimpleName().toLowerCase());
@@ -252,13 +262,17 @@ public class ElementHelpView extends ViewPart {
 		final String filter = _filter.getText().trim().toLowerCase();
 		_table.removeAll();
 		for (final ElementCatalog.Entry entry : _entries) {
-			if (!filter.isEmpty() && !entry.getSimpleName().toLowerCase().contains(filter)
-					&& (entry.getOrigin() == null || !entry.getOrigin().toLowerCase().contains(filter))) {
+			final String tags = String.join(", ", entry.getTags());
+			if (!filter.isEmpty()
+					&& !entry.getSimpleName().toLowerCase().contains(filter)
+					&& (entry.getOrigin() == null || !entry.getOrigin().toLowerCase().contains(filter))
+					&& !tags.toLowerCase().contains(filter)) {
 				continue;
 			}
 			final TableItem item = new TableItem(_table, SWT.NONE);
 			item.setText(0, entry.getSimpleName());
 			item.setText(1, entry.getOrigin() != null ? entry.getOrigin() : "");
+			item.setText(3, tags);
 			item.setData(entry);
 			styleStateCell(item, entry.getDefinitionKind());
 		}
@@ -283,6 +297,7 @@ public class ElementHelpView extends ViewPart {
 			// Grey the whole row so undocumented elements visibly recede.
 			item.setForeground(0, _noneFg);
 			item.setForeground(1, _noneFg);
+			item.setForeground(3, _noneFg);
 			break;
 		}
 	}
