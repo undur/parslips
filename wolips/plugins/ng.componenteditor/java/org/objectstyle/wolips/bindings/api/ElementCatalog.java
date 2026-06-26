@@ -47,19 +47,35 @@ public final class ElementCatalog {
 		private final String _origin;
 		private final DefinitionKind _definitionKind;
 		private final List<String> _tags;
+		private final String _overriddenBy;
 
-		Entry(String simpleName, String qualifiedName, IType type, String origin, DefinitionKind definitionKind, List<String> tags) {
+		Entry(String simpleName, String qualifiedName, IType type, String origin, DefinitionKind definitionKind, List<String> tags, String overriddenBy) {
 			_simpleName = simpleName;
 			_qualifiedName = qualifiedName;
 			_type = type;
 			_origin = origin;
 			_definitionKind = definitionKind;
 			_tags = java.util.Collections.unmodifiableList(tags);
+			_overriddenBy = overriddenBy;
 		}
 
 		/** Short element name (e.g. "WOString"). */
 		public String getSimpleName() {
 			return _simpleName;
+		}
+
+		/**
+		 * The element this one is overridden/replaced by in the current project (e.g. WOString
+		 * is overridden by ERXWOString when ERExtensions' aliases are active), or null if this
+		 * element is not replaced. Derived from the project's Parsley tag aliases.
+		 */
+		public String getOverriddenBy() {
+			return _overriddenBy;
+		}
+
+		/** True if this element is replaced by another in the current project. */
+		public boolean isOverridden() {
+			return _overriddenBy != null;
 		}
 
 		/**
@@ -117,13 +133,25 @@ public final class ElementCatalog {
 			final TypeNameCollector collector = new TypeNameCollector(project, false);
 			BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, null);
 
+			final boolean aliasesActive = ParsleyTagAliasResolver.isActiveFor(project);
 			for (final String qualifiedName : collector.getTypeNames()) {
 				final IType type = collector.getTypeForClassName(qualifiedName);
 				final String simpleName = BindingReflectionUtils.getShortClassName(qualifiedName);
 				final String origin = ApiUtils.resolveOrigin(type);
 				final DefinitionKind kind = definitionKindFor(type, simpleName, project);
 				final List<String> tags = shortcutsByElement.getOrDefault(simpleName, java.util.Collections.emptyList());
-				entries.add(new Entry(simpleName, qualifiedName, type, origin, kind, tags));
+				// Is this element replaced by another in this project? Resolve its own name
+				// through the aliases; if it resolves to a different element, that's the override.
+				String overriddenBy = null;
+				if (aliasesActive) {
+					final String resolved = ParsleyTagAliasResolver.resolve(project, simpleName);
+					final int dot = resolved.lastIndexOf('.');
+					final String resolvedSimple = dot >= 0 ? resolved.substring(dot + 1) : resolved;
+					if (!resolvedSimple.equals(simpleName)) {
+						overriddenBy = resolvedSimple;
+					}
+				}
+				entries.add(new Entry(simpleName, qualifiedName, type, origin, kind, tags, overriddenBy));
 			}
 		} catch (Throwable t) {
 			// Best-effort enumeration — return whatever we gathered.
@@ -222,6 +250,7 @@ public final class ElementCatalog {
 		final IType type = entry.getType();
 		final String displayName = entry.getSimpleName();
 		final String origin = entry.getOrigin();
+		final String overriddenBy = entry.getOverriddenBy(); // orange "overridden by X" banner, or null
 
 		try {
 			// Project / bundled .apiext first.
@@ -231,7 +260,7 @@ public final class ElementCatalog {
 					final ApiextModel m = ApiextModel.parse(apiextBytes);
 					if (m != null) {
 						m.setOrigin(origin);
-						return ApiextHtmlRenderer.renderBody(displayName, m);
+						return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, m);
 					}
 				}
 			}
@@ -243,7 +272,7 @@ public final class ElementCatalog {
 				final ApiextModel m = ApiextModel.parse(globalApiext);
 				if (m != null) {
 					m.setOrigin(origin);
-					return ApiextHtmlRenderer.renderBody(displayName, m);
+					return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, m);
 				}
 			}
 
@@ -262,7 +291,7 @@ public final class ElementCatalog {
 			if (api != null) {
 				final ApiextModel m = ApiextModel.fromApiSnapshot(displayName, api);
 				m.setOrigin(origin);
-				return ApiextHtmlRenderer.renderBody(displayName, m);
+				return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, m);
 			}
 		} catch (Throwable t) {
 			// fall through to the no-API card

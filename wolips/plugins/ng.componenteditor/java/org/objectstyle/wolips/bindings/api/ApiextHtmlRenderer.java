@@ -38,15 +38,22 @@ public final class ApiextHtmlRenderer {
 	 * {@code <html>} that results from embedding a full document.
 	 */
 	public static String renderBody(String displayName, ApiextModel model) {
-		return renderBody(displayName, null, model);
+		return renderBody(displayName, null, null, model);
+	}
+
+	public static String renderBody(String displayName, String note, ApiextModel model) {
+		return renderBody(displayName, note, null, model);
 	}
 
 	/**
-	 * @param note an optional muted sub-note under the title (e.g. "docs from WOString" when
-	 *             the resolved element's documentation is inherited from an element it
-	 *             replaces); null for none. Shown greyed, to set it apart from element names.
+	 * @param note         an optional muted sub-note under the title (e.g. "docs from WOString"
+	 *                     when the documentation is inherited from a replaced element); null for
+	 *                     none. Shown greyed, to set it apart from element names.
+	 * @param overriddenBy if non-null, the element that replaces this one in the current project
+	 *                     (e.g. "ERXWOString"); rendered as an orange "overridden by…" banner so
+	 *                     it's clear this element is effectively replaced in this context.
 	 */
-	public static String renderBody(String displayName, String note, ApiextModel model) {
+	public static String renderBody(String displayName, String note, String overriddenBy, ApiextModel model) {
 		final StringBuilder b = new StringBuilder(2048);
 
 		// Header. The source marker (.api / .apiext) is pinned to the top-right corner,
@@ -69,6 +76,12 @@ public final class ApiextHtmlRenderer {
 		// Origin: which framework/bundle the element comes from (when known).
 		if (model.getOrigin() != null && !model.getOrigin().isEmpty()) {
 			b.append("<div class=\"origin\">from ").append(esc(model.getOrigin())).append("</div>");
+		}
+
+		// Override banner: this element is replaced by another in the current project.
+		if (overriddenBy != null && !overriddenBy.isEmpty()) {
+			b.append("<div class=\"overridden\">Overridden by <code>").append(esc(overriddenBy))
+					.append("</code> in this project</div>");
 		}
 
 		// Status row: structural badges below the name (only if any apply).
@@ -355,6 +368,8 @@ public final class ApiextHtmlRenderer {
 				+ ".src-api{background:#f1f3f5;color:#6c757d;border:1px solid #d3d8de;}"
 				+ ".origin{color:#999;font-size:.82em;margin:.05rem 0 .1rem;}"
 				+ ".docnote{color:#999;font-size:.78em;font-weight:normal;}"
+				+ ".overridden{background:#fff3e8;color:#9a4d12;border-left:3px solid #e0791a;border-radius:0 4px 4px 0;padding:.3rem .5rem;margin:.2rem 0 .3rem;font-size:.86em;}"
+				+ ".overridden code{background:#fbe4cf;color:#8a3f0c;}"
 				+ ".no-api{color:#9aa0a8;font-style:italic;font-size:.9em;margin:.6rem 0 .2rem;}"
 				+ ".status{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem;}"
 				+ ".badge{font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:.05rem .4rem;border-radius:4px;white-space:nowrap;}"

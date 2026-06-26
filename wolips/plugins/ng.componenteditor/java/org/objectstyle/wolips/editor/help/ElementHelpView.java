@@ -69,6 +69,8 @@ public class ElementHelpView extends ViewPart {
 	private Color _apiBg;
 	private Color _apiFg;
 	private Color _noneFg;
+	/** Orange, used to mark an element that is overridden/replaced in the current project. */
+	private Color _overriddenFg;
 
 	/** Listens for editor activation so the list follows the frontmost editor. */
 	private IPartListener2 _partListener;
@@ -131,12 +133,16 @@ public class ElementHelpView extends ViewPart {
 		final TableColumn tagsCol = new TableColumn(_table, SWT.LEFT);
 		tagsCol.setText("Tags");
 		tagsCol.setWidth(160);
+		final TableColumn overriddenCol = new TableColumn(_table, SWT.LEFT);
+		overriddenCol.setText("Overridden by");
+		overriddenCol.setWidth(160);
 
 		// Click a header to sort by that column; click again to reverse.
 		nameCol.addListener(SWT.Selection, e -> sortBy(0, nameCol));
 		originCol.addListener(SWT.Selection, e -> sortBy(1, originCol));
 		stateCol.addListener(SWT.Selection, e -> sortBy(2, stateCol));
 		tagsCol.addListener(SWT.Selection, e -> sortBy(3, tagsCol));
+		overriddenCol.addListener(SWT.Selection, e -> sortBy(4, overriddenCol));
 
 		_table.addListener(SWT.Selection, e -> showSelectedCard());
 		// Double-click opens the element — the same action as cmd-clicking it in a template.
@@ -165,6 +171,7 @@ public class ElementHelpView extends ViewPart {
 		_apiBg = new Color(d, 0xF1, 0xF3, 0xF5);
 		_apiFg = new Color(d, 0x6C, 0x75, 0x7D);
 		_noneFg = new Color(d, 0x9A, 0xA0, 0xA8);
+		_overriddenFg = new Color(d, 0xC0, 0x5A, 0x12); // orange — "replaced in this project"
 	}
 
 	/**
@@ -237,6 +244,13 @@ public class ElementHelpView extends ViewPart {
 					.comparingInt((ElementCatalog.Entry e) -> e.getDefinitionKind().ordinal())
 					.thenComparing(e -> e.getSimpleName().toLowerCase());
 			break;
+		case 4:
+			// Overridden by: overridden elements first (by the override target), others last;
+			// name tiebreaker. Groups all the replaced elements together for a quick scan.
+			cmp = java.util.Comparator
+					.comparing((ElementCatalog.Entry e) -> e.getOverriddenBy() == null ? "￿" : e.getOverriddenBy().toLowerCase())
+					.thenComparing(e -> e.getSimpleName().toLowerCase());
+			break;
 		case 3:
 			// Tags: elements with shortcuts first (by their first tag), tagless last; name tiebreaker.
 			cmp = java.util.Comparator
@@ -266,7 +280,8 @@ public class ElementHelpView extends ViewPart {
 			if (!filter.isEmpty()
 					&& !entry.getSimpleName().toLowerCase().contains(filter)
 					&& (entry.getOrigin() == null || !entry.getOrigin().toLowerCase().contains(filter))
-					&& !tags.toLowerCase().contains(filter)) {
+					&& !tags.toLowerCase().contains(filter)
+					&& (entry.getOverriddenBy() == null || !entry.getOverriddenBy().toLowerCase().contains(filter))) {
 				continue;
 			}
 			final TableItem item = new TableItem(_table, SWT.NONE);
@@ -275,6 +290,15 @@ public class ElementHelpView extends ViewPart {
 			item.setText(3, tags);
 			item.setData(entry);
 			styleStateCell(item, entry.getDefinitionKind());
+			// "Overridden by" column: what replaces this element in the project being viewed
+			// (e.g. ERXWOString for WOString). An overridden element's whole row is tinted
+			// orange so it reads as replaced at a glance.
+			if (entry.isOverridden()) {
+				item.setText(4, entry.getOverriddenBy());
+				for (int col = 0; col < _table.getColumnCount(); col++) {
+					item.setForeground(col, _overriddenFg);
+				}
+			}
 		}
 	}
 
@@ -379,6 +403,7 @@ public class ElementHelpView extends ViewPart {
 		disposeColor(_apiBg);
 		disposeColor(_apiFg);
 		disposeColor(_noneFg);
+		disposeColor(_overriddenFg);
 		super.dispose();
 	}
 
