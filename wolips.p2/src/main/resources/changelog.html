@@ -39,6 +39,32 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- June 26, 2026 -->
+			<div class="card">
+				<h2 class="date-header">June 26, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>One source of truth for what a tag means</h3>
+					<p>Phew. I've wanted this for so long: Eclipse/the template editor and the WO runtime now <strong>share a single, declarative tag registry</strong> &mdash; so the editor and the application will interpret tags through a single mechanism.</p>
+					<p>Until now, the template editor carried its own built-in "tag shortcut" registry for tags like <code>&lt;wo:str&gt;</code> and really had no idea whether it matched what WO would actually render at runtime. It usually did &mdash; but &ldquo;usually&rdquo; is where subtle, maddening mismatches live. The classic example: WebObjects frameworks <em>substitute</em> elements at runtime. Bind a <code>&lt;wo:str&gt;</code> and ERExtensions quietly swaps in its own <code>ERXWOString</code> when the page renders. That substitution lived only in framework code that ran at startup &mdash; completely invisible to the editor.</p>
+					<p>Now element tags are <strong>declared by frameworks and applications</strong>. A framework or application drops a simple <code>parsley-tag-aliases.properties</code> file on its classpath:</p>
+					<pre class="code-block"><code>str       = WOString          <span class="cmt"># a friendly shortcut</span>
+WOString  = ERXWOString       <span class="cmt"># an element replacement</span></code></pre>
+					<p>A tag shortcut and an element replacement are pretty much the same thing &mdash; an alias from one name to another &mdash; so they share one mechanism. Resolution is <em>recursive</em>: <code>str</code> &rarr; <code>WOString</code> &rarr; <code>ERXWOString</code>, following the chain to whatever your app really renders. The Parsley runtime reads this file to build pages; the editor reads the very same files from your project&rsquo;s classpath.</p>
+					<p>What you get, across the whole editor:</p>
+					<ul>
+						<li><strong>Autocomplete</strong> offers the tags your project actually defines.</li>
+						<li><strong>Hover and binding completion</strong> resolve the full chain. Hovering <code>&lt;wo:str&gt;</code> shows <code>str &rarr; WOString &rarr; ERXWOString</code> &mdash; the truth of what renders.</li>
+					</ul>
+					<img src="img/override-hover.png" alt="The element hover for a &lt;wo:str&gt; tag, showing the full resolution chain str &rarr; WOString &rarr; ERXWOString in the header, with a note that the documentation is inherited from WOString, and the bindings table below." />
+					<ul>
+						<li><strong>The Element Reference</strong> marks overridden elements in orange and a dedicated &ldquo;Overridden by&rdquo; column, so you can see at a glance which built-in elements are replaced in your project, and with what.</li>
+					</ul>
+					<img src="img/override-reference.png" alt="The Element Reference view showing overridden elements: rows like WOString are tinted orange with an &lsquo;Overridden by&rsquo; column naming the replacement (ERXWOString), and the detail card carries an &lsquo;Overridden by ERXWOString in this project&rsquo; banner." />
+					<p>It is opt-in and per-project: a project that contains no alias files behaves exactly as before. And it&rsquo;s the first step and foundation for something larger &mdash; a proper <em>tag library</em>, where a framework fully describes its own tags to the tooling.</p>
+				</div>
+			</div>
+
 			<!-- June 24, 2026 -->
 			<div class="card">
 				<h2 class="date-header">June 24, 2026</h2>
