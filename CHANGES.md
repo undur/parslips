@@ -12,6 +12,34 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Editor: read the project's declared tag vocabulary (Parsley tag aliases)
+
+When a project declares Parsley tag aliases — any `parsley-tag-aliases.properties` on its
+classpath, as shipped by the Parsley parser and frameworks like wonder-slim's ERExtensions
+— the editor now resolves tag names through them, exactly as the runtime does, instead of
+the legacy WOLips tag-shortcut preference. The switch is per-project and all-or-nothing
+(`ParsleyTagAliasResolver`): projects without such a file keep using the legacy mechanism
+unchanged.
+
+Resolution is recursive to a fixed point (`str` → `WOString` → `ERXWOString`), so the
+editor understands element replacements (a framework substituting `ERXWOString` for
+`WOString`) the same way the running app does. It feeds every consumer: `<wo:…>` completion
+(offers the real alias names), the hover, binding-name completion, validation, the "did you
+mean?" suggestions, and the Element Reference view (including the Tags column).
+
+Two resolution targets, by purpose:
+- **Display** (hover header) shows the full chain, e.g. `str → WOString → ERXWOString`, with
+  a greyed "docs from WOString" note when the resolved element's documentation is inherited
+  from an element it replaces (the replacement shares its bindings).
+- **Bindings/validation** resolve to the nearest *documented* element in the chain (the
+  cheap, cached `WOString` rather than the heavyweight `ERXWOString`). This is both more
+  correct and far faster — it avoids per-tag reflection and a project-wide element scan that
+  would otherwise run on every save.
+
+The alias files are read from the resolved classpath (jars, this project's output, and
+referenced workspace projects' output), mirroring the runtime classloader; results are
+cached per project.
+
 ### Editor: Element Reference view
 
 A new view (Window → Show View → Parsley → Element Reference) lists every element

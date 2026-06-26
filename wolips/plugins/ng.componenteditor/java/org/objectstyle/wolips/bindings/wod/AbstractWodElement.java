@@ -441,11 +441,21 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 
       // Also include tag shortcut names as candidates. A user typing
       // "repetiti" is more likely trying to type the shortcut "repetition"
-      // (distance 2) than the class name "WORepetition" (distance 4).
-      for (TagShortcut tagShortcut : ApiCache.getTagShortcuts()) {
-        String shortcutName = tagShortcut.getShortcut();
-        if (!simpleNames.contains(shortcutName)) {
-          simpleNames.add(shortcutName);
+      // (distance 2) than the class name "WORepetition" (distance 4). Use the
+      // project's Parsley aliases when present, otherwise the legacy shortcuts.
+      if (org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject)) {
+        for (String alias : org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.aliasMap(javaProject).keySet()) {
+          if (!simpleNames.contains(alias)) {
+            simpleNames.add(alias);
+          }
+        }
+      }
+      else {
+        for (TagShortcut tagShortcut : ApiCache.getTagShortcuts()) {
+          String shortcutName = tagShortcut.getShortcut();
+          if (!simpleNames.contains(shortcutName)) {
+            simpleNames.add(shortcutName);
+          }
         }
       }
 

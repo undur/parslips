@@ -111,7 +111,7 @@ public final class ElementCatalog {
 		try {
 			// Reverse-map element class name -> tag shortcuts that resolve to it (e.g.
 			// "repetition" -> WORepetition). Keyed by simple class name; computed once.
-			final java.util.Map<String, List<String>> shortcutsByElement = shortcutsByElement();
+			final java.util.Map<String, List<String>> shortcutsByElement = shortcutsByElement(project);
 
 			// Same enumeration the <wo:…> completion uses: every element type on the classpath.
 			final TypeNameCollector collector = new TypeNameCollector(project, false);
@@ -138,21 +138,38 @@ public final class ElementCatalog {
 	 * element name itself. Shortcuts per element are sorted. Project-wide (shortcuts are a
 	 * global preference), so it's computed once per enumeration.
 	 */
-	private static java.util.Map<String, List<String>> shortcutsByElement() {
+	private static java.util.Map<String, List<String>> shortcutsByElement(IJavaProject project) {
 		final java.util.Map<String, List<String>> map = new java.util.HashMap<>();
 		try {
-			for (final TagShortcut shortcut : ApiCache.getTagShortcuts()) {
-				final String name = shortcut.getShortcut();
-				final String actual = shortcut.getActual();
-				if (name == null || actual == null) {
-					continue;
+			if (ParsleyTagAliasResolver.isActiveFor(project)) {
+				// New mechanism: each alias key resolves (recursively) to a final element; the
+				// tag belongs on that resolved element's row. Skip keys that ARE element names
+				// (the replacement entries like WOString -> ERXWOString) so only the friendly
+				// shortcuts (str, foreach, …) show as tags.
+				for (final String alias : ParsleyTagAliasResolver.aliasMap(project).keySet()) {
+					final String resolved = ParsleyTagAliasResolver.resolve(project, alias);
+					final int dot = resolved.lastIndexOf('.');
+					final String element = dot >= 0 ? resolved.substring(dot + 1) : resolved;
+					if (alias.equalsIgnoreCase(element)) {
+						continue;
+					}
+					map.computeIfAbsent(element, k -> new ArrayList<>()).add(alias);
 				}
-				final int dot = actual.lastIndexOf('.');
-				final String element = dot >= 0 ? actual.substring(dot + 1) : actual;
-				if (name.equalsIgnoreCase(element)) {
-					continue; // skip a "shortcut" that is just the element name
+			}
+			else {
+				for (final TagShortcut shortcut : ApiCache.getTagShortcuts()) {
+					final String name = shortcut.getShortcut();
+					final String actual = shortcut.getActual();
+					if (name == null || actual == null) {
+						continue;
+					}
+					final int dot = actual.lastIndexOf('.');
+					final String element = dot >= 0 ? actual.substring(dot + 1) : actual;
+					if (name.equalsIgnoreCase(element)) {
+						continue; // skip a "shortcut" that is just the element name
+					}
+					map.computeIfAbsent(element, k -> new ArrayList<>()).add(name);
 				}
-				map.computeIfAbsent(element, k -> new ArrayList<>()).add(name);
 			}
 			for (final List<String> tags : map.values()) {
 				tags.sort(String.CASE_INSENSITIVE_ORDER);

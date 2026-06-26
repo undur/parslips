@@ -25,6 +25,7 @@ import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.EditorsUI;
 import org.objectstyle.wolips.bindings.api.ApiCache;
+import org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
@@ -176,8 +177,13 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 	 * Centralizes the "set origin, then renderBody" step shared by all three lookup paths.
 	 */
 	private static HoverContent renderCard(String displayName, ApiextModel model, String origin) {
+		return renderCard(displayName, null, model, origin);
+	}
+
+	/** As {@link #renderCard(String, ApiextModel, String)}, with a greyed sub-note under the title. */
+	private static HoverContent renderCard(String displayName, String note, ApiextModel model, String origin) {
 		model.setOrigin(origin);
-		return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, model), true);
+		return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, note, model), true);
 	}
 
 	/**
@@ -364,98 +370,117 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 
 			TypeCache typeCache = WodParserCache.getTypeCache();
 
-			// The display name shown in the hover header — may differ from the
-			// lookup name if the user typed a tag shortcut
+			// When the project declares Parsley tag aliases (the new mechanism), resolve the
+			// tag recursively through them first — matching the runtime (str -> WOString ->
+			// ERXWOString). The legacy shortcut path below is then skipped for such projects.
+			String lookupName = elementTypeName;
+			// The header shows the FULL resolution chain, e.g. "str → WOString → ERXWOString".
 			String displayName = elementTypeName;
-
-			// Resolve the element type name to a Java type
-			IType elementType = BindingReflectionUtils.findElementType(
-					javaProject, elementTypeName, false, typeCache);
-
-			// If direct resolution failed, check if it's a tag shortcut
-			// (e.g. "form" → "WOForm", "if" → "WOConditional")
-			String resolvedClassName = elementTypeName;
-			if (elementType == null) {
-				TagShortcut shortcut = ApiCache.getTagShortcutNamed(elementTypeName);
-				if (shortcut != null) {
-					resolvedClassName = shortcut.getActual();
-					displayName = elementTypeName + " \u2192 " + resolvedClassName;
-					elementType = BindingReflectionUtils.findElementType(
-							javaProject, resolvedClassName, false, typeCache);
-				}
+			final boolean aliasesActive = ParsleyTagAliasResolver.isActiveFor(javaProject);
+			if (aliasesActive) {
+				final java.util.List<String> chain = ParsleyTagAliasResolver.resolveChain(javaProject, elementTypeName);
+				lookupName = chain.get(chain.size() - 1);
+				displayName = String.join(" → ", chain);
 			}
 
-			// .apiext first: if a parsable extended-API sibling exists for this element,
-			// render its richer content and use it INSTEAD of the .api preview. The format
-			// is in flux, so an unparsable .apiext yields null here and we fall through to
-			// the classic .api path below — .api still drives everything else.
-			// Where the element comes from (framework/bundle), shown in the card header.
-			// Resolved once from the type and attached to whichever model we render.
-			final String origin = ApiUtils.resolveOrigin(elementType);
+			// Try to find documentation for the resolved element (the chain's end).
+			HoverContent card = findDocCard(javaProject, lookupName, elementTypeName, displayName, null, typeCache);
+			if (card != null) {
+				return card;
+			}
 
-			if (elementType != null) {
-				byte[] apiextBytes = ApiUtils.findApiextBytes(elementType);
-				if (apiextBytes != null) {
-					ApiextModel apiext = ApiextModel.parse(apiextBytes);
-					if (apiext != null) {
-						return renderCard(displayName, apiext, origin);
+			// Doc fallback up the alias chain: the resolved element (e.g. ERXWOString) may have
+			// no documentation of its own, but an element it replaces (WOString) does. Walk the
+			// chain backward and show the nearest documented ancestor's card; the header keeps
+			// the full chain and a greyed "docs from X" note marks where the docs came from.
+			if (aliasesActive) {
+				final java.util.List<String> chain = ParsleyTagAliasResolver.resolveChain(javaProject, elementTypeName);
+				for (int i = chain.size() - 2; i >= 0; i--) {
+					final String ancestor = chain.get(i);
+					final HoverContent inherited = findDocCard(javaProject, ancestor, elementTypeName, displayName, "docs from " + ancestor, typeCache);
+					if (inherited != null) {
+						return inherited;
+					}
+				}
+			}
+			else {
+				// Legacy projects: the old tag-shortcut fallback, when the name didn't resolve.
+				final IType direct = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache);
+				if (direct == null) {
+					final TagShortcut shortcut = ApiCache.getTagShortcutNamed(elementTypeName);
+					if (shortcut != null && shortcut.getActual() != null) {
+						final String legacyName = elementTypeName + " → " + shortcut.getActual();
+						final HoverContent legacy = findDocCard(javaProject, shortcut.getActual(), elementTypeName, legacyName, null, typeCache);
+						if (legacy != null) {
+							return legacy;
+						}
 					}
 				}
 			}
 
-			// Bundled .apiext for a built-in element: a curated <Element>.apiext in the
-			// plugin's apiext/ folder takes precedence over BOTH the framework .api and the
-			// terse global WebObjectDefinitions.xml. It fully replaces them (the built-in
-			// elements are frozen, so a complete curated file is authoritative). This lets us
-			// enrich built-in element docs and is the staging ground for moving element
-			// documentation into the frameworks themselves. Try the resolved class name, then
-			// the original element name; an unparsable file falls through to the .api path.
-			byte[] globalApiext = ApiUtils.findGlobalApiextBytes(resolvedClassName);
-			if (globalApiext == null && !resolvedClassName.equals(elementTypeName)) {
-				globalApiext = ApiUtils.findGlobalApiextBytes(elementTypeName);
-			}
-			if (globalApiext != null) {
-				ApiextModel apiext = ApiextModel.parse(globalApiext);
-				if (apiext != null) {
-					return renderCard(displayName, apiext, origin);
-				}
-			}
-
-			ApiSnapshot api = null;
-
-			// Try project/classpath .api file first
-			if (elementType != null) {
-				try {
-					api = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
-				}
-				catch (ApiModelException e) {
-					// fall through to global lookup
-				}
-			}
-
-			// Fall back to global WebObjectDefinitions.xml for built-in components.
-			// Try both the resolved class name and the original element name.
-			if (api == null) {
-				api = ApiUtils.findGlobalApiSnapshotByClassName(resolvedClassName);
-			}
-			if (api == null && !resolvedClassName.equals(elementTypeName)) {
-				api = ApiUtils.findGlobalApiSnapshotByClassName(elementTypeName);
-			}
-
-			if (api == null) {
-				// No API at all — render a tidy "no API" card (name + origin + a muted
-				// message) rather than a bare name floating in an empty popup.
-				return new HoverContent(ApiextHtmlRenderer.renderNoApiBody(displayName, origin), true);
-			}
-
-			// Render the .api through the SAME template as .apiext (an .api is just an
-			// .apiext with the extension fields empty), so both hovers look identical apart
-			// from the source badge and the richer content .apiext can carry.
-			return renderCard(displayName, ApiextModel.fromApiSnapshot(displayName, api), origin);
+			// Nothing documented anywhere in the chain — a tidy "no API" card for the element
+			// that's actually used.
+			final IType resolvedType = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache);
+			return new HoverContent(ApiextHtmlRenderer.renderNoApiBody(displayName, ApiUtils.resolveOrigin(resolvedType)), true);
 		}
 		catch (Exception e) {
 			return null;
 		}
+	}
+
+	/**
+	 * Finds documentation for a single element name and renders its card, or returns null if
+	 * the element has no .apiext/.api/global documentation (so the caller can fall back).
+	 * Tries, in order: project/bundled .apiext, then project .api or the global
+	 * WebObjectDefinitions.xml.
+	 *
+	 * @param displayName the header label to show (may include the resolution arrow / inherited note)
+	 */
+	private HoverContent findDocCard(IJavaProject javaProject, String lookupName, String elementTypeName, String displayName, String note, TypeCache typeCache) throws org.eclipse.jdt.core.JavaModelException {
+		final IType elementType = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache);
+		final String origin = ApiUtils.resolveOrigin(elementType);
+
+		if (elementType != null) {
+			final byte[] apiextBytes = ApiUtils.findApiextBytes(elementType);
+			if (apiextBytes != null) {
+				final ApiextModel apiext = ApiextModel.parse(apiextBytes);
+				if (apiext != null) {
+					return renderCard(displayName, note, apiext, origin);
+				}
+			}
+		}
+
+		byte[] globalApiext = ApiUtils.findGlobalApiextBytes(lookupName);
+		if (globalApiext == null && !lookupName.equals(elementTypeName)) {
+			globalApiext = ApiUtils.findGlobalApiextBytes(elementTypeName);
+		}
+		if (globalApiext != null) {
+			final ApiextModel apiext = ApiextModel.parse(globalApiext);
+			if (apiext != null) {
+				return renderCard(displayName, note, apiext, origin);
+			}
+		}
+
+		ApiSnapshot api = null;
+		if (elementType != null) {
+			try {
+				api = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
+			}
+			catch (ApiModelException e) {
+				// fall through to global lookup
+			}
+		}
+		if (api == null) {
+			api = ApiUtils.findGlobalApiSnapshotByClassName(lookupName);
+		}
+		if (api == null && !lookupName.equals(elementTypeName)) {
+			api = ApiUtils.findGlobalApiSnapshotByClassName(elementTypeName);
+		}
+		if (api != null) {
+			return renderCard(displayName, note, ApiextModel.fromApiSnapshot(displayName, api), origin);
+		}
+
+		return null;
 	}
 
 	/**

@@ -9,6 +9,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.objectstyle.wolips.bindings.api.ApiCache;
+import org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.editor.help.ElementHelpView;
@@ -57,12 +58,24 @@ public class ShowInElementReferenceHandler extends AbstractHandler {
 			if (colon >= 0) {
 				elementName = elementName.substring(colon + 1);
 			}
-			final TagShortcut shortcut = ApiCache.getTagShortcutNamed(elementName);
-			if (shortcut != null && shortcut.getActual() != null) {
-				// getActual() may be fully-qualified; the view matches on the simple name.
-				final String actual = shortcut.getActual();
-				final int dot = actual.lastIndexOf('.');
-				elementName = dot >= 0 ? actual.substring(dot + 1) : actual;
+
+			// Resolve the tag to its actual element. When the project declares Parsley tag
+			// aliases (the new mechanism), resolve recursively through them — matching the
+			// runtime — instead of the legacy WOLips tag-shortcut preference.
+			final org.eclipse.jdt.core.IJavaProject jp = aliasProject(sourceEditor);
+			if (jp != null && ParsleyTagAliasResolver.isActiveFor(jp)) {
+				final String resolved = ParsleyTagAliasResolver.resolve(jp, elementName);
+				final int dot = resolved.lastIndexOf('.');
+				elementName = dot >= 0 ? resolved.substring(dot + 1) : resolved;
+			}
+			else {
+				final TagShortcut shortcut = ApiCache.getTagShortcutNamed(elementName);
+				if (shortcut != null && shortcut.getActual() != null) {
+					// getActual() may be fully-qualified; the view matches on the simple name.
+					final String actual = shortcut.getActual();
+					final int dot = actual.lastIndexOf('.');
+					elementName = dot >= 0 ? actual.substring(dot + 1) : actual;
+				}
 			}
 
 			// Show the view WITHOUT moving focus (VIEW_VISIBLE), so the editing flow in the
@@ -78,6 +91,15 @@ public class ShowInElementReferenceHandler extends AbstractHandler {
 		}
 
 		return null;
+	}
+
+	/** The Java project backing the editor's template, for alias resolution, or null. */
+	private static org.eclipse.jdt.core.IJavaProject aliasProject(TemplateSourceEditor sourceEditor) {
+		try {
+			return org.eclipse.jdt.core.JavaCore.create(sourceEditor.getParserCache().getProject());
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	private TemplateEditor getTemplateEditor(IEditorPart editor) {

@@ -38,6 +38,15 @@ public final class ApiextHtmlRenderer {
 	 * {@code <html>} that results from embedding a full document.
 	 */
 	public static String renderBody(String displayName, ApiextModel model) {
+		return renderBody(displayName, null, model);
+	}
+
+	/**
+	 * @param note an optional muted sub-note under the title (e.g. "docs from WOString" when
+	 *             the resolved element's documentation is inherited from an element it
+	 *             replaces); null for none. Shown greyed, to set it apart from element names.
+	 */
+	public static String renderBody(String displayName, String note, ApiextModel model) {
 		final StringBuilder b = new StringBuilder(2048);
 
 		// Header. The source marker (.api / .apiext) is pinned to the top-right corner,
@@ -50,8 +59,12 @@ public final class ApiextHtmlRenderer {
 		b.append("<span class=\"src src-").append(model.getSource() == ApiextModel.SourceKind.APIEXT ? "apiext" : "api")
 				.append("\">").append(esc(model.getSource().getLabel())).append("</span>");
 
-		// Title row: element name.
-		b.append("<h3><code>").append(esc(displayName)).append("</code></h3>");
+		// Title row: element name (the resolution chain), with an optional greyed note.
+		b.append("<h3><code>").append(esc(displayName)).append("</code>");
+		if (note != null && !note.isEmpty()) {
+			b.append(" <span class=\"docnote\">").append(esc(note)).append("</span>");
+		}
+		b.append("</h3>");
 
 		// Origin: which framework/bundle the element comes from (when known).
 		if (model.getOrigin() != null && !model.getOrigin().isEmpty()) {
@@ -341,6 +354,7 @@ public final class ApiextHtmlRenderer {
 				+ ".src-apiext{background:#eef6ff;color:#1c4f8a;border:1px solid #c5dcf6;}"
 				+ ".src-api{background:#f1f3f5;color:#6c757d;border:1px solid #d3d8de;}"
 				+ ".origin{color:#999;font-size:.82em;margin:.05rem 0 .1rem;}"
+				+ ".docnote{color:#999;font-size:.78em;font-weight:normal;}"
 				+ ".no-api{color:#9aa0a8;font-style:italic;font-size:.9em;margin:.6rem 0 .2rem;}"
 				+ ".status{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.3rem;}"
 				+ ".badge{font-size:.68em;font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:.05rem .4rem;border-radius:4px;white-space:nowrap;}"

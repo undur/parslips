@@ -78,11 +78,29 @@ public class InlineWodTagInfo extends TagInfo {
   }
 
   public String getExpandedElementTypeName() {
+    // When the project declares Parsley tag aliases, resolve through them (matching the
+    // runtime); otherwise expand via the legacy tag-shortcut.
+    if (_javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(_javaProject)) {
+      return org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolve(_javaProject, _elementTypeName);
+    }
     String elementTypeName = _elementTypeName;
     if (_tagShortcut != null) {
       elementTypeName = _tagShortcut.getActual(_parsleyProject);
     }
     return elementTypeName;
+  }
+
+  /**
+   * The element name whose bindings should drive completion. When aliases are active this is
+   * the binding-source element — the documented ancestor (WOString) rather than the bare
+   * replacement (ERXWOString) — both more correct and far cheaper. See
+   * {@link org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver#resolveForBindings}.
+   */
+  private String bindingSourceElementName() {
+    if (_javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(_javaProject)) {
+      return org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolveForBindings(_javaProject, _elementTypeName);
+    }
+    return getExpandedElementTypeName();
   }
 
   /**
@@ -102,14 +120,18 @@ public class InlineWodTagInfo extends TagInfo {
   protected void loadAttributeInfo() {
     if (!_attributeInfoCached) {
       try {
-        IType elementType = BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache);
+        // The element whose bindings we offer. When the project uses Parsley aliases and the
+        // resolved element (e.g. ERXWOString) has no API of its own, walk back up the alias
+        // chain to an element that does (WOString) — the replacement shares its bindings — so
+        // binding completion still works. (Mirrors the hover's doc-fallback.)
+        String expandedName = bindingSourceElementName();
+        IType elementType = BindingReflectionUtils.findElementType(_javaProject, expandedName, false, _cache);
         _resolvedElementType = elementType;
         // Try to get binding info from the global API definitions
         // (WebObjectDefinitions.xml). This covers both framework elements
         // whose bindings aren't discoverable via reflection (e.g. NG
         // elements that use private association fields) and elements
         // whose type isn't on the classpath at all.
-        String expandedName = getExpandedElementTypeName();
         ApiSnapshot api = ApiUtils.findGlobalApiSnapshotByClassName(expandedName);
 
         if (elementType != null) {

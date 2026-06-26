@@ -27,20 +27,34 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
     int elementTypePosition = element.getOffset() + element.getNameOffset() + "wo:".length() + 1;
     int elementTypeLength = namespaceElementName.length();
 
+    // Resolve the tag to its actual element type. When the project declares Parsley tag
+    // aliases (the new mechanism), resolve recursively through them, matching the runtime;
+    // otherwise use the legacy WOLips tag-shortcut preference (which also carries default
+    // attribute bindings, applied below).
+    final org.eclipse.jdt.core.IJavaProject javaProject = parsleyProject != null
+        ? org.eclipse.jdt.core.JavaCore.create(parsleyProject.getProject()) : null;
     TagShortcut matchingTagShortcut = null;
-    for (TagShortcut tagShortcut : ApiCache.getTagShortcuts()) {
-      if (namespaceElementName.equalsIgnoreCase(tagShortcut.getShortcut())) {
-        matchingTagShortcut = tagShortcut;
-      }
+    if (javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject)) {
+      // Resolve to the binding-source element (the documented ancestor, e.g. WOString rather
+      // than ERXWOString) — both more correct and far cheaper, since the replacement has no
+      // .api and would force slow per-tag reflection during validation.
+      namespaceElementName = org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolveForBindings(javaProject, namespaceElementName);
     }
-    if (matchingTagShortcut != null) {
-      // Flag case mismatches: user wrote "Repetition" but shortcut is "repetition".
-      // We still expand to the actual class name so binding validation works,
-      // but record the mismatch so fillInProblems() can warn about it.
-      if (!namespaceElementName.equals(matchingTagShortcut.getShortcut())) {
-        setTagShortcutCaseMismatch(namespaceElementName, matchingTagShortcut.getShortcut());
+    else {
+      for (TagShortcut tagShortcut : ApiCache.getTagShortcuts()) {
+        if (namespaceElementName.equalsIgnoreCase(tagShortcut.getShortcut())) {
+          matchingTagShortcut = tagShortcut;
+        }
       }
-      namespaceElementName = matchingTagShortcut.getActual(parsleyProject);
+      if (matchingTagShortcut != null) {
+        // Flag case mismatches: user wrote "Repetition" but shortcut is "repetition".
+        // We still expand to the actual class name so binding validation works,
+        // but record the mismatch so fillInProblems() can warn about it.
+        if (!namespaceElementName.equals(matchingTagShortcut.getShortcut())) {
+          setTagShortcutCaseMismatch(namespaceElementName, matchingTagShortcut.getShortcut());
+        }
+        namespaceElementName = matchingTagShortcut.getActual(parsleyProject);
+      }
     }
 
     _setElementName("_temp");

@@ -170,10 +170,22 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
       try {
         Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();
         WodCompletionUtils.fillInElementTypeCompletionProposals(javaProject, partialElementType, 0, partialElementType.length(), proposals, false, null);
-        for (TagShortcut tagShortcut : _cache.getTagShortcuts()) {
-          String shortcut = tagShortcut.getShortcut();
-          if (shortcut.startsWith(partialElementType.toLowerCase())) {
-            proposals.add(new WodCompletionProposal(partialElementType, 0, partialElementType.length(), shortcut));
+        // Tag shortcuts: from the project's Parsley aliases when present (the real vocabulary
+        // the app uses), otherwise from the legacy WOLips tag-shortcut preference.
+        final String partialLower = partialElementType.toLowerCase();
+        if (org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject)) {
+          for (String alias : org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.aliasMap(javaProject).keySet()) {
+            if (alias.toLowerCase().startsWith(partialLower)) {
+              proposals.add(new WodCompletionProposal(partialElementType, 0, partialElementType.length(), alias));
+            }
+          }
+        }
+        else {
+          for (TagShortcut tagShortcut : _cache.getTagShortcuts()) {
+            String shortcut = tagShortcut.getShortcut();
+            if (shortcut.startsWith(partialLower)) {
+              proposals.add(new WodCompletionProposal(partialElementType, 0, partialElementType.length(), shortcut));
+            }
           }
         }
         if (!proposals.isEmpty()) {
