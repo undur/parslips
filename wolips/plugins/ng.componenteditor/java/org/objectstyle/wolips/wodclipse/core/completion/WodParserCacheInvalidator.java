@@ -37,6 +37,15 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
 
   public boolean visit(IResourceDelta delta) {
     IResource resource = delta.getResource();
+    // Parsley tag-alias files invalidate the (workspace-wide) alias cache. Checked BEFORE the
+    // isDerived() prune below, because these files also live in build-output folders
+    // (target/classes), which are derived — e.g. a framework project's compiled copy. The
+    // alias map is cheap to rebuild (~10ms/project), so clearing the whole cache is fine.
+    if (resource instanceof IFile
+        && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.ALIASES_RESOURCE.equals(resource.getName())) {
+      org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.clearCache();
+      // don't return — let normal processing continue too
+    }
     if (resource.isDerived()) {
     	return false;
     }
