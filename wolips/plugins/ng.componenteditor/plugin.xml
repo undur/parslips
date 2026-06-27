@@ -654,10 +654,6 @@
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.EmbeddedJavaScript"
             name="Embedded JavaScript"/>
-      <page class="org.objectstyle.wolips.preferences.TagShortcutPreferencePage"
-            category="ng.componenteditor.preferences"
-            id="ng.componenteditor.preferences.TagShortcuts"
-            name="Inline Binding Shortcuts"/>
       <page class="org.objectstyle.wolips.preferences.BindingValidationRulePreferencePage"
             category="ng.componenteditor.preferences"
             id="ng.componenteditor.preferences.ValidationRules"
@@ -717,6 +713,13 @@
             category="ng.componenteditor.preferences.deprecated"
             id="ng.componenteditor.preferences.deprecated.HTMLTemplates"
             name="HTML Templates"/>
+      <!-- Inline binding shortcuts: superseded by per-project Parsley tag aliases -->
+      <!-- (parsley-tag-aliases.properties read by ParsleyTagAliasResolver). Kept    -->
+      <!-- under Zombies for projects not yet on Parsley.                            -->
+      <page class="org.objectstyle.wolips.preferences.TagShortcutPreferencePage"
+            category="ng.componenteditor.preferences.deprecated"
+            id="ng.componenteditor.preferences.TagShortcuts"
+            name="Inline Binding Shortcuts"/>
    </extension>
 
 <!-- =================================================================================== -->
