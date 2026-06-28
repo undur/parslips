@@ -25,6 +25,7 @@ collection stays trustworthy as work ships.
 | [`proposal-wiring-audit.md`](proposal-wiring-audit.md) | Deep audit: accidentally-disabled / half-wired / dead code vs. `wolips-original` | 🔶 PARTIAL | **2.1–2.4** validation staleness (→ revalidate), **2.6** Parsley menu (feature), **3.1** dead builder/nature cluster, **4.1** ContentDescriberWO (verify first) |
 | [`proposal-revalidate.md`](proposal-revalidate.md) | Project-wide revalidation to kill stale markers (the lost build-time validation sweep) | 🟢 OPEN | the whole proposal — the substantive next feature; absorbs wiring-audit 2.1–2.4 |
 | [`proposal-live-channel.md`](proposal-live-channel.md) | Ideas for a live IDE ↔ running-app channel | 💡 IDEAS | exploratory; no commitment |
+| [`proposal-tag-library-format.md`](proposal-tag-library-format.md) | Prior-art survey (CEM, JSP TLD, JSF, web-types, Stencil, Vue, VS Code custom-data) + design input for the Parsley/ng tag-library descriptor — the single source of truth for a project's tags, read by runtime + tooling | 🟢 OPEN | the format design itself; ultimately lands in Parsley/ng with this editor as one consumer |
 
 ## What's actually open right now
 
@@ -39,6 +40,10 @@ In rough priority order:
    mechanical, deferred until there's appetite.
 4. **Parsley Navigate menu** (`proposal-wiring-audit.md` §2.6) — feature, not cleanup;
    needs `org.eclipse.ui.menus` work + a product call.
+5. **Tag-library format** (`proposal-tag-library-format.md`) — forward-looking design
+   input, not an editor task. The format belongs in Parsley/ng; this is the coordinating
+   record until then. Concrete near-term adds it identifies (deprecation-with-reason,
+   declared library identity + version, explicit precedence) can land incrementally.
 
 ## Convention for new proposals
 
