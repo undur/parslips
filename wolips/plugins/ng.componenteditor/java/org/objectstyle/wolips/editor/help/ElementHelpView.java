@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.swt.SWT;
@@ -74,6 +78,9 @@ public class ElementHelpView extends ViewPart {
 
 	/** Listens for editor activation so the list follows the frontmost editor. */
 	private IPartListener2 _partListener;
+
+	/** Reloads the catalog when a parsley-tag-aliases.properties changes in the workspace. */
+	private org.eclipse.core.resources.IResourceChangeListener _aliasFileListener;
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -158,6 +165,27 @@ public class ElementHelpView extends ViewPart {
 		_partListener = new EditorActivationListener();
 		getSite().getWorkbenchWindow().getPartService().addPartListener(_partListener);
 
+		// Reload when a parsley-tag-aliases.properties changes, so the catalog (including the
+		// override column) reflects edited aliases without an Eclipse restart — mirroring the
+		// alias-cache invalidation that the hover/completion already get.
+		_aliasFileListener = event -> {
+			if (_project != null && aliasFileChanged(event)) {
+				// Clear the resolver cache here too, so we don't depend on this listener firing
+				// after the one that normally invalidates it — otherwise reload() could rebuild
+				// from the stale alias map.
+				ParsleyTagAliasResolver.clearCache();
+				final Table t = _table;
+				if (t != null && !t.isDisposed()) {
+					t.getDisplay().asyncExec(() -> {
+						if (!t.isDisposed()) {
+							reload();
+						}
+					});
+				}
+			}
+		};
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(_aliasFileListener, IResourceChangeEvent.POST_CHANGE);
+
 		// Prime from whatever editor is already active.
 		final IEditorPart active = getSite().getWorkbenchWindow().getActivePage() != null
 				? getSite().getWorkbenchWindow().getActivePage().getActiveEditor() : null;
@@ -201,6 +229,32 @@ public class ElementHelpView extends ViewPart {
 		}
 		final IJavaProject jp = JavaCore.create(file.getProject());
 		return (jp != null && jp.exists()) ? jp : null;
+	}
+
+	/** True if the resource delta includes a change to a parsley-tag-aliases.properties file. */
+	private static boolean aliasFileChanged(IResourceChangeEvent event) {
+		final org.eclipse.core.resources.IResourceDelta delta = event.getDelta();
+		if (delta == null) {
+			return false;
+		}
+		final boolean[] hit = { false };
+		try {
+			delta.accept(d -> {
+				if (hit[0]) {
+					return false;
+				}
+				final IResource res = d.getResource();
+				if (res != null
+						&& ParsleyTagAliasResolver.ALIASES_RESOURCE.equals(res.getName())) {
+					hit[0] = true;
+					return false;
+				}
+				return true; // keep descending (incl. into derived output folders)
+			});
+		} catch (Exception e) {
+			// best-effort
+		}
+		return hit[0];
 	}
 
 	/** Rebuilds the catalog for the current project and repopulates the table. */
@@ -397,6 +451,9 @@ public class ElementHelpView extends ViewPart {
 	public void dispose() {
 		if (_partListener != null && getSite() != null && getSite().getWorkbenchWindow() != null) {
 			getSite().getWorkbenchWindow().getPartService().removePartListener(_partListener);
+		}
+		if (_aliasFileListener != null) {
+			ResourcesPlugin.getWorkspace().removeResourceChangeListener(_aliasFileListener);
 		}
 		disposeColor(_apiextBg);
 		disposeColor(_apiextFg);
