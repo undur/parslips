@@ -30,7 +30,12 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.jface.text.Region;
 import org.objectstyle.wolips.bindings.api.ApiextHtmlRenderer;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.objectstyle.wolips.bindings.api.ElementCatalog;
+import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
 import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
 
@@ -62,6 +67,15 @@ public class ElementHelpView extends ViewPart {
 
 	/** The full, unfiltered catalog for {@link #_project}; the table shows a filtered view. */
 	private List<ElementCatalog.Entry> _entries = new ArrayList<>();
+
+	/**
+	 * The project the most recent {@link #reload()} was launched for. The catalog is built
+	 * on a background {@link Job} (the build does JAR I/O and must not block the UI thread);
+	 * when a job finishes it compares against this field and discards its result if the view
+	 * has since been pointed at a different project, so a slow stale build can't clobber a
+	 * newer one. Only touched on the UI thread.
+	 */
+	private IJavaProject _reloadTarget;
 
 	/** Current sort column (0=Element, 1=Origin, 2=API state) and direction. */
 	private int _sortColumn = 0;
@@ -257,11 +271,47 @@ public class ElementHelpView extends ViewPart {
 		return hit[0];
 	}
 
-	/** Rebuilds the catalog for the current project and repopulates the table. */
+	/**
+	 * Rebuilds the catalog for the current project and repopulates the table.
+	 * <p>
+	 * The build ({@link ElementCatalog#forProject}) enumerates every element type on the
+	 * classpath and reads {@code .api}/{@code .apiext} bytes out of JARs — seconds of
+	 * blocking I/O in a large project — so it runs on a background {@link Job}, never on the
+	 * UI thread. When the job finishes it re-enters the UI thread to populate the table, but
+	 * only if the view still exists and is still pointed at the same project it was launched
+	 * for (guards against a stale build clobbering a newer one — see {@link #_reloadTarget}).
+	 */
 	private void reload() {
-		_entries = ElementCatalog.forProject(_project);
-		sortEntries();
-		populateTable();
+		final IJavaProject target = _project;
+		_reloadTarget = target;
+		if (target == null) {
+			_entries = new ArrayList<>();
+			sortEntries();
+			populateTable();
+			return;
+		}
+		final Job job = new Job("Loading element reference for " + target.getElementName()) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				final List<ElementCatalog.Entry> built = ElementCatalog.forProject(target);
+				final Table t = _table;
+				if (t == null || t.isDisposed()) {
+					return Status.OK_STATUS;
+				}
+				t.getDisplay().asyncExec(() -> {
+					// Drop the result if the view was disposed or re-pointed while we built.
+					if (t.isDisposed() || _reloadTarget != target) {
+						return;
+					}
+					_entries = built;
+					sortEntries();
+					populateTable();
+				});
+				return Status.OK_STATUS;
+			}
+		};
+		job.setSystem(true); // housekeeping work — don't show it in the Progress view
+		job.schedule();
 	}
 
 	/**
@@ -475,7 +525,14 @@ public class ElementHelpView extends ViewPart {
 		@Override
 		public void partActivated(IWorkbenchPartReference ref) {
 			final IWorkbenchPart part = ref.getPart(false);
-			if (part instanceof IEditorPart) {
+			// Only react to component editors. Activating any OTHER editor (a pom, a
+			// plain .java/.xml, …) must NOT rebuild the catalog: the rebuild enumerates
+			// every element type on the classpath and reads .api/.apiext bytes out of
+			// JARs, which is costly in a large project and was beachballing the UI when
+			// the user simply opened/closed an unrelated file. A non-component editor
+			// tells us nothing about which element library to show, so we ignore it and
+			// leave the view pointed at whatever component project it last tracked.
+			if (part instanceof ComponentEditor) {
 				trackEditor((IEditorPart) part);
 			}
 		}
