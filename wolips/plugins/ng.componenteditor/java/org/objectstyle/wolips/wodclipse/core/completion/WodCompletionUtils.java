@@ -93,10 +93,29 @@ public class WodCompletionUtils {
    * @param onlyIfMissing if true, only opens the dialog if the key is missing
    */
   public static void openBinding(String bindingValue, boolean isAction, IType componentType, boolean onlyIfMissing) throws CoreException {
+    openBinding(bindingValue, isAction, componentType, onlyIfMissing, -1);
+  }
+
+  /**
+   * Opens the Java declaration a binding keypath resolves to, or offers to create a missing
+   * key/action.
+   * <p>
+   * {@code segmentIndex} selects <em>which</em> segment of a dotted keypath to open — so that
+   * "open declaration" (F3) or Cmd+click can land on the segment under the cursor rather than
+   * always the terminal one. For {@code value="$activeUser.address.name"}, index 0 opens
+   * {@code activeUser}, 1 opens {@code address}, 2 opens {@code name}. Pass {@code -1} for the
+   * last segment (the historical behavior — every keypath is treated as one thing).
+   * <p>
+   * The index is into the <em>resolved</em> key array ({@link BindingValueKeyPath#getBindingKeys()}),
+   * which can be shorter than the textual segment count when a mid-path key doesn't resolve; the
+   * index is clamped into range, so a cursor past the last resolvable segment degrades to that
+   * segment rather than doing nothing.
+   */
+  public static void openBinding(String bindingValue, boolean isAction, IType componentType, boolean onlyIfMissing, int segmentIndex) throws CoreException {
     BindingValueKeyPath bindingValueKeyPath = new BindingValueKeyPath(bindingValue, componentType, componentType.getJavaProject(), WodParserCache.getTypeCache());
     if (bindingValueKeyPath.isValid() && bindingValueKeyPath.exists()) {
       if (!onlyIfMissing) {
-        IMember member = bindingValueKeyPath.getLastBindingKey().getBindingMember();
+        IMember member = memberForSegment(bindingValueKeyPath, segmentIndex);
         if (member != null) {
           JavaUI.openInEditor(member, true, true);
         }
@@ -105,6 +124,22 @@ public class WodCompletionUtils {
     else if (!bindingValueKeyPath.exists() && bindingValueKeyPath.isSingleKey()) {
       WodCompletionUtils.addKeyOrAction(bindingValueKeyPath, isAction, componentType);
     }
+  }
+
+  /**
+   * Returns the member for the given keypath segment, clamping the index into the resolved-key
+   * range. {@code segmentIndex < 0} (or past the end) yields the last segment's member — the
+   * historical whole-keypath behavior — so callers that don't care about segments, and cursors
+   * sitting beyond the last resolvable key, both fall back cleanly.
+   */
+  private static IMember memberForSegment(BindingValueKeyPath bindingValueKeyPath, int segmentIndex) {
+    BindingValueKey[] keys = bindingValueKeyPath.getBindingKeys();
+    if (keys == null || keys.length == 0) {
+      return null;
+    }
+    int index = (segmentIndex < 0 || segmentIndex >= keys.length) ? keys.length - 1 : segmentIndex;
+    BindingValueKey key = keys[index];
+    return (key == null) ? null : key.getBindingMember();
   }
 
   /**

@@ -260,4 +260,110 @@ public class WodHtmlUtilsTest {
 	public void webobjectsPattern_doesNotMatchRegularTag() {
 		assertFalse(WodHtmlUtils.WEBOBJECTS_PATTERN.matcher("<div name=\"Foo\">").find());
 	}
+
+	// ---- segmentIndexAt(String, int) ---------------------------------------
+	// Keypath "activeUser.address.name": positions 0-9 activeUser, 10='.',
+	// 11-17 address, 18='.', 19-22 name.
+
+	@Test
+	public void segmentIndexAt_firstSegment() {
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 0));
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 5));
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 9));
+	}
+
+	@Test
+	public void segmentIndexAt_middleSegment() {
+		assertEquals(1, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 11));
+		assertEquals(1, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 17));
+	}
+
+	@Test
+	public void segmentIndexAt_lastSegment() {
+		assertEquals(2, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 19));
+		assertEquals(2, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 22));
+	}
+
+	@Test
+	public void segmentIndexAt_dotBelongsToPrecedingSegment() {
+		// The caret sitting on the '.' after activeUser resolves to activeUser (index 0),
+		// not address — the separator counts toward the segment it follows.
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 10));
+	}
+
+	@Test
+	public void segmentIndexAt_offsetPastEnd_clampsToLast() {
+		assertEquals(2, WodHtmlUtils.segmentIndexAt("activeUser.address.name", 999));
+	}
+
+	@Test
+	public void segmentIndexAt_negativeOffset_firstSegment() {
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("activeUser.address.name", -5));
+	}
+
+	@Test
+	public void segmentIndexAt_singleSegment() {
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("name", 0));
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("name", 4));
+	}
+
+	@Test
+	public void segmentIndexAt_nullOrEmpty() {
+		assertEquals(0, WodHtmlUtils.segmentIndexAt(null, 5));
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("", 5));
+	}
+
+	@Test
+	public void segmentIndexAt_operatorKeyPath() {
+		// "@count.foo" — the leading '@' is part of segment 0's text and doesn't shift indexing.
+		assertEquals(0, WodHtmlUtils.segmentIndexAt("@count.foo", 3));
+		assertEquals(1, WodHtmlUtils.segmentIndexAt("@count.foo", 7));
+	}
+
+	// ---- segmentSpan(String, int) ------------------------------------------
+	// "activeUser.address.name": activeUser [0,10], address [11,7], name [19,4].
+
+	@Test
+	public void segmentSpan_firstSegment() {
+		assertArrayEquals(new int[] { 0, 10 }, WodHtmlUtils.segmentSpan("activeUser.address.name", 0));
+	}
+
+	@Test
+	public void segmentSpan_middleSegment() {
+		assertArrayEquals(new int[] { 11, 7 }, WodHtmlUtils.segmentSpan("activeUser.address.name", 1));
+	}
+
+	@Test
+	public void segmentSpan_lastSegment() {
+		assertArrayEquals(new int[] { 19, 4 }, WodHtmlUtils.segmentSpan("activeUser.address.name", 2));
+	}
+
+	@Test
+	public void segmentSpan_negativeIndex_lastSegment() {
+		// -1 (the whole-path default) resolves to the terminal segment's span.
+		assertArrayEquals(new int[] { 19, 4 }, WodHtmlUtils.segmentSpan("activeUser.address.name", -1));
+	}
+
+	@Test
+	public void segmentSpan_pastEnd_lastSegment() {
+		assertArrayEquals(new int[] { 19, 4 }, WodHtmlUtils.segmentSpan("activeUser.address.name", 99));
+	}
+
+	@Test
+	public void segmentSpan_singleSegment() {
+		assertArrayEquals(new int[] { 0, 4 }, WodHtmlUtils.segmentSpan("name", 0));
+		assertArrayEquals(new int[] { 0, 4 }, WodHtmlUtils.segmentSpan("name", -1));
+	}
+
+	@Test
+	public void segmentSpan_roundTripsWithSegmentIndexAt() {
+		// The span of the segment segmentIndexAt reports for an offset must contain that offset.
+		String kp = "activeUser.address.name";
+		for (int off = 0; off < kp.length(); off++) {
+			int idx = WodHtmlUtils.segmentIndexAt(kp, off);
+			int[] span = WodHtmlUtils.segmentSpan(kp, idx);
+			assertTrue("offset " + off + " should fall within its segment span",
+					off >= span[0] && off <= span[0] + span[1]);
+		}
+	}
 }

@@ -41,6 +41,22 @@
 
 			<!-- June 26, 2026 -->
 			<div class="card">
+				<h2 class="date-header">July 1, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Jump to any part of a keypath</h3>
+					<p>Editing a template and want to jump to the Java behind a binding? Put your cursor in a keypath and hit <code>F3</code> &mdash; the same &ldquo;Open Declaration&rdquo; shortcut you already use in Java code. It now works in the template editor too, on element tags, binding names, and binding values, so you can navigate without reaching for the mouse.</p>
+					<p>The nice part is how it treats a <em>keypath</em>. Eclipse normally sees <code>$activeUser.address.city</code> as one thing and, on <code>Cmd</code>+click, jumps to the very end &mdash; the <code>city</code> method. But often you want a <em>segment</em> in the middle. Now both <code>F3</code> and <code>Cmd</code>+click open the segment your cursor is actually on:</p>
+					<ul>
+						<li>On <code>activeUser</code> &rarr; opens <code>activeUser</code></li>
+						<li>On <code>address</code> &rarr; opens <code>address</code></li>
+						<li>On <code>city</code> &rarr; opens <code>city</code></li>
+					</ul>
+					<p>And when you hold <code>Cmd</code> and hover, the underline now highlights just the segment you&rsquo;re pointing at &mdash; so what lights up is exactly what a click will open.</p>
+				</div>
+			</div>
+
+			<div class="card">
 				<h2 class="date-header">June 26, 2026</h2>
 
 				<div class="changelog-entry">

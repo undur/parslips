@@ -87,6 +87,79 @@ public class WodHtmlUtils {
     return lineCount;
   }
 
+  /**
+   * Given a dotted keypath and an offset <em>relative to the start of that keypath string</em>,
+   * returns the index of the segment the offset falls within — so "open declaration" (F3) and
+   * Cmd+click can target the segment under the cursor rather than the whole path.
+   * <p>
+   * For {@code "activeUser.address.name"}: offsets inside {@code activeUser} → 0, inside
+   * {@code address} → 1, inside {@code name} → 2. A dot separator belongs to the segment it
+   * follows (the cursor sitting on the {@code .} after {@code activeUser} still resolves to
+   * {@code activeUser}). Offsets at or past the end map to the last segment; a negative offset
+   * maps to the first. Any leading operator character ({@code @} for {@code @count}, etc.) is
+   * part of segment 0's text and doesn't shift the indexing.
+   * <p>
+   * Purely textual and null/empty-safe — it counts unescaped dots and does no type resolution;
+   * the resolved-key array may be shorter (an unresolvable mid-path key), so callers clamp the
+   * returned index into that array's range.
+   *
+   * @param keyPath the keypath text (no binding prefix/suffix, e.g. no leading {@code $})
+   * @param offsetInKeyPath caret/click offset measured from the first character of {@code keyPath}
+   * @return the zero-based segment index, or 0 for a null/empty keypath
+   */
+  public static int segmentIndexAt(String keyPath, int offsetInKeyPath) {
+    if (keyPath == null || keyPath.isEmpty()) {
+      return 0;
+    }
+    if (offsetInKeyPath <= 0) {
+      return 0;
+    }
+    // Count the dots strictly before the offset; that's the segment index. Clamp the offset to
+    // the string length so an offset at/after the end lands on the final segment.
+    int limit = Math.min(offsetInKeyPath, keyPath.length());
+    int index = 0;
+    for (int i = 0; i < limit; i++) {
+      if (keyPath.charAt(i) == '.') {
+        index++;
+      }
+    }
+    return index;
+  }
+
+  /**
+   * Returns the character span {@code [start, length]} of the given segment within a dotted
+   * keypath, so the Cmd+hover underline can cover just the segment that a click will open
+   * (rather than the whole keypath). Offsets are relative to the start of {@code keyPath}.
+   * <p>
+   * For {@code "activeUser.address.name"}: segment 0 → {@code [0, 10]} (activeUser), 1 →
+   * {@code [11, 7]} (address), 2 → {@code [19, 4]} (name). A {@code segmentIndex < 0} or past
+   * the last segment resolves to the last segment (matching {@link #segmentIndexAt}'s clamping).
+   * Returns the whole-string span for a null/empty keypath.
+   *
+   * @return a two-element array {@code {startOffset, length}}
+   */
+  public static int[] segmentSpan(String keyPath, int segmentIndex) {
+    if (keyPath == null || keyPath.isEmpty()) {
+      return new int[] { 0, keyPath == null ? 0 : keyPath.length() };
+    }
+    // Split on '.' tracking each segment's start; operators/text within a segment are included.
+    int segStart = 0;
+    int index = 0;
+    int lastStart = 0;
+    for (int i = 0; i <= keyPath.length(); i++) {
+      if (i == keyPath.length() || keyPath.charAt(i) == '.') {
+        if (index == segmentIndex) {
+          return new int[] { segStart, i - segStart };
+        }
+        lastStart = segStart;
+        segStart = i + 1; // skip the '.'
+        index++;
+      }
+    }
+    // segmentIndex < 0 or past the end → the last segment (start = lastStart, to end of string).
+    return new int[] { lastStart, keyPath.length() - lastStart };
+  }
+
   public static class BindingValue {
     private String _valueNamespace;
     private String _value;

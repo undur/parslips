@@ -52,7 +52,9 @@ public class WodElementHyperlinkDetector implements IHyperlinkDetector {
 										}
 									}
 									else if (binding.isValueWithin(region)) {
-										WodBindingValueHyperlink bindingHyperlink = WodBindingValueHyperlink.toBindingValueHyperlink(element, binding.getName(), cache);
+										// Pass the click offset so a Cmd+click lands on the keypath segment
+										// under the pointer (activeUser vs. the terminal name), not the whole path.
+										WodBindingValueHyperlink bindingHyperlink = WodBindingValueHyperlink.toBindingValueHyperlink(element, binding.getName(), cache, region.getOffset());
 										if (bindingHyperlink != null) {
 											hyperlinks.add(bindingHyperlink);
 										}

@@ -9,11 +9,14 @@ import org.eclipse.jface.text.hyperlink.IHyperlink;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.objectstyle.wolips.bindings.wod.IWodBinding;
 import org.objectstyle.wolips.bindings.wod.SimpleWodElement;
 import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.core.Activator;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
+import org.objectstyle.wolips.wodclipse.core.document.WodBindingNameHyperlink;
+import org.objectstyle.wolips.wodclipse.core.document.WodBindingValueHyperlink;
 import org.objectstyle.wolips.wodclipse.core.document.WodElementTypeHyperlink;
 import org.objectstyle.wolips.wodclipse.core.util.FuzzyXMLWodElement;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
@@ -57,11 +60,29 @@ public class OpenDeclarationHandler extends AbstractHandler {
 			ParsleyProject parsleyProject = (ParsleyProject) cache.getProject().getAdapter(ParsleyProject.class);
 			SimpleWodElement wodElement = new FuzzyXMLWodElement(element, parsleyProject);
 
-			if (!wodElement.isTypeWithin(new Region(offset, 0))) {
-				return null;
+			final Region caret = new Region(offset, 0);
+
+			// Open whatever the caret is on, mirroring what Cmd+click would resolve at this offset:
+			// the element type, a binding name, or a binding value (a keypath — targeting the exact
+			// segment under the caret, so F3 on "activeUser" in "$activeUser.address.name" opens
+			// activeUser, not the terminal name). First match wins.
+			IHyperlink hyperlink = null;
+			if (wodElement.isTypeWithin(caret)) {
+				hyperlink = WodElementTypeHyperlink.toElementTypeHyperlink(wodElement, cache);
+			}
+			else {
+				for (IWodBinding binding : wodElement.getBindings()) {
+					if (binding.isNameWithin(caret)) {
+						hyperlink = WodBindingNameHyperlink.toBindingNameHyperlink(wodElement, binding.getName(), cache);
+						break;
+					}
+					if (binding.isValueWithin(caret)) {
+						hyperlink = WodBindingValueHyperlink.toBindingValueHyperlink(wodElement, binding.getName(), cache, offset);
+						break;
+					}
+				}
 			}
 
-			IHyperlink hyperlink = WodElementTypeHyperlink.toElementTypeHyperlink(wodElement, cache);
 			if (hyperlink != null) {
 				hyperlink.open();
 			}
