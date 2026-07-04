@@ -12,6 +12,50 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### `.apiext` for every standard WebObjects element
+
+Authored a full `.apiext` descriptor for all 39 elements in `WebObjectDefinitions.xml` —
+the complete set of standard WO dynamic elements — bundled under the plugin's `apiext/`
+folder. These succeed the thin legacy `.api` vocabulary (binding names + a few flags) with
+the richer `.apiext` grammar: per-element and per-binding documentation, typed bindings with
+directionality (`<pull>`/`<push>`, plus `interpretation="truthy"` where a value is read by
+truthiness), literal defaults, element- and binding-level `<deprecated>`, an
+`unknownAttributes` policy, a `content` policy, and typed cross-binding constraints
+(`<choose>`/`<any-of>`/`<requires>`) translated from the legacy `<validation>` trees.
+
+The descriptions are grounded in the published WebObjects element reference and the elements'
+documented binding behavior — including binding *direction* and *type*, which the legacy
+`.api` never recorded. Where an element's documented behavior contradicts a legacy `.api`
+flag (e.g. `WOImageButton`'s `value`, marked `settable` in the old file but never actually
+written back), the documented behavior wins.
+
+Notes on the corpus:
+- **Passthrough attributes.** Elements that forward *all* undeclared attributes onto their
+  rendered tag (`unknownAttributes="passthrough"`) don't declare `id`/`class`/`style`/
+  `otherTagString` as bindings — the policy already covers them. The three elements that
+  forward only a fixed, enumerated set (`WOCheckBoxList`, `WORadioButtonList`, `WOIFrame`)
+  are modelled as `unknownAttributes="forbidden"` with the forwarded attributes declared
+  explicitly, since arbitrary attributes are silently dropped there.
+- **Deprecations.** Genuinely obsolete elements (`WOApplet`, `WOVBScript`, `WOQuickTime`) and
+  the runtime-deprecated list elements carry an element-level `<deprecated>`.
+- **Canonical form.** All files are kept in the serializer's canonical form (the
+  `ApiextSerializerTest.bundledFiles_roundTripAndAreCanonical` guard round-trips every one),
+  so opening and saving in the form editor produces clean diffs.
+
+The `.apiext` files live with the plugin (installed as part of the bundle); the Element
+Reference, hover, autocomplete, and template validation all read them through the existing
+`ElementApiResolver` seam.
+
+### Element Reference: strike through deprecated elements
+
+Elements marked `<deprecated>` at the element level are now struck through in the Element
+Reference list — a light-red, semi-transparent rule across the element name — so an obsolete
+element reads as "don't reach for this" at a glance, complementing the detail card's existing
+deprecation banner. The list is a native SWT `Table` (no per-cell styled text), so the line
+is owner-drawn via an `SWT.PaintItem` listener. The deprecation flag is resolved once per
+element during catalog enumeration, alongside the definition kind, so no extra per-row lookup
+runs on the UI thread.
+
 ### Editor: read the project's declared tag vocabulary (Parsley tag aliases)
 
 When a project declares Parsley tag aliases — any `parsley-tag-aliases.properties` on its

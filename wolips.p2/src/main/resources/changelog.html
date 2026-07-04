@@ -39,7 +39,25 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
-			<!-- June 26, 2026 -->
+			<!-- July 4, 2026 -->
+			<div class="card">
+				<h2 class="date-header">July 4, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Every standard WebObjects element, richly described</h3>
+					<p>The template editor now ships a full <code>.apiext</code> description for <strong>every one of the standard WebObjects dynamic elements</strong> &mdash; all 39 of them, from <code>WOString</code> and <code>WORepetition</code> to <code>WOForm</code>, <code>WOPopUpButton</code> and the rest. Until now these built-in elements were described by the old, thin <code>.api</code> files, which knew a binding&rsquo;s <em>name</em> but little else. The new descriptions are far richer, and they light up everywhere the editor already helps you.</p>
+					<p>For each element and each of its bindings you now get:</p>
+					<ul>
+						<li><strong>Real documentation</strong> &mdash; a written description of what the element does and what every binding is for, shown in the hover and the Element Reference.</li>
+						<li><strong>Typed bindings with direction</strong> &mdash; each binding declares the Java type it accepts, and whether the element <em>reads</em> it (pull&nbsp;&darr;), <em>writes</em> it back (push&nbsp;&uarr;), or both. So you can see at a glance that a checkbox&rsquo;s <code>checked</code> reads any value by truthiness but pushes back a real <code>Boolean</code>.</li>
+						<li><strong>Cross-binding rules</strong> &mdash; the &ldquo;exactly one of these&rdquo; and &ldquo;if you bind this, you must bind that&rdquo; constraints are now typed and checked, so the editor flags a mis-bound element as you write it.</li>
+						<li><strong>Sensible defaults and deprecations</strong> &mdash; default values are shown where they exist, and genuinely obsolete elements (<code>WOApplet</code>, <code>WOVBScript</code>, <code>WOQuickTime</code>&hellip;) are marked deprecated and struck through in the Element Reference, so it&rsquo;s obvious what not to reach for.</li>
+					</ul>
+					<p>The descriptions are grounded in the published WebObjects element reference and the elements&rsquo; documented binding behavior, so what the editor tells you matches what the framework actually does. This is also the largest body of real <code>.apiext</code> yet &mdash; a solid, practical proving ground for the format as it grows toward a full tag library.</p>
+				</div>
+			</div>
+
+			<!-- July 1, 2026 -->
 			<div class="card">
 				<h2 class="date-header">July 1, 2026</h2>
 
