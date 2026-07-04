@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ===================================================================== -->
+<!--  example.apilib  —  a self-documenting strawman for .apilib / .apiext v2  -->
+<!--                                                                       -->
+<!--  This file IS the proposal. It is a complete, valid example that      -->
+<!--  describes REAL WebObjects elements and explains every construct as   -->
+<!--  you read it. There is no DTD to consult — the <format-guide> below   -->
+<!--  and the inline comments are the spec. Read top to bottom, then       -->
+<!--  strike whatever we don't want.                                       -->
+<!--                                                                       -->
+<!--  .apiext  = one element   (root <element-api>, no <library> header)   -->
+<!--  .apilib  = many elements (root <element-library>, with a header)     -->
+<!--  The element vocabulary is identical in both. This file is .apilib.   -->
+<!-- ===================================================================== -->
+
+<element-library>
+
+	<!-- ============================ THE GUIDE ============================ -->
+	<!-- A human-readable tour of the whole vocabulary. A consumer ignores  -->
+	<!-- <format-guide>; it exists purely so the file is self-teaching.     -->
+	<format-guide><![CDATA[
+VOCABULARY AT A GLANCE
+
+  <library>            Header: who this library is (id, version) and how it
+                       composes with others (precedence). Only in .apilib.
+
+  <element>            One element's full contract. (In a .apiext file the
+                       root is <element-api> and there is exactly one of these,
+                       un-nested.)
+    class=             FULLY-QUALIFIED class name — the implementation. The
+                       authoritative class reference. (Issue #11: no more
+                       simple-name relic.)
+    name=              The tag/element name — the simple name authors type.
+                       Usually equals the simple class name, but separate, so
+                       one class can be exposed under more than one name and so
+                       the tag name isn't derived from a package-bearing class.
+    scope=             Visibility: public | framework | project | page.   (#8)
+    reusable=          Can it be used as a tag at all?  true | false.      (#7)
+    unknownAttributes= Policy for attributes NOT declared below:           (#1)
+                         forbidden   — undeclared attribute is an error
+                         allowed     — accepted, not forwarded, not flagged
+                         passthrough — accepted AND forwarded to the rendered
+                                       HTML tag (replaces the old passthrough
+                                       boolean). Absent = the tool decides.
+    since= experimental= deprecated lifecycle (see below).
+
+    summary=           One short line, for listings/palettes.
+    <doc>              The long description. Markdown subset allowed; wrap in
+                       CDATA when it contains Markdown specials.
+    <see href=>        Reference link(s) — spec/HTML docs/guides.
+    <renders as=>      The primary HTML element this renders as.            (#10)
+                       Makes passthrough CHECKABLE: a tool can validate
+                       forwarded attributes against this real HTML element.
+    <deprecated since=> Marks the element (or a member) deprecated, with a    (#5)
+                       migration <doc>. Tooling warns and points at the fix.
+
+  MEMBERS — an element exposes several DISTINCT, separately-typed channels,
+  not one flat bag of attributes (the central lesson of the format survey):
+
+    <binding>          An inbound/two-way value binding.
+      name= required=
+      <pull>           Direction = READ. Holds the pulled <type>(s).
+      <push>           Direction = WRITE-BACK. Holds the pushed <type>(s).
+                       Presence of the block IS the directionality. Both =
+                       two-way; neither = direction-agnostic/legacy. (`settable`
+                       is the legacy .api equivalent of <push>; don't author
+                       it in .apiext — issue #2.)
+      <type interpretation=>  Accepted type: a Java FQN or a value-set name.
+                       Always inside <pull>/<push>. `interpretation` names a
+                       coercion rule (e.g. truthy) WITHOUT changing the type —
+                       the type stays the real validatable constraint.
+      <default>        Singular. The value the element behaves as if bound to
+                       when the binding is ABSENT. On <binding>, never          (#3)
+                       directional. Distinct from `defaults` (the old
+                       autocomplete-preset hint).
+      <values>         Allowed values — a value-set.                           (#4)
+                         literal:  <values>a b c</values>
+                         dynamic:  <values kind="resource|pageName|framework|
+                                    enum|frameworkList|custom" .../>
+                       Literal enums are portable; a `kind` is a portable
+                       statement of INTENT that each tool resolves itself.
+
+    <action>           An action/handler binding (WO's real "do something"
+                       channel). Carries a <signature> a tool can check.
+
+    <event>            [SPECULATIVE — for ng / future] An outbound event the
+                       element emits. Modeled as its own channel, not folded
+                       into bindings. Cut this if WO earns nothing from it.
+
+    <content>          Child-content / slots.                                  (#10-ish)
+                       default unnamed slot + named, typed slots. Replaces the
+                       coarse wocomponentcontent boolean with something that can
+                       express multiple regions and a typed/scoped slot value.
+
+  <constraint>         Cross-binding rule (redesigned — issue #9).            (#9)
+                       message= describes how to FIX it (not the bad state).
+                       <when> holds the predicate; firing the predicate means
+                       the constraint is VIOLATED. Predicates: <bound>,
+                       <unbound>, <ungettable>, <unsettable>, combined with
+                       <all-of>/<any-of>/<count test="">. No code escape hatch,
+                       ever — all validation is declarative.
+
+LIFECYCLE (on <element> and on any member)
+  since="8.1"          Version the member was introduced.
+  experimental="true"  Unstable; tooling may warn.
+  <deprecated since=>   Deprecated; migration note in its <doc>.
+
+EVERYTHING ABSENT IS "UNSTATED", NOT A DEFAULT VALUE. A missing <default> means
+"no declared default", not "defaults to null". A missing unknownAttributes means
+"author stated no policy → tool decides", not a fourth semantic.
+	]]></format-guide>
+
+
+	<!-- =========================== THE HEADER =========================== -->
+	<!-- Library identity + composition. Only meaningful for .apilib.       -->
+	<!--                                                                     -->
+	<!--   id          stable, reverse-DNS identity (NOT a version, NOT a    -->
+	<!--               file path). This is the durable name other libraries  -->
+	<!--               and precedence rules refer to.                        -->
+	<!--   version     the library's own version. Separate field from id —   -->
+	<!--               identity and version are orthogonal (the JSP <uri> vs  -->
+	<!--               <tlib-version> lesson).                                -->
+	<!--   precedence  when two libraries declare the same tag name, the      -->
+	<!--               higher precedence wins — explicitly, instead of by      -->
+	<!--               accidental classpath order. (Replaces ng/Parsley's     -->
+	<!--               fragile "first-declaration-wins".) A coarse integer;    -->
+	<!--               framework defaults sit low, app/override layers high.   -->
+	<library
+			id="com.webobjects.core"
+			version="5.0"
+			precedence="0"
+			description="The built-in WebObjects dynamic elements.">
+		<doc><![CDATA[
+The canonical WebObjects elements. A project, or a framework like
+**wonder-slim**, ships its own `.apilib` at a higher `precedence` to *override*
+specific elements (e.g. `WOString` → `ERXWOString`) without editing this one.
+		]]></doc>
+	</library>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 1 — WOString                                                    -->
+	<!-- The simplest real case: one read-only binding + an interpretation flag. -->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WOString"
+			name="WOString"
+			scope="public"
+			reusable="true"
+			unknownAttributes="forbidden"
+			summary="Renders a value as a string.">
+
+		<doc><![CDATA[
+Writes the string value of an object into the page. The workhorse text element.
+Use `value` for the object to display; `dateFormat`/`numberFormat` to format it;
+`escapeHTML` to control escaping.
+		]]></doc>
+		<see href="https://example.org/wo/WOString"/>
+		<renders as="text-node"/> <!-- renders raw text, not an HTML element -->
+
+		<binding name="value" required="true">
+			<!-- pull-only: WOString reads `value`, never writes it back -->
+			<pull><type>java.lang.Object</type></pull>
+			<doc>The object whose string value is written into the page.</doc>
+		</binding>
+
+		<binding name="escapeHTML">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<default>true</default> <!-- if unbound, behaves as if escapeHTML=true -->
+			<values>true false</values>
+			<doc>When true (the default), HTML-escapes the value. Bind `false` to emit raw markup.</doc>
+		</binding>
+
+		<binding name="dateFormat">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A `java.text.SimpleDateFormat` pattern, used when `value` is a date.</doc>
+		</binding>
+
+	</element>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 2 — WOConditional                                               -->
+	<!-- A pure-logic element: renders NO html element, has a redesigned          -->
+	<!-- cross-binding constraint, and shows the `interpretation="truthy"` rule.  -->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WOConditional"
+			name="WOConditional"
+			scope="public"
+			reusable="true"
+			unknownAttributes="forbidden"
+			summary="Renders its children only when a condition holds.">
+
+		<doc>Conditionally includes its child content. The bread-and-butter control-flow element.</doc>
+		<!-- no <renders> — WOConditional emits no tag of its own -->
+
+		<binding name="condition" required="true">
+			<!-- accepts ANYTHING, read by truthiness. The type is the honest,
+			     validatable claim (Object = accepts anything); the interpretation
+			     documents HOW it's read, without pretending to be a Boolean type. -->
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc>Any value, read as a boolean: `null`, `0`, and `false` are false; everything else is true.</doc>
+		</binding>
+
+		<binding name="negate">
+			<pull><type>java.lang.Boolean</type></pull>
+			<default>false</default>
+			<values>true false</values>
+			<doc>Inverts the condition. (`&lt;wo:not&gt;` is sugar for `negate=true`.)</doc>
+		</binding>
+
+		<!-- Redesigned constraint (issue #9): the message says how to FIX it,
+		     and <when> makes the firing predicate explicit instead of relying on
+		     bare-AND-of-children. The predicate firing = the rule is VIOLATED. -->
+		<constraint message="Bind 'condition' — WOConditional needs something to test.">
+			<when><unbound name="condition"/></when>
+		</constraint>
+
+	</element>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 3 — WOTextField                                                 -->
+	<!-- The canonical two-way binding with DIFFERENT pull/push types, an         -->
+	<!-- action channel, value-sets, and passthrough made checkable via <renders>.-->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WOTextField"
+			name="WOTextField"
+			scope="public"
+			reusable="true"
+			unknownAttributes="passthrough"
+			summary="A single-line text input bound to a value.">
+
+		<doc>A dynamic `&lt;input type="text"&gt;`. Pulls a value to display and pushes back what the user typed.</doc>
+		<see href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/text"/>
+
+		<!-- Because it declares it renders as <input type=text>, a tool can validate
+		     passthrough attributes (onchange, placeholder, aria-*) against the REAL
+		     html element — passthrough stops meaning "anything goes". -->
+		<renders as="input" type="text"/>
+
+		<binding name="value" required="true">
+			<!-- A TRUE split: pulls any Object (to display), pushes a String
+			     (what the user typed). Rendered as two rows: ↓ Object / ↑ String. -->
+			<pull><type>java.lang.Object</type></pull>
+			<push><type>java.lang.String</type></push>
+			<doc>The bound value: read to populate the field, written back with the user's input.</doc>
+		</binding>
+
+		<binding name="disabled">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<default>false</default>
+			<values>true false</values>
+			<doc>When truthy, renders the input disabled.</doc>
+		</binding>
+
+		<binding name="formatName">
+			<pull><type>java.lang.String</type></pull>
+			<!-- dynamic value-set: the valid values are project resources, resolved
+			     at edit time by the tool. The format states the KIND (portable
+			     intent); the tool scans the project (its concern). -->
+			<values kind="resource" resourceType="formatter"/>
+			<doc>Name of a project formatter resource to apply.</doc>
+		</binding>
+
+		<!-- WO's real "do something" channel, modeled separately from value bindings.
+		     A tool can check the bound method against the signature. -->
+		<action name="action">
+			<signature>com.webobjects.appserver.WOActionResults action()</signature>
+			<doc>Invoked when the field's form is submitted. Binds to an action method returning a page (or null).</doc>
+		</action>
+
+	</element>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 4 — WOCheckBox                                                  -->
+	<!-- The textbook pull≠push split (truthy in, Boolean out) + a cross-binding   -->
+	<!-- constraint expressing "use checked OR value+selection, not both".        -->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WOCheckBox"
+			name="WOCheckBox"
+			scope="public"
+			reusable="true"
+			unknownAttributes="passthrough"
+			summary="A checkbox bound to a boolean (or to value+selection).">
+
+		<doc><![CDATA[A dynamic `<input type="checkbox">`. Use **either** `checked`, **or** `value`+`selection`.]]></doc>
+		<renders as="input" type="checkbox"/>
+
+		<binding name="checked">
+			<!-- pulls any object read by truthiness (initial state); pushes a hard
+			     Boolean (the state the user left it in). The cleanest real split. -->
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<push><type>java.lang.Boolean</type></push>
+			<doc>The checked state — read by truthiness, written back as a `Boolean`.</doc>
+		</binding>
+
+		<binding name="value">
+			<pull><type>java.lang.Object</type></pull>
+			<doc>The value this checkbox contributes to `selection` when checked.</doc>
+		</binding>
+
+		<binding name="selection">
+			<pull><type>java.util.List</type></pull>
+			<push><type>java.util.List</type></push>
+			<doc>The list that gains/loses `value` as the box is checked/unchecked.</doc>
+		</binding>
+
+		<!-- "exactly one of these two binding-groups": fires (= violated) when
+		     checked is bound AT THE SAME TIME as value. -->
+		<constraint message="Use either 'checked', or 'value' + 'selection' — not both.">
+			<when>
+				<all-of>
+					<bound name="checked"/>
+					<bound name="value"/>
+				</all-of>
+			</when>
+		</constraint>
+
+	</element>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 5 — WORepetition                                                -->
+	<!-- Shows <content> (slots) replacing the wocomponentcontent boolean, plus    -->
+	<!-- the published loop variables a repetition exposes.                       -->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WORepetition"
+			name="WORepetition"
+			scope="public"
+			reusable="true"
+			unknownAttributes="forbidden"
+			summary="Repeats its child content once per item in a list.">
+
+		<doc>Iterates a list, rendering its children once per element. The fundamental loop.</doc>
+
+		<binding name="list" required="true">
+			<pull><type>java.util.List</type></pull>
+			<doc>The items to iterate.</doc>
+		</binding>
+
+		<binding name="item">
+			<!-- item is PUSHED: the element writes the current item into this key
+			     on each pass. push-only. -->
+			<push><type>java.lang.Object</type></push>
+			<doc>Receives the current item on each iteration.</doc>
+		</binding>
+
+		<binding name="index">
+			<push><type>java.lang.Integer</type></push>
+			<doc>Receives the current zero-based index on each iteration.</doc>
+		</binding>
+
+		<!-- content/slots: a repetition wraps its children (the per-item template).
+		     This replaces wocomponentcontent="true" with something that can name and
+		     scope the content. The default slot here receives the current `item`. -->
+		<content>
+			<slot name="default" scoped="item">
+				<doc>The per-item template, rendered once per list element with `item` in scope.</doc>
+			</slot>
+		</content>
+
+	</element>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 6 — WOHyperlink                                                 -->
+	<!-- An overridable <renders as>, an action channel, lifecycle (since), and a   -->
+	<!-- deprecated binding with a migration note.                                -->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WOHyperlink"
+			name="WOHyperlink"
+			scope="public"
+			reusable="true"
+			unknownAttributes="passthrough"
+			summary="A link that triggers an action or navigates to a page/URL.">
+
+		<doc>A dynamic `&lt;a&gt;`. Bind `action` for a server action, `pageName` to navigate, or `href` for a plain URL.</doc>
+		<!-- primary tag is <a>, but it can render <button> etc. via bindings, so this
+		     is the DEFAULT, not "always". A tool treats it as the primary case. -->
+		<renders as="a" overridable="true"/>
+
+		<action name="action">
+			<signature>com.webobjects.appserver.WOActionResults action()</signature>
+			<doc>Server action invoked on click. Mutually exclusive with `pageName`/`href`.</doc>
+		</action>
+
+		<binding name="pageName">
+			<pull><type>java.lang.String</type></pull>
+			<values kind="pageName"/> <!-- dynamic: the project's page-class names -->
+			<doc>Name of a page to navigate to. Mutually exclusive with `action`/`href`.</doc>
+		</binding>
+
+		<binding name="href">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A literal URL to link to.</doc>
+		</binding>
+
+		<binding name="string" since="5.0">
+			<pull><type>java.lang.Object</type></pull>
+			<doc>Convenience: the link's visible text (instead of child content).</doc>
+		</binding>
+
+		<binding name="disabledString">
+			<pull><type>java.lang.Object</type></pull>
+			<deprecated since="5.0">
+				<doc>Deprecated — bind child content and `&lt;wo:if&gt;` on `disabled` instead.</doc>
+			</deprecated>
+			<doc>Text shown when the link is disabled.</doc>
+		</binding>
+
+		<!-- exactly-one-of constraint across three alternatives, via <count>. -->
+		<constraint message="Bind exactly one of 'action', 'pageName', or 'href'.">
+			<when>
+				<count test="!=1">
+					<bound name="action"/>
+					<bound name="pageName"/>
+					<bound name="href"/>
+				</count>
+			</when>
+		</constraint>
+
+	</element>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 7 — WOImage                                                     -->
+	<!-- The motivating value-set case (#4): `filename` valid values are the       -->
+	<!-- project resources that actually exist, resolved at edit time.            -->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WOImage"
+			name="WOImage"
+			scope="public"
+			reusable="true"
+			unknownAttributes="passthrough"
+			summary="Renders an image from a project resource or URL.">
+
+		<doc>A dynamic `&lt;img&gt;`. Bind `filename` for a project resource or `src` for a URL.</doc>
+		<renders as="img"/>
+
+		<binding name="filename">
+			<pull><type>java.lang.String</type></pull>
+			<!-- THE motivating dynamic value-set: valid values are the image
+			     resources present in the project. Portable intent (kind=resource);
+			     the tool resolves the actual set. -->
+			<values kind="resource" resourceType="image"/>
+			<doc>Name of an image resource in the project (e.g. `logo.png`).</doc>
+		</binding>
+
+		<binding name="src">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A literal image URL. Mutually exclusive with `filename`.</doc>
+		</binding>
+
+		<constraint message="Bind either 'filename' (a project resource) or 'src' (a URL).">
+			<when>
+				<count test="!=1">
+					<bound name="filename"/>
+					<bound name="src"/>
+				</count>
+			</when>
+		</constraint>
+
+	</element>
+
+
+	<!-- ====================================================================== -->
+	<!-- ELEMENT 8 — WOGenericContainer                                          -->
+	<!-- The "renders as whatever you say" case: <renders> is fully dynamic, and    -->
+	<!-- unknownAttributes=passthrough is its entire purpose.                     -->
+	<!-- ====================================================================== -->
+	<element
+			class="com.webobjects.appserver._private.WOGenericContainer"
+			name="WOGenericContainer"
+			scope="public"
+			reusable="true"
+			unknownAttributes="passthrough"
+			summary="Renders an arbitrary HTML container element with dynamic attributes.">
+
+		<doc>Renders whatever HTML element `elementName` names, wrapping its children. The escape hatch for arbitrary tags.</doc>
+		<!-- the rendered tag is determined at runtime by the `elementName` binding,
+		     so <renders> points at the binding rather than naming a fixed tag. -->
+		<renders from="elementName"/>
+
+		<binding name="elementName" required="true">
+			<pull><type>java.lang.String</type></pull>
+			<doc>The HTML tag name to render (e.g. `div`, `section`, `span`).</doc>
+		</binding>
+
+		<content>
+			<slot name="default">
+				<doc>The container's child content.</doc>
+			</slot>
+		</content>
+
+	</element>
+
+</element-library>
