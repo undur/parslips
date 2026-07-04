@@ -26,6 +26,8 @@ collection stays trustworthy as work ships.
 | [`proposal-revalidate.md`](proposal-revalidate.md) | Project-wide revalidation to kill stale markers (the lost build-time validation sweep) | 🟢 OPEN | the whole proposal — the substantive next feature; absorbs wiring-audit 2.1–2.4 |
 | [`proposal-live-channel.md`](proposal-live-channel.md) | Ideas for a live IDE ↔ running-app channel | 💡 IDEAS | exploratory; no commitment |
 | [`proposal-tag-library-format.md`](proposal-tag-library-format.md) | Prior-art survey (CEM, JSP TLD, JSF, web-types, Stencil, Vue, VS Code custom-data) + design input for the Parsley/ng tag-library descriptor — the single source of truth for a project's tags, read by runtime + tooling | 🟢 OPEN | the format design itself; ultimately lands in Parsley/ng with this editor as one consumer |
+| [`tag-library-formats/`](tag-library-formats/overview.md) | **Field-by-field deep-dive** on 10 component-descriptor formats (the 7 above + Angular, Blazor/Razor, Svelte 5), observed as industry best-practice for a *greenfield* ng/WO format — one doc per format + a cross-format `overview.md` with a field universe and prioritized recommendations | 🟢 OPEN | feeds the format design; companion to the summary proposal above |
+| [`proposal-apilib-format.md`](proposal-apilib-format.md) + [`apilib-format/example.apilib`](apilib-format/example.apilib) | **The strawman.** A concrete `.apilib`/`.apiext` v2 design presented as ONE self-documenting example file (real WO elements, vocabulary explained inline, no DTD), synthesizing the deep-dive + all 11 [`apiext-format`](https://github.com/undur/apiext-format/issues) issues. Reviewed by subtraction. | 🟢 OPEN | format design; lands in `undur/apiext-format` when settled |
 
 ## What's actually open right now
 

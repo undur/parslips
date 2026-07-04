@@ -14,6 +14,14 @@ by the Parsley runtime + wonder-slim + this editor; see `CHANGES.md`) proved the
 "one registry, many readers" model in miniature. The tag library generalizes it to the
 full element vocabulary. Before designing the format, we surveyed the prior art.
 
+> **Companion deep-dive:** this document is the high-level summary. For the *field-by-field*
+> reference — every construct each format declares, across **ten** formats (the seven below
+> plus Angular, Blazor/Razor, and Svelte 5), with a cross-format field universe and
+> prioritized greenfield recommendations — see
+> [`tag-library-formats/overview.md`](tag-library-formats/overview.md) and the per-format
+> docs beside it. The deep-dive was run *unbiased*: each format observed as industry
+> best-practice for a greenfield ng/WO format, not mapped onto current WO/ng conventions.
+
 ---
 
 ## How this was researched
