@@ -98,6 +98,16 @@ public final class ApiextHtmlRenderer {
 
 		b.append("</div>");
 
+		// Element-level deprecation banner (#5) — any use of the element is a warning.
+		if (model.isDeprecated()) {
+			b.append("<div class=\"elem-deprecated\"><strong>Deprecated.</strong> ");
+			final String depNote = model.getDeprecationNote();
+			if (depNote != null && !depNote.isEmpty()) {
+				b.append(markdown(depNote));
+			}
+			b.append("</div>");
+		}
+
 		// Role / description (element-level doc).
 		if (model.getDoc() != null) {
 			b.append("<div class=\"role\">").append(markdown(model.getDoc())).append("</div>");
@@ -114,9 +124,33 @@ public final class ApiextHtmlRenderer {
 				if (binding.isRequired()) {
 					b.append("<span class=\"req\">&bull;</span> ");
 				}
-				b.append(esc(binding.getName())).append("</td>");
+				// A deprecated binding's name is struck through (#5).
+				if (binding.isDeprecated()) {
+					b.append("<span class=\"deprecated\">").append(esc(binding.getName())).append("</span>");
+				}
+				else {
+					b.append(esc(binding.getName()));
+				}
+				b.append("</td>");
 				b.append("<td class=\"b-type\">").append(typeCell(binding)).append("</td>");
-				b.append("<td>").append(binding.getDoc() != null ? markdown(binding.getDoc()) : "").append("</td>");
+				b.append("<td>");
+				if (binding.getDoc() != null) {
+					b.append(markdown(binding.getDoc()));
+				}
+				// #3: the declared default, shown as a small note (documentation only — never validation).
+				if (binding.getDefaultValue() != null) {
+					b.append("<div class=\"b-default\">Default: <code>").append(esc(binding.getDefaultValue())).append("</code></div>");
+				}
+				// #5: the deprecation note (the migration hint), shown below the doc.
+				if (binding.isDeprecated()) {
+					b.append("<div class=\"b-deprecated\"><strong>Deprecated.</strong> ");
+					final String bDepNote = binding.getDeprecationNote();
+					if (bDepNote != null && !bDepNote.isEmpty()) {
+						b.append(markdown(bDepNote));
+					}
+					b.append("</div>");
+				}
+				b.append("</td>");
 				b.append("</tr>");
 			}
 			b.append("</tbody></table>");
@@ -396,5 +430,10 @@ public final class ApiextHtmlRenderer {
 				+ "pre.md-code{background:#f7f8fa;border:1px solid #e6e8ec;border-left:3px solid #2b6cb0;border-radius:0 5px 5px 0;padding:.4rem .6rem;margin:.4rem 0;overflow-x:auto;font-size:.85em;}"
 				+ "pre.md-code code{background:none;padding:0;}"
 				+ ".valids{margin:.4rem 0 0;padding:.4rem .6rem;background:#fffbea;border-left:3px solid #f0c000;border-radius:4px;font-size:.85em;}"
-				+ ".valids .vmsg{margin:.1rem 0;color:#7a5b00;}";
+				+ ".valids .vmsg{margin:.1rem 0;color:#7a5b00;}"
+			// #3 default note, #5 deprecation (binding name strikethrough, per-binding + element banner).
+			+ ".b-default{margin:.15rem 0 0;color:#6c757d;font-size:.9em;}"
+			+ ".deprecated{text-decoration:line-through;color:#9a5b5b;}"
+			+ ".b-deprecated{margin:.15rem 0 0;color:#9a5b5b;font-size:.9em;}"
+			+ ".elem-deprecated{margin:.2rem 0 .4rem;padding:.3rem .5rem;background:#fdf0f0;border-left:3px solid #d08a8a;border-radius:4px;color:#8a4a4a;font-size:.9em;}";
 }

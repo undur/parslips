@@ -270,6 +270,90 @@ public class ApiextConstraintTest {
 		assertFalse(m.getBindings().get(0).isRequired()); // "YES" is not the enum value "true"
 	}
 
+	// ---- #1 unknownAttributes ------------------------------------------------
+
+	@Test
+	public void unknownAttributes_parsedAndPassthroughDerived() {
+		ApiextModel m = ApiextModel.parse(("<?xml version=\"1.0\"?><wodefinitions>"
+				+ "<wo class=\"X\" unknownAttributes=\"passthrough\">" + bindings("a") + "</wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
+		assertEquals(ApiextModel.UnknownAttributes.PASSTHROUGH, m.getUnknownAttributes());
+		assertTrue(m.isPassthrough()); // derived from the policy
+	}
+
+	@Test
+	public void unknownAttributes_forbiddenIsNotPassthrough() {
+		ApiextModel m = ApiextModel.parse(("<?xml version=\"1.0\"?><wodefinitions>"
+				+ "<wo class=\"X\" unknownAttributes=\"forbidden\">" + bindings("a") + "</wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
+		assertEquals(ApiextModel.UnknownAttributes.FORBIDDEN, m.getUnknownAttributes());
+		assertFalse(m.isPassthrough());
+	}
+
+	@Test
+	public void unknownAttributes_absentIsNull_notSynthesized() {
+		// The enum deliberately has no default: absent means "author stated no policy".
+		ApiextModel m = parse(bindings("a"));
+		assertNull(m.getUnknownAttributes());
+		assertFalse(m.isPassthrough());
+	}
+
+	// ---- #3 <default> --------------------------------------------------------
+
+	@Test
+	public void defaultValue_parsed() {
+		ApiextModel m = parse("<binding name=\"morph\"><pull><type>java.lang.Boolean</type></pull><default>true</default></binding>");
+		assertEquals("true", m.getBindings().get(0).getDefaultValue());
+	}
+
+	@Test
+	public void defaultValue_absentIsNull() {
+		ApiextModel m = parse(bindings("a"));
+		assertNull(m.getBindings().get(0).getDefaultValue());
+	}
+
+	// ---- #5 <deprecated> -----------------------------------------------------
+
+	@Test
+	public void deprecated_withNote() {
+		ApiextModel m = parse("<binding name=\"old\"><pull><type>java.lang.String</type></pull>"
+				+ "<deprecated>Use `new` instead.</deprecated></binding>");
+		ApiextModel.Binding b = m.getBindings().get(0);
+		assertTrue(b.isDeprecated());
+		assertEquals("Use `new` instead.", b.getDeprecationNote());
+	}
+
+	@Test
+	public void deprecated_emptyNoteStillDeprecated() {
+		// Presence marks deprecation; the null-vs-empty distinction matters.
+		ApiextModel m = parse("<binding name=\"old\"><pull><type>java.lang.String</type></pull><deprecated></deprecated></binding>");
+		ApiextModel.Binding b = m.getBindings().get(0);
+		assertTrue(b.isDeprecated());
+		assertEquals("", b.getDeprecationNote());
+	}
+
+	@Test
+	public void notDeprecated_isNull() {
+		ApiextModel m = parse(bindings("a"));
+		ApiextModel.Binding b = m.getBindings().get(0);
+		assertFalse(b.isDeprecated());
+		assertNull(b.getDeprecationNote());
+	}
+
+	@Test
+	public void elementLevelDeprecation() {
+		ApiextModel m = ApiextModel.parse(("<?xml version=\"1.0\"?><wodefinitions>"
+				+ "<wo class=\"X\">" + bindings("a") + "<deprecated>Whole element is legacy.</deprecated></wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
+		assertTrue(m.isDeprecated());
+		assertEquals("Whole element is legacy.", m.getDeprecationNote());
+	}
+
+	@Test
+	public void deprecatedPlusRequiredIsWarning() {
+		ApiextModel m = parse("<binding name=\"x\" required=\"true\"><pull><type>java.lang.String</type></pull><deprecated>gone soon</deprecated></binding>");
+		List<Problem> ps = ApiextConstraintValidator.validate(m);
+		assertTrue(ps.stream().anyMatch(p -> p.getSeverity() == Severity.WARNING
+				&& p.getMessage().contains("required and deprecated")));
+	}
+
 	// ---- helpers ------------------------------------------------------------
 
 	private static boolean hasError(List<Problem> problems, String substring) {

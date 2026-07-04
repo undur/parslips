@@ -113,13 +113,18 @@ public final class ApiextModel {
 		private final List<TypeRef> _pushTypes; // <push><type>… written back by the element
 		private final String _doc; // raw Markdown, or null
 		private final boolean _required;
+		private final String _defaultValue; // <default> literal, or null if none (#3)
+		private final String _deprecationNote; // <deprecated> migration note, or null if not deprecated (#5)
 
-		Binding(String name, List<TypeRef> pullTypes, List<TypeRef> pushTypes, String doc, boolean required) {
+		Binding(String name, List<TypeRef> pullTypes, List<TypeRef> pushTypes, String doc, boolean required,
+				String defaultValue, String deprecationNote) {
 			_name = name;
 			_pullTypes = Collections.unmodifiableList(pullTypes);
 			_pushTypes = Collections.unmodifiableList(pushTypes);
 			_doc = doc;
 			_required = required;
+			_defaultValue = defaultValue;
+			_deprecationNote = deprecationNote;
 		}
 
 		public String getName() {
@@ -143,6 +148,32 @@ public final class ApiextModel {
 
 		public boolean isRequired() {
 			return _required;
+		}
+
+		/**
+		 * The binding's declared literal default (#3) — the value the element behaves as when the
+		 * binding is unbound — or null if none. NEVER feeds validation ("bound means bound"); it is
+		 * documentation/preview only.
+		 */
+		public String getDefaultValue() {
+			return _defaultValue;
+		}
+
+		/**
+		 * True if this binding is marked {@code <deprecated>} (#5). Using it is a warning, never an error.
+		 * Note a null-vs-empty distinction: {@link #getDeprecationNote()} may be empty for a deprecated
+		 * binding with no migration note, so test deprecation with this method, not the note.
+		 */
+		public boolean isDeprecated() {
+			return _deprecationNote != null;
+		}
+
+		/**
+		 * The migration note from {@code <deprecated>} (Markdown subset), possibly empty, or null if the
+		 * binding is not deprecated. Use {@link #isDeprecated()} to test deprecation.
+		 */
+		public String getDeprecationNote() {
+			return _deprecationNote;
 		}
 	}
 
@@ -280,10 +311,40 @@ public final class ApiextModel {
 		}
 	}
 
+	/**
+	 * The element's policy for attributes not named in its binding API (#1). {@code null} is
+	 * significant and distinct from any value: it means the author declared <em>no</em> policy
+	 * (absent {@code unknownAttributes}), so a consuming tool applies its own default — do not
+	 * synthesize a value. A present value is a portable claim ({@code FORBIDDEN} must error on an
+	 * undeclared binding; {@code PASSTHROUGH} must be treated as forwarded regardless of strictness).
+	 */
+	public enum UnknownAttributes {
+		/** Undeclared bindings are a validation error (closed set). */
+		FORBIDDEN,
+		/** Undeclared bindings are accepted, not forwarded, not flagged. */
+		ALLOWED,
+		/** Undeclared bindings are accepted and forwarded onto the rendered tag (value evaluated). */
+		PASSTHROUGH;
+
+		static UnknownAttributes parse(String s) {
+			if ("forbidden".equalsIgnoreCase(s)) {
+				return FORBIDDEN;
+			}
+			if ("allowed".equalsIgnoreCase(s)) {
+				return ALLOWED;
+			}
+			if ("passthrough".equalsIgnoreCase(s)) {
+				return PASSTHROUGH;
+			}
+			return null; // absent / unrecognized → no declared policy
+		}
+	}
+
 	private final SourceKind _source;
 	private final String _className;
 	private final boolean _componentContent;
-	private final boolean _passthrough;
+	private final UnknownAttributes _unknownAttributes; // #1 — null = no declared policy
+	private final String _elementDeprecationNote; // element-level <deprecated>, or null if not deprecated (#5)
 	private final String _doc; // raw Markdown, or null
 	private final List<Binding> _bindings;
 	private final List<Constraint> _constraints;
@@ -304,13 +365,15 @@ public final class ApiextModel {
 	 */
 	private String _origin;
 
-	private ApiextModel(SourceKind source, String className, boolean componentContent, boolean passthrough,
+	private ApiextModel(SourceKind source, String className, boolean componentContent,
+			UnknownAttributes unknownAttributes, String elementDeprecationNote,
 			String doc, List<Binding> bindings, List<Constraint> constraints, List<String> legacyMessages,
 			List<String> legacyConstructs) {
 		_source = source;
 		_className = className;
 		_componentContent = componentContent;
-		_passthrough = passthrough;
+		_unknownAttributes = unknownAttributes;
+		_elementDeprecationNote = elementDeprecationNote;
 		_doc = doc;
 		_bindings = Collections.unmodifiableList(bindings);
 		_constraints = Collections.unmodifiableList(constraints);
@@ -348,7 +411,8 @@ public final class ApiextModel {
 		for (final IApiBinding b : api.getBindings()) {
 			// .api has no type/direction/doc info — empty pull/push lists and null doc, which
 			// the renderer renders as blank cells (no type, no direction arrow).
-			bindings.add(new Binding(b.getName(), new ArrayList<>(), new ArrayList<>(), null, b.isRequired()));
+			// .api has no type/direction/doc/default/deprecation info.
+			bindings.add(new Binding(b.getName(), new ArrayList<>(), new ArrayList<>(), null, b.isRequired(), null, null));
 		}
 		// A legacy .api carries <validation> predicate trees, which have no typed representation in
 		// the new constraint model (they are exactly what the .apiext format replaced). We don't
@@ -361,7 +425,8 @@ public final class ApiextModel {
 				legacyMessages.add(message);
 			}
 		}
-		return new ApiextModel(SourceKind.API, className, api.isComponentContent(), false,
+		// Legacy .api carries no unknown-attribute policy and no element-level deprecation.
+		return new ApiextModel(SourceKind.API, className, api.isComponentContent(), null, null,
 				null, bindings, new ArrayList<>(), legacyMessages, new ArrayList<>());
 	}
 
@@ -373,8 +438,27 @@ public final class ApiextModel {
 		return _componentContent;
 	}
 
+	/**
+	 * The element's unknown-attribute policy (#1), or null if the author declared none (absent
+	 * {@code unknownAttributes} — the consumer decides). Replaces the old {@code passthrough} boolean.
+	 */
+	public UnknownAttributes getUnknownAttributes() {
+		return _unknownAttributes;
+	}
+
+	/** True if the element forwards unknown attributes onto the rendered tag (policy = passthrough). */
 	public boolean isPassthrough() {
-		return _passthrough;
+		return _unknownAttributes == UnknownAttributes.PASSTHROUGH;
+	}
+
+	/** True if the element itself is marked {@code <deprecated>} (#5) — any use of it is a warning. */
+	public boolean isDeprecated() {
+		return _elementDeprecationNote != null;
+	}
+
+	/** The element-level deprecation migration note (may be empty), or null if not deprecated (#5). */
+	public String getDeprecationNote() {
+		return _elementDeprecationNote;
 	}
 
 	/** The element's Markdown documentation (role/description), or null. */
@@ -454,9 +538,11 @@ public final class ApiextModel {
 		final String className = attr(wo, "class");
 		// #17: .apiext uses wrapsContent (legacy .api's wocomponentcontent lives only on the .api path).
 		final boolean componentContent = boolAttr(wo, "wrapsContent");
-		final boolean passthrough = boolAttr(wo, "passthrough");
+		// #1: unknownAttributes is a nullable policy — absent means "no declared policy", NOT a default.
+		final UnknownAttributes unknownAttributes = UnknownAttributes.parse(emptyToNull(attr(wo, "unknownAttributes")));
 
 		String elementDoc = null;
+		String elementDeprecation = null; // #5: element-level <deprecated> note (null = not deprecated)
 		final List<Binding> bindings = new ArrayList<>();
 		final List<Constraint> constraints = new ArrayList<>();
 		final List<String> legacyConstructs = new ArrayList<>();
@@ -470,6 +556,12 @@ public final class ApiextModel {
 			case "doc":
 				if (elementDoc == null) {
 					elementDoc = text(el);
+				}
+				break;
+			case "deprecated":
+				// #5: presence (not content) marks deprecation; keep the note verbatim, empty allowed.
+				if (elementDeprecation == null) {
+					elementDeprecation = text(el);
 				}
 				break;
 			case "binding":
@@ -495,8 +587,8 @@ public final class ApiextModel {
 			}
 		}
 
-		return new ApiextModel(SourceKind.APIEXT, className, componentContent, passthrough,
-				emptyToNull(elementDoc), bindings, constraints, new ArrayList<>(), legacyConstructs);
+		return new ApiextModel(SourceKind.APIEXT, className, componentContent, unknownAttributes,
+				elementDeprecation, emptyToNull(elementDoc), bindings, constraints, new ArrayList<>(), legacyConstructs);
 	}
 
 	/**
@@ -578,6 +670,8 @@ public final class ApiextModel {
 		final List<TypeRef> pullTypes = new ArrayList<>(); // <pull><type>
 		final List<TypeRef> pushTypes = new ArrayList<>(); // <push><type>
 		String doc = null;
+		String defaultValue = null; // #3: first <default> literal, or null
+		String deprecationNote = null; // #5: first <deprecated> note (presence marks deprecation; "" allowed)
 		for (Node n = bindingEl.getFirstChild(); n != null; n = n.getNextSibling()) {
 			if (n.getNodeType() != Node.ELEMENT_NODE) {
 				continue;
@@ -595,12 +689,24 @@ public final class ApiextModel {
 					doc = text(el);
 				}
 				break;
+			case "default":
+				if (defaultValue == null) {
+					defaultValue = text(el); // literal; may legitimately be empty, but emptyToNull below drops "" defaults
+				}
+				break;
+			case "deprecated":
+				// Presence (not content) marks deprecation; keep the note verbatim, empty allowed.
+				if (deprecationNote == null) {
+					deprecationNote = text(el);
+				}
+				break;
 			default:
 				// <type> directly under <binding> is no longer valid; ignored if present.
 				break;
 			}
 		}
-		return new Binding(name, pullTypes, pushTypes, emptyToNull(doc), required);
+		return new Binding(name, pullTypes, pushTypes, emptyToNull(doc), required,
+				emptyToNull(defaultValue), deprecationNote);
 	}
 
 	/** Collects the {@code <type>} children of a {@code <pull>}/{@code <push>} block into {@code out}. */

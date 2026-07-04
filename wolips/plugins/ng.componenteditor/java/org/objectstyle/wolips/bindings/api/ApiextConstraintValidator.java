@@ -109,6 +109,15 @@ public final class ApiextConstraintValidator {
 			}
 		}
 
+		// #5: deprecated + required on one binding is incoherent (a required binding can't be
+		// discouraged from use) — a lint, not an error.
+		for (final Binding b : model.getBindings()) {
+			if (b.isDeprecated() && b.isRequired()) {
+				problems.add(new Problem(Severity.WARNING,
+						"Binding \"" + b.getName() + "\" is both required and deprecated — a required binding cannot be discouraged from use."));
+			}
+		}
+
 		return problems;
 	}
 
