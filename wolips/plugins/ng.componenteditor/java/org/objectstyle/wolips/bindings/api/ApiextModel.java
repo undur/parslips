@@ -146,16 +146,137 @@ public final class ApiextModel {
 		}
 	}
 
-	/** A cross-binding validation rule (message + the binding names it concerns). */
-	public static final class Validation {
-		private final String _message;
+	/**
+	 * A cross-binding constraint. Two concrete kinds — {@link Choose} (cardinality over a set of
+	 * alternatives) and {@link Requires} (implication) — replace the legacy {@code <validation>}
+	 * predicate language (see the apiext-format spec, § Constraints). Each carries an optional
+	 * author {@code message} override; when absent, a consumer generates one from the typed rule
+	 * (see {@link ApiextHtmlRenderer}). {@code getMessage()} returns the override or {@code null}.
+	 */
+	public static abstract class Constraint {
+		private final String _message; // author override, or null → consumer generates
 
-		Validation(String message) {
-			_message = message;
+		Constraint(String message) {
+			_message = emptyToNull(message);
 		}
 
+		/** The author's message override, or null when the consumer should generate one. */
 		public String getMessage() {
 			return _message;
+		}
+	}
+
+	/**
+	 * One alternative of a {@link Choose}, or the antecedent of a {@link Requires}: either a single
+	 * binding, or an {@link #isAnyOf() any-of} group (satisfied iff ≥1 member bound, counting as
+	 * exactly one satisfied alternative). Never nests — a group's members are always single bindings.
+	 */
+	public static final class Alternative {
+		private final List<String> _bindingNames; // 1 = single binding; ≥2 = an <any-of> group
+
+		Alternative(List<String> bindingNames) {
+			_bindingNames = Collections.unmodifiableList(bindingNames);
+		}
+
+		static Alternative binding(String name) {
+			final List<String> l = new ArrayList<>(1);
+			l.add(name);
+			return new Alternative(l);
+		}
+
+		/** True if this is an {@code <any-of>} group (≥2 bindings, OR-combined). */
+		public boolean isAnyOf() {
+			return _bindingNames.size() > 1;
+		}
+
+		/** The binding name(s): one for a single binding, several for an {@code <any-of>} group. */
+		public List<String> getBindingNames() {
+			return _bindingNames;
+		}
+	}
+
+	/**
+	 * {@code <choose min max>} — between {@code min} (default 0) and {@code max} (default unbounded)
+	 * of the alternatives must be satisfied. {@code getMin()}/{@code getMax()} return null for an
+	 * absent bound. Covers at-least-one ({@code min}), at-most-one ({@code max=1}) and exactly-one.
+	 */
+	public static final class Choose extends Constraint {
+		private final Integer _min;
+		private final Integer _max;
+		private final List<Alternative> _alternatives;
+
+		Choose(Integer min, Integer max, List<Alternative> alternatives, String message) {
+			super(message);
+			_min = min;
+			_max = max;
+			_alternatives = Collections.unmodifiableList(alternatives);
+		}
+
+		/** Lower bound, or null if the {@code min} attribute was absent (defaults to 0). */
+		public Integer getMin() {
+			return _min;
+		}
+
+		/** Upper bound, or null if the {@code max} attribute was absent (unbounded). */
+		public Integer getMax() {
+			return _max;
+		}
+
+		public List<Alternative> getAlternatives() {
+			return _alternatives;
+		}
+	}
+
+	/** The obligation a {@link Requires} places on its consequent binding. */
+	public enum Obligation {
+		/** Must be bound. Only valid with an antecedent (unconditional "bound" is {@code required=}). */
+		BOUND,
+		/** If bound, the value must be assignable (a keypath, not a constant). Does not imply BOUND. */
+		SETTABLE,
+		/** If bound, the value must be a resolvable keypath (not a constant). Does not imply BOUND. */
+		GETTABLE;
+
+		static Obligation parse(String s) {
+			if ("settable".equalsIgnoreCase(s)) {
+				return SETTABLE;
+			}
+			if ("gettable".equalsIgnoreCase(s)) {
+				return GETTABLE;
+			}
+			return BOUND; // DTD default
+		}
+	}
+
+	/**
+	 * {@code <requires binding must when>} — when the antecedent holds, {@code binding} must meet the
+	 * {@link Obligation}. The antecedent is a single binding ({@code when="x"}), an {@link Alternative
+	 * any-of} child, or absent (unconditional — only legal for SETTABLE/GETTABLE). {@code getAntecedent()}
+	 * returns null for the unconditional form.
+	 */
+	public static final class Requires extends Constraint {
+		private final String _binding;
+		private final Obligation _must;
+		private final Alternative _antecedent; // null = unconditional
+
+		Requires(String binding, Obligation must, Alternative antecedent, String message) {
+			super(message);
+			_binding = binding;
+			_must = must;
+			_antecedent = antecedent;
+		}
+
+		/** The consequent binding (must meet the obligation when the antecedent holds). */
+		public String getBinding() {
+			return _binding;
+		}
+
+		public Obligation getMust() {
+			return _must;
+		}
+
+		/** The antecedent, or null for the unconditional form. */
+		public Alternative getAntecedent() {
+			return _antecedent;
 		}
 	}
 
@@ -165,7 +286,15 @@ public final class ApiextModel {
 	private final boolean _passthrough;
 	private final String _doc; // raw Markdown, or null
 	private final List<Binding> _bindings;
-	private final List<Validation> _validations;
+	private final List<Constraint> _constraints;
+	/** Verbatim messages from legacy {@code .api} {@code <validation>} rules — see {@link #fromApiSnapshot}. */
+	private final List<String> _legacyMessages;
+	/**
+	 * Names of removed-grammar constructs ({@code validation}, {@code documentation}) found in an
+	 * {@code .apiext} file — a spec violation the {@link ApiextConstraintValidator} flags. Empty for
+	 * a well-formed {@code .apiext} and for the {@code .api} bridge.
+	 */
+	private final List<String> _legacyConstructs;
 
 	/**
 	 * Where the element comes from — its originating framework/bundle (e.g. "JavaWebObjects",
@@ -176,14 +305,17 @@ public final class ApiextModel {
 	private String _origin;
 
 	private ApiextModel(SourceKind source, String className, boolean componentContent, boolean passthrough,
-			String doc, List<Binding> bindings, List<Validation> validations) {
+			String doc, List<Binding> bindings, List<Constraint> constraints, List<String> legacyMessages,
+			List<String> legacyConstructs) {
 		_source = source;
 		_className = className;
 		_componentContent = componentContent;
 		_passthrough = passthrough;
 		_doc = doc;
 		_bindings = Collections.unmodifiableList(bindings);
-		_validations = Collections.unmodifiableList(validations);
+		_constraints = Collections.unmodifiableList(constraints);
+		_legacyMessages = Collections.unmodifiableList(legacyMessages);
+		_legacyConstructs = Collections.unmodifiableList(legacyConstructs);
 	}
 
 	/** Which on-disk format this model was loaded from ({@code .api} or {@code .apiext}). */
@@ -218,15 +350,19 @@ public final class ApiextModel {
 			// the renderer renders as blank cells (no type, no direction arrow).
 			bindings.add(new Binding(b.getName(), new ArrayList<>(), new ArrayList<>(), null, b.isRequired()));
 		}
-		final List<Validation> validations = new ArrayList<>();
+		// A legacy .api carries <validation> predicate trees, which have no typed representation in
+		// the new constraint model (they are exactly what the .apiext format replaced). We don't
+		// invent Choose/Requires for them — we surface their author messages verbatim as
+		// legacyMessages, which the renderer shows as plain lines (no generated text, no grouping).
+		final List<String> legacyMessages = new ArrayList<>();
 		for (final ApiValidation v : api.getValidations()) {
 			final String message = v.getMessage();
 			if (message != null && !message.isEmpty()) {
-				validations.add(new Validation(message));
+				legacyMessages.add(message);
 			}
 		}
 		return new ApiextModel(SourceKind.API, className, api.isComponentContent(), false,
-				null, bindings, validations);
+				null, bindings, new ArrayList<>(), legacyMessages, new ArrayList<>());
 	}
 
 	public String getClassName() {
@@ -250,8 +386,25 @@ public final class ApiextModel {
 		return _bindings;
 	}
 
-	public List<Validation> getValidations() {
-		return _validations;
+	/** The typed cross-binding constraints ({@link Choose} / {@link Requires}). Empty for legacy {@code .api}. */
+	public List<Constraint> getConstraints() {
+		return _constraints;
+	}
+
+	/**
+	 * Verbatim messages from legacy {@code .api} {@code <validation>} rules, which have no typed
+	 * representation. Empty for {@code .apiext}. Shown by the renderer as plain lines.
+	 */
+	public List<String> getLegacyMessages() {
+		return _legacyMessages;
+	}
+
+	/**
+	 * Names of removed-grammar constructs ({@code validation}, {@code documentation}) found in this
+	 * {@code .apiext} file — a spec violation. Empty for well-formed {@code .apiext} and for {@code .api}.
+	 */
+	public List<String> getLegacyConstructs() {
+		return _legacyConstructs;
 	}
 
 	/**
@@ -299,15 +452,15 @@ public final class ApiextModel {
 		}
 
 		final String className = attr(wo, "class");
-		final boolean componentContent = boolAttr(wo, "wocomponentcontent");
+		// #17: .apiext uses wrapsContent (legacy .api's wocomponentcontent lives only on the .api path).
+		final boolean componentContent = boolAttr(wo, "wrapsContent");
 		final boolean passthrough = boolAttr(wo, "passthrough");
 
 		String elementDoc = null;
 		final List<Binding> bindings = new ArrayList<>();
-		final List<Validation> validations = new ArrayList<>();
+		final List<Constraint> constraints = new ArrayList<>();
+		final List<String> legacyConstructs = new ArrayList<>();
 
-		// First pass: collect bindings named in validations, so we can mark required.
-		// (A binding the rules say must be bound is shown as required in the preview.)
 		for (Node n = wo.getFirstChild(); n != null; n = n.getNextSibling()) {
 			if (n.getNodeType() != Node.ELEMENT_NODE) {
 				continue;
@@ -322,22 +475,106 @@ public final class ApiextModel {
 			case "binding":
 				bindings.add(parseBinding(el));
 				break;
+			case "choose":
+				constraints.add(parseChoose(el));
+				break;
+			case "requires":
+				constraints.add(parseRequires(el));
+				break;
 			case "validation":
-				validations.add(new Validation(attr(el, "message")));
+			case "documentation":
+				// Removed from the .apiext grammar (#9 replaced <validation>; #12 removed
+				// <documentation>). A well-formed .apiext has none; we record the sighting so
+				// ApiextConstraintValidator can flag it (a legacy construct in .apiext is an error,
+				// not a fallback), but parse leniently so the rest of the file still renders.
+				legacyConstructs.add(el.getNodeName());
 				break;
 			default:
-				// documentation (WO external pointer), legacy <tags>, and anything else:
-				// ignored for the preview.
+				// Anything else unrecognized: ignored for the preview.
 				break;
 			}
 		}
 
-		return new ApiextModel(SourceKind.APIEXT, className, componentContent, passthrough, emptyToNull(elementDoc), bindings, validations);
+		return new ApiextModel(SourceKind.APIEXT, className, componentContent, passthrough,
+				emptyToNull(elementDoc), bindings, constraints, new ArrayList<>(), legacyConstructs);
+	}
+
+	/**
+	 * Parses a {@code <choose min max>} element. Structural gates the DTD can't express
+	 * (≥2 alternatives, min/max presence/arithmetic) are enforced separately by
+	 * {@link ApiextConstraintValidator}; here we parse leniently and let that layer report problems,
+	 * so a slightly-malformed file still renders what it can rather than failing the whole model.
+	 */
+	private static Choose parseChoose(Element el) {
+		final Integer min = intAttr(el, "min");
+		final Integer max = intAttr(el, "max");
+		final List<Alternative> alts = new ArrayList<>();
+		for (Node n = el.getFirstChild(); n != null; n = n.getNextSibling()) {
+			if (n.getNodeType() != Node.ELEMENT_NODE) {
+				continue;
+			}
+			final Element child = (Element) n;
+			if ("binding".equals(child.getNodeName())) {
+				alts.add(Alternative.binding(attr(child, "name")));
+			}
+			else if ("any-of".equals(child.getNodeName())) {
+				alts.add(parseAnyOf(child));
+			}
+		}
+		return new Choose(min, max, alts, attr(el, "message"));
+	}
+
+	/**
+	 * Parses a {@code <requires binding must when>} element. The antecedent is {@code when="x"}, an
+	 * {@code <any-of>} child, or absent (unconditional). If both {@code when} and an {@code <any-of>}
+	 * are present the DTD form is ambiguous; we prefer the {@code <any-of>} child and let the
+	 * validator flag the conflict.
+	 */
+	private static Requires parseRequires(Element el) {
+		final String binding = attr(el, "binding");
+		final Obligation must = Obligation.parse(attr(el, "must"));
+		Alternative antecedent = null;
+		final Element anyOf = firstChildElement(el, "any-of");
+		if (anyOf != null) {
+			antecedent = parseAnyOf(anyOf);
+		}
+		else {
+			final String when = emptyToNull(attr(el, "when"));
+			if (when != null) {
+				antecedent = Alternative.binding(when);
+			}
+		}
+		return new Requires(binding, must, antecedent, attr(el, "message"));
+	}
+
+	/** Parses an {@code <any-of>} group into an {@link Alternative} (its member binding names). */
+	private static Alternative parseAnyOf(Element el) {
+		final List<String> names = new ArrayList<>();
+		for (Node n = el.getFirstChild(); n != null; n = n.getNextSibling()) {
+			if (n.getNodeType() == Node.ELEMENT_NODE && "binding".equals(n.getNodeName())) {
+				names.add(attr((Element) n, "name"));
+			}
+		}
+		return new Alternative(names);
+	}
+
+	/** Parses a non-negative integer attribute, or null if absent/blank/unparseable. */
+	private static Integer intAttr(Element el, String name) {
+		final String s = emptyToNull(attr(el, name));
+		if (s == null) {
+			return null;
+		}
+		try {
+			return Integer.valueOf(s.trim());
+		}
+		catch (NumberFormatException e) {
+			return null; // the validator reports non-integer min/max
+		}
 	}
 
 	private static Binding parseBinding(Element bindingEl) {
 		final String name = attr(bindingEl, "name");
-		final boolean required = "true".equalsIgnoreCase(attr(bindingEl, "required")) || "yes".equalsIgnoreCase(attr(bindingEl, "required"));
+		final boolean required = boolAttr(bindingEl, "required");
 		final List<TypeRef> pullTypes = new ArrayList<>(); // <pull><type>
 		final List<TypeRef> pushTypes = new ArrayList<>(); // <push><type>
 		String doc = null;
@@ -398,9 +635,14 @@ public final class ApiextModel {
 		return el.hasAttribute(name) ? el.getAttribute(name) : null;
 	}
 
+	/**
+	 * Reads a boolean attribute on the {@code .apiext} path. The grammar enumerates booleans as
+	 * {@code (true|false)} (#13), so legacy spellings ({@code YES}/{@code yes}/{@code NO}) are not
+	 * accepted here — only a literal {@code "true"} is true. (The tolerant legacy path reads {@code .api}
+	 * booleans separately, via {@link ApiParser}; this method is {@code .apiext}-only.)
+	 */
 	private static boolean boolAttr(Element el, String name) {
-		final String v = attr(el, name);
-		return "true".equalsIgnoreCase(v) || "yes".equalsIgnoreCase(v);
+		return "true".equals(attr(el, name));
 	}
 
 	/** The element's text content (CDATA included), trimmed; never null but may be empty. */

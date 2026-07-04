@@ -122,13 +122,16 @@ public final class ApiextHtmlRenderer {
 			b.append("</tbody></table>");
 		}
 
-		// Validation rules.
-		if (!model.getValidations().isEmpty()) {
+		// Cross-binding constraints (.apiext) — the author message if present, else generated from
+		// the typed rule. Legacy .api validation messages (no typed form) are shown verbatim below.
+		if (!model.getConstraints().isEmpty() || !model.getLegacyMessages().isEmpty()) {
 			b.append("<div class=\"valids\">");
-			for (final ApiextModel.Validation v : model.getValidations()) {
-				if (v.getMessage() != null) {
-					b.append("<p class=\"vmsg\">").append(esc(v.getMessage())).append("</p>");
-				}
+			for (final ApiextModel.Constraint c : model.getConstraints()) {
+				final String msg = c.getMessage() != null ? c.getMessage() : ApiextConstraintMessages.describe(c);
+				b.append("<p class=\"vmsg\">").append(esc(msg)).append("</p>");
+			}
+			for (final String legacy : model.getLegacyMessages()) {
+				b.append("<p class=\"vmsg\">").append(esc(legacy)).append("</p>");
 			}
 			b.append("</div>");
 		}
