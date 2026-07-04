@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!DOCTYPE wodefinitions SYSTEM "apiext.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
 	<wo class="WOString">
 		<doc><![CDATA[
@@ -33,6 +32,12 @@ Use a `dateformat`, `numberformat`, or `formatter` to format non-string values, 
 			<doc>Substituted when `value` is null or empty, so the element still renders something.</doc>
 		</binding>
 
-		<validation message="no more than one of 'dateformat', 'numberformat', or 'formatter' may be bound"/>
+		<!-- At most one formatting mechanism. (The legacy file carried this as a message-only,
+		     predicate-less validation element - prose that validated nothing.) -->
+		<choose max="1">
+			<binding name="formatter"/>
+			<binding name="dateformat"/>
+			<binding name="numberformat"/>
+		</choose>
 	</wo>
 </wodefinitions>
