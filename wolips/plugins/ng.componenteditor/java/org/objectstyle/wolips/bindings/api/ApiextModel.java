@@ -115,9 +115,10 @@ public final class ApiextModel {
 		private final boolean _required;
 		private final String _defaultValue; // <default> literal, or null if none (#3)
 		private final String _deprecationNote; // <deprecated> migration note, or null if not deprecated (#5)
+		private final String _defaults; // the TRANSITIONAL 'defaults' autocomplete-preset attribute, or null
 
 		Binding(String name, List<TypeRef> pullTypes, List<TypeRef> pushTypes, String doc, boolean required,
-				String defaultValue, String deprecationNote) {
+				String defaultValue, String deprecationNote, String defaults) {
 			_name = name;
 			_pullTypes = Collections.unmodifiableList(pullTypes);
 			_pushTypes = Collections.unmodifiableList(pushTypes);
@@ -125,6 +126,7 @@ public final class ApiextModel {
 			_required = required;
 			_defaultValue = defaultValue;
 			_deprecationNote = deprecationNote;
+			_defaults = defaults;
 		}
 
 		public String getName() {
@@ -157,6 +159,15 @@ public final class ApiextModel {
 		 */
 		public String getDefaultValue() {
 			return _defaultValue;
+		}
+
+		/**
+		 * The TRANSITIONAL {@code defaults} attribute — WO's autocomplete-preset hint (e.g. "Date Format
+		 * Strings") — or null. Kept for round-trip fidelity until value-sets (#4) replace it; the editor
+		 * must preserve it rather than silently drop it. Not otherwise interpreted here.
+		 */
+		public String getDefaults() {
+			return _defaults;
 		}
 
 		/**
@@ -424,7 +435,7 @@ public final class ApiextModel {
 			// .api has no type/direction/doc info — empty pull/push lists and null doc, which
 			// the renderer renders as blank cells (no type, no direction arrow).
 			// .api has no type/direction/doc/default/deprecation info.
-			bindings.add(new Binding(b.getName(), new ArrayList<>(), new ArrayList<>(), null, b.isRequired(), null, null));
+			bindings.add(new Binding(b.getName(), new ArrayList<>(), new ArrayList<>(), null, b.isRequired(), null, null, emptyToNull(b.getDefaults())));
 		}
 		// A legacy .api carries <validation> predicate trees, which have no typed representation in
 		// the new constraint model (they are exactly what the .apiext format replaced). We don't
@@ -679,6 +690,7 @@ public final class ApiextModel {
 	private static Binding parseBinding(Element bindingEl) {
 		final String name = attr(bindingEl, "name");
 		final boolean required = boolAttr(bindingEl, "required");
+		final String defaults = emptyToNull(attr(bindingEl, "defaults")); // transitional autocomplete-preset hint
 		final List<TypeRef> pullTypes = new ArrayList<>(); // <pull><type>
 		final List<TypeRef> pushTypes = new ArrayList<>(); // <push><type>
 		String doc = null;
@@ -718,7 +730,7 @@ public final class ApiextModel {
 			}
 		}
 		return new Binding(name, pullTypes, pushTypes, emptyToNull(doc), required,
-				emptyToNull(defaultValue), deprecationNote);
+				emptyToNull(defaultValue), deprecationNote, defaults);
 	}
 
 	/** Collects the {@code <type>} children of a {@code <pull>}/{@code <push>} block into {@code out}. */

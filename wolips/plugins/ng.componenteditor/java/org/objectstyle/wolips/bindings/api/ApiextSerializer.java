@@ -96,6 +96,9 @@ public final class ApiextSerializer {
 		w.write(TAB + TAB + "<binding name=\"");
 		w.write(escapeAttr(b.getName()));
 		w.write("\"");
+		if (b.getDefaults() != null) {
+			w.write(" defaults=\"" + escapeAttr(b.getDefaults()) + "\"");
+		}
 		if (b.isRequired()) {
 			w.write(" required=\"true\"");
 		}

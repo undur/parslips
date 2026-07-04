@@ -47,6 +47,8 @@ public class MutableApiextModel {
 		public String doc; // null = none
 		/** null = not deprecated; non-null (incl. "") = deprecated with this migration note. */
 		public String deprecationNote;
+		/** The transitional 'defaults' autocomplete-preset hint, or null. Preserved round-trip. */
+		public String defaults;
 	}
 
 	/** An editable accepted type: the FQN/value-set name and an optional interpretation. */
@@ -146,6 +148,7 @@ public class MutableApiextModel {
 			mb.defaultValue = b.getDefaultValue();
 			mb.doc = b.getDoc();
 			mb.deprecationNote = b.isDeprecated() ? (b.getDeprecationNote() == null ? "" : b.getDeprecationNote()) : null;
+			mb.defaults = b.getDefaults();
 			for (final TypeRef t : b.getPullTypes()) {
 				mb.pull.add(new MutableType(t.getName(), t.getInterpretation()));
 			}
@@ -190,7 +193,7 @@ public class MutableApiextModel {
 		final List<Binding> bs = new ArrayList<>();
 		for (final MutableBinding mb : bindings) {
 			bs.add(new Binding(mb.name, toTypeRefs(mb.pull), toTypeRefs(mb.push), emptyToNull(mb.doc),
-					mb.required, emptyToNull(mb.defaultValue), mb.deprecationNote));
+					mb.required, emptyToNull(mb.defaultValue), mb.deprecationNote, emptyToNull(mb.defaults)));
 		}
 		final List<Constraint> cs = new ArrayList<>();
 		for (final MutableConstraint mc : constraints) {

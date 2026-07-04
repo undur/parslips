@@ -102,6 +102,43 @@ public class ApiextSerializerTest {
 		org.junit.Assert.assertNull(b.getUnknownAttributes());
 	}
 
+	// ---- the bundled .apiext files (the ones we ship) -----------------------
+
+	/**
+	 * Round-trips every {@code .apiext} the plugin bundles and asserts the serializer preserves the
+	 * model — the permanent regression guard that serialization is meaning-preserving on real files, and
+	 * that the shipped files stay in the serializer's canonical form (so editor saves diff cleanly). The
+	 * surefire CWD is the plugin base dir, so the {@code apiext/} folder resolves directly.
+	 */
+	@Test
+	public void bundledFiles_roundTripAndAreCanonical() throws Exception {
+		final java.io.File dir = new java.io.File("apiext");
+		final java.io.File[] files = dir.listFiles((d, name) -> name.endsWith(".apiext"));
+		assertNotNull("bundled apiext/ directory should exist", files);
+		org.junit.Assert.assertTrue("expected bundled .apiext files", files.length > 0);
+
+		for (final java.io.File f : files) {
+			final byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
+			final ApiextModel a = ApiextModel.parse(bytes);
+			assertNotNull(f.getName() + " should parse", a);
+
+			// (1) meaning-preserving: parse → serialize → re-parse yields an equal model.
+			final String serialized = ApiextSerializer.serialize(a);
+			final ApiextModel b = ApiextModel.parse(serialized.getBytes(StandardCharsets.UTF_8));
+			assertNotNull(f.getName() + " serialized output should re-parse", b);
+			assertModelsEqual(a, b);
+
+			// (2) already canonical: the shipped bytes equal the serializer's output, so opening and
+			// saving in the editor changes nothing but the user's actual edit.
+			assertEquals(f.getName() + " is not in canonical serializer form (re-normalize it)",
+					new String(bytes, StandardCharsets.UTF_8), serialized);
+
+			// (3) idempotent: serializing the re-parsed model gives identical bytes.
+			assertEquals(f.getName() + " serialization is not idempotent",
+					serialized, ApiextSerializer.serialize(b));
+		}
+	}
+
 	// ---- structural model equality ------------------------------------------
 
 	private static void assertModelsEqual(ApiextModel a, ApiextModel b) {
