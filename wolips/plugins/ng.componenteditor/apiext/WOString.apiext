@@ -11,7 +11,7 @@ Use a `dateformat`, `numberformat`, or `formatter` to format non-string values, 
 			<pull><type>java.lang.Object</type></pull>
 			<doc>The value to display. Required. **Pulled**, formatted to a string, then HTML-escaped unless `escapeHTML` is `false`. WOString is display-only — it never pushes anything back.</doc>
 		</binding>
-		<binding name="escapeHTML" defaults="YES/NO">
+		<binding name="escapeHTML">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<doc>Whether to HTML-escape the rendered value. Defaults to `true`; set falsy only when `value` is already safe markup.</doc>
 		</binding>
