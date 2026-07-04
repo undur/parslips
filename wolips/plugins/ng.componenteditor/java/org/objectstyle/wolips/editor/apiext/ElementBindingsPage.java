@@ -161,10 +161,19 @@ public class ElementBindingsPage extends FormPage {
 		// an error), so a missing pull/push is spottable at a glance.
 		final org.eclipse.jface.viewers.TableViewerColumn dirCol = new org.eclipse.jface.viewers.TableViewerColumn(_bindingTable, SWT.CENTER);
 		dirCol.getColumn().setText("Dir");
-		dirCol.getColumn().setWidth(36);
+		dirCol.getColumn().setWidth(44);
 		dirCol.setLabelProvider(new org.eclipse.jface.viewers.ColumnLabelProvider() {
 			@Override public String getText(Object element) { return directionGlyph((MutableBinding) element); }
 			@Override public String getToolTipText(Object element) { return directionTooltip((MutableBinding) element); }
+			@Override public org.eclipse.swt.graphics.Color getForeground(Object element) {
+				// Red-tint the "no direction" error marker so it stands out from the plain arrows.
+				// A shared system color (never disposed — no resource leak).
+				final MutableBinding b = (MutableBinding) element;
+				if (b.pull.isEmpty() && b.push.isEmpty()) {
+					return org.eclipse.swt.widgets.Display.getCurrent().getSystemColor(SWT.COLOR_RED);
+				}
+				return null;
+			}
 		});
 
 		// Column 2: the binding name (required dot, struck-through-ish "(deprecated)" hint).
@@ -366,13 +375,13 @@ public class ElementBindingsPage extends FormPage {
 		note.addModifyListener(e -> { if (check.getSelection()) { onChange.accept(note.getText()); } });
 	}
 
-	/** ↓ pull-only, ↑ push-only, ↕ two-way, ! neither (a binding with no direction — likely an error). */
+	/** ↓ pull-only, ↑ push-only, ↓↑ two-way, ! neither (a binding with no direction — likely an error). */
 	private static String directionGlyph(MutableBinding b) {
 		final boolean pull = !b.pull.isEmpty();
 		final boolean push = !b.push.isEmpty();
-		if (pull && push) return "↕"; // ↕
-		if (pull) return "↓"; // ↓
-		if (push) return "↑"; // ↑
+		if (pull && push) return "↓↑"; // two arrows — clearer than a single small ↕
+		if (pull) return "↓";
+		if (push) return "↑";
 		return "!";
 	}
 
