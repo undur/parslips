@@ -58,30 +58,6 @@ Bind `list` (required) and, in the loop, `item` (the current element) plus optio
 			<doc>Whether to HTML-escape the option labels. **Pulled** by truthiness; defaults to true. Set falsy only when the labels are already safe markup.</doc>
 		</binding>
 
-		<binding name="id">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `id` attribute forwarded onto the rendered `<select>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `class` attribute forwarded onto the rendered `<select>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="style">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `style` attribute forwarded onto the rendered `<select>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[A raw string of extra attributes injected verbatim into the rendered `<select>` tag.]]></doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 		<requires binding="list" must="gettable"/>
 		<requires binding="item">
 			<any-of><binding name="displayString"/><binding name="value"/></any-of>

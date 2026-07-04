@@ -36,30 +36,6 @@ Because it emits no closing tag, `WOGenericElement` is for void/empty elements (
 			<doc><![CDATA[Receives this element's context element ID. **Pushed** as a `java.lang.String` each cycle so the component can capture the element's position in the page.]]></doc>
 		</binding>
 
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc>A raw string of extra attributes appended verbatim inside the opening tag. **Pulled** and converted to a string.</doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
-		<binding name="id">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `id` attribute, forwarded onto the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `class` attribute, forwarded onto the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="style">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `style` attribute, forwarded onto the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
 		<choose max="1">
 			<binding name="formValue"/>
 			<binding name="formValues"/>

@@ -41,30 +41,6 @@ The source is chosen from exactly one of `src`, `filename`, `data`, or `value`: 
 			<doc><![CDATA[An action that lazily produces the embedded content. **Pulled** when the browser requests the generated URL — the returned `WOActionResults` (an image, a document, etc.) is sent back as the response. Mutually exclusive with `src`, `filename`, and `data`.]]></doc>
 		</binding>
 
-		<binding name="id">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `id` attribute forwarded onto the rendered `<embed>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `class` attribute forwarded onto the rendered `<embed>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="style">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `style` attribute forwarded onto the rendered `<embed>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc>A raw string appended verbatim into the rendered tag's attributes.</doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 		<choose min="1" max="1">
 			<binding name="filename"/>
 			<binding name="src"/>

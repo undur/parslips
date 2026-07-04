@@ -36,24 +36,6 @@ Only one background source may be bound at a time. All bindings are **pulled** â
 			<doc><![CDATA[The cache key under which the inline `data` is stored, so it can be served from the generated URL. **Pulled**.]]></doc>
 		</binding>
 
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `class` attribute forwarded to the rendered `<body>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="style">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `style` attribute forwarded to the rendered `<body>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[A raw string of extra attributes appended verbatim to the rendered `<body>` tag.]]></doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 		<requires binding="filename" when="framework"/>
 		<requires binding="mimeType" when="data"/>
 

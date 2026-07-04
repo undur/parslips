@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-	<wo class="WOIFrame" content="forbidden" unknownAttributes="passthrough">
+	<wo class="WOIFrame" content="forbidden" unknownAttributes="forbidden">
 
 		<doc><![CDATA[Renders an `<iframe>` whose source is produced by the component itself. Bind **`src`** for an explicit URL, or bind **`pageName`**, **`value`**, or **`actionName`** to have the frame's `src` point at a component action that renders the target page/element on demand.
 
@@ -71,22 +71,14 @@ The content bindings are all **pulled** — WOIFrame never pushes anything back.
 			<doc><![CDATA[The frame's `name` attribute, forwarded onto the rendered `<iframe>` (a link target can point at it).]]></doc>
 		</binding>
 
-		<binding name="id">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `id` attribute forwarded onto the rendered `<iframe>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `class` attribute forwarded onto the rendered `<iframe>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
 		<binding name="style">
 			<pull><type>java.lang.String</type></pull>
 			<doc><![CDATA[The `style` attribute forwarded onto the rendered `<iframe>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
+		</binding>
+
+		<binding name="border">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `border` attribute, forwarded onto the rendered `<iframe>`.]]></doc>
 		</binding>
 
 		<choose min="1" max="1">

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-	<wo class="WORadioButtonList" content="forbidden" unknownAttributes="passthrough">
+	<wo class="WORadioButtonList" content="forbidden" unknownAttributes="forbidden">
 
 		<doc><![CDATA[Renders a group of radio buttons (`<input type="radio">`), one per element of `list`. Iterating over `list`, it **pushes** each element to `item` (and its position to `index`), renders a radio button for it, and on submit **pushes** the chosen element back to `selection`. `displayString` supplies each button's label; `prefix`/`suffix` wrap it.
 
@@ -62,6 +62,26 @@ Bind either `selection` or a `selectedValue` (never both — the framework rejec
 		<binding name="disabled">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<doc><![CDATA[If truthy, the whole group renders disabled and its submitted value is not read (so nothing is **pushed** to `selection`). **Pulled** by truthiness.]]></doc>
+		</binding>
+
+		<binding name="class">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `class` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="id">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `id` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="style">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `style` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="title">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `title` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
 		</binding>
 
 		<requires binding="list" must="gettable"/>

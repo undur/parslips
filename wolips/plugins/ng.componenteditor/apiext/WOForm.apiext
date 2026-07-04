@@ -57,30 +57,6 @@ Point the form at exactly one destination: a component `action`, a plain `href`,
 			<doc><![CDATA[The browsing context the response is loaded into (the HTML `target` attribute). Forwarded to the rendered `<form>` tag.]]></doc>
 		</binding>
 
-		<binding name="id">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `id` attribute, forwarded to the rendered `<form>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `class` attribute, forwarded to the rendered `<form>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="style">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `style` attribute, forwarded to the rendered `<form>` tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[A raw string of extra attributes appended verbatim to the rendered `<form>` tag.]]></doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 		<choose max="1">
 			<binding name="action"/>
 			<binding name="href"/>

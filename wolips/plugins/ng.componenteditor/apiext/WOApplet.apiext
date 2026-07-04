@@ -48,11 +48,5 @@ Client-side attributes that aren't recognized as applet tag attributes are emitt
 			<doc><![CDATA[The client-side association class. Framework-consumed: when bound, the element emits it as a `<param>` child and enables generation of the standard client-side params (element id, action URL, context id).]]></doc>
 		</binding>
 
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc>A raw string appended verbatim into the rendered tag's attributes.</doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 	</wo>
 </wodefinitions>

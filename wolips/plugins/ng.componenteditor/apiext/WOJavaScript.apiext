@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-	<wo class="WOJavaScript" content="expected" unknownAttributes="forbidden">
+	<wo class="WOJavaScript" content="expected" unknownAttributes="passthrough">
 
 		<doc><![CDATA[Emits a `<script>` element carrying client-side JavaScript. The script body comes from exactly one of three sources: an inline string (`scriptString`), a resource file bundled with the application (`scriptFile`), or an external URL referenced via `src` (`scriptSource`). Exactly one must be bound.
 
@@ -24,12 +24,6 @@ When `scriptSource` is used the element renders an empty `<script src="…">` ta
 		<binding name="hideInComment" defaults="YES/NO">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<doc><![CDATA[If truthy, the inline script body is wrapped in an HTML comment (`<!-- … //-->`) so legacy browsers that don't understand `<script>` ignore it. **Pulled** by truthiness. Has no effect when `scriptSource` is used.]]></doc>
-		</binding>
-
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc>A raw string appended verbatim into the rendered tag's attributes.</doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
 		</binding>
 
 		<choose min="1" max="1">

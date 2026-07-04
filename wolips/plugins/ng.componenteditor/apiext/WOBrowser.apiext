@@ -58,12 +58,6 @@ Iterate `list` with `item` as the loop variable, rendering each option's label f
 			<deprecated>Avoid binding `value` — it forces the slow selection path and only affects the option's `value` attribute cosmetically. Rely on `item`/`selections` instead.</deprecated>
 		</binding>
 
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[Extra raw text spliced into the `<select>` tag. **Pulled** and emitted verbatim.]]></doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 		<requires binding="list" must="gettable"/>
 		<requires binding="item">
 			<any-of><binding name="displayString"/><binding name="value"/></any-of>

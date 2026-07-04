@@ -96,30 +96,6 @@ Give the image a source with exactly one of `src`, `filename`, `data`, or `value
 			<doc><![CDATA[The HTML form-field name used to submit the click coordinates (`name.x`/`name.y`). Auto-assigned from the element id if unbound.]]></doc>
 		</binding>
 
-		<binding name="id">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `id` attribute on the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `class` attribute on the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="style">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML `style` attribute on the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc>A raw string of extra attributes appended verbatim to the rendered tag.</doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 		<choose min="1" max="1">
 			<binding name="data"/>
 			<binding name="filename"/>

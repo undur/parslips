@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-	<wo class="WOCheckBoxList" content="forbidden" unknownAttributes="passthrough">
+	<wo class="WOCheckBoxList" content="forbidden" unknownAttributes="forbidden">
 
 		<doc><![CDATA[Renders a parallel list of checkboxes (`<input type="checkbox">`) — one per element of `list` — sharing a single form-field name so the checked options come back together.
 
@@ -57,6 +57,26 @@ For each item it pushes `item` (and `index`) so `displayString`/`value` can be e
 		<binding name="suffix">
 			<pull><type>java.lang.String</type></pull>
 			<doc>A raw string emitted **after** each option's label. **Pulled**; written verbatim, not HTML-escaped.</doc>
+		</binding>
+
+		<binding name="class">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `class` attribute forwarded onto each rendered `<input type="checkbox">`. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="id">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `id` attribute forwarded onto each rendered `<input type="checkbox">`. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="style">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `style` attribute forwarded onto each rendered `<input type="checkbox">`. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="title">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `title` attribute forwarded onto each rendered `<input type="checkbox">`. **Pulled**.]]></doc>
 		</binding>
 
 		<requires binding="list" must="gettable"/>

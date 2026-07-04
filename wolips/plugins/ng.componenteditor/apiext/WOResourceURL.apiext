@@ -36,12 +36,6 @@ Bind exactly one of `filename` (a resource in the bundle), `pageName` (a compone
 			<doc><![CDATA[A cache key for the `data` payload, letting the same bytes be reused across requests instead of re-encoded. **Pulled** during data-URL construction.]]></doc>
 		</binding>
 
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc>A raw string of extra HTML attributes appended verbatim to the tag.</doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
 		<choose min="1" max="1">
 			<binding name="filename"/>
 			<binding name="pageName"/>

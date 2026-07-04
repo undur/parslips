@@ -41,30 +41,6 @@ The tag name comes from `elementName`, any undeclared attributes are forwarded o
 			<doc>The framework **pushes** this element's context element ID here on every phase, so the component can correlate a request back to this element.</doc>
 		</binding>
 
-		<binding name="otherTagString">
-			<pull><type>java.lang.String</type></pull>
-			<doc>A raw string appended verbatim into the rendered tag's attributes. **Pulled** and inserted as-is.</doc>
-			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
-		</binding>
-
-		<binding name="id">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `id` attribute forwarded onto the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="class">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `class` attribute forwarded onto the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
-		<binding name="style">
-			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `style` attribute forwarded onto the rendered tag.]]></doc>
-			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
-		</binding>
-
 		<choose max="1">
 			<binding name="formValue"/>
 			<binding name="formValues"/>
