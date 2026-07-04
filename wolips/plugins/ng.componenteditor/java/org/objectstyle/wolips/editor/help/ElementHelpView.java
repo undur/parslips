@@ -14,6 +14,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -87,6 +88,7 @@ public class ElementHelpView extends ViewPart {
 	private Color _apiBg;
 	private Color _apiFg;
 	private Color _noneFg;
+	private Color _deprecatedStrike; // light red, drawn semi-transparently through deprecated rows
 	/** Orange, used to mark an element that is overridden/replaced in the current project. */
 	private Color _overriddenFg;
 
@@ -169,6 +171,33 @@ public class ElementHelpView extends ViewPart {
 		// Double-click opens the element — the same action as cmd-clicking it in a template.
 		_table.addListener(SWT.MouseDoubleClick, e -> openSelectedElement());
 
+		// Strike deprecated elements through. A native SWT Table can't style cell text (no per-cell
+		// StyleRange), so we owner-draw the line ourselves: after the cell's text is painted, draw a
+		// light-red, semi-transparent rule across the name column. Only the name column (index 0) is
+		// struck — enough to read "don't use this" without turning the whole row into noise. Alpha keeps
+		// the thin line from swallowing the small text; it's restored so we don't leak GC state.
+		_table.addListener(SWT.PaintItem, e -> {
+			if (e.index != 0) {
+				return; // strike the element name only
+			}
+			final ElementCatalog.Entry entry = (ElementCatalog.Entry) ((TableItem) e.item).getData();
+			if (entry == null || !entry.isDeprecated()) {
+				return;
+			}
+			final GC gc = e.gc;
+			final int savedAlpha = gc.getAlpha();
+			final Color savedFg = gc.getForeground();
+			gc.setForeground(_deprecatedStrike);
+			gc.setAlpha(150); // ~60% — visible over grey text, but the glyphs still read through it
+			final int y = e.y + e.height / 2;
+			// e.x is the cell's left edge; strike only across the drawn text, not the full column width.
+			final String text = ((TableItem) e.item).getText(e.index);
+			final int textWidth = gc.textExtent(text).x;
+			gc.drawLine(e.x + 2, y, e.x + 2 + textWidth, y);
+			gc.setAlpha(savedAlpha);
+			gc.setForeground(savedFg);
+		});
+
 		// ---- Right: detail card ----
 		_browser = new Browser(sash, SWT.NONE);
 		_browser.setJavascriptEnabled(false);
@@ -214,6 +243,7 @@ public class ElementHelpView extends ViewPart {
 		_apiFg = new Color(d, 0x6C, 0x75, 0x7D);
 		_noneFg = new Color(d, 0x9A, 0xA0, 0xA8);
 		_overriddenFg = new Color(d, 0xC0, 0x5A, 0x12); // orange — "replaced in this project"
+		_deprecatedStrike = new Color(d, 0xE0, 0x40, 0x40); // light red — strikethrough on deprecated rows (drawn at reduced alpha)
 	}
 
 	/**
@@ -511,6 +541,7 @@ public class ElementHelpView extends ViewPart {
 		disposeColor(_apiFg);
 		disposeColor(_noneFg);
 		disposeColor(_overriddenFg);
+		disposeColor(_deprecatedStrike);
 		super.dispose();
 	}
 

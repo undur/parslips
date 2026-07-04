@@ -48,8 +48,9 @@ public final class ElementCatalog {
 		private final DefinitionKind _definitionKind;
 		private final List<String> _tags;
 		private final String _overriddenBy;
+		private final boolean _deprecated;
 
-		Entry(String simpleName, String qualifiedName, IType type, String origin, DefinitionKind definitionKind, List<String> tags, String overriddenBy) {
+		Entry(String simpleName, String qualifiedName, IType type, String origin, DefinitionKind definitionKind, List<String> tags, String overriddenBy, boolean deprecated) {
 			_simpleName = simpleName;
 			_qualifiedName = qualifiedName;
 			_type = type;
@@ -57,6 +58,7 @@ public final class ElementCatalog {
 			_definitionKind = definitionKind;
 			_tags = java.util.Collections.unmodifiableList(tags);
 			_overriddenBy = overriddenBy;
+			_deprecated = deprecated;
 		}
 
 		/** Short element name (e.g. "WOString"). */
@@ -110,6 +112,15 @@ public final class ElementCatalog {
 		public boolean hasDefinition() {
 			return _definitionKind != DefinitionKind.NONE;
 		}
+
+		/**
+		 * True if the element's definition marks it {@code <deprecated>} at the element level (#5) — the
+		 * Element Reference strikes such entries through. Resolved during enumeration alongside the
+		 * definition kind, so reading it here is free.
+		 */
+		public boolean isDeprecated() {
+			return _deprecated;
+		}
 	}
 
 	private ElementCatalog() {
@@ -138,7 +149,8 @@ public final class ElementCatalog {
 				final IType type = collector.getTypeForClassName(qualifiedName);
 				final String simpleName = BindingReflectionUtils.getShortClassName(qualifiedName);
 				final String origin = ApiUtils.resolveOrigin(type);
-				final DefinitionKind kind = definitionKindFor(type, simpleName, project);
+				final ResolvedDefinition def = resolveDefinition(type, simpleName, project);
+				final DefinitionKind kind = def.kind;
 				final List<String> tags = shortcutsByElement.getOrDefault(simpleName, java.util.Collections.emptyList());
 				// Is this element replaced by another in this project? Resolve its own name
 				// through the aliases; if it resolves to a different element, that's the override.
@@ -151,7 +163,7 @@ public final class ElementCatalog {
 						overriddenBy = resolvedSimple;
 					}
 				}
-				entries.add(new Entry(simpleName, qualifiedName, type, origin, kind, tags, overriddenBy));
+				entries.add(new Entry(simpleName, qualifiedName, type, origin, kind, tags, overriddenBy, def.deprecated));
 			}
 		} catch (Throwable t) {
 			// Best-effort enumeration — return whatever we gathered.
@@ -213,21 +225,44 @@ public final class ElementCatalog {
 	 * seam (a project/bundled {@code .apiext} wins per-element, else any {@code .api}/global
 	 * definition, else none) — so the badge always agrees with what the hover/card renders.
 	 */
-	private static DefinitionKind definitionKindFor(IType type, String simpleName, IJavaProject project) {
+	/** The definition kind plus element-level deprecation, resolved together in one pass. */
+	private static final class ResolvedDefinition {
+		final DefinitionKind kind;
+		final boolean deprecated;
+
+		ResolvedDefinition(DefinitionKind kind, boolean deprecated) {
+			this.kind = kind;
+			this.deprecated = deprecated;
+		}
+	}
+
+	/**
+	 * Resolves an element's definition kind AND whether it is marked {@code <deprecated>} in a SINGLE
+	 * {@link ElementApiResolver#resolve} call. Deprecation piggybacks on the resolution already done for
+	 * the kind — no second (I/O-bearing) lookup — which matters because this runs once per element during
+	 * enumeration and a duplicate resolve per row was what previously beach-balled the UI thread.
+	 */
+	private static ResolvedDefinition resolveDefinition(IType type, String simpleName, IJavaProject project) {
 		// Primary lookup by FQN (findGlobal* strips to the simple name internally), simpleName as the
 		// alternate — matching the historical resolution exactly.
 		final String fqn = type != null ? type.getFullyQualifiedName() : simpleName;
-		final ElementApiResolver.Kind kind =
-				ElementApiResolver.resolve(type, fqn, simpleName, simpleName, new TypeCache().getApiCache(project)).getKind();
-		switch (kind) {
+		final ElementApiResolver.ResolvedElementApi resolved =
+				ElementApiResolver.resolve(type, fqn, simpleName, simpleName, new TypeCache().getApiCache(project));
+		final boolean deprecated = resolved.exists() && resolved.getModel() != null && resolved.getModel().isDeprecated();
+		final DefinitionKind kind;
+		switch (resolved.getKind()) {
 		case APIEXT:
-			return DefinitionKind.APIEXT;
+			kind = DefinitionKind.APIEXT;
+			break;
 		case LEGACY_API:
-			return DefinitionKind.API;
+			kind = DefinitionKind.API;
+			break;
 		case NONE:
 		default:
-			return DefinitionKind.NONE;
+			kind = DefinitionKind.NONE;
+			break;
 		}
+		return new ResolvedDefinition(kind, deprecated);
 	}
 
 	/**
