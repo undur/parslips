@@ -209,33 +209,25 @@ public final class ElementCatalog {
 	}
 
 	/**
-	 * Determines which kind of definition an element has, in the same precedence the hover
-	 * uses for choosing what to render: a project/bundled {@code .apiext} wins, else any
-	 * {@code .api}/global definition, else none.
+	 * Determines which kind of definition an element has, via the shared {@link ElementApiResolver}
+	 * seam (a project/bundled {@code .apiext} wins per-element, else any {@code .api}/global
+	 * definition, else none) — so the badge always agrees with what the hover/card renders.
 	 */
 	private static DefinitionKind definitionKindFor(IType type, String simpleName, IJavaProject project) {
-		// .apiext — project sibling, or bundled for built-in elements.
-		if (type != null && ApiUtils.findApiextBytes(type) != null) {
+		// Primary lookup by FQN (findGlobal* strips to the simple name internally), simpleName as the
+		// alternate — matching the historical resolution exactly.
+		final String fqn = type != null ? type.getFullyQualifiedName() : simpleName;
+		final ElementApiResolver.Kind kind =
+				ElementApiResolver.resolve(type, fqn, simpleName, simpleName, new TypeCache().getApiCache(project)).getKind();
+		switch (kind) {
+		case APIEXT:
 			return DefinitionKind.APIEXT;
-		}
-		if (ApiUtils.findGlobalApiextBytes(type != null ? type.getFullyQualifiedName() : simpleName) != null
-				|| ApiUtils.findGlobalApiextBytes(simpleName) != null) {
-			return DefinitionKind.APIEXT;
-		}
-
-		// .api — project file, or the global WebObjectDefinitions.xml.
-		try {
-			if (type != null && ApiUtils.findApiSnapshot(type, new TypeCache().getApiCache(project)) != null) {
-				return DefinitionKind.API;
-			}
-		} catch (Throwable t) {
-			// fall through to global lookup
-		}
-		if (ApiUtils.findGlobalApiSnapshotByClassName(simpleName) != null) {
+		case LEGACY_API:
 			return DefinitionKind.API;
+		case NONE:
+		default:
+			return DefinitionKind.NONE;
 		}
-
-		return DefinitionKind.NONE;
 	}
 
 	/**
@@ -253,43 +245,13 @@ public final class ElementCatalog {
 		final String overriddenBy = entry.getOverriddenBy(); // orange "overridden by X" banner, or null
 
 		try {
-			// Project / bundled .apiext first.
-			if (type != null) {
-				final byte[] apiextBytes = ApiUtils.findApiextBytes(type);
-				if (apiextBytes != null) {
-					final ApiextModel m = ApiextModel.parse(apiextBytes);
-					if (m != null) {
-						m.setOrigin(origin);
-						return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, m);
-					}
-				}
-			}
-			byte[] globalApiext = ApiUtils.findGlobalApiextBytes(type != null ? type.getFullyQualifiedName() : displayName);
-			if (globalApiext == null) {
-				globalApiext = ApiUtils.findGlobalApiextBytes(displayName);
-			}
-			if (globalApiext != null) {
-				final ApiextModel m = ApiextModel.parse(globalApiext);
-				if (m != null) {
-					m.setOrigin(origin);
-					return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, m);
-				}
-			}
-
-			// Classic .api / global definition.
-			ApiSnapshot api = null;
-			if (type != null) {
-				try {
-					api = ApiUtils.findApiSnapshot(type, new TypeCache().getApiCache(project));
-				} catch (Throwable t) {
-					// fall through to global lookup
-				}
-			}
-			if (api == null) {
-				api = ApiUtils.findGlobalApiSnapshotByClassName(displayName);
-			}
-			if (api != null) {
-				final ApiextModel m = ApiextModel.fromApiSnapshot(displayName, api);
+			// One resolution through the shared seam (apiext-wins per element); render whatever
+			// model it yields (parsed .apiext, or a legacy .api adapted into an ApiextModel).
+			final String fqn = type != null ? type.getFullyQualifiedName() : displayName;
+			final ElementApiResolver.ResolvedElementApi resolved =
+					ElementApiResolver.resolve(type, fqn, displayName, displayName, new TypeCache().getApiCache(project));
+			if (resolved.exists()) {
+				final ApiextModel m = resolved.getModel();
 				m.setOrigin(origin);
 				return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, m);
 			}

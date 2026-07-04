@@ -26,11 +26,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.EditorsUI;
 import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver;
-import org.objectstyle.wolips.bindings.api.ApiModelException;
-import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
 import org.objectstyle.wolips.bindings.api.ApiextHtmlRenderer;
 import org.objectstyle.wolips.bindings.api.ApiextModel;
+import org.objectstyle.wolips.bindings.api.ElementApiResolver;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -440,44 +439,13 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 		final IType elementType = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache);
 		final String origin = ApiUtils.resolveOrigin(elementType);
 
-		if (elementType != null) {
-			final byte[] apiextBytes = ApiUtils.findApiextBytes(elementType);
-			if (apiextBytes != null) {
-				final ApiextModel apiext = ApiextModel.parse(apiextBytes);
-				if (apiext != null) {
-					return renderCard(displayName, note, apiext, origin);
-				}
-			}
-		}
-
-		byte[] globalApiext = ApiUtils.findGlobalApiextBytes(lookupName);
-		if (globalApiext == null && !lookupName.equals(elementTypeName)) {
-			globalApiext = ApiUtils.findGlobalApiextBytes(elementTypeName);
-		}
-		if (globalApiext != null) {
-			final ApiextModel apiext = ApiextModel.parse(globalApiext);
-			if (apiext != null) {
-				return renderCard(displayName, note, apiext, origin);
-			}
-		}
-
-		ApiSnapshot api = null;
-		if (elementType != null) {
-			try {
-				api = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
-			}
-			catch (ApiModelException e) {
-				// fall through to global lookup
-			}
-		}
-		if (api == null) {
-			api = ApiUtils.findGlobalApiSnapshotByClassName(lookupName);
-		}
-		if (api == null && !lookupName.equals(elementTypeName)) {
-			api = ApiUtils.findGlobalApiSnapshotByClassName(elementTypeName);
-		}
-		if (api != null) {
-			return renderCard(displayName, note, ApiextModel.fromApiSnapshot(displayName, api), origin);
+		// The apiext-wins-per-element resolution now lives in ElementApiResolver (the single seam);
+		// the hover just renders whatever model it hands back (a parsed .apiext, or a legacy .api
+		// adapted into an ApiextModel). See ElementApiResolver for the precedence rule.
+		final ElementApiResolver.ResolvedElementApi resolved =
+				ElementApiResolver.resolve(elementType, lookupName, elementTypeName, displayName, typeCache.getApiCache(javaProject));
+		if (resolved.exists()) {
+			return renderCard(displayName, note, resolved.getModel(), origin);
 		}
 
 		return null;
