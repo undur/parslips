@@ -152,14 +152,32 @@ public class ElementBindingsPage extends FormPage {
 		final Table table = _toolkit.createTable(masterCol, SWT.SINGLE | SWT.FULL_SELECTION | SWT.BORDER);
 		final GridData tableData = new GridData(GridData.FILL_BOTH);
 		table.setLayoutData(tableData);
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
 		_bindingTable = new TableViewer(table);
 		_bindingTable.setContentProvider((org.eclipse.jface.viewers.IStructuredContentProvider) input -> m.bindings.toArray());
-		_bindingTable.setLabelProvider(new org.eclipse.jface.viewers.LabelProvider() {
+
+		// Column 1: a narrow direction glyph (↓ pull-only, ↑ push-only, ↕ two-way, ! none — likely
+		// an error), so a missing pull/push is spottable at a glance.
+		final org.eclipse.jface.viewers.TableViewerColumn dirCol = new org.eclipse.jface.viewers.TableViewerColumn(_bindingTable, SWT.CENTER);
+		dirCol.getColumn().setText("Dir");
+		dirCol.getColumn().setWidth(36);
+		dirCol.setLabelProvider(new org.eclipse.jface.viewers.ColumnLabelProvider() {
+			@Override public String getText(Object element) { return directionGlyph((MutableBinding) element); }
+			@Override public String getToolTipText(Object element) { return directionTooltip((MutableBinding) element); }
+		});
+
+		// Column 2: the binding name (required dot, struck-through-ish "(deprecated)" hint).
+		final org.eclipse.jface.viewers.TableViewerColumn nameCol = new org.eclipse.jface.viewers.TableViewerColumn(_bindingTable, SWT.LEFT);
+		nameCol.getColumn().setText("Binding");
+		nameCol.getColumn().setWidth(170);
+		nameCol.setLabelProvider(new org.eclipse.jface.viewers.ColumnLabelProvider() {
 			@Override public String getText(Object element) {
 				final MutableBinding b = (MutableBinding) element;
-				return (b.required ? "• " : "") + b.name + (b.deprecationNote != null ? " (deprecated)" : "");
+				return (b.required ? "• " : "") + b.name + (b.deprecationNote != null ? "  (deprecated)" : "");
 			}
 		});
+		org.eclipse.jface.viewers.ColumnViewerToolTipSupport.enableFor(_bindingTable);
 		_bindingTable.setInput(m);
 
 		final Composite buttons = _toolkit.createComposite(masterCol);
@@ -246,7 +264,7 @@ public class ElementBindingsPage extends FormPage {
 			_toolkit.createLabel(pull, "Types (comma-sep FQN):");
 			_pull = _toolkit.createText(pull, "", SWT.SINGLE);
 			_pull.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			_pull.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.pull, _pull.getText()); dirty(); } });
+			_pull.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.pull, _pull.getText()); _bindingTable.refresh(_binding); dirty(); } });
 
 			_toolkit.createLabel(pull, "Interpretation:");
 			_interp = new Combo(pull, SWT.READ_ONLY);
@@ -266,7 +284,7 @@ public class ElementBindingsPage extends FormPage {
 			_toolkit.createLabel(push, "Types (comma-sep FQN):");
 			_push = _toolkit.createText(push, "", SWT.SINGLE);
 			_push.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			_push.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.push, _push.getText()); dirty(); } });
+			_push.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.push, _push.getText()); _bindingTable.refresh(_binding); dirty(); } });
 
 			// --- Documentation (binding-level metadata) ---
 			final Composite meta = group("Documentation", 2);
@@ -346,6 +364,25 @@ public class ElementBindingsPage extends FormPage {
 			}
 		});
 		note.addModifyListener(e -> { if (check.getSelection()) { onChange.accept(note.getText()); } });
+	}
+
+	/** ↓ pull-only, ↑ push-only, ↕ two-way, ! neither (a binding with no direction — likely an error). */
+	private static String directionGlyph(MutableBinding b) {
+		final boolean pull = !b.pull.isEmpty();
+		final boolean push = !b.push.isEmpty();
+		if (pull && push) return "↕"; // ↕
+		if (pull) return "↓"; // ↓
+		if (push) return "↑"; // ↑
+		return "!";
+	}
+
+	private static String directionTooltip(MutableBinding b) {
+		final boolean pull = !b.pull.isEmpty();
+		final boolean push = !b.push.isEmpty();
+		if (pull && push) return "Two-way: pulled and pushed";
+		if (pull) return "Pull only (read)";
+		if (push) return "Push only (written back)";
+		return "No pull or push type declared";
 	}
 
 	private static int policyIndex(UnknownAttributes p) {
