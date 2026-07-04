@@ -18,6 +18,7 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
   private FuzzyXMLElement _xmlElement;
 
   public FuzzyXMLWodElement(FuzzyXMLElement element, ParsleyProject parsleyProject) {
+    _xmlElement = element; // keep the source node — used by getXmlElement()/hasContent()
     BuildProperties buildProperties = parsleyProject != null ? parsleyProject.getBuildProperties() : null;
     String inlineBindingPrefix = buildProperties != null ? buildProperties.getInlineBindingPrefix() : "$";
     String inlineBindingSuffix = buildProperties != null ? buildProperties.getInlineBindingSuffix() : "";
@@ -115,5 +116,15 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
 
   public FuzzyXMLElement getXmlElement() {
     return _xmlElement;
+  }
+
+  /**
+   * An inline element has content iff its tag has an explicit close tag — {@code <wo:x>…</wo:x>},
+   * even when empty — rather than being self-closed ({@code <wo:x/>}). This is the "content" a
+   * {@code content="forbidden"} .apiext policy forbids.
+   */
+  @Override
+  public boolean hasContent() {
+    return _xmlElement != null && _xmlElement.hasCloseTag();
   }
 }

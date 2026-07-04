@@ -110,6 +110,16 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     _inline = inline;
   }
 
+  /**
+   * Whether this element has child content in the template — an explicit close tag (even an empty
+   * {@code <wo:x></wo:x>}), as opposed to a self-closed {@code <wo:x/>}. Used to enforce an
+   * {@code .apiext} {@code content="forbidden"} policy. Defaults to false (unknown → don't flag);
+   * overridden where the underlying template node is available (inline elements).
+   */
+  public boolean hasContent() {
+    return false;
+  }
+
   public void addBinding(IWodBinding binding) {
     _bindings.add(binding);
   }
@@ -438,6 +448,14 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
    */
   private void fillInApiextProblems(org.objectstyle.wolips.bindings.api.ApiextModel model, int lineNumber,
       boolean apiSeverityIsWarning, List<WodProblem> problems) {
+    // content="forbidden": the element must be self-closed — giving it any content (even an empty
+    // <wo:x></wo:x>) is an error (#22). Element-level, so it needs this element's content-presence,
+    // which the name-based ApiextTemplateEvaluator doesn't see.
+    if (model.getContent() == org.objectstyle.wolips.bindings.api.ApiextModel.Content.FORBIDDEN && hasContent()) {
+      problems.add(new WodElementProblem(this, "'" + getElementType() + "' does not allow content — write it self-closed.",
+          getElementNamePosition(), lineNumber, apiSeverityIsWarning));
+    }
+
     final Map<String, String> bindingsMap = getBindingsMap();
     final java.util.List<org.objectstyle.wolips.bindings.api.ApiextTemplateEvaluator.Diagnostic> diagnostics =
         org.objectstyle.wolips.bindings.api.ApiextTemplateEvaluator.evaluate(model, bindingsMap.keySet());
