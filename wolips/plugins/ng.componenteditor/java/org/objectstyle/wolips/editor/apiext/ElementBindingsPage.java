@@ -124,7 +124,7 @@ public class ElementBindingsPage extends FormPage {
 		_toolkit.createLabel(c, "Documentation:");
 		final Text doc = _toolkit.createText(c, m.doc != null ? m.doc : "", SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.BORDER);
 		final GridData docData = new GridData(GridData.FILL_HORIZONTAL);
-		docData.heightHint = 44;
+		docData.heightHint = 80;
 		doc.setLayoutData(docData);
 		doc.addModifyListener(e -> { m.doc = doc.getText(); dirty(); });
 
@@ -146,7 +146,7 @@ public class ElementBindingsPage extends FormPage {
 		final Composite masterCol = _toolkit.createComposite(c);
 		masterCol.setLayout(new GridLayout(1, false));
 		final GridData masterData = new GridData(GridData.FILL_VERTICAL);
-		masterData.widthHint = 160;
+		masterData.widthHint = 220;
 		masterCol.setLayoutData(masterData);
 
 		final Table table = _toolkit.createTable(masterCol, SWT.SINGLE | SWT.FULL_SELECTION | SWT.BORDER);
@@ -270,7 +270,7 @@ public class ElementBindingsPage extends FormPage {
 			_toolkit.createLabel(_root, "Documentation:");
 			_doc = _toolkit.createText(_root, "", SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.BORDER);
 			final GridData docData = new GridData(GridData.FILL_HORIZONTAL);
-			docData.heightHint = 44;
+			docData.heightHint = 80;
 			_doc.setLayoutData(docData);
 			_doc.addModifyListener(e -> { if (_binding != null && !_updating) { _binding.doc = emptyToNull(_doc.getText()); dirty(); } });
 

@@ -92,12 +92,18 @@ public class WodParserCacheInvalidator implements IResourceChangeListener, IReso
         // API changes affect hasBody and required bindings in cached tag infos
         TemplateAssistProcessor.clearTagInfoCacheForProject(file.getProject());
       }
-      else if (name.endsWith(".apiext") && delta.getKind() != IResourceDelta.REMOVED) {
-        // Re-validate the .apiext file (integrity checks the DTD can't express) and reflect the
-        // result as markers on the file. Scheduled as a workspace job: resources must not be
-        // modified from within resource-change notification.
-        final IFile apiextFile = file;
-        org.objectstyle.wolips.bindings.api.ApiextFileValidationJob.schedule(apiextFile);
+      else if (name.endsWith(".apiext")) {
+        // An .apiext change alters the element's contract, so clear the caches that hold it — the
+        // same ones a .api change clears — or open component editors keep validating against the
+        // stale contract until reopened.
+        WodCompletionUtils.clearElementTypeCacheForProject(file.getProject());
+        TemplateAssistProcessor.clearTagInfoCacheForProject(file.getProject());
+        if (delta.getKind() != IResourceDelta.REMOVED) {
+          // Re-validate the .apiext file itself (integrity checks the DTD can't express) and reflect
+          // the result as markers on the file. Scheduled as a workspace job: resources must not be
+          // modified from within resource-change notification.
+          org.objectstyle.wolips.bindings.api.ApiextFileValidationJob.schedule(file);
+        }
       }
       else if (file.getParent() != null && file.getParent().getName().endsWith(".wo")) {
         if (delta.getKind() == IResourceDelta.ADDED) {

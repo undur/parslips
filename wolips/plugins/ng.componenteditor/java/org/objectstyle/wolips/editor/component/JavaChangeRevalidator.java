@@ -76,7 +76,10 @@ public class JavaChangeRevalidator implements IResourceChangeListener {
 							if ("java".equals(ext)) {
 								_javaAffectedProjects.add(file.getProject());
 							}
-							else if ("api".equals(ext)) {
+							else if ("api".equals(ext) || "apiext".equals(ext)) {
+								// An .apiext change alters an element's contract (required, choose/requires,
+								// deprecation, unknownAttributes), so open component editors must re-validate —
+								// same as .api. Revalidate all, since the changed element may be used anywhere.
 								_apiChanged[0] = true;
 							}
 						}

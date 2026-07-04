@@ -20,11 +20,14 @@ import org.objectstyle.wolips.variables.ParsleyProject;
  *   <li>Any file inside a {@code .wo} folder (unambiguously a WO component)</li>
  *   <li>Component files ({@code .html}, {@code .wod}, {@code .woo}, {@code .api})
  *       in ng-objects projects (identified by {@code project.base=ng} in {@code build.properties})</li>
+ *   <li>{@code .apiext} files in Parsley projects → the dedicated {@link org.objectstyle.wolips.editor.apiext.ApiextEditor}
+ *       (a separate editor from the component editor; {@code default="true"} alone loses to the platform text editor)</li>
  * </ul>
  */
 public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 
 	private static final String NG_EDITOR_ID = "ng.componenteditor.ComponentEditor";
+	private static final String APIEXT_EDITOR_ID = "ng.componenteditor.ApiextEditor";
 	private static final Set<String> COMPONENT_EXTENSIONS = Set.of("html", "wod", "woo", "api");
 
 	@Override
@@ -36,6 +39,16 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 		IFile file = ResourceUtil.getFile(editorInput);
 		if (file == null) {
 			return editorDescriptor;
+		}
+
+		// .apiext → the dedicated Apiext editor (in Parsley projects). Its plugin.xml default="true"
+		// isn't enough to beat the platform text editor, so force it here like the component editor.
+		if (isApiextFile(file) && ParsleyProject.shouldHandleProject(file.getProject())) {
+			if (APIEXT_EDITOR_ID.equals(editorDescriptor.getId())) {
+				return editorDescriptor;
+			}
+			IEditorDescriptor apiextEditor = findEditor(APIEXT_EDITOR_ID);
+			return apiextEditor != null ? apiextEditor : editorDescriptor;
 		}
 
 		if (shouldUseComponentEditor(file)) {
@@ -68,8 +81,12 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 			return editorDescriptors;
 		}
 
+		if (isApiextFile(file) && ParsleyProject.shouldHandleProject(file.getProject())) {
+			return reorderEditors(editorDescriptors, APIEXT_EDITOR_ID);
+		}
+
 		if (shouldUseComponentEditor(file)) {
-			return reorderEditors(editorDescriptors);
+			return reorderEditors(editorDescriptors, NG_EDITOR_ID);
 		}
 
 		// Not a Parsley project — remove our editors from the list
@@ -108,25 +125,29 @@ public class NGEditorAssociationOverride implements IEditorAssociationOverride {
 		return ext != null && COMPONENT_EXTENSIONS.contains(ext.toLowerCase());
 	}
 
+	private boolean isApiextFile(IFile file) {
+		return "apiext".equalsIgnoreCase(file.getFileExtension());
+	}
+
 	/**
-	 * Reorder the editor list so the NG editor comes first.
+	 * Reorder the editor list so the given editor id comes first.
 	 */
-	private IEditorDescriptor[] reorderEditors(IEditorDescriptor[] editors) {
-		int ngIndex = -1;
+	private IEditorDescriptor[] reorderEditors(IEditorDescriptor[] editors, String editorId) {
+		int index = -1;
 		for (int i = 0; i < editors.length; i++) {
-			if (NG_EDITOR_ID.equals(editors[i].getId())) {
-				ngIndex = i;
+			if (editorId.equals(editors[i].getId())) {
+				index = i;
 				break;
 			}
 		}
-		if (ngIndex <= 0) {
+		if (index <= 0) {
 			return editors;
 		}
 		IEditorDescriptor[] reordered = new IEditorDescriptor[editors.length];
-		reordered[0] = editors[ngIndex];
+		reordered[0] = editors[index];
 		int dest = 1;
 		for (int i = 0; i < editors.length; i++) {
-			if (i != ngIndex) {
+			if (i != index) {
 				reordered[dest++] = editors[i];
 			}
 		}
