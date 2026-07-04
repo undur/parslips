@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wodefinitions>
+	<wo class="WOCheckBoxList" content="forbidden" unknownAttributes="passthrough">
+
+		<doc><![CDATA[Renders a parallel list of checkboxes (`<input type="checkbox">`) — one per element of `list` — sharing a single form-field name so the checked options come back together.
+
+For each item it pushes `item` (and `index`) so `displayString`/`value` can be evaluated per option, then on submit collects the checked options and **pushes** them back into `selections`.]]></doc>
+
+		<deprecated>WOCheckBoxList is a deprecated dynamic element. Build a list of checkboxes with a `WORepetition` around a `WOCheckBox` instead.</deprecated>
+
+		<binding name="list" required="true">
+			<pull><type>java.util.List</type></pull>
+			<doc>The list of option objects, one checkbox per element. Required. **Pulled** each cycle; must be a resolvable keypath, not a constant.</doc>
+		</binding>
+
+		<binding name="item">
+			<push><type>java.lang.Object</type></push>
+			<doc><![CDATA[The loop variable. For each option the current element of `list` is **pushed** here so `displayString` and `value` can be evaluated against it — so it must be a settable keypath, and it must be bound whenever `displayString` is.]]></doc>
+		</binding>
+
+		<binding name="index">
+			<push><type>java.lang.Integer</type></push>
+			<doc><![CDATA[The current option's zero-based position. **Pushed** as an `Integer` alongside `item` on each iteration when bound.]]></doc>
+		</binding>
+
+		<binding name="selections">
+			<pull><type>java.util.List</type></pull>
+			<push><type>java.util.List</type></push>
+			<doc><![CDATA[The selected options. **Pulled** to decide which boxes render checked (an option is checked when it is contained in this list); on submit the checked options are collected and **pushed** back as a new `List`.]]></doc>
+		</binding>
+
+		<binding name="displayString">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[The label rendered after each checkbox. **Pulled** per option (with `item` pushed first) and rendered via `toString()`; falls back to the option's own value string when unbound or empty.]]></doc>
+		</binding>
+
+		<binding name="value">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[The `value` attribute emitted for each checkbox. **Pulled** per option and rendered as a string. Binding it forces the slower request-handling path (the framework matches submitted value strings against the list rather than by index) and is largely cosmetic — prefer leaving it unbound.]]></doc>
+		</binding>
+
+		<binding name="disabled" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[If truthy, renders every checkbox disabled and skips reading the submitted values (so nothing is pushed to `selections`). **Pulled** by truthiness.]]></doc>
+		</binding>
+
+		<binding name="name">
+			<pull><type>java.lang.String</type></pull>
+			<doc>The shared HTML form-field name applied to every checkbox in the group. Pulled; auto-assigned from the element ID when unbound.</doc>
+		</binding>
+
+		<binding name="prefix">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A raw string emitted **before** each option's label. **Pulled**; written verbatim, not HTML-escaped.</doc>
+		</binding>
+
+		<binding name="suffix">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A raw string emitted **after** each option's label. **Pulled**; written verbatim, not HTML-escaped.</doc>
+		</binding>
+
+		<requires binding="list" must="gettable"/>
+		<requires binding="item" when="displayString"/>
+
+	</wo>
+</wodefinitions>

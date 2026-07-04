@@ -8,13 +8,13 @@ Use a `dateformat`, `numberformat`, or `formatter` to format non-string values, 
 
 		<binding name="value" required="true">
 			<pull><type>java.lang.Object</type></pull>
-			<doc><![CDATA[The value to display. Required. **Pulled**, formatted to a string, then HTML-escaped unless `escapeHTML` is `false`. WOString is display-only — it never pushes anything back.]]></doc>
+			<doc><![CDATA[The value to display. Required. **Pulled**, formatted to a string via `toString()`, then HTML-escaped unless `escapeHTML` is falsy. WOString is display-only — it never pushes anything back.]]></doc>
 		</binding>
 
 		<binding name="escapeHTML">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<default>true</default>
-			<doc><![CDATA[Whether to HTML-escape the rendered value. Set falsy only when `value` is already safe markup.]]></doc>
+			<doc><![CDATA[Whether to HTML-escape the rendered value. **Pulled** by truthiness; set it falsy only when `value` is already safe markup.]]></doc>
 		</binding>
 
 		<binding name="dateformat" defaults="Date Format Strings">

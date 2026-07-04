@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wodefinitions>
+	<wo class="WOBody" content="expected" unknownAttributes="passthrough">
+
+		<doc><![CDATA[Renders an HTML `<body>` tag whose `background` attribute is resolved dynamically. The background image can come from a framework resource (`filename` + `framework`), a static URL (`src`), or inline `data` (with a `mimeType`). The element wraps the page body content.
+
+Only one background source may be bound at a time. All bindings are **pulled** — WOBody never pushes anything back.]]></doc>
+
+		<binding name="filename" defaults="Resources">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The name of a resource (an image) to use as the `background`, looked up in `framework`. **Pulled** and resolved to a resource URL. Mutually exclusive with `src` and `data`.]]></doc>
+		</binding>
+
+		<binding name="framework" defaults="Frameworks">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The framework that owns `filename`, used to resolve the resource URL. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="src">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[A static URL used directly as the `background`. **Pulled**; relative URLs are resolved against the application's resource base. Mutually exclusive with `filename` and `data`.]]></doc>
+		</binding>
+
+		<binding name="data">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[Inline background data, served through a generated URL. **Pulled**; requires `mimeType`. Mutually exclusive with `filename` and `src`.]]></doc>
+		</binding>
+
+		<binding name="mimeType" defaults="MIME Types">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The MIME type of the inline `data`. **Pulled**; required whenever `data` is bound.]]></doc>
+		</binding>
+
+		<binding name="key">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The cache key under which the inline `data` is stored, so it can be served from the generated URL. **Pulled**.]]></doc>
+		</binding>
+
+		<binding name="class">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `class` attribute forwarded to the rendered `<body>` tag.]]></doc>
+			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
+		</binding>
+
+		<binding name="style">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `style` attribute forwarded to the rendered `<body>` tag.]]></doc>
+			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
+		</binding>
+
+		<binding name="otherTagString">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[A raw string of extra attributes appended verbatim to the rendered `<body>` tag.]]></doc>
+			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
+		</binding>
+
+		<requires binding="filename" when="framework"/>
+		<requires binding="mimeType" when="data"/>
+
+	</wo>
+</wodefinitions>

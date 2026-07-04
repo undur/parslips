@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wodefinitions>
+	<wo class="WOImage" content="forbidden" unknownAttributes="passthrough">
+
+		<doc><![CDATA[Renders an `<img>` tag. The image source is supplied one of three ways — a resource `filename` (resolved through the resource manager, optionally within a `framework`), a static or dynamic `src` URL, or in-memory `data` (with a `mimeType`). Exactly one of those three must be bound.
+
+WOImage is display-only: every binding is **pulled**, nothing is pushed back. When neither `width` nor `height` is given for a `filename` image, the element reads the image's intrinsic dimensions and writes them onto the tag.]]></doc>
+
+		<binding name="filename" defaults="Resources">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The name of an image resource to serve. **Pulled** and resolved through the resource manager (within `framework` if bound). Mutually exclusive with `src` and `data`.]]></doc>
+		</binding>
+
+		<binding name="src">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[A URL for the image's `src` attribute. **Pulled** as a string; a relative URL is resolved against the application's resource base, an absolute one is emitted verbatim. Mutually exclusive with `filename` and `data`.]]></doc>
+		</binding>
+
+		<binding name="data">
+			<pull><type>com.webobjects.foundation.NSData</type></pull>
+			<doc><![CDATA[In-memory image bytes served inline. **Pulled** as an `NSData`; requires `mimeType` so the data URL can declare its content type. Mutually exclusive with `filename` and `src`.]]></doc>
+		</binding>
+
+		<binding name="mimeType" defaults="MIME Types">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The MIME type of the `data` image (e.g. `image/png`). **Pulled**; required whenever `data` is bound.]]></doc>
+		</binding>
+
+		<binding name="framework" defaults="Frameworks">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The framework to resolve `filename` against. **Pulled** as a string; `app` targets the application wrapper. Only meaningful together with `filename`.]]></doc>
+		</binding>
+
+		<binding name="key">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[A cache key under which the `data` image is registered, so the generated data URL stays stable across requests. **Pulled**; used only with `data`.]]></doc>
+		</binding>
+
+		<binding name="width">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[The image width, written onto the tag. **Pulled** and rendered via `toString()`; bind it to `"*"` to force the element to compute the intrinsic width instead. Applies only to a `filename` image. When both `width` and `height` are unbound, the element computes both from the image itself.]]></doc>
+		</binding>
+
+		<binding name="height">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[The image height, written onto the tag. **Pulled** and rendered via `toString()`; bind it to `"*"` to force the element to compute the intrinsic height instead. Applies only to a `filename` image. When both `width` and `height` are unbound, the element computes both from the image itself.]]></doc>
+		</binding>
+
+		<binding name="alt">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `alt` text forwarded onto the rendered `<img>` tag. **Pulled** and rendered via `toString()`.]]></doc>
+		</binding>
+
+		<binding name="border">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `border` attribute forwarded onto the rendered `<img>` tag. **Pulled** and rendered via `toString()`.]]></doc>
+		</binding>
+
+		<binding name="id">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `id` attribute forwarded onto the rendered `<img>` tag.]]></doc>
+			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
+		</binding>
+
+		<binding name="class">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `class` attribute forwarded onto the rendered `<img>` tag.]]></doc>
+			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
+		</binding>
+
+		<binding name="style">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The `style` attribute forwarded onto the rendered `<img>` tag.]]></doc>
+			<deprecated>Write this as a raw HTML attribute on the tag instead of a WO binding.</deprecated>
+		</binding>
+
+		<binding name="otherTagString">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A raw string appended verbatim into the rendered tag's attributes.</doc>
+			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
+		</binding>
+
+		<choose min="1" max="1">
+			<binding name="filename"/>
+			<binding name="src"/>
+			<binding name="data"/>
+		</choose>
+		<requires binding="filename" when="framework"/>
+		<requires binding="mimeType" when="data"/>
+
+	</wo>
+</wodefinitions>

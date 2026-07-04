@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wodefinitions>
+	<wo class="WOBrowser" content="forbidden" unknownAttributes="passthrough">
+
+		<doc><![CDATA[A scrolling list selector — an HTML `<select>` rendered with a `size` so several options are visible at once (the browser-widget form of a pop-up).
+
+Iterate `list` with `item` as the loop variable, rendering each option's label from `displayString` (or the item's `toString`). Bind `selections` to collect the chosen objects, and set `multiple` truthy to allow more than one. Unlike a pop-up, the `size` attribute is always emitted (defaulting to 5) so the control shows as a list rather than a drop-down.]]></doc>
+
+		<binding name="list" required="true">
+			<pull><type>java.util.List</type></pull>
+			<doc><![CDATA[The collection of objects to offer as options. Required. **Pulled** and iterated; each element is bound to `item` in turn to render its option row. Must be a resolvable keypath, not a constant.]]></doc>
+		</binding>
+
+		<binding name="item">
+			<push><type>java.lang.Object</type></push>
+			<doc><![CDATA[The loop variable. As `list` is iterated, each element is **pushed** into `item` so `displayString` (and `value`) can read the current object. Must be bound — and settable — whenever `displayString` or `value` is used.]]></doc>
+		</binding>
+
+		<binding name="displayString">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[The label to show for the current `item`. **Pulled** for each option and rendered as text (via its `toString`); binding it also makes option labels HTML-escape by default. When unbound, the item's own `toString` is used.]]></doc>
+		</binding>
+
+		<binding name="selections">
+			<pull><type>java.util.List</type></pull>
+			<push><type>java.util.List</type></push>
+			<doc><![CDATA[The selected objects. **Pulled** to decide which options render selected, and **pushed** back on submit as a `List` of the chosen `item`s (a single-element list when `multiple` is falsy). Mutually exclusive with `selectedValues`.]]></doc>
+		</binding>
+
+		<binding name="selectedValues">
+			<pull><type>java.util.List</type></pull>
+			<doc><![CDATA[An alternative, display-only way to mark the initial selection: a `List` of values that are matched against the options. **Pulled** only — it is never written back. Mutually exclusive with `selections`.]]></doc>
+		</binding>
+
+		<binding name="multiple">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[If truthy, renders the `<select multiple>` so the user can choose several options; otherwise selection is limited to one. **Pulled** by truthiness.]]></doc>
+		</binding>
+
+		<binding name="name">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The HTML form-field name of the `<select>` (auto-assigned from the element id if unbound).]]></doc>
+		</binding>
+
+		<binding name="disabled">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc>If truthy, renders the control disabled and skips reading its submitted selection. **Pulled** by truthiness.</doc>
+		</binding>
+
+		<binding name="escapeHTML">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[Whether to HTML-escape option labels. **Pulled** by truthiness; defaults to escaping when `displayString` is bound. Set falsy only when the labels are already safe markup.]]></doc>
+		</binding>
+
+		<binding name="value">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[The value written into each option's `value` attribute for the current `item`. **Pulled** per option and rendered via its `toString`.]]></doc>
+			<deprecated>Avoid binding `value` — it forces the slow selection path and only affects the option's `value` attribute cosmetically. Rely on `item`/`selections` instead.</deprecated>
+		</binding>
+
+		<binding name="otherTagString">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[Extra raw text spliced into the `<select>` tag. **Pulled** and emitted verbatim.]]></doc>
+			<deprecated>A WebObjects vestige. Write the attributes directly on the tag instead.</deprecated>
+		</binding>
+
+		<requires binding="list" must="gettable"/>
+		<requires binding="item">
+			<any-of><binding name="displayString"/><binding name="value"/></any-of>
+		</requires>
+		<requires binding="item" must="settable">
+			<any-of><binding name="displayString"/><binding name="value"/></any-of>
+		</requires>
+		<choose max="1">
+			<binding name="selections"/>
+			<binding name="selectedValues"/>
+		</choose>
+
+	</wo>
+</wodefinitions>
