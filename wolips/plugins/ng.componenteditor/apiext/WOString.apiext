@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-	<wo class="WOString" wrapsContent="false" unknownAttributes="forbidden">
+	<wo class="WOString" content="forbidden" unknownAttributes="forbidden">
 
 		<doc><![CDATA[Renders a dynamic string into the page. The bound `value` is converted to text and HTML-escaped by default.
 

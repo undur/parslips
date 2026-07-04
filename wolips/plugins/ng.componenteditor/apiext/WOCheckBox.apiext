@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-	<wo class="WOCheckBox" wrapsContent="false" unknownAttributes="passthrough">
+	<wo class="WOCheckBox" content="forbidden" unknownAttributes="passthrough">
 
 		<doc><![CDATA[A checkbox (`<input type="checkbox">`). Use **either** `checked` (a truthy in, a Boolean out) **or** `value`+`selection` (membership-style) — not both.]]></doc>
 
