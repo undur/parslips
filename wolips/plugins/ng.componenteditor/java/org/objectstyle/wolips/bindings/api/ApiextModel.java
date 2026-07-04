@@ -340,6 +340,18 @@ public final class ApiextModel {
 		}
 	}
 
+	/**
+	 * Package-private factory used by {@link MutableApiextModel#toImmutable()} to build an immutable
+	 * view of an in-editor model, so serialization and validation run against the same {@code ApiextModel}
+	 * shape the parser produces — without a serialize/re-parse round-trip. {@code SourceKind} is always
+	 * {@code APIEXT} here (a mutable model only ever edits {@code .apiext}); legacy channels are empty.
+	 */
+	static ApiextModel build(String className, boolean wrapsContent, UnknownAttributes unknownAttributes,
+			String elementDeprecationNote, String doc, List<Binding> bindings, List<Constraint> constraints) {
+		return new ApiextModel(SourceKind.APIEXT, className, wrapsContent, unknownAttributes,
+				elementDeprecationNote, emptyToNull(doc), bindings, constraints, new ArrayList<>(), new ArrayList<>());
+	}
+
 	private final SourceKind _source;
 	private final String _className;
 	private final boolean _componentContent;
