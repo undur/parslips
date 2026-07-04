@@ -47,6 +47,15 @@
       <content-type
             base-type="org.eclipse.core.runtime.text"
             default-charset="UTF-8"
+            file-extensions="apiext"
+            id="org.objectstyle.wolips.editors.apiext"
+            name="Parsley element API (.apiext)"
+            priority="normal">
+               <describer class="org.eclipse.core.internal.content.TextContentDescriber"/>
+      </content-type>
+      <content-type
+            base-type="org.eclipse.core.runtime.text"
+            default-charset="UTF-8"
             file-extensions="woo"
             id="org.objectstyle.wolips.editors.woo"
             name="WOComponent woo part"
@@ -113,6 +122,17 @@
             id="ng.componenteditor.ApiEditor"
             name="Parsley API Editor">
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.api"/>
+      </editor>
+
+<!-- Apiext Editor -->
+      <editor
+            class="org.objectstyle.wolips.editor.apiext.ApiextEditor"
+            default="true"
+            extensions="apiext"
+            icon="icons/parsley16.png"
+            id="ng.componenteditor.ApiextEditor"
+            name="Parsley Element API Editor">
+         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.apiext"/>
       </editor>
 
 <!-- WOO Editor -->
