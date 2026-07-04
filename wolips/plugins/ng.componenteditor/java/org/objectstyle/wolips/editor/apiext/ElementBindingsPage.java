@@ -241,15 +241,15 @@ public class ElementBindingsPage extends FormPage {
 				}
 			});
 
-			// --- Value: the <pull>/<push> contract, grouped as its own box ---
-			final Composite value = group("Value (↓ pull / ↑ push)", 2);
-			_toolkit.createLabel(value, "↓ Pull types (comma-sep FQN):");
-			_pull = _toolkit.createText(value, "", SWT.SINGLE);
+			// --- ↓ Pull: the read contract (types + interpretation) ---
+			final Composite pull = group("↓ Pull", 2);
+			_toolkit.createLabel(pull, "Types (comma-sep FQN):");
+			_pull = _toolkit.createText(pull, "", SWT.SINGLE);
 			_pull.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			_pull.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.pull, _pull.getText()); dirty(); } });
 
-			_toolkit.createLabel(value, "↓ Pull interpretation:");
-			_interp = new Combo(value, SWT.READ_ONLY);
+			_toolkit.createLabel(pull, "Interpretation:");
+			_interp = new Combo(pull, SWT.READ_ONLY);
 			_interp.setItems("(none)", "truthy");
 			_toolkit.adapt(_interp);
 			_interp.addSelectionListener(new SelectionAdapter() {
@@ -261,13 +261,15 @@ public class ElementBindingsPage extends FormPage {
 				}
 			});
 
-			_toolkit.createLabel(value, "↑ Push types (comma-sep FQN):");
-			_push = _toolkit.createText(value, "", SWT.SINGLE);
+			// --- ↑ Push: the write-back contract (types) ---
+			final Composite push = group("↑ Push", 2);
+			_toolkit.createLabel(push, "Types (comma-sep FQN):");
+			_push = _toolkit.createText(push, "", SWT.SINGLE);
 			_push.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			_push.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.push, _push.getText()); dirty(); } });
 
-			// --- Documentation & lifecycle (binding-level metadata) ---
-			final Composite meta = group("Documentation & lifecycle", 2);
+			// --- Documentation (binding-level metadata) ---
+			final Composite meta = group("Documentation", 2);
 			_toolkit.createLabel(meta, "Default value:");
 			_default = _toolkit.createText(meta, "", SWT.SINGLE);
 			_default.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
