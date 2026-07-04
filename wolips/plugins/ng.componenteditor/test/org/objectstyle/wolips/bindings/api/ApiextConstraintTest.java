@@ -250,18 +250,34 @@ public class ApiextConstraintTest {
 	}
 
 	@Test
-	public void wrapsContentIsRead_notWocomponentcontent() {
+	public void contentPolicy_parsed() {
 		ApiextModel m = ApiextModel.parse(("<?xml version=\"1.0\"?><wodefinitions>"
-				+ "<wo class=\"X\" wrapsContent=\"true\">" + bindings("a") + "</wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
-		assertTrue(m.isComponentContent());
+				+ "<wo class=\"X\" content=\"expected\">" + bindings("a") + "</wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
+		assertEquals(ApiextModel.Content.EXPECTED, m.getContent());
+		assertTrue(m.isComponentContent()); // expected/allowed read as "can contain content"
 	}
 
 	@Test
-	public void legacyWocomponentcontentIsIgnoredInApiext() {
-		// A file still using the old attribute name simply doesn't set wrapsContent (defaults false).
+	public void contentPolicy_forbiddenIsNotAContainer() {
 		ApiextModel m = ApiextModel.parse(("<?xml version=\"1.0\"?><wodefinitions>"
-				+ "<wo class=\"X\" wocomponentcontent=\"true\">" + bindings("a") + "</wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
+				+ "<wo class=\"X\" content=\"forbidden\">" + bindings("a") + "</wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
+		assertEquals(ApiextModel.Content.FORBIDDEN, m.getContent());
 		assertFalse(m.isComponentContent());
+	}
+
+	@Test
+	public void contentPolicy_absentIsNull() {
+		ApiextModel m = parse(bindings("a"));
+		assertNull(m.getContent());
+		assertFalse(m.isComponentContent());
+	}
+
+	@Test
+	public void legacyContentAttributesIgnoredInApiext() {
+		// Old attribute names (wrapsContent / wocomponentcontent) are not the .apiext grammar → no policy.
+		ApiextModel m = ApiextModel.parse(("<?xml version=\"1.0\"?><wodefinitions>"
+				+ "<wo class=\"X\" wrapsContent=\"true\" wocomponentcontent=\"true\">" + bindings("a") + "</wo></wodefinitions>").getBytes(StandardCharsets.UTF_8));
+		assertNull(m.getContent());
 	}
 
 	@Test

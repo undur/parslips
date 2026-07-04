@@ -25,7 +25,7 @@ public class MutableApiextModelTest {
 
 	private static final String CHECKBOX =
 			"<?xml version=\"1.0\"?><wodefinitions>"
-			+ "<wo class=\"WOCheckBox\" wrapsContent=\"false\" unknownAttributes=\"passthrough\">"
+			+ "<wo class=\"WOCheckBox\" content=\"allowed\" unknownAttributes=\"passthrough\">"
 			+ "<doc>A checkbox.</doc>"
 			+ "<binding name=\"checked\"><pull><type interpretation=\"truthy\">java.lang.Object</type></pull>"
 			+ "<push><type>java.lang.Boolean</type></push></binding>"
@@ -48,7 +48,7 @@ public class MutableApiextModelTest {
 	public void loadsFixtureIntoMutableStructures() throws Exception {
 		MutableApiextModel m = new MutableApiextModel(writeTemp(CHECKBOX));
 		assertEquals("WOCheckBox", m.className);
-		assertFalse(m.wrapsContent);
+		assertEquals(ApiextModel.Content.ALLOWED, m.content);
 		assertEquals(ApiextModel.UnknownAttributes.PASSTHROUGH, m.unknownAttributes);
 		assertEquals("A checkbox.", m.doc);
 		assertEquals(2, m.bindings.size());

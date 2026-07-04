@@ -41,7 +41,7 @@ public class ApiextSerializerTest {
 	@Test
 	public void roundTrip_checkBox() {
 		assertRoundTrips("<?xml version=\"1.0\"?><wodefinitions>"
-				+ "<wo class=\"WOCheckBox\" wrapsContent=\"false\" unknownAttributes=\"passthrough\">"
+				+ "<wo class=\"WOCheckBox\" content=\"allowed\" unknownAttributes=\"passthrough\">"
 				+ "<doc><![CDATA[A checkbox (`<input>`). Use **either** `checked` **or** `value`.]]></doc>"
 				+ "<binding name=\"checked\"><pull><type interpretation=\"truthy\">java.lang.Object</type></pull>"
 				+ "<push><type>java.lang.Boolean</type></push><doc>The checked state.</doc></binding>"
@@ -56,7 +56,7 @@ public class ApiextSerializerTest {
 	@Test
 	public void roundTrip_anyOfInBothChooseAndRequires() {
 		assertRoundTrips("<?xml version=\"1.0\"?><wodefinitions>"
-				+ "<wo class=\"X\" wrapsContent=\"true\">"
+				+ "<wo class=\"X\" content=\"expected\">"
 				+ "<binding name=\"action\"><pull><type>java.lang.Object</type></pull></binding>"
 				+ "<binding name=\"actionClass\"><pull><type>java.lang.Object</type></pull></binding>"
 				+ "<binding name=\"directActionName\"><pull><type>java.lang.Object</type></pull></binding>"
@@ -143,7 +143,7 @@ public class ApiextSerializerTest {
 
 	private static void assertModelsEqual(ApiextModel a, ApiextModel b) {
 		assertEquals("class", a.getClassName(), b.getClassName());
-		assertEquals("wrapsContent", a.isComponentContent(), b.isComponentContent());
+		assertEquals("content", a.getContent(), b.getContent());
 		assertEquals("unknownAttributes", a.getUnknownAttributes(), b.getUnknownAttributes());
 		assertEquals("element doc", a.getDoc(), b.getDoc());
 		assertEquals("element deprecated", a.isDeprecated(), b.isDeprecated());

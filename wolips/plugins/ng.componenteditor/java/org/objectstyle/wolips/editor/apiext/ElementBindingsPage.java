@@ -21,6 +21,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.objectstyle.wolips.bindings.api.ApiextModel.UnknownAttributes;
+import org.objectstyle.wolips.bindings.api.ApiextModel;
 import org.objectstyle.wolips.bindings.api.MutableApiextModel;
 import org.objectstyle.wolips.bindings.api.MutableApiextModel.MutableBinding;
 import org.objectstyle.wolips.bindings.api.MutableApiextModel.MutableType;
@@ -102,11 +103,16 @@ public class ElementBindingsPage extends FormPage {
 		classText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		classText.addModifyListener(e -> { m.className = classText.getText(); dirty(); });
 
-		_toolkit.createLabel(c, "Wraps content:");
-		final Button wraps = _toolkit.createButton(c, "", SWT.CHECK);
-		wraps.setSelection(m.wrapsContent);
-		wraps.addSelectionListener(new SelectionAdapter() {
-			@Override public void widgetSelected(SelectionEvent e) { m.wrapsContent = wraps.getSelection(); dirty(); }
+		_toolkit.createLabel(c, "Content:");
+		final Combo contentPolicy = new Combo(c, SWT.READ_ONLY);
+		contentPolicy.setItems("(no policy)", "expected", "allowed", "forbidden");
+		contentPolicy.select(contentIndex(m.content));
+		_toolkit.adapt(contentPolicy);
+		contentPolicy.addSelectionListener(new SelectionAdapter() {
+			@Override public void widgetSelected(SelectionEvent e) {
+				m.content = contentFromIndex(contentPolicy.getSelectionIndex());
+				dirty();
+			}
 		});
 
 		_toolkit.createLabel(c, "Unknown attributes:");
@@ -392,6 +398,22 @@ public class ElementBindingsPage extends FormPage {
 		if (pull) return "Pull only (read)";
 		if (push) return "Push only (written back)";
 		return "No pull or push type declared";
+	}
+
+	private static int contentIndex(ApiextModel.Content c) {
+		if (c == ApiextModel.Content.EXPECTED) return 1;
+		if (c == ApiextModel.Content.ALLOWED) return 2;
+		if (c == ApiextModel.Content.FORBIDDEN) return 3;
+		return 0;
+	}
+
+	private static ApiextModel.Content contentFromIndex(int i) {
+		switch (i) {
+		case 1: return ApiextModel.Content.EXPECTED;
+		case 2: return ApiextModel.Content.ALLOWED;
+		case 3: return ApiextModel.Content.FORBIDDEN;
+		default: return null;
+		}
 	}
 
 	private static int policyIndex(UnknownAttributes p) {

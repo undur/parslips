@@ -17,6 +17,7 @@ import org.objectstyle.wolips.bindings.api.ApiextModel.Alternative;
 import org.objectstyle.wolips.bindings.api.ApiextModel.Binding;
 import org.objectstyle.wolips.bindings.api.ApiextModel.Choose;
 import org.objectstyle.wolips.bindings.api.ApiextModel.Constraint;
+import org.objectstyle.wolips.bindings.api.ApiextModel.Content;
 import org.objectstyle.wolips.bindings.api.ApiextModel.Obligation;
 import org.objectstyle.wolips.bindings.api.ApiextModel.Requires;
 import org.objectstyle.wolips.bindings.api.ApiextModel.TypeRef;
@@ -93,7 +94,7 @@ public class MutableApiextModel {
 	private final IFile _eclipseFile;
 
 	public String className = "";
-	public boolean wrapsContent;
+	public Content content; // null = no declared policy (#22)
 	public UnknownAttributes unknownAttributes; // null = no declared policy (#1)
 	public String doc; // null = none
 	public String deprecationNote; // element-level; null = not deprecated (#5)
@@ -136,7 +137,7 @@ public class MutableApiextModel {
 	/** Fills this mutable model from a parsed immutable one. */
 	private void copyFrom(ApiextModel m) {
 		className = m.getClassName() != null ? m.getClassName() : "";
-		wrapsContent = m.isComponentContent();
+		content = m.getContent();
 		unknownAttributes = m.getUnknownAttributes();
 		doc = m.getDoc();
 		deprecationNote = m.isDeprecated() ? (m.getDeprecationNote() == null ? "" : m.getDeprecationNote()) : null;
@@ -211,7 +212,7 @@ public class MutableApiextModel {
 				cs.add(new Requires(r.binding, r.must, antecedent, emptyToNull(r.message)));
 			}
 		}
-		return ApiextModel.build(className, wrapsContent, unknownAttributes, deprecationNote, doc, bs, cs);
+		return ApiextModel.build(className, content, unknownAttributes, deprecationNote, doc, bs, cs);
 	}
 
 	private static List<TypeRef> toTypeRefs(List<MutableType> types) {

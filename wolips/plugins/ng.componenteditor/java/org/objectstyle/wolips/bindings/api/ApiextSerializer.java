@@ -58,9 +58,11 @@ public final class ApiextSerializer {
 	private static void serializeWo(ApiextModel model, Writer w) throws IOException {
 		w.write(TAB + "<wo class=\"");
 		w.write(escapeAttr(model.getClassName()));
-		w.write("\" wrapsContent=\"");
-		w.write(model.isComponentContent() ? "true" : "false");
 		w.write("\"");
+		// content and unknownAttributes are nullable policies — emit only when declared.
+		if (model.getContent() != null) {
+			w.write(" content=\"" + model.getContent().name().toLowerCase() + "\"");
+		}
 		if (model.getUnknownAttributes() != null) {
 			w.write(" unknownAttributes=\"" + policy(model.getUnknownAttributes()) + "\"");
 		}

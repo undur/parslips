@@ -352,20 +352,49 @@ public final class ApiextModel {
 	}
 
 	/**
+	 * The element's policy for CHILD CONTENT (#22 — the three-valued successor to the legacy
+	 * {@code wocomponentcontent}/{@code wrapsContent} boolean). {@code null} means no declared policy
+	 * (absent {@code content} attribute), distinct from any value — the consumer decides; do not
+	 * synthesize a value. Only {@link #FORBIDDEN} carries validation; {@code EXPECTED}/{@code ALLOWED}
+	 * differ only in editor affordance (whether to offer a container form by default).
+	 */
+	public enum Content {
+		/** Usually a container — content allowed; an editor should offer the container form by default. */
+		EXPECTED,
+		/** Hybrid — works both as a container and as a standalone no-content element; no diagnostics. */
+		ALLOWED,
+		/** The only validating value — giving the element content (even {@code <x></x>}) is an error. */
+		FORBIDDEN;
+
+		static Content parse(String s) {
+			if ("expected".equalsIgnoreCase(s)) {
+				return EXPECTED;
+			}
+			if ("allowed".equalsIgnoreCase(s)) {
+				return ALLOWED;
+			}
+			if ("forbidden".equalsIgnoreCase(s)) {
+				return FORBIDDEN;
+			}
+			return null; // absent / unrecognized → no declared policy
+		}
+	}
+
+	/**
 	 * Package-private factory used by {@link MutableApiextModel#toImmutable()} to build an immutable
 	 * view of an in-editor model, so serialization and validation run against the same {@code ApiextModel}
 	 * shape the parser produces — without a serialize/re-parse round-trip. {@code SourceKind} is always
 	 * {@code APIEXT} here (a mutable model only ever edits {@code .apiext}); legacy channels are empty.
 	 */
-	static ApiextModel build(String className, boolean wrapsContent, UnknownAttributes unknownAttributes,
+	static ApiextModel build(String className, Content content, UnknownAttributes unknownAttributes,
 			String elementDeprecationNote, String doc, List<Binding> bindings, List<Constraint> constraints) {
-		return new ApiextModel(SourceKind.APIEXT, className, wrapsContent, unknownAttributes,
+		return new ApiextModel(SourceKind.APIEXT, className, content, unknownAttributes,
 				elementDeprecationNote, emptyToNull(doc), bindings, constraints, new ArrayList<>(), new ArrayList<>());
 	}
 
 	private final SourceKind _source;
 	private final String _className;
-	private final boolean _componentContent;
+	private final Content _content; // #22 — null = no declared policy
 	private final UnknownAttributes _unknownAttributes; // #1 — null = no declared policy
 	private final String _elementDeprecationNote; // element-level <deprecated>, or null if not deprecated (#5)
 	private final String _doc; // raw Markdown, or null
@@ -388,13 +417,13 @@ public final class ApiextModel {
 	 */
 	private String _origin;
 
-	private ApiextModel(SourceKind source, String className, boolean componentContent,
+	private ApiextModel(SourceKind source, String className, Content content,
 			UnknownAttributes unknownAttributes, String elementDeprecationNote,
 			String doc, List<Binding> bindings, List<Constraint> constraints, List<String> legacyMessages,
 			List<String> legacyConstructs) {
 		_source = source;
 		_className = className;
-		_componentContent = componentContent;
+		_content = content;
 		_unknownAttributes = unknownAttributes;
 		_elementDeprecationNote = elementDeprecationNote;
 		_doc = doc;
@@ -449,7 +478,11 @@ public final class ApiextModel {
 			}
 		}
 		// Legacy .api carries no unknown-attribute policy and no element-level deprecation.
-		return new ApiextModel(SourceKind.API, className, api.isComponentContent(), null, null,
+		// Map the legacy wocomponentcontent boolean onto the content policy for display: a container maps
+		// to ALLOWED (legacy has no expected/forbidden distinction); non-container maps to no policy
+		// (legacy "false" meant "not a container", not the stricter "content forbidden").
+		final Content legacyContent = api.isComponentContent() ? Content.ALLOWED : null;
+		return new ApiextModel(SourceKind.API, className, legacyContent, null, null,
 				null, bindings, new ArrayList<>(), legacyMessages, new ArrayList<>());
 	}
 
@@ -457,8 +490,20 @@ public final class ApiextModel {
 		return _className;
 	}
 
+	/**
+	 * The element's child-content policy (#22), or null if none is declared. Only {@link Content#FORBIDDEN}
+	 * carries validation; the others differ in editor affordance.
+	 */
+	public Content getContent() {
+		return _content;
+	}
+
+	/**
+	 * Whether the element can act as a container (content EXPECTED or ALLOWED) — the coarse boolean the
+	 * hover's "Container element" badge uses. FORBIDDEN and "no policy" both read as non-container.
+	 */
 	public boolean isComponentContent() {
-		return _componentContent;
+		return _content == Content.EXPECTED || _content == Content.ALLOWED;
 	}
 
 	/**
@@ -559,8 +604,9 @@ public final class ApiextModel {
 		}
 
 		final String className = attr(wo, "class");
-		// #17: .apiext uses wrapsContent (legacy .api's wocomponentcontent lives only on the .api path).
-		final boolean componentContent = boolAttr(wo, "wrapsContent");
+		// #22: the three-valued child-content policy (successor of the wrapsContent boolean). Nullable —
+		// absent means "no declared policy", NOT a default.
+		final Content content = Content.parse(emptyToNull(attr(wo, "content")));
 		// #1: unknownAttributes is a nullable policy — absent means "no declared policy", NOT a default.
 		final UnknownAttributes unknownAttributes = UnknownAttributes.parse(emptyToNull(attr(wo, "unknownAttributes")));
 
@@ -610,7 +656,7 @@ public final class ApiextModel {
 			}
 		}
 
-		return new ApiextModel(SourceKind.APIEXT, className, componentContent, unknownAttributes,
+		return new ApiextModel(SourceKind.APIEXT, className, content, unknownAttributes,
 				elementDeprecation, emptyToNull(elementDoc), bindings, constraints, new ArrayList<>(), legacyConstructs);
 	}
 
