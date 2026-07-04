@@ -70,6 +70,7 @@ import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
+import org.objectstyle.wolips.bindings.api.ElementApiResolver;
 import org.objectstyle.wolips.bindings.api.ApiValidation;
 import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
@@ -352,19 +353,30 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 	    	String wodApiProblemSeverity = BindingValidationPreferences.severity(PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY);
 	    	if (!SeverityPolicy.isIgnored(wodApiProblemSeverity)) {
 		      try {
-		        wo = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
-		        if (wo != null) {
-		          Map<String, String> bindingsMap = getBindingsMap();
-		          List<IApiBinding> apiBindings = wo.getBindings();
-		          for (IApiBinding binding : apiBindings) {
-		            String bindingName = binding.getName();
-		            if (binding.isExplicitlyRequired() && !bindingsMap.containsKey(bindingName)) {
-		              problems.add(new ApiBindingValidationProblem(this, binding, wo.getClassName(), getElementNamePosition(), lineNumber, SeverityPolicy.isWarning(wodApiProblemSeverity)));
+		        // .apiext-wins per element: if an .apiext owns this element, evaluate its typed
+		        // constraints and ignore the legacy .api entirely (the "successor, not superset"
+		        // principle at the validation layer). Otherwise fall through to the legacy .api path.
+		        final ElementApiResolver.ResolvedElementApi resolved =
+		            ElementApiResolver.resolve(elementType, elementType.getElementName(), elementTypeName,
+		                elementType.getElementName(), typeCache.getApiCache(javaProject));
+		        if (resolved.isApiext()) {
+		          fillInApiextProblems(resolved.getModel(), lineNumber, SeverityPolicy.isWarning(wodApiProblemSeverity), problems);
+		        }
+		        else {
+		          wo = ApiUtils.findApiSnapshot(elementType, typeCache.getApiCache(javaProject));
+		          if (wo != null) {
+		            Map<String, String> bindingsMap = getBindingsMap();
+		            List<IApiBinding> apiBindings = wo.getBindings();
+		            for (IApiBinding binding : apiBindings) {
+		              String bindingName = binding.getName();
+		              if (binding.isExplicitlyRequired() && !bindingsMap.containsKey(bindingName)) {
+		                problems.add(new ApiBindingValidationProblem(this, binding, wo.getClassName(), getElementNamePosition(), lineNumber, SeverityPolicy.isWarning(wodApiProblemSeverity)));
+		              }
 		            }
-		          }
-		          List<ApiValidation> failedValidations = wo.getFailedValidations(bindingsMap);
-		          for (ApiValidation failedValidation : failedValidations) {
-		            problems.add(new ApiElementValidationProblem(this, failedValidation, getElementNamePosition(), lineNumber, SeverityPolicy.isWarning(wodApiProblemSeverity)));
+		            List<ApiValidation> failedValidations = wo.getFailedValidations(bindingsMap);
+		            for (ApiValidation failedValidation : failedValidations) {
+		              problems.add(new ApiElementValidationProblem(this, failedValidation, getElementNamePosition(), lineNumber, SeverityPolicy.isWarning(wodApiProblemSeverity)));
+		            }
 		          }
 		        }
 		      }
@@ -413,6 +425,37 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 
     if (javaModelException != null) {
       throw javaModelException;
+    }
+  }
+
+  /**
+   * Evaluates an {@code .apiext}-owned element's typed contract against this tag's bindings and adds
+   * the resulting problems. Binding-targeted diagnostics (required, deprecation, forbidden unknowns)
+   * are positioned on the offending binding when it's present on the tag, else on the element name;
+   * cross-binding constraint failures sit on the element name. The {@code apiSeverityIsWarning} flag
+   * carries the user's "WOD API problems" severity preference for contract errors; deprecation is
+   * always a warning per the format spec.
+   */
+  private void fillInApiextProblems(org.objectstyle.wolips.bindings.api.ApiextModel model, int lineNumber,
+      boolean apiSeverityIsWarning, List<WodProblem> problems) {
+    final Map<String, String> bindingsMap = getBindingsMap();
+    final java.util.List<org.objectstyle.wolips.bindings.api.ApiextTemplateEvaluator.Diagnostic> diagnostics =
+        org.objectstyle.wolips.bindings.api.ApiextTemplateEvaluator.evaluate(model, bindingsMap.keySet());
+    for (final org.objectstyle.wolips.bindings.api.ApiextTemplateEvaluator.Diagnostic d : diagnostics) {
+      final boolean warning =
+          d.getKind() == org.objectstyle.wolips.bindings.api.ApiextTemplateEvaluator.Diagnostic.Kind.WARNING
+          || apiSeverityIsWarning;
+      final String bindingName = d.getBindingName();
+      if (bindingName != null) {
+        // Point at the binding's own position if it's present on the tag; otherwise the element name
+        // (e.g. a required binding that's missing has no position of its own).
+        final IWodBinding binding = getBindingNamed(bindingName);
+        final Position position = binding != null ? binding.getNamePosition() : getElementNamePosition();
+        problems.add(new WodBindingNameProblem(this, bindingName, d.getMessage(), position, lineNumber, warning));
+      }
+      else {
+        problems.add(new WodElementProblem(this, d.getMessage(), getElementNamePosition(), lineNumber, warning));
+      }
     }
   }
 
