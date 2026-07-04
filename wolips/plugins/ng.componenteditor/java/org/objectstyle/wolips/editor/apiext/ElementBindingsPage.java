@@ -219,30 +219,37 @@ public class ElementBindingsPage extends FormPage {
 
 		BindingDetail(Composite parent) {
 			_root = _toolkit.createComposite(parent);
-			_root.setLayout(new GridLayout(2, false));
+			_root.setLayout(new GridLayout(1, false));
 			_root.setLayoutData(new GridData(GridData.FILL_BOTH));
 			build();
 			show(null);
 		}
 
 		private void build() {
-			_toolkit.createLabel(_root, "Name:");
-			_name = _toolkit.createText(_root, "", SWT.SINGLE);
+			// --- Identity (binding-level) ---
+			final Composite identity = group("Binding", 2);
+			_toolkit.createLabel(identity, "Name:");
+			_name = _toolkit.createText(identity, "", SWT.SINGLE);
 			_name.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			_name.addModifyListener(e -> { if (_binding != null && !_updating) { _binding.name = _name.getText(); _bindingTable.refresh(_binding); dirty(); } });
 
-			_toolkit.createLabel(_root, "Pull types (comma-sep FQN):");
-			_pull = _toolkit.createText(_root, "", SWT.SINGLE);
+			_toolkit.createLabel(identity, "Required:");
+			_required = _toolkit.createButton(identity, "", SWT.CHECK);
+			_required.addSelectionListener(new SelectionAdapter() {
+				@Override public void widgetSelected(SelectionEvent e) {
+					if (_binding != null && !_updating) { _binding.required = _required.getSelection(); _bindingTable.refresh(_binding); dirty(); }
+				}
+			});
+
+			// --- Value: the <pull>/<push> contract, grouped as its own box ---
+			final Composite value = group("Value (↓ pull / ↑ push)", 2);
+			_toolkit.createLabel(value, "↓ Pull types (comma-sep FQN):");
+			_pull = _toolkit.createText(value, "", SWT.SINGLE);
 			_pull.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			_pull.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.pull, _pull.getText()); dirty(); } });
 
-			_toolkit.createLabel(_root, "Push types (comma-sep FQN):");
-			_push = _toolkit.createText(_root, "", SWT.SINGLE);
-			_push.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			_push.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.push, _push.getText()); dirty(); } });
-
-			_toolkit.createLabel(_root, "Pull interpretation:");
-			_interp = new Combo(_root, SWT.READ_ONLY);
+			_toolkit.createLabel(value, "↓ Pull interpretation:");
+			_interp = new Combo(value, SWT.READ_ONLY);
 			_interp.setItems("(none)", "truthy");
 			_toolkit.adapt(_interp);
 			_interp.addSelectionListener(new SelectionAdapter() {
@@ -254,29 +261,38 @@ public class ElementBindingsPage extends FormPage {
 				}
 			});
 
-			_toolkit.createLabel(_root, "Required:");
-			_required = _toolkit.createButton(_root, "", SWT.CHECK);
-			_required.addSelectionListener(new SelectionAdapter() {
-				@Override public void widgetSelected(SelectionEvent e) {
-					if (_binding != null && !_updating) { _binding.required = _required.getSelection(); _bindingTable.refresh(_binding); dirty(); }
-				}
-			});
+			_toolkit.createLabel(value, "↑ Push types (comma-sep FQN):");
+			_push = _toolkit.createText(value, "", SWT.SINGLE);
+			_push.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			_push.addModifyListener(e -> { if (_binding != null && !_updating) { setTypes(_binding.push, _push.getText()); dirty(); } });
 
-			_toolkit.createLabel(_root, "Default value:");
-			_default = _toolkit.createText(_root, "", SWT.SINGLE);
+			// --- Documentation & lifecycle (binding-level metadata) ---
+			final Composite meta = group("Documentation & lifecycle", 2);
+			_toolkit.createLabel(meta, "Default value:");
+			_default = _toolkit.createText(meta, "", SWT.SINGLE);
 			_default.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			_default.addModifyListener(e -> { if (_binding != null && !_updating) { _binding.defaultValue = emptyToNull(_default.getText()); dirty(); } });
 
-			_toolkit.createLabel(_root, "Documentation:");
-			_doc = _toolkit.createText(_root, "", SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.BORDER);
+			_toolkit.createLabel(meta, "Documentation:");
+			_doc = _toolkit.createText(meta, "", SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.BORDER);
 			final GridData docData = new GridData(GridData.FILL_HORIZONTAL);
 			docData.heightHint = 80;
 			_doc.setLayoutData(docData);
 			_doc.addModifyListener(e -> { if (_binding != null && !_updating) { _binding.doc = emptyToNull(_doc.getText()); dirty(); } });
 
-			createDeprecationControls(_root, "Binding deprecated:", null, note -> {
+			createDeprecationControls(meta, "Binding deprecated:", null, note -> {
 				if (_binding != null && !_updating) { _binding.deprecationNote = note; _bindingTable.refresh(_binding); dirty(); }
 			});
+		}
+
+		/** A titled group box under the detail root, laid out with the given column count. */
+		private Composite group(String title, int columns) {
+			final org.eclipse.swt.widgets.Group g = new org.eclipse.swt.widgets.Group(_root, SWT.NONE);
+			g.setText(title);
+			g.setLayout(new GridLayout(columns, false));
+			g.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			_toolkit.adapt(g);
+			return g;
 		}
 
 		void show(MutableBinding b) {

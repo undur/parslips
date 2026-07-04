@@ -244,7 +244,7 @@ public class ConstraintsPage extends FormPage {
 			min.addModifyListener(e -> { ch.min = min.getSelection(); dirty(); updatePreview(ch); });
 			max.addModifyListener(e -> { ch.max = max.getSelection() >= 99 ? null : max.getSelection(); dirty(); updatePreview(ch); });
 
-			_toolkit.createLabel(_body, "Alternatives (pick declared bindings):");
+			_toolkit.createLabel(_body, "Alternatives — single bindings (pick declared bindings):");
 			for (final String name : bindingNames()) {
 				final Button cb = _toolkit.createButton(_body, name, SWT.CHECK);
 				cb.setSelection(containsSingle(ch.alternatives, name));
@@ -261,8 +261,42 @@ public class ConstraintsPage extends FormPage {
 				});
 			}
 
+			// Any-of alternatives — each counts as ONE alternative, satisfied if any member is bound.
+			_toolkit.createLabel(_body, "Alternatives — any-of groups (each counts as one):");
+			for (int i = 0; i < ch.alternatives.size(); i++) {
+				final List<String> alt = ch.alternatives.get(i);
+				if (alt.size() < 2) {
+					continue; // single-binding alternatives are shown as checkboxes above
+				}
+				final Composite groupRow = _toolkit.createComposite(_body);
+				groupRow.setLayout(new GridLayout(2, false));
+				groupRow.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+				_toolkit.createLabel(groupRow, "(" + String.join(" or ", alt) + ")");
+				final Button del = _toolkit.createButton(groupRow, "Remove group", SWT.PUSH);
+				del.addSelectionListener(new SelectionAdapter() {
+					@Override public void widgetSelected(SelectionEvent e) { ch.alternatives.remove(alt); rebuild(ch); dirty(); }
+				});
+			}
+			final Button addGroup = _toolkit.createButton(_body, "+ Add any-of group…", SWT.PUSH);
+			addGroup.addSelectionListener(new SelectionAdapter() {
+				@Override public void widgetSelected(SelectionEvent e) {
+					final List<String> chosen = pickBindings("Any-of group", "Pick two or more bindings; the group is satisfied if any is bound.");
+					if (chosen.size() >= 2) {
+						ch.alternatives.add(new ArrayList<>(chosen));
+						rebuild(ch);
+						dirty();
+					}
+				}
+			});
+
 			addMessageOverride(ch);
 			addPreview();
+		}
+
+		/** Re-render the detail for the given constraint (after a structural change like adding a group). */
+		private void rebuild(MutableConstraint c) {
+			show(c);
+			updatePreview(c);
 		}
 
 		private void buildRequires(MutableRequires r) {
@@ -336,5 +370,49 @@ public class ConstraintsPage extends FormPage {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Prompts for a subset of the declared binding names (a checkbox per binding). Returns the chosen
+	 * names, or an empty list if cancelled — reference integrity by construction: only declared
+	 * bindings can be picked.
+	 */
+	private List<String> pickBindings(String title, String message) {
+		final List<String> names = bindingNames();
+		final List<String> chosen = new ArrayList<>();
+		final org.eclipse.jface.dialogs.Dialog dialog =
+				new org.eclipse.jface.dialogs.Dialog(getSite().getShell()) {
+			private final List<Button> _checks = new ArrayList<>();
+
+			@Override
+			protected org.eclipse.swt.widgets.Control createDialogArea(Composite parent) {
+				final Composite area = (Composite) super.createDialogArea(parent);
+				new Label(area, SWT.WRAP).setText(message);
+				for (final String name : names) {
+					final Button cb = new Button(area, SWT.CHECK);
+					cb.setText(name);
+					_checks.add(cb);
+				}
+				return area;
+			}
+
+			@Override
+			protected void configureShell(org.eclipse.swt.widgets.Shell shell) {
+				super.configureShell(shell);
+				shell.setText(title);
+			}
+
+			@Override
+			protected void okPressed() {
+				for (int i = 0; i < _checks.size(); i++) {
+					if (_checks.get(i).getSelection()) {
+						chosen.add(names.get(i));
+					}
+				}
+				super.okPressed();
+			}
+		};
+		dialog.open();
+		return chosen;
 	}
 }
