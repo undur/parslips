@@ -52,6 +52,20 @@ public class ApiUtils {
 	private static Map<String, ApiSnapshot> _globalApiSnapshots;
 
 	/**
+	 * Parsed bundled {@code .apiext} models, keyed by the exact lookup name passed to
+	 * {@link #findGlobalApiextModel}. Memoized parse-once (the bundled files never change at
+	 * runtime), including misses via {@link #APIEXT_MISS} — this is what keeps template validation
+	 * off the hot path of re-reading and re-parsing the ~39 bundled files for every {@code <wo:…>}
+	 * on every save (which otherwise churns the heap into GC thrash). Mirrors the parse-once caching
+	 * {@link #findGlobalApiSnapshotByClassName} already gives the legacy {@code .api} side.
+	 */
+	private static final Map<String, ApiextModel> _globalApiextModels = new java.util.concurrent.ConcurrentHashMap<String, ApiextModel>();
+
+	/** Sentinel cached for a name with no bundled {@code .apiext}, so misses stay cheap too. */
+	private static final ApiextModel APIEXT_MISS = ApiextModel.parse(
+			"<wodefinitions><wo class=\"__apiext_miss__\"/></wodefinitions>".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+	/**
 	 * Returns true if the given binding is an action binding, determined by
 	 * either having "Actions" as its defaults category, or (when no defaults
 	 * are defined) having a name that matches action naming conventions.
@@ -219,6 +233,32 @@ public class ApiUtils {
 			// Any failure (missing folder, IO, etc.) just means "no bundled .apiext".
 		}
 		return null;
+	}
+
+	/**
+	 * Like {@link #findGlobalApiextBytes} but returns the PARSED, CACHED {@link ApiextModel} instead of
+	 * raw bytes — parsed once per name and reused thereafter. Callers on the validation hot path (every
+	 * {@code <wo:…>} on every save) MUST use this rather than {@code findGlobalApiextBytes} + a fresh
+	 * {@link ApiextModel#parse}, or they re-read the bundle entry and re-parse the XML on every element,
+	 * which churns the heap into GC thrash on large components.
+	 *
+	 * @param className the class name to look up (fully-qualified or simple)
+	 * @return the parsed bundled model, or null if there's no bundled {@code .apiext} for it
+	 */
+	public static ApiextModel findGlobalApiextModel(String className) {
+		if (className == null || className.isEmpty()) {
+			return null;
+		}
+		final ApiextModel cached = _globalApiextModels.get(className);
+		if (cached != null) {
+			return cached == APIEXT_MISS ? null : cached;
+		}
+		final byte[] bytes = findGlobalApiextBytes(className);
+		ApiextModel model = bytes != null ? ApiextModel.parse(bytes) : null;
+		// Cache the result — including a miss (as the sentinel) so repeat lookups of an
+		// undocumented element don't re-hit the bundle. A parse failure is treated as a miss.
+		_globalApiextModels.put(className, model != null ? model : APIEXT_MISS);
+		return model;
 	}
 
 	/**

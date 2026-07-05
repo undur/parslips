@@ -181,8 +181,10 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 
 	/** As {@link #renderCard(String, ApiextModel, String)}, with a greyed sub-note under the title. */
 	private static HoverContent renderCard(String displayName, String note, ApiextModel model, String origin) {
-		model.setOrigin(origin);
-		return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, note, model), true);
+		// Pass origin to the renderer rather than stamping it on the model — the resolved model
+		// may be a shared, cached instance (see ElementApiResolver), so mutating it would leak one
+		// project's origin into another's.
+		return new HoverContent(ApiextHtmlRenderer.renderBody(displayName, note, null, origin, model), true);
 	}
 
 	/**

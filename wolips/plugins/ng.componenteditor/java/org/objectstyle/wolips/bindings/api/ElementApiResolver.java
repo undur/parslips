@@ -105,16 +105,15 @@ public final class ElementApiResolver {
 			}
 		}
 
-		// 2) global/bundled .apiext (primary name, then alt name)
-		byte[] globalApiext = ApiUtils.findGlobalApiextBytes(primaryName);
-		if (globalApiext == null && altName != null && !altName.equals(primaryName)) {
-			globalApiext = ApiUtils.findGlobalApiextBytes(altName);
+		// 2) global/bundled .apiext (primary name, then alt name). Uses the PARSED, CACHED model —
+		// this is the validation hot path (every <wo:…> resolves through here on every save), so it
+		// must not re-read the bundle entry and re-parse the XML per element.
+		ApiextModel global = ApiUtils.findGlobalApiextModel(primaryName);
+		if (global == null && altName != null && !altName.equals(primaryName)) {
+			global = ApiUtils.findGlobalApiextModel(altName);
 		}
-		if (globalApiext != null) {
-			final ApiextModel m = ApiextModel.parse(globalApiext);
-			if (m != null) {
-				return new ResolvedElementApi(Kind.APIEXT, m);
-			}
+		if (global != null) {
+			return new ResolvedElementApi(Kind.APIEXT, global);
 		}
 
 		// 3) project .api — only reached because no .apiext owns this element

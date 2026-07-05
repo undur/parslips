@@ -38,11 +38,16 @@ public final class ApiextHtmlRenderer {
 	 * {@code <html>} that results from embedding a full document.
 	 */
 	public static String renderBody(String displayName, ApiextModel model) {
-		return renderBody(displayName, null, null, model);
+		return renderBody(displayName, null, null, null, model);
 	}
 
 	public static String renderBody(String displayName, String note, ApiextModel model) {
-		return renderBody(displayName, note, null, model);
+		return renderBody(displayName, note, null, null, model);
+	}
+
+	/** No-origin overload; callers with an origin use the five-arg form and pass it explicitly. */
+	public static String renderBody(String displayName, String note, String overriddenBy, ApiextModel model) {
+		return renderBody(displayName, note, overriddenBy, null, model);
 	}
 
 	/**
@@ -52,8 +57,13 @@ public final class ApiextHtmlRenderer {
 	 * @param overriddenBy if non-null, the element that replaces this one in the current project
 	 *                     (e.g. "ERXWOString"); rendered as an orange "overridden by…" banner so
 	 *                     it's clear this element is effectively replaced in this context.
+	 * @param origin       the originating framework/bundle to show, or null for none. Passed
+	 *                     explicitly (rather than read from the model) so a SHARED, cached
+	 *                     {@link ApiextModel} is never mutated to carry a per-project origin —
+	 *                     the models returned by {@link ElementApiResolver} are now cached and
+	 *                     shared across projects/threads.
 	 */
-	public static String renderBody(String displayName, String note, String overriddenBy, ApiextModel model) {
+	public static String renderBody(String displayName, String note, String overriddenBy, String origin, ApiextModel model) {
 		final StringBuilder b = new StringBuilder(2048);
 
 		// Header. The source marker (.api / .apiext) is pinned to the top-right corner,
@@ -74,8 +84,8 @@ public final class ApiextHtmlRenderer {
 		b.append("</h3>");
 
 		// Origin: which framework/bundle the element comes from (when known).
-		if (model.getOrigin() != null && !model.getOrigin().isEmpty()) {
-			b.append("<div class=\"origin\">from ").append(esc(model.getOrigin())).append("</div>");
+		if (origin != null && !origin.isEmpty()) {
+			b.append("<div class=\"origin\">from ").append(esc(origin)).append("</div>");
 		}
 
 		// Override banner: this element is replaced by another in the current project.

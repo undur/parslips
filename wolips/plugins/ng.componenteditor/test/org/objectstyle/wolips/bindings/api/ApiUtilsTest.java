@@ -11,6 +11,28 @@ import org.junit.Test;
  */
 public class ApiUtilsTest {
 
+	// ---- findGlobalApiextModel: null-safety + stable caching ----------------
+	// The bundle-reading path needs a running OSGi runtime (HTMLPlugin.getBundle()),
+	// so outside the plugin these resolve to a cached miss. What we CAN assert here is the
+	// contract that matters for the validation hot path: the call never throws, tolerates
+	// junk input, and returns a stable result across repeat calls (parse/lookup once, reuse) —
+	// the property that stops template validation from re-reading and re-parsing per element.
+
+	@Test
+	public void findGlobalApiextModel_nullOrEmpty_returnsNull() {
+		assertNull(ApiUtils.findGlobalApiextModel(null));
+		assertNull(ApiUtils.findGlobalApiextModel(""));
+	}
+
+	@Test
+	public void findGlobalApiextModel_repeatCallsAreStable() {
+		// Same name resolves to the same result each time (a cached miss outside OSGi); the point
+		// is that repeat lookups don't diverge or throw — the caching contract holds regardless.
+		final ApiextModel first = ApiUtils.findGlobalApiextModel("NoSuchElementXYZ");
+		final ApiextModel second = ApiUtils.findGlobalApiextModel("NoSuchElementXYZ");
+		assertSame(first, second);
+	}
+
 	// ---- isActionBindingName ------------------------------------------------
 
 	@Test

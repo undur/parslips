@@ -286,9 +286,11 @@ public final class ElementCatalog {
 			final ElementApiResolver.ResolvedElementApi resolved =
 					ElementApiResolver.resolve(type, fqn, displayName, displayName, new TypeCache().getApiCache(project));
 			if (resolved.exists()) {
+				// Pass origin to the renderer rather than stamping it on the model: the resolved
+				// model may be a shared, cached instance, so mutating it would bleed one project's
+				// origin into another's (and race across threads).
 				final ApiextModel m = resolved.getModel();
-				m.setOrigin(origin);
-				return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, m);
+				return ApiextHtmlRenderer.renderBody(displayName, null, overriddenBy, origin, m);
 			}
 		} catch (Throwable t) {
 			// fall through to the no-API card
