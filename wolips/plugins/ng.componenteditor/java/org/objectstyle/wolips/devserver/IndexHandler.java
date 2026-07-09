@@ -28,6 +28,7 @@ class IndexHandler implements DevServerHandler {
 			    {"path": "/problems", "params": "project?, severity=error|warning, limit?", "description": "Problem markers (the Problems view) as JSON. Default: errors only, all open projects with errors."},
 			    {"path": "/console", "params": "app|config, tail?", "description": "The app's console output (tail, default 100 lines) — including after the process died, which is when you need it: startup failures are only visible here."},
 			    {"path": "/breakpoints", "params": "skipAll=true|false?", "description": "List workspace breakpoints and the Skip All Breakpoints state; skipAll toggles the master switch (non-destructive)."},
+			    {"path": "/openProject", "params": "project|all, related=false?", "description": "Open a closed workspace project together with its workspace dependencies (transitive, pom-resolved) - dependency resolution only sees open projects, so opening just one is rarely enough."},
 			    {"path": "/validate", "params": "component", "description": "Validate a component template and report template problems."},
 			    {"path": "/apps", "params": "", "description": "Apps that self-registered (name, port, pid), liveness-checked."},
 			    {"path": "/registerApp", "params": "name, port, pid?", "description": "Called by running apps to announce themselves."},

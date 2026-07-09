@@ -11,6 +11,20 @@ final class DevServerJson {
 	private DevServerJson() {
 	}
 
+	/** Renders a list of strings as a JSON array literal. */
+	static String stringArray(java.util.List<String> values) {
+		final StringBuilder b = new StringBuilder(values.size() * 24 + 2);
+		b.append('[');
+		for (int i = 0; i < values.size(); i++) {
+			if (i > 0) {
+				b.append(',');
+			}
+			b.append('"').append(escape(values.get(i))).append('"');
+		}
+		b.append(']');
+		return b.toString();
+	}
+
 	/** Escapes a string for safe inclusion inside a JSON string literal. */
 	static String escape(String s) {
 		if (s == null) {

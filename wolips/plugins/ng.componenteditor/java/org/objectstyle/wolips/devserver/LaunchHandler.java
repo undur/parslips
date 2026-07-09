@@ -5,9 +5,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -87,14 +85,18 @@ class LaunchHandler implements DevServerHandler {
 		final String projectName = LaunchConfigs.projectNameOf(config);
 		final IProject project = projectName.isEmpty() ? null : ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 
+		String openedNote = "";
 		if (project != null && project.exists() && !project.isOpen()) {
 			if ("true".equalsIgnoreCase(params.get("open"))) {
-				project.open(new NullProgressMonitor());
-				project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
+				// Opening just the target is not enough: dependency resolution is
+				// Maven-workspace-level, which only sees OPEN projects — so open the
+				// project's workspace dependencies transitively too (pom-walk).
+				final ProjectOpener.Result openResult = ProjectOpener.openWithRelated(project);
+				openedNote = ",\"opened\":" + DevServerJson.stringArray(openResult.opened);
 			}
 			else {
 				return "{\"launched\":false,\"reason\":\"project \\\"" + DevServerJson.escape(projectName)
-						+ "\\\" is closed in the workspace\",\"hint\":\"pass open=true to open and build it first\"}";
+						+ "\\\" is closed in the workspace\",\"hint\":\"pass open=true to open it and its workspace dependencies\"}";
 			}
 		}
 
@@ -103,7 +105,7 @@ class LaunchHandler implements DevServerHandler {
 			if (!errors.isEmpty()) {
 				return "{\"launched\":false,\"reason\":\"project \\\"" + DevServerJson.escape(projectName)
 						+ "\\\" has compile errors\",\"problems\":" + WorkspaceProblems.toJsonArray(errors)
-						+ ",\"hint\":\"fix them, or pass ignoreErrors=true\"}";
+						+ openedNote + ",\"hint\":\"fix them, or pass ignoreErrors=true\"}";
 			}
 		}
 
@@ -134,11 +136,11 @@ class LaunchHandler implements DevServerHandler {
 
 		final String waitForPort = params.get("waitForPort");
 		if (waitForPort != null && !waitForPort.isEmpty()) {
-			return waitJson(config, mode, Integer.parseInt(waitForPort), timeoutSeconds(params));
+			return waitJson(config, mode, openedNote, Integer.parseInt(waitForPort), timeoutSeconds(params));
 		}
 
 		return "{\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName())
-				+ "\",\"mode\":\"" + mode + "\"}";
+				+ "\",\"mode\":\"" + mode + "\"" + openedNote + "}";
 	}
 
 	private static int timeoutSeconds(Map<String, String> params) {
@@ -157,10 +159,10 @@ class LaunchHandler implements DevServerHandler {
 	 * Polls until the port answers, the launched process dies, or the timeout elapses —
 	 * so the caller's next request can't race a still-booting (or already-dead) app.
 	 */
-	private static String waitJson(ILaunchConfiguration config, String mode, int port, int timeoutSeconds) throws InterruptedException {
+	private static String waitJson(ILaunchConfiguration config, String mode, String openedNote, int port, int timeoutSeconds) throws InterruptedException {
 		final long start = System.currentTimeMillis();
 		final long deadline = start + timeoutSeconds * 1000L;
-		final String base = "\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName()) + "\",\"mode\":\"" + mode + "\"";
+		final String base = "\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName()) + "\",\"mode\":\"" + mode + "\"" + openedNote;
 
 		while (System.currentTimeMillis() < deadline) {
 			if (portAnswers(port)) {
