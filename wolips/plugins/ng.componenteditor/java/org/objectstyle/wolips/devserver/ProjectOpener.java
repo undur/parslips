@@ -123,7 +123,13 @@ final class ProjectOpener {
 			for (final String name : result.opened) {
 				final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
 				if (project.isOpen()) {
-					project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
+					// CLEAN+FULL on purpose: a freshly opened project's persisted build state
+					// is stale-but-trusted, so an incremental build no-ops and leaves output
+					// that can't actually run (shakedown: main-bundle detection failed until a
+					// clean). Nothing is running yet, so there's no hot-swap delta to preserve —
+					// the incremental-only rule applies to the edit loop, not to opening.
+					project.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor());
+					project.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor());
 				}
 			}
 			final Object[] families = {

@@ -101,7 +101,9 @@ class LaunchHandler implements DevServerHandler {
 		}
 
 		if (project != null && project.isOpen() && !"true".equalsIgnoreCase(params.get("ignoreErrors"))) {
-			final List<WorkspaceProblems.Problem> errors = WorkspaceProblems.problems(project, org.eclipse.core.resources.IMarker.SEVERITY_ERROR, 10);
+			// Java compile / build-path errors only: template-validation markers don't
+			// prevent a launch and must not block one.
+			final List<WorkspaceProblems.Problem> errors = WorkspaceProblems.javaErrors(project, 10);
 			if (!errors.isEmpty()) {
 				return "{\"launched\":false,\"reason\":\"project \\\"" + DevServerJson.escape(projectName)
 						+ "\\\" has compile errors\",\"problems\":" + WorkspaceProblems.toJsonArray(errors)
@@ -115,6 +117,12 @@ class LaunchHandler implements DevServerHandler {
 		}
 
 		// ---- Launch. ----
+
+		// Snapshot the launches that exist BEFORE we fire, so the wait loop can tell the
+		// launch we're creating apart from an older (terminated) launch of the same config
+		// still listed by the launch manager — matching by config name alone made a restart
+		// report "terminated during startup" while the new process was starting fine.
+		final java.util.Set<ILaunch> preexisting = new java.util.HashSet<>(java.util.Arrays.asList(DebugPlugin.getDefault().getLaunchManager().getLaunches()));
 
 		final AtomicReference<String> error = new AtomicReference<>();
 		Display.getDefault().syncExec(() -> {
@@ -136,7 +144,7 @@ class LaunchHandler implements DevServerHandler {
 
 		final String waitForPort = params.get("waitForPort");
 		if (waitForPort != null && !waitForPort.isEmpty()) {
-			return waitJson(config, mode, openedNote, Integer.parseInt(waitForPort), timeoutSeconds(params));
+			return waitJson(config, mode, openedNote, preexisting, Integer.parseInt(waitForPort), timeoutSeconds(params));
 		}
 
 		return "{\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName())
@@ -159,7 +167,7 @@ class LaunchHandler implements DevServerHandler {
 	 * Polls until the port answers, the launched process dies, or the timeout elapses —
 	 * so the caller's next request can't race a still-booting (or already-dead) app.
 	 */
-	private static String waitJson(ILaunchConfiguration config, String mode, String openedNote, int port, int timeoutSeconds) throws InterruptedException {
+	private static String waitJson(ILaunchConfiguration config, String mode, String openedNote, java.util.Set<ILaunch> preexisting, int port, int timeoutSeconds) throws InterruptedException {
 		final long start = System.currentTimeMillis();
 		final long deadline = start + timeoutSeconds * 1000L;
 		final String base = "\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName()) + "\",\"mode\":\"" + mode + "\"" + openedNote;
@@ -169,7 +177,9 @@ class LaunchHandler implements DevServerHandler {
 				return "{" + base + ",\"ready\":true,\"port\":" + port
 						+ ",\"startupMillis\":" + (System.currentTimeMillis() - start) + "}";
 			}
-			final ILaunch launch = findLaunch(config.getName());
+			// Only the launch created by THIS request counts — older launches of the same
+			// config linger in the manager (terminated) and must not be mistaken for ours.
+			final ILaunch launch = findLaunch(config.getName(), preexisting);
 			if (launch != null && launch.isTerminated()) {
 				return "{" + base + ",\"ready\":false,\"reason\":\"process terminated during startup\""
 						+ ",\"hint\":\"see /console?app=" + DevServerJson.escape(config.getName()) + " for the output\"}";
@@ -192,8 +202,16 @@ class LaunchHandler implements DevServerHandler {
 
 	/** The most recent launch of the given config, running or not; null when none exists. */
 	static ILaunch findLaunch(String configName) {
+		return findLaunch(configName, java.util.Set.of());
+	}
+
+	/** Like {@link #findLaunch(String)}, but ignoring the given (pre-existing) launches. */
+	static ILaunch findLaunch(String configName, java.util.Set<ILaunch> ignored) {
 		ILaunch found = null;
 		for (final ILaunch launch : DebugPlugin.getDefault().getLaunchManager().getLaunches()) {
+			if (ignored.contains(launch)) {
+				continue;
+			}
 			final ILaunchConfiguration c = launch.getLaunchConfiguration();
 			if (c != null && configName.equalsIgnoreCase(c.getName())) {
 				found = launch;

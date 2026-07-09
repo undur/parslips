@@ -37,6 +37,43 @@ final class WorkspaceProblems {
 	}
 
 	/**
+	 * The project's JAVA compile and build-path errors only — the ones that actually make a
+	 * launch pointless. Template-validation and other tool markers are deliberately excluded:
+	 * a WO app with a stale template binding launches fine, and blocking on those would make
+	 * every marker a launch blocker.
+	 */
+	static List<Problem> javaErrors(IProject project, int limit) {
+		final List<Problem> result = new ArrayList<>();
+		if (project == null || !project.isOpen()) {
+			return result;
+		}
+		try {
+			final String[] types = {
+					org.eclipse.jdt.core.IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER,
+					org.eclipse.jdt.core.IJavaModelMarker.BUILDPATH_PROBLEM_MARKER,
+			};
+			for (final String type : types) {
+				for (final IMarker marker : project.findMarkers(type, true, IResource.DEPTH_INFINITE)) {
+					if (marker.getAttribute(IMarker.SEVERITY, -1) < IMarker.SEVERITY_ERROR) {
+						continue;
+					}
+					result.add(new Problem(
+							marker.getResource() == null ? "" : marker.getResource().getProjectRelativePath().toString(),
+							marker.getAttribute(IMarker.LINE_NUMBER, -1),
+							String.valueOf(marker.getAttribute(IMarker.MESSAGE, ""))));
+					if (result.size() >= limit) {
+						return result;
+					}
+				}
+			}
+		}
+		catch (Exception e) {
+			ComponenteditorPlugin.getDefault().log(e);
+		}
+		return result;
+	}
+
+	/**
 	 * The project's problem markers at or above the given severity, up to {@code limit}.
 	 * Returns an empty list on any failure — the callers degrade to "no report" rather
 	 * than breaking their actual operation.

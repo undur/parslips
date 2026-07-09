@@ -126,7 +126,7 @@ class RefreshProjectHandler implements DevServerHandler {
 			if (!project.isOpen()) {
 				continue;
 			}
-			final java.util.List<WorkspaceProblems.Problem> errors = WorkspaceProblems.problems(project, org.eclipse.core.resources.IMarker.SEVERITY_ERROR, 10);
+			final java.util.List<WorkspaceProblems.Problem> errors = WorkspaceProblems.javaErrors(project, 10);
 			if (errors.isEmpty()) {
 				continue;
 			}

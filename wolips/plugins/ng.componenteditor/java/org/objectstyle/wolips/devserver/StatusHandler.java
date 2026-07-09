@@ -55,7 +55,8 @@ class StatusHandler implements DevServerHandler {
 		if (project != null && project.exists()) {
 			b.append(",\"projectOpen\":").append(project.isOpen());
 			if (project.isOpen()) {
-				b.append(",\"compileErrors\":").append(WorkspaceProblems.errorCount(project));
+				// Java errors only — "compileErrors" must not count template-validation markers.
+				b.append(",\"compileErrors\":").append(WorkspaceProblems.javaErrors(project, Integer.MAX_VALUE).size());
 			}
 		}
 
