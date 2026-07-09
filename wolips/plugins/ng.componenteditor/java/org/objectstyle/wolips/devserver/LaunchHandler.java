@@ -4,6 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.ui.DebugUITools;
@@ -19,7 +25,25 @@ import org.eclipse.swt.widgets.Display;
  *       Omit it to just <em>list</em> the available configs.</li>
  *   <li>{@code mode} — {@code debug} (default) or {@code run}. Debug is the default
  *       because the dev loop (hot-code-replace, HotswapAgent) needs a debug JVM.</li>
+ *   <li>{@code open} — {@code true} to open the config's project if it is closed in the
+ *       workspace (and build it) instead of refusing to launch.</li>
+ *   <li>{@code ignoreErrors} — {@code true} to launch even when the project has compile
+ *       errors (by default the launch is refused and the errors are reported).</li>
+ *   <li>{@code allowMultiple} — {@code true} to launch even when a launch of the same
+ *       config is already running (by default that is refused: the second instance
+ *       usually just loses a port-bind fight).</li>
+ *   <li>{@code waitForPort} — a TCP port; when given, the response is delayed until
+ *       something listens on that port (success), the launched process terminates
+ *       (failure, with a pointer at {@code /console}), or {@code timeout} elapses.</li>
+ *   <li>{@code timeout} — seconds to wait for {@code waitForPort} (default 60).</li>
  * </ul>
+ *
+ * <h2>Truthfulness</h2>
+ * The contract an external caller actually needs is not "Eclipse was asked to launch"
+ * but "a JVM is (about to be) running" — so this handler checks the reasons a launch
+ * silently produces nothing <em>before</em> launching: unknown config, closed project,
+ * compile errors, already-running instance. Each refusal names its reason and, where
+ * one exists, the parameter that overrides it.
  *
  * <p>Resolution is handled by {@link LaunchConfigs}: an exact config name wins;
  * otherwise the query is treated as a project name, preferring a "local"/"dev" config
@@ -34,7 +58,7 @@ import org.eclipse.swt.widgets.Display;
 class LaunchHandler implements DevServerHandler {
 
 	@Override
-	public String handle(Map<String, String> params) {
+	public String handle(Map<String, String> params) throws Exception {
 		final String query = params.get("config") != null ? params.get("config") : params.get("app");
 		final String modeParam = params.get("mode");
 		final String mode = "run".equalsIgnoreCase(modeParam) ? ILaunchManager.RUN_MODE : ILaunchManager.DEBUG_MODE;
@@ -57,6 +81,39 @@ class LaunchHandler implements DevServerHandler {
 		}
 
 		final ILaunchConfiguration config = resolution.chosen;
+
+		// ---- Preflight: catch the ways a launch silently produces no JVM. ----
+
+		final String projectName = LaunchConfigs.projectNameOf(config);
+		final IProject project = projectName.isEmpty() ? null : ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+
+		if (project != null && project.exists() && !project.isOpen()) {
+			if ("true".equalsIgnoreCase(params.get("open"))) {
+				project.open(new NullProgressMonitor());
+				project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
+			}
+			else {
+				return "{\"launched\":false,\"reason\":\"project \\\"" + DevServerJson.escape(projectName)
+						+ "\\\" is closed in the workspace\",\"hint\":\"pass open=true to open and build it first\"}";
+			}
+		}
+
+		if (project != null && project.isOpen() && !"true".equalsIgnoreCase(params.get("ignoreErrors"))) {
+			final List<WorkspaceProblems.Problem> errors = WorkspaceProblems.problems(project, org.eclipse.core.resources.IMarker.SEVERITY_ERROR, 10);
+			if (!errors.isEmpty()) {
+				return "{\"launched\":false,\"reason\":\"project \\\"" + DevServerJson.escape(projectName)
+						+ "\\\" has compile errors\",\"problems\":" + WorkspaceProblems.toJsonArray(errors)
+						+ ",\"hint\":\"fix them, or pass ignoreErrors=true\"}";
+			}
+		}
+
+		if (!"true".equalsIgnoreCase(params.get("allowMultiple")) && findRunningLaunch(config.getName()) != null) {
+			return "{\"launched\":false,\"reason\":\"a launch of \\\"" + DevServerJson.escape(config.getName())
+					+ "\\\" is already running\",\"hint\":\"use /stop or /restart, or pass allowMultiple=true\"}";
+		}
+
+		// ---- Launch. ----
+
 		final AtomicReference<String> error = new AtomicReference<>();
 		Display.getDefault().syncExec(() -> {
 			try {
@@ -72,8 +129,81 @@ class LaunchHandler implements DevServerHandler {
 			return "{\"launched\":false,\"config\":\"" + DevServerJson.escape(config.getName())
 					+ "\",\"error\":\"" + DevServerJson.escape(error.get()) + "\"}";
 		}
+
+		// ---- Optionally wait until the app is actually ready (or provably dead). ----
+
+		final String waitForPort = params.get("waitForPort");
+		if (waitForPort != null && !waitForPort.isEmpty()) {
+			return waitJson(config, mode, Integer.parseInt(waitForPort), timeoutSeconds(params));
+		}
+
 		return "{\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName())
 				+ "\",\"mode\":\"" + mode + "\"}";
+	}
+
+	private static int timeoutSeconds(Map<String, String> params) {
+		try {
+			if (params.get("timeout") != null) {
+				return Math.max(1, Integer.parseInt(params.get("timeout")));
+			}
+		}
+		catch (NumberFormatException e) {
+			// keep the default
+		}
+		return 60;
+	}
+
+	/**
+	 * Polls until the port answers, the launched process dies, or the timeout elapses —
+	 * so the caller's next request can't race a still-booting (or already-dead) app.
+	 */
+	private static String waitJson(ILaunchConfiguration config, String mode, int port, int timeoutSeconds) throws InterruptedException {
+		final long start = System.currentTimeMillis();
+		final long deadline = start + timeoutSeconds * 1000L;
+		final String base = "\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName()) + "\",\"mode\":\"" + mode + "\"";
+
+		while (System.currentTimeMillis() < deadline) {
+			if (portAnswers(port)) {
+				return "{" + base + ",\"ready\":true,\"port\":" + port
+						+ ",\"startupMillis\":" + (System.currentTimeMillis() - start) + "}";
+			}
+			final ILaunch launch = findLaunch(config.getName());
+			if (launch != null && launch.isTerminated()) {
+				return "{" + base + ",\"ready\":false,\"reason\":\"process terminated during startup\""
+						+ ",\"hint\":\"see /console?app=" + DevServerJson.escape(config.getName()) + " for the output\"}";
+			}
+			Thread.sleep(500);
+		}
+		return "{" + base + ",\"ready\":false,\"reason\":\"port " + port + " not answering after "
+				+ timeoutSeconds + "s\",\"hint\":\"see /console?app=" + DevServerJson.escape(config.getName()) + "\"}";
+	}
+
+	private static boolean portAnswers(int port) {
+		try (java.net.Socket socket = new java.net.Socket()) {
+			socket.connect(new java.net.InetSocketAddress(java.net.InetAddress.getLoopbackAddress(), port), 250);
+			return true;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+
+	/** The most recent launch of the given config, running or not; null when none exists. */
+	static ILaunch findLaunch(String configName) {
+		ILaunch found = null;
+		for (final ILaunch launch : DebugPlugin.getDefault().getLaunchManager().getLaunches()) {
+			final ILaunchConfiguration c = launch.getLaunchConfiguration();
+			if (c != null && configName.equalsIgnoreCase(c.getName())) {
+				found = launch;
+			}
+		}
+		return found;
+	}
+
+	/** A non-terminated launch of the given config, or null. */
+	static ILaunch findRunningLaunch(String configName) {
+		final ILaunch launch = findLaunch(configName);
+		return launch != null && !launch.isTerminated() ? launch : null;
 	}
 
 	private static String listJson(List<ILaunchConfiguration> configs) {

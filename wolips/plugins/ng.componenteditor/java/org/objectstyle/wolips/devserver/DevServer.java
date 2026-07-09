@@ -91,6 +91,17 @@ public class DevServer {
 		_httpServer.createContext("/apps", new RequestHandler(new AppsHandler()));
 		_httpServer.createContext("/launch", new RequestHandler(new LaunchHandler()));
 		_httpServer.createContext("/stop", new RequestHandler(new StopHandler()));
+		_httpServer.createContext("/restart", new RequestHandler(new RestartHandler()));
+		_httpServer.createContext("/status", new RequestHandler(new StatusHandler()));
+		_httpServer.createContext("/problems", new RequestHandler(new ProblemsHandler()));
+		_httpServer.createContext("/console", new RequestHandler(new ConsoleHandler()));
+		_httpServer.createContext("/breakpoints", new RequestHandler(new BreakpointsHandler()));
+		// "/" catches every otherwise-unmatched path, so the index doubles as the 404:
+		// a typo'd endpoint answers with the list of real ones.
+		_httpServer.createContext("/", new RequestHandler(new IndexHandler()));
+
+		// Start following launch consoles so /console can serve them (incl. post-mortem).
+		ConsoleBuffer.install();
 
 		// Use a small daemon thread pool. Requests are short-lived (open an
 		// editor, refresh a resource) and arrive one at a time in practice.

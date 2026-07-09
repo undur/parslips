@@ -98,8 +98,50 @@ class RefreshProjectHandler implements DevServerHandler {
 		// time the caller gets "ok" the new classes are genuinely in place.
 		waitForBuildToSettle();
 
+		// The build settled — but did it succeed? Answering "ok" when the compile
+		// failed is how an external editor ends up staring at an app that "ignores"
+		// its change. Clean build: plain "ok" (compatible with existing callers).
+		// Errors: a JSON report naming them, so the caller learns immediately.
+		final String errorReport = buildErrorReport(projectName);
+		if (errorReport != null) {
+			return errorReport;
+		}
+
 		// Fire-and-forget: success conveyed by the framework's plain "ok".
 		return null;
+	}
+
+	/**
+	 * A JSON build report when the refreshed project(s) hold compile errors after the
+	 * build, or null when everything is clean.
+	 */
+	private static String buildErrorReport(String projectName) {
+		final IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		final StringBuilder report = new StringBuilder();
+		int totalErrors = 0;
+		for (final IProject project : workspace.getRoot().getProjects()) {
+			if (projectName != null && !projectName.isEmpty() && !projectName.equalsIgnoreCase(project.getName())) {
+				continue;
+			}
+			if (!project.isOpen()) {
+				continue;
+			}
+			final java.util.List<WorkspaceProblems.Problem> errors = WorkspaceProblems.problems(project, org.eclipse.core.resources.IMarker.SEVERITY_ERROR, 10);
+			if (errors.isEmpty()) {
+				continue;
+			}
+			totalErrors += errors.size();
+			if (report.length() > 0) {
+				report.append(',');
+			}
+			report.append("{\"project\":\"").append(DevServerJson.escape(project.getName()))
+					.append("\",\"problems\":").append(WorkspaceProblems.toJsonArray(errors)).append('}');
+		}
+		if (totalErrors == 0) {
+			return null;
+		}
+		return "{\"refreshed\":true,\"buildErrors\":" + totalErrors + ",\"projects\":[" + report
+				+ "],\"hint\":\"the build settled but did NOT compile cleanly — the running app is still on the previous classes\"}";
 	}
 
 	/**
