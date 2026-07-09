@@ -39,6 +39,26 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- July 9, 2026 -->
+			<div class="card">
+				<h2 class="date-header">July 9, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>The dev server grows up: outcomes, not just commands</h3>
+					<p>The built-in dev server (<code>localhost:9485</code>) &mdash; the HTTP surface that lets external tools and AI agents drive Eclipse &mdash; now reports what actually <em>happened</em>, not just that a command was relayed. A batch of new endpoints and fixes, all born from real agent usage:</p>
+					<ul>
+						<li><strong><code>/status</code></strong> &mdash; what's running, per launch config: mode, uptime, project open state, compile errors, and the app's self-registered port with a live reachability check.</li>
+						<li><strong><code>/console</code></strong> &mdash; a launch's console output over HTTP, kept <em>after the process dies</em> &mdash; so startup failures finally have a readable post-mortem.</li>
+						<li><strong><code>/launch</code> preflight</strong> &mdash; instead of pretending to succeed, a launch now refuses with a named reason (closed project, compile errors, already running), each with the parameter that overrides it. And <code>waitForPort</code> blocks until the app answers, provably died, or timed out.</li>
+						<li><strong><code>/openProject</code></strong> &mdash; opens a closed project <em>together with its workspace dependencies</em>, resolved transitively from the poms (Maven workspace resolution only sees open projects, so opening just one is rarely enough), and clean-builds them. A fully closed workspace to a running, verified app is now one call.</li>
+						<li><strong><code>/restart</code></strong> &mdash; stop, wait for termination, rebuild chosen projects, relaunch, wait for ready. The whole edit-cycle dance in one request.</li>
+						<li><strong><code>/problems</code></strong> and <strong><code>/breakpoints</code></strong> &mdash; the Problems view as JSON, and a list of workspace breakpoints with a &ldquo;Skip All&rdquo; toggle (for the classic forgotten-breakpoint-on-a-hot-class mystery).</li>
+						<li><strong><code>/</code></strong> &mdash; the server describes itself: a JSON index of every endpoint, so a tool landing cold can discover the API instead of guessing.</li>
+					</ul>
+					<p><code>/refreshProject</code> also stopped answering <code>ok</code> when the build produced compile errors &mdash; it now returns a build report naming them, so &ldquo;my edit did nothing&rdquo; mysteries end at the response instead of an hour later.</p>
+				</div>
+			</div>
+
 			<!-- July 4, 2026 -->
 			<div class="card">
 				<h2 class="date-header">July 4, 2026</h2>

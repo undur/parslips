@@ -12,6 +12,20 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server v2: outcome-reporting endpoints
+
+The dev server (`localhost:9485`) now reports outcomes instead of relayed commands.
+New endpoints: `/status` (per-config ground truth), `/console` (launch console over
+HTTP, survives process death), `/restart` (stop/rebuild/relaunch/wait in one call),
+`/problems` (Problems view as JSON), `/breakpoints` (list + Skip All toggle),
+`/openProject` (opens a project plus its workspace dependencies, pom-resolved
+transitively, then clean-builds), and a self-describing JSON index at `/`. `/launch`
+gained preflight (refuses with named reasons: closed project, compile errors, already
+running — each with an override parameter) and `waitForPort` (block until ready,
+provably dead, or timeout). `/refreshProject` returns a build-error report instead of
+`ok` when the build settles dirty. Launch-blocking error checks count JDT
+compile/build-path markers only — template-validation markers don't block a launch.
+
 ### `.apiext` for every standard WebObjects element
 
 Authored a full `.apiext` descriptor for all 39 elements in `WebObjectDefinitions.xml` —
