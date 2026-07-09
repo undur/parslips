@@ -83,6 +83,22 @@ final class ProjectOpener {
 					queue.addLast(dep);
 				}
 			}
+			// Union in Eclipse's own project references (what the IDE's "open related
+			// projects" feature follows) — readable now that the project is open. They
+			// catch non-Maven relationships the pom-walk can't see; the pom-walk catches
+			// the Maven ones m2e hasn't materialized as references yet because the
+			// dependency projects were closed. Together they cover both worlds.
+			try {
+				for (final IProject referenced : project.getReferencedProjects()) {
+					if (referenced.exists() && !visited.contains(referenced.getName())) {
+						queue.addLast(referenced);
+					}
+				}
+			}
+			catch (Exception e) {
+				// References unavailable (project still closed after a failed open, etc.) —
+				// the pom-walk alone still covers the Maven case.
+			}
 		}
 
 		buildAndSettle(result);
