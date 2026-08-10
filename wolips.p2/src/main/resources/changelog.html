@@ -39,6 +39,21 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- August 10, 2026 -->
+			<div class="card">
+				<h2 class="date-header">August 10, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Ask the editor what a tag can do</h3>
+					<p>Two additions to the editor's dev server (<code>localhost:9485</code>), the HTTP surface external tools and AI agents drive &mdash; both aimed at the same thing: giving a tool the editor's own understanding of your templates, instead of making it guess.</p>
+					<ul>
+						<li><strong><code>/elementApi</code></strong> &mdash; the resolved binding API of any element, as JSON. Ask for <code>WOPopUpButton</code> (or <code>str</code>, or <code>link</code> &mdash; tag aliases and shortcuts resolve just like they do in a template) and you get back every binding with its accepted types, its direction (does the element <em>read</em> it, <em>write</em> it back, or both), whether it's required, its default, and the cross-binding rules &mdash; each with the same plain-English message the hover shows (<em>&ldquo;exactly one of&hellip; must be bound&rdquo;</em>). It's the editor's hover, as data. An agent that used to open <code>WOPopUpButton.java</code> to work out its bindings now asks in one call.</li>
+						<li><strong>A new <code>/validate</code> check</strong> &mdash; the <code>$</code>-on-a-plain-tag trap. Writing <code>style="$highlight"</code> on a raw <code>&lt;div&gt;</code> renders the literal text <code>$highlight</code>, because plain HTML tags don't evaluate bindings &mdash; a mistake that hides until you look at the page. Validation now catches it with a precise warning that names the fix (use a <code>wo:</code> element or container). That whole class of bug is now caught before render.</li>
+					</ul>
+					<p>These pair with new endpoints on the <em>runtime</em> side (in ng-objects and wonder-slim): an <strong><code>eval</code></strong> endpoint that runs a Java snippet inside the live application &mdash; a REPL against your real objects and data, not a reconstruction &mdash; and a <strong><code>problems</code></strong> endpoint that returns the binding errors the app rendered into a page as data instead of markup to be scraped. Together they close the other half of the loop: not just <em>make the change take effect</em>, but <em>exercise it and observe the truth</em>.</p>
+				</div>
+			</div>
+
 			<!-- July 9, 2026 -->
 			<div class="card">
 				<h2 class="date-header">July 9, 2026</h2>

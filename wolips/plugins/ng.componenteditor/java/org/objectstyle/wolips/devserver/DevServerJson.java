@@ -6,13 +6,25 @@ package org.objectstyle.wolips.devserver;
  * library — the payloads are tiny and fixed-shape — so this just centralises correct
  * string escaping so each handler doesn't reinvent (and subtly mis-implement) it.
  */
-final class DevServerJson {
+public final class DevServerJson {
 
 	private DevServerJson() {
 	}
 
+	/**
+	 * Renders a value as a JSON string literal ( quoted and escaped ), or the literal {@code null}
+	 * for a null value — the distinction matters for nullable fields where absence is meaningful
+	 * (an unstated policy is {@code null}, not an empty string).
+	 */
+	public static String str(String value) {
+		if (value == null) {
+			return "null";
+		}
+		return "\"" + escape(value) + "\"";
+	}
+
 	/** Renders a list of strings as a JSON array literal. */
-	static String stringArray(java.util.List<String> values) {
+	public static String stringArray(java.util.List<String> values) {
 		final StringBuilder b = new StringBuilder(values.size() * 24 + 2);
 		b.append('[');
 		for (int i = 0; i < values.size(); i++) {
@@ -26,7 +38,7 @@ final class DevServerJson {
 	}
 
 	/** Escapes a string for safe inclusion inside a JSON string literal. */
-	static String escape(String s) {
+	public static String escape(String s) {
 		if (s == null) {
 			return "";
 		}

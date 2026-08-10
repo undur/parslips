@@ -3,7 +3,6 @@ package org.objectstyle.wolips.devserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -183,8 +182,8 @@ class ValidateComponentHandler implements DevServerHandler {
 					.append(",\"line\":").append(line)
 					.append(",\"charStart\":").append(charStart)
 					.append(",\"charEnd\":").append(charEnd)
-					.append(",\"message\":\"").append(jsonEscape(message)).append('"')
-					.append(",\"file\":\"").append(jsonEscape(path)).append('"')
+					.append(",\"message\":\"").append(DevServerJson.escape(message)).append('"')
+					.append(",\"file\":\"").append(DevServerJson.escape(path)).append('"')
 					.append('}');
 			problemsOut.add(p.toString());
 			any = true;
@@ -208,64 +207,15 @@ class ValidateComponentHandler implements DevServerHandler {
 	private static String buildJson(String componentName, List<String> files, List<String> problems) {
 		final StringBuilder b = new StringBuilder(256);
 		b.append('{')
-				.append("\"component\":\"").append(jsonEscape(componentName)).append('"')
+				.append("\"component\":\"").append(DevServerJson.escape(componentName)).append('"')
 				.append(",\"found\":true")
-				.append(",\"files\":").append(jsonStringArray(files))
+				.append(",\"files\":").append(DevServerJson.stringArray(files))
 				.append(",\"problems\":[").append(String.join(",", problems)).append(']')
 				.append('}');
 		return b.toString();
 	}
 
 	private static String notFoundJson(String componentName) {
-		return "{\"component\":\"" + jsonEscape(componentName) + "\",\"found\":false,\"problems\":[]}";
-	}
-
-	private static String jsonStringArray(List<String> values) {
-		final StringBuilder b = new StringBuilder();
-		b.append('[');
-		for (int i = 0; i < values.size(); i++) {
-			if (i > 0) {
-				b.append(',');
-			}
-			b.append('"').append(jsonEscape(values.get(i))).append('"');
-		}
-		b.append(']');
-		return b.toString();
-	}
-
-	/** Minimal JSON string escaping for the fields we emit (messages, paths). */
-	private static String jsonEscape(String s) {
-		if (s == null) {
-			return "";
-		}
-		final StringBuilder b = new StringBuilder(s.length() + 16);
-		for (int i = 0; i < s.length(); i++) {
-			final char c = s.charAt(i);
-			switch (c) {
-			case '"':
-				b.append("\\\"");
-				break;
-			case '\\':
-				b.append("\\\\");
-				break;
-			case '\n':
-				b.append("\\n");
-				break;
-			case '\r':
-				b.append("\\r");
-				break;
-			case '\t':
-				b.append("\\t");
-				break;
-			default:
-				if (c < 0x20) {
-					b.append(String.format("\\u%04x", (int) c));
-				}
-				else {
-					b.append(c);
-				}
-			}
-		}
-		return b.toString();
+		return "{\"component\":\"" + DevServerJson.escape(componentName) + "\",\"found\":false,\"problems\":[]}";
 	}
 }

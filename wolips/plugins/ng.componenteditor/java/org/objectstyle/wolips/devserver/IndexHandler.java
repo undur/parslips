@@ -30,6 +30,7 @@ class IndexHandler implements DevServerHandler {
 			    {"path": "/breakpoints", "params": "skipAll=true|false?", "description": "List workspace breakpoints and the Skip All Breakpoints state; skipAll toggles the master switch (non-destructive)."},
 			    {"path": "/openProject", "params": "project|all, related=false?", "description": "Open a closed workspace project together with its workspace dependencies (transitive, pom-resolved) - dependency resolution only sees open projects, so opening just one is rarely enough."},
 			    {"path": "/validate", "params": "component", "description": "Validate a component template and report template problems."},
+			    {"path": "/elementApi", "params": "element (name or comma-separated list), project?, raw=true?", "description": "The resolved binding API of one or more elements, in a project's context, as JSON: bindings with pull/push directions+types, required/default/deprecation, cross-binding constraints with their generated messages, and content/unknownAttributes policies. Names resolve through the project's tag aliases (str -> WOString -> ERXWOString). raw=true returns the canonical .apiext XML instead. This is the editor hover, as data."},
 			    {"path": "/apps", "params": "", "description": "Apps that self-registered (name, port, pid), liveness-checked."},
 			    {"path": "/registerApp", "params": "name, port, pid?", "description": "Called by running apps to announce themselves."},
 			    {"path": "/refresh", "params": "path", "description": "Refresh a single workspace path from disk."},

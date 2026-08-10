@@ -12,6 +12,34 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: element-API lookup + a plain-tag binding lint
+
+Two additions to the dev server (`localhost:9485`), both surfacing the editor's own
+template understanding to external tools/agents as data:
+
+- **`/elementApi`** — the resolved binding API of one or more elements, in a project's
+  context, as JSON (`ElementApiHandler` + `ApiextJsonRenderer`, the JSON sibling of
+  `ApiextHtmlRenderer`). Returns per binding: `pull`/`push` types with interpretation, a
+  derived `direction`, `required`, `default`/`defaults`, deprecation; per element: `content`
+  and `unknownAttributes` policies, and constraints **with their generated messages** (via
+  `ApiextConstraintMessages`). Names resolve through both the project's Parsley tag aliases
+  **and** the legacy tag shortcuts (`str`/`link`/`textfield` → their class), so a template's
+  tag name resolves; `raw=true` returns the canonical `.apiext` XML instead. Runs on the
+  request thread (JDT model reads take their own locks), same as `/validate`.
+- **`/validate` — `$`-on-a-plain-tag lint.** `TemplateValidator` now warns when a plain
+  HTML tag carries an attribute whose value starts with the project's inline binding prefix
+  (e.g. `style="$x"` on a raw `<div>`) — a value that renders literally because plain tags
+  don't evaluate bindings. Flows to `/validate` through the normal marker path.
+
+Cleanup: `DevServerJson` is now the single JSON helper (added a nullable `str()`, made it
+public); `ValidateComponentHandler`'s duplicate private escaper was removed, along with an
+unused import.
+
+These pair with new *runtime-side* endpoints (in ng-objects and wonder-slim, backed by a
+shared `ng-core` dev engine): `eval` (a Java REPL inside the live app) and `problems` (the
+rendered binding-error boxes as data). Those live in the framework repos, not this plugin.
+
+
 ### Dev server v2: outcome-reporting endpoints
 
 The dev server (`localhost:9485`) now reports outcomes instead of relayed commands.

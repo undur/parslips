@@ -8,6 +8,7 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.wod.HtmlElementName;
@@ -16,11 +17,13 @@ import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.bindings.wod.WodBindingValueProblem;
 import org.objectstyle.wolips.bindings.wod.WodProblem;
 import org.objectstyle.wolips.locate.LocateException;
+import org.objectstyle.wolips.variables.BuildProperties;
 import org.objectstyle.wolips.variables.ParsleyProject;
 import org.objectstyle.wolips.wodclipse.WodclipsePlugin;
 import org.objectstyle.wolips.wodclipse.core.util.FuzzyXMLWodElement;
 import org.objectstyle.wolips.wodclipse.core.util.WodHtmlUtils;
 
+import jp.aonir.fuzzyxml.FuzzyXMLAttribute;
 import jp.aonir.fuzzyxml.FuzzyXMLDocument;
 import jp.aonir.fuzzyxml.FuzzyXMLElement;
 import jp.aonir.fuzzyxml.FuzzyXMLNode;
@@ -131,6 +134,14 @@ public class TemplateValidator {
       }
     }
     else {
+      // A plain HTML tag (not an inline wo: element, not a webobject tag). A plain tag does not
+      // evaluate bindings, so an attribute value written like a binding — e.g. style="$foo" — is
+      // almost always a mistake: the author meant it to be dynamic but it renders the literal
+      // text "$foo". Flag it so the trap is caught cheaply. (To make it dynamic, the tag needs to
+      // be a wo: element / wo:container, where attribute values ARE evaluated.)
+      if (validate) {
+        checkPlainTagForBindingLikeAttributes(element, inlineProblems);
+      }
     }
 
     // p:raw and p:comment — don't validate children (p:raw content is
@@ -145,5 +156,43 @@ public class TemplateValidator {
         visitElement((FuzzyXMLElement) nodes[i], inlineProblems, validate);
       }
     }
+  }
+
+  /**
+   * Warns when a plain HTML tag carries an attribute whose value starts with the project's inline
+   * binding prefix (default {@code $}) — e.g. {@code <div style="$highlight">}. On a plain tag the
+   * value is emitted verbatim, so this is almost always an accidental binding: the author wanted a
+   * {@code wo:} element / {@code wo:container} (where attribute values are evaluated). It is a
+   * warning, not an error — a literal value that legitimately begins with the prefix is rare but
+   * possible, so this nudges rather than blocks.
+   */
+  private void checkPlainTagForBindingLikeAttributes(FuzzyXMLElement element, List<InlineWodProblem> inlineProblems) {
+    final String prefix = inlineBindingPrefix();
+    if (prefix == null || prefix.isEmpty()) {
+      return;
+    }
+
+    for (FuzzyXMLAttribute attribute : element.getAttributes()) {
+      final String value = attribute.getValue();
+      // Longer than the prefix: a value that IS exactly the prefix (a lone "$") is more likely a
+      // literal than a truncated binding, so don't flag it.
+      if (value != null && value.length() > prefix.length() && value.startsWith(prefix)) {
+        final int valueOffset = element.getOffset() + attribute.getValueDataOffset() + 1;
+        final int lineNumber = WodHtmlUtils.getLineAtOffset(_cache.getHtmlEntry().getContents(), valueOffset);
+        final String message = "'" + attribute.getName() + "' looks like a binding (" + value
+            + ") but this is a plain HTML tag, so it renders literally. Use a wo: element/container to bind it.";
+        final WodProblem problem = new WodProblem(message, new Position(valueOffset, attribute.getValueDataLength()), lineNumber, true);
+        inlineProblems.add(new InlineWodProblem(element, problem, _cache));
+      }
+    }
+  }
+
+  /**
+   * @return the project's inline binding prefix (e.g. {@code $}), or {@code $} as the default when
+   *         the project doesn't declare one.
+   */
+  private String inlineBindingPrefix() {
+    final BuildProperties buildProperties = _parsleyProject != null ? _parsleyProject.getBuildProperties() : null;
+    return buildProperties != null ? buildProperties.getInlineBindingPrefix() : "$";
   }
 }
