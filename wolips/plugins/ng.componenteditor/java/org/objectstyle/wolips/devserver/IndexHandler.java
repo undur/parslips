@@ -32,7 +32,7 @@ class IndexHandler implements DevServerHandler {
 			    {"path": "/validate", "params": "component", "description": "Validate a component template and report template problems."},
 			    {"path": "/elementApi", "params": "element (name or comma-separated list), project?, raw=true?", "description": "The resolved binding API of one or more elements, in a project's context, as JSON: bindings with pull/push directions+types, required/default/deprecation, cross-binding constraints with their generated messages, and content/unknownAttributes policies. Names resolve through the project's tag aliases (str -> WOString -> ERXWOString). raw=true returns the canonical .apiext XML instead. This is the editor hover, as data."},
 			    {"path": "/apps", "params": "", "description": "Apps that self-registered (name, port, pid), liveness-checked."},
-			    {"path": "/registerApp", "params": "name, port, pid?, runtime?", "description": "Called by running apps to announce themselves. runtime is \"ng\" or \"wo\", echoed by /apps and /status so a tool picks the right endpoint URL form."},
+			    {"path": "/registerApp", "params": "name, port, pid?, runtime?", "description": "Called by running apps to announce themselves. runtime is ng or wo, echoed by /apps and /status so a tool picks the right endpoint URL form."},
 			    {"path": "/refresh", "params": "path", "description": "Refresh a single workspace path from disk."},
 			    {"path": "/openJavaFile", "params": "className, lineNumber?", "description": "Open a Java source file in Eclipse (exception-page links)."},
 			    {"path": "/openComponent", "params": "component", "description": "Open a component in the editor."}
