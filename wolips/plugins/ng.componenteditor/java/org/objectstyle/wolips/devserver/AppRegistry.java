@@ -31,12 +31,14 @@ final class AppRegistry {
 		final String name;
 		final int port;
 		final String pid; // may be null — apps aren't required to send it
+		final String runtime; // "ng" or "wo", or null if the app didn't say (older builds)
 		final long lastSeenEpochMillis;
 
-		Entry(String name, int port, String pid, long lastSeenEpochMillis) {
+		Entry(String name, int port, String pid, String runtime, long lastSeenEpochMillis) {
 			this.name = name;
 			this.port = port;
 			this.pid = pid;
+			this.runtime = runtime;
 			this.lastSeenEpochMillis = lastSeenEpochMillis;
 		}
 	}
@@ -56,9 +58,9 @@ final class AppRegistry {
 	 * common "always launch dev apps on :1200" workflow tidy: re-launching a different app
 	 * on 1200 drops the dead one instead of leaving two entries fighting over the port.
 	 */
-	static void register(String name, int port, String pid, long nowEpochMillis) {
+	static void register(String name, int port, String pid, String runtime, long nowEpochMillis) {
 		_byName.entrySet().removeIf(e -> e.getValue().port == port && !e.getKey().equals(name));
-		_byName.put(name, new Entry(name, port, pid, nowEpochMillis));
+		_byName.put(name, new Entry(name, port, pid, runtime, nowEpochMillis));
 	}
 
 	/** @return the entry for an app name, or null if none has registered under it. */

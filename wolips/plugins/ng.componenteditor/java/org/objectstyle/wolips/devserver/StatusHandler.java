@@ -77,6 +77,9 @@ class StatusHandler implements DevServerHandler {
 			if (registered.pid != null && !registered.pid.isEmpty()) {
 				b.append(",\"pid\":\"").append(DevServerJson.escape(registered.pid)).append('"');
 			}
+			if (registered.runtime != null && !registered.runtime.isEmpty()) {
+				b.append(",\"runtime\":\"").append(DevServerJson.escape(registered.runtime)).append('"');
+			}
 			b.append(",\"reachable\":").append(AppRegistry.isReachable(registered)).append('}');
 		}
 

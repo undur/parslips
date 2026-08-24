@@ -77,6 +77,11 @@ class AppsHandler implements DevServerHandler {
 		if (e.pid != null && !e.pid.isEmpty()) {
 			b.append(",\"pid\":\"").append(DevServerJson.escape(e.pid)).append('"');
 		}
+		// The app's framework ("ng" or "wo"), so a tool picks the right runtime endpoint URL
+		// form (/ng/dev/… vs …woa/…) without probing. Absent for apps on older builds.
+		if (e.runtime != null && !e.runtime.isEmpty()) {
+			b.append(",\"runtime\":\"").append(DevServerJson.escape(e.runtime)).append('"');
+		}
 
 		// The app's dependencies that are open in the workspace with source — i.e. the
 		// ones an agent can actually read and edit (jar-only deps are omitted). Computed

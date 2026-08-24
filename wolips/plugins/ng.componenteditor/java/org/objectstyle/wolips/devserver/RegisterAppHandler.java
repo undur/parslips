@@ -16,6 +16,9 @@ import java.util.Map;
  *   <li>{@code name} — the application name (required)</li>
  *   <li>{@code port} — the port it's listening on (required, positive integer)</li>
  *   <li>{@code pid} — the process id (optional, informational)</li>
+ *   <li>{@code runtime} — the app's framework, {@code "ng"} or {@code "wo"} (optional; absent
+ *       from older app builds). Lets a tool pick the right runtime endpoint URL form
+ *       ({@code /ng/dev/…} vs {@code …woa/…}) instead of probing or inferring it.</li>
  * </ul>
  *
  * <p>Returns a small JSON acknowledgement. Malformed registrations (missing name or
@@ -37,7 +40,8 @@ class RegisterAppHandler implements DevServerHandler {
 		}
 
 		final String pid = params.get("pid"); // optional
-		AppRegistry.register(name, port, pid, System.currentTimeMillis());
+		final String runtime = params.get("runtime"); // optional: "ng" or "wo"; null from older app builds
+		AppRegistry.register(name, port, pid, runtime, System.currentTimeMillis());
 
 		return "{\"ok\":true,\"name\":\"" + DevServerJson.escape(name) + "\",\"port\":" + port + "}";
 	}
