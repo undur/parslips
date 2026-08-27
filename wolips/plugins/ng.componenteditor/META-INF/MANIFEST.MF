@@ -47,6 +47,6 @@ Bundle-ClassPath: .,
  lib/dtdparser121.jar,
  lib/ph-css-8.2.1.jar,
  lib/ph-commons-11.2.1.jar,
- lib/slf4j-api-2.0.15.jar,
+ lib/slf4j-api-2.0.18.jar,
  lib/jsr305-3.0.2.jar,
  lib/commons-jxpath-1.2.jar
