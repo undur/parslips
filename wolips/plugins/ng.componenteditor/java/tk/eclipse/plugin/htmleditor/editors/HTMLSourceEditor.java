@@ -301,7 +301,11 @@ public class HTMLSourceEditor extends TextEditor {
   }
 
   /**
-   * Validates HTML document.
+   * The JTidy-based HTML validation was removed here (issue #4): its ancient HTML rules are
+   * noise, and the real template validation lives in the Wod/Parsley validators, which write
+   * TYPED markers (ng.componenteditor.problem). What remains is deliberate cleanup: deleting
+   * exact-stock-type PROBLEM markers on save quietly clears any leftovers the legacy
+   * validators (which used the stock type) wrote in the past — typed markers are untouched.
    * If the editor provides other validation, do override at the subclass.
    */
   protected void doValidate() {
@@ -312,11 +316,6 @@ public class HTMLSourceEditor extends TextEditor {
             IFileEditorInput input = (IFileEditorInput) getEditorInput();
             IFile file = input.getFile();
             file.deleteMarkers(IMarker.PROBLEM, false, 0);
-
-            HTMLProjectParams params = new HTMLProjectParams(file.getProject());
-            if (params.getValidateHTML()) {
-              new HTMLValidator(input.getFile()).doValidate();
-            }
           }
           catch (Exception ex) {
             //HTMLPlugin.logException(ex);

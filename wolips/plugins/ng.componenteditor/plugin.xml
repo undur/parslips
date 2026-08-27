@@ -155,20 +155,6 @@
             icon="icons/html.png"
             id="ng.componenteditor.HTMLEditor"
             name="Parsley HTML Editor"/>
-      <editor
-            class="tk.eclipse.plugin.csseditor.editors.CSSEditor"
-            contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
-            extensions="css"
-            icon="icons/css.png"
-            id="ng.componenteditor.CSSEditor"
-            name="Parsley CSS Editor"/>
-      <editor
-            class="tk.eclipse.plugin.jseditor.editors.JavaScriptEditor"
-            contributorClass="tk.eclipse.plugin.jseditor.editors.JavaScriptEditorContributor"
-            extensions="js"
-            icon="icons/javascript.gif"
-            id="ng.componenteditor.JavaScriptEditor"
-            name="Parsley JavaScript Editor"/>
 
    </extension>
 

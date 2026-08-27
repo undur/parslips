@@ -189,24 +189,13 @@ public class JavaScriptEditor extends TextEditor {
 	}
 	
 	/**
-	 * Invokes <code>JavaScriptValidator</code> to validate editing source code.
-	 * 
-	 * @see JavaScriptValidator
+	 * Standalone JavaScript validation removed (issue #4): the embedded Rhino flagged modern
+	 * JavaScript as broken, and freestanding .js files are Eclipse's business, not this
+	 * plugin's. The editor itself is no longer registered for .js files either; this class
+	 * remains only until the standalone-editor code is fully retired.
 	 */
 	protected void doValidate(){
-		try {
-			ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-				public void run(IProgressMonitor monitor) throws CoreException {
-					try {
-						IFileEditorInput input = (IFileEditorInput)getEditorInput();
-						new JavaScriptValidator(input.getFile()).doValidate();
-					} catch(Exception ex){
-					}
-				}
-			},null);
-		} catch(Exception ex){
-			HTMLPlugin.logException(ex);
-		}
+		// no-op — see javadoc
 	}
 	
 	@Override
