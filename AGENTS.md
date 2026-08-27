@@ -34,20 +34,30 @@ The hooks work the same for both runtimes; two things differ:
 ## Dev server
 
 `http://localhost:9485` — **loopback only**, no auth (loopback *is* the trust
-boundary). Plain `GET`; `/validate` returns JSON, the rest return `ok`. Port is
+boundary). Plain `GET`; most endpoints return JSON (fire-and-forget ones return `ok`). Port is
 configurable in Eclipse prefs.
 
 | Endpoint | Params | Does |
 |---|---|---|
-| `/refreshProject` | `project?`, `build?`, `clean?` | Refresh project(s) from disk + incremental build. Use after editing. |
+| `/` | | Self-describing JSON index of every endpoint (also answers unknown paths). Trust it over this table. |
+| `/status` | `app?` | Per launch config: running/mode/uptime, project open state, compile errors, registered port/pid/runtime + reachability. |
+| `/refreshProject` | `project?`, `build?`, `clean?` | Refresh project(s) from disk + incremental build; returns a build-error report when dirty. Use after editing. |
 | `/validate` | `component`, `project?` | Validate a component's template, return problems as JSON. |
-| `/refresh` | `path` | Refresh one resource path. |
-| `/apps` | `name?` | Discover running apps and their ports (so you don't have to be told the port). |
-| `/launch` | `config?`/`app?`, `mode?` | List launch configs, or start one. |
+| `/revalidate` | `project?` | Revalidate EVERY template in a project (or the whole workspace) — the bulk cure for stale markers. Slow; generous timeout. |
+| `/purgeMarkers` | `project?` | Bring out your dead: delete orphaned exact-stock-type PROBLEM markers on js/css/html/xml (legacy-validator leftovers). Typed markers untouched. |
+| `/elementApi` | `element`, `project?`, `raw?` | An element's resolved binding API as JSON (types, pull/push, constraints with messages); aliases and shortcuts resolve. `raw=true` = the .apiext XML. |
+| `/problems` | `project?`, `severity?`, `limit?` | Problem markers as JSON; `count` is the true total, entries carry a `source` (parsley/java/stock/other). |
+| `/console` | `app`/`config`, `tail?` | A launch's console output — kept after the process dies (the startup post-mortem). |
+| `/launch` | `config?`/`app?`, `mode?`, `open?`, `ignoreErrors?`, `allowMultiple?`, `waitForPort?`, `timeout?` | List launch configs, or start one — with preflight refusals and wait-until-ready. |
 | `/stop` | `app`, `force?` | Stop a running app (terminate, or `force=true` to hard-kill). |
+| `/restart` | `app`, `refresh?` + `/launch` params | stop → refresh+rebuild → launch → wait, in one call. |
+| `/openProject` | `project`\|`all`, `related?` | Open a closed project with its workspace dependencies (pom-resolved). |
+| `/breakpoints` | `skipAll?` | List workspace breakpoints; toggle Skip All. |
+| `/refresh` | `path` | Refresh one resource path. |
+| `/apps` | `name?` | Discover running apps: port, `runtime` (`ng`/`wo` — pick the right app-endpoint URL form), and source-available dependencies. |
 | `/openComponent` | `app?`, `component`, `lineNumber?`, `offset?`, `length?` | Open a component, reveal a position. |
 | `/openJavaFile` | `className`, `lineNumber`, `app?` | Open a Java file at a line. |
-| `/registerApp` | `name`, `port`, `pid?` | (App-side, automatic) An app announces its port at startup. You won't call this. |
+| `/registerApp` | `name`, `port`, `pid?`, `runtime?` | (App-side, automatic) An app announces its port and framework at startup. You won't call this. |
 
 ### `/launch` and `/stop` — start and stop apps
 
