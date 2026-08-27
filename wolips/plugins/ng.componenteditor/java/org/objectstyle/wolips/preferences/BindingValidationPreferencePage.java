@@ -43,20 +43,57 @@
  */
 package org.objectstyle.wolips.preferences;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.objectstyle.wolips.bindings.preferences.PreferenceConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.wodclipse.core.builder.TemplateRevalidator;
 
 /**
  * @author mike
  */
 public class BindingValidationPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-	
+
+	/**
+	 * The preference keys this page edits. Used to detect whether Apply/OK actually changed
+	 * anything, so we can offer a full revalidation — existing problem markers were written under
+	 * the OLD settings and won't reflect the new ones until their files are revalidated (template
+	 * validation is per-file and event-driven; nothing else re-runs it). This is the same pattern
+	 * as JDT's compiler preference pages prompting for a full rebuild.
+	 */
+	private static final String[] VALIDATION_KEYS = {
+			PreferenceConstants.VALIDATE_TEMPLATES_KEY,
+			PreferenceConstants.USE_INLINE_BINDINGS_KEY,
+			PreferenceConstants.VALIDATE_BINDING_VALUES,
+			PreferenceConstants.VALIDATE_WOO_ENCODINGS_KEY,
+			PreferenceConstants.HTML_ERRORS_SEVERITY_KEY,
+			PreferenceConstants.WOD_MISSING_COMPONENT_SEVERITY_KEY,
+			PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY,
+			PreferenceConstants.UNUSED_WOD_ELEMENT_SEVERITY_KEY,
+			PreferenceConstants.WOD_ERRORS_IN_HTML_SEVERITY_KEY,
+			PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY,
+			PreferenceConstants.MISSING_COLLECTION_SEVERITY_KEY,
+			PreferenceConstants.MISSING_COMPONENT_SEVERITY_KEY,
+			PreferenceConstants.MISSING_NSKVC_SEVERITY_KEY,
+			PreferenceConstants.AMBIGUOUS_SEVERITY_KEY,
+			PreferenceConstants.AT_OPERATOR_SEVERITY_KEY,
+			PreferenceConstants.HELPER_FUNCTION_SEVERITY_KEY,
+			PreferenceConstants.INVALID_OGNL_SEVERITY_KEY,
+			PreferenceConstants.WELL_FORMED_TEMPLATE_KEY };
+
 	public BindingValidationPreferencePage() {
 		super(GRID);
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
@@ -90,6 +127,48 @@ public class BindingValidationPreferencePage extends FieldEditorPreferencePage i
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		super.propertyChange(event);
+	}
+
+	/**
+	 * Adds a "Revalidate All Templates" button next to the standard page buttons — the on-demand
+	 * trigger for a full-workspace revalidation (all templates in every project the component
+	 * editor handles). Useful when markers look stale for reasons other than a settings change
+	 * (e.g. validation ran while the workspace was still resolving types).
+	 */
+	@Override
+	protected void contributeButtons(Composite parent) {
+		((GridLayout) parent.getLayout()).numColumns++;
+		final Button revalidate = new Button(parent, SWT.PUSH);
+		revalidate.setText("Revalidate All Templates");
+		revalidate.setToolTipText("Re-run template validation on every component in the workspace, replacing all existing template problem markers.");
+		revalidate.addListener(SWT.Selection, event -> TemplateRevalidator.scheduleRevalidation(TemplateRevalidator.allHandledProjects()));
+	}
+
+	/**
+	 * After applying, offer a full revalidation when any validation setting actually changed —
+	 * existing markers were produced under the old settings and stay stale until their files are
+	 * revalidated (the JDT "settings changed, full rebuild?" pattern).
+	 */
+	@Override
+	public boolean performOk() {
+		final Map<String, String> before = snapshot();
+		final boolean ok = super.performOk();
+		if (ok && !snapshot().equals(before)) {
+			if (MessageDialog.openQuestion(getShell(), "Revalidate Templates",
+					"Validation settings changed. Existing problem markers still reflect the old settings until their templates are revalidated.\n\nRevalidate all templates now?")) {
+				TemplateRevalidator.scheduleRevalidation(TemplateRevalidator.allHandledProjects());
+			}
+		}
+		return ok;
+	}
+
+	private Map<String, String> snapshot() {
+		final IPreferenceStore store = getPreferenceStore();
+		final Map<String, String> values = new HashMap<>();
+		for (final String key : VALIDATION_KEYS) {
+			values.put(key, store.getString(key));
+		}
+		return values;
 	}
 
 	public void init(IWorkbench workbench) {

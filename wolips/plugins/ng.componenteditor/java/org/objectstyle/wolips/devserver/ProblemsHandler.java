@@ -55,8 +55,12 @@ class ProblemsHandler implements DevServerHandler {
 				b.append(',');
 			}
 			first = false;
+			// count is the TRUE total at this severity; the problems list is capped by limit.
+			// (Previously count was the capped list's size, which made a limit=1 damage-survey
+			// report "1" for every project regardless of the real number.)
 			b.append("{\"project\":\"").append(DevServerJson.escape(project.getName()))
-					.append("\",\"count\":").append(problems.size())
+					.append("\",\"count\":").append(WorkspaceProblems.count(project, severity))
+					.append(",\"shown\":").append(problems.size())
 					.append(",\"problems\":").append(WorkspaceProblems.toJsonArray(problems))
 					.append('}');
 		}

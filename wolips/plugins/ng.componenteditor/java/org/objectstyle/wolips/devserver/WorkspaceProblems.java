@@ -74,6 +74,30 @@ final class WorkspaceProblems {
 	}
 
 	/**
+	 * The TRUE number of problem markers at or above the given severity — independent of any
+	 * listing limit, so a report's "count" can be honest while its problem list stays capped.
+	 * Returns 0 on any failure, matching {@link #problems}' degrade-to-empty behavior.
+	 */
+	static int count(IProject project, int minimumSeverity) {
+		if (project == null || !project.isOpen()) {
+			return 0;
+		}
+		try {
+			int count = 0;
+			for (final IMarker marker : project.findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE)) {
+				if (marker.getAttribute(IMarker.SEVERITY, -1) >= minimumSeverity) {
+					count++;
+				}
+			}
+			return count;
+		}
+		catch (Exception e) {
+			ComponenteditorPlugin.getDefault().log(e);
+			return 0;
+		}
+	}
+
+	/**
 	 * The project's problem markers at or above the given severity, up to {@code limit}.
 	 * Returns an empty list on any failure — the callers degrade to "no report" rather
 	 * than breaking their actual operation.
