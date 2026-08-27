@@ -88,6 +88,7 @@ public class DevServer {
 		_httpServer.createContext("/refreshProject", new RequestHandler(new RefreshProjectHandler()));
 		_httpServer.createContext("/validate", new RequestHandler(new ValidateComponentHandler()));
 		_httpServer.createContext("/revalidate", new RequestHandler(new RevalidateHandler()));
+		_httpServer.createContext("/purgeMarkers", new RequestHandler(new PurgeMarkersHandler()));
 		_httpServer.createContext("/elementApi", new RequestHandler(new ElementApiHandler()));
 		_httpServer.createContext("/registerApp", new RequestHandler(new RegisterAppHandler()));
 		_httpServer.createContext("/apps", new RequestHandler(new AppsHandler()));

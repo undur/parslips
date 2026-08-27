@@ -60,6 +60,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.wodclipse.core.builder.StaleMarkerPurge;
 import org.objectstyle.wolips.wodclipse.core.builder.TemplateRevalidator;
 
 /**
@@ -137,11 +138,20 @@ public class BindingValidationPreferencePage extends FieldEditorPreferencePage i
 	 */
 	@Override
 	protected void contributeButtons(Composite parent) {
-		((GridLayout) parent.getLayout()).numColumns++;
+		((GridLayout) parent.getLayout()).numColumns += 2;
 		final Button revalidate = new Button(parent, SWT.PUSH);
 		revalidate.setText("Revalidate All Templates");
 		revalidate.setToolTipText("Re-run template validation on every component in the workspace, replacing all existing template problem markers.");
 		revalidate.addListener(SWT.Selection, event -> TemplateRevalidator.scheduleRevalidation(TemplateRevalidator.allHandledProjects()));
+
+		final Button purge = new Button(parent, SWT.PUSH);
+		purge.setText("Purge Stale Markers");
+		purge.setToolTipText("Delete orphaned untyped problem markers on js/css/html/xml files — leftovers of removed legacy validators that nothing will ever revalidate. Typed markers (template validation, Java, WTP) are untouched.");
+		purge.addListener(SWT.Selection, event -> {
+			final StaleMarkerPurge.Summary summary = StaleMarkerPurge.purgeWorkspace();
+			MessageDialog.openInformation(getShell(), "Purge Stale Markers",
+					"Deleted " + summary.deletedMarkers + " stale marker(s) across " + summary.affectedFiles + " file(s).");
+		});
 	}
 
 	/**

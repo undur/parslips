@@ -20,11 +20,40 @@ final class WorkspaceProblems {
 		final String resource; // workspace-relative path
 		final int line; // -1 when the marker has no line
 		final String message;
+		final String source; // which tool family wrote it: parsley | java | stock | other
 
-		Problem(String resource, int line, String message) {
+		Problem(String resource, int line, String message, String source) {
 			this.resource = resource;
 			this.line = line;
 			this.message = message;
+			this.source = source;
+		}
+	}
+
+	/**
+	 * Classifies a marker by its type into the tool family that wrote it, so a report reader can
+	 * tell template findings from Java errors from legacy leftovers without guessing by message
+	 * text: {@code parsley} (this plugin's typed template/apiext markers), {@code java} (JDT),
+	 * {@code stock} (the untyped {@code IMarker.PROBLEM} — no living tool writes these; they're
+	 * legacy-validator leftovers, purgeable via /purgeMarkers), {@code other} (anything else,
+	 * e.g. WTP).
+	 */
+	private static String sourceOf(IMarker marker) {
+		try {
+			final String type = marker.getType();
+			if ("ng.componenteditor.problem".equals(type)) {
+				return "parsley";
+			}
+			if (type.startsWith("org.eclipse.jdt.")) {
+				return "java";
+			}
+			if (IMarker.PROBLEM.equals(type)) {
+				return "stock";
+			}
+			return "other";
+		}
+		catch (Exception e) {
+			return "other";
 		}
 	}
 
@@ -60,7 +89,8 @@ final class WorkspaceProblems {
 					result.add(new Problem(
 							marker.getResource() == null ? "" : marker.getResource().getProjectRelativePath().toString(),
 							marker.getAttribute(IMarker.LINE_NUMBER, -1),
-							String.valueOf(marker.getAttribute(IMarker.MESSAGE, ""))));
+							String.valueOf(marker.getAttribute(IMarker.MESSAGE, "")),
+							"java"));
 					if (result.size() >= limit) {
 						return result;
 					}
@@ -115,7 +145,8 @@ final class WorkspaceProblems {
 				result.add(new Problem(
 						marker.getResource() == null ? "" : marker.getResource().getProjectRelativePath().toString(),
 						marker.getAttribute(IMarker.LINE_NUMBER, -1),
-						String.valueOf(marker.getAttribute(IMarker.MESSAGE, ""))));
+						String.valueOf(marker.getAttribute(IMarker.MESSAGE, "")),
+						sourceOf(marker)));
 				if (result.size() >= limit) {
 					break;
 				}
@@ -138,7 +169,8 @@ final class WorkspaceProblems {
 			final Problem p = problems.get(i);
 			b.append("{\"resource\":\"").append(DevServerJson.escape(p.resource))
 					.append("\",\"line\":").append(p.line)
-					.append(",\"message\":\"").append(DevServerJson.escape(p.message))
+					.append(",\"source\":\"").append(DevServerJson.escape(p.source))
+					.append("\",\"message\":\"").append(DevServerJson.escape(p.message))
 					.append("\"}");
 		}
 		b.append(']');
