@@ -14,7 +14,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
-import com.helger.css.ECSSVersion;
 import com.helger.css.decl.CascadingStyleSheet;
 import com.helger.css.reader.CSSReader;
 
@@ -49,7 +48,7 @@ public class CSSOutlinePage extends ContentOutlinePage {
     try {
         String css = editor.getDocumentProvider().getDocument(editor.getEditorInput()).get();
         this.selectors.clear();
-  	  CascadingStyleSheet styles = CSSReader.readFromString(css, ECSSVersion.LATEST);
+  	  CascadingStyleSheet styles = CSSReader.readFromString(css);
 	  styles.getAllStyleRules().stream().forEach(stylerule ->{
 		  stylerule.getAllSelectors().forEach(sel ->{
 			  this.selectors.add(sel.getAsCSSString());

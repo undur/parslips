@@ -6,7 +6,6 @@ import java.util.HashMap;
 import org.eclipse.core.resources.IFile;
 import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
 
-import com.helger.css.ECSSVersion;
 import com.helger.css.decl.CSSSelectorSimpleMember;
 import com.helger.css.decl.CascadingStyleSheet;
 import com.helger.css.decl.ICSSSelectorMember;
@@ -144,7 +143,7 @@ public class CSSAssistProcessor {
 	   * div (class3, class4)
 	   * Then it can provide these class names in code assist when editing.
 	   */
-	  CascadingStyleSheet styles = CSSReader.readFromString(css, ECSSVersion.LATEST);
+	  CascadingStyleSheet styles = CSSReader.readFromString(css);
 	  if (styles == null) {
 		  // CSS couldn't be parsed — e.g. @import("...") or other non-standard
 		  // syntax.  Nothing to extract for class-name completion.
