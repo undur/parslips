@@ -12,6 +12,72 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Exit the standalone JS/CSS editing business; purge tooling for the fossils (#4)
+
+Parsley is a template editor; the standalone `.js`/`.css` editors and their validators
+were a vestige of the Amateras general-purpose-web-editor ancestry. Per issue #4:
+
+- **Standalone editor registrations removed** from `plugin.xml` — freestanding `.js` and
+  `.css` files now open in Eclipse/WTP's own (far more current) editors. Inline
+  `<script>`/`<style>` support in templates (`InnerJavaScriptScanner`,
+  `InnerCSSScanner`) is untouched — we own the inline context, Eclipse owns the files.
+- **Rhino and JTidy deleted**: `JavaScriptValidator` (Rhino, ES3-era — flagged all
+  modern JS as syntax errors) and `HTMLValidator` (JTidy), plus `lib/js.jar` and
+  `lib/Tidy-1.jar`. A cascade audit also found `lib/dtdparser121.jar` and
+  `lib/trang.jar` with zero references — deleted too. The two `doValidate()` hooks are
+  neutered with explanatory javadoc (HTMLSourceEditor keeps its stock-marker-deleting
+  janitor line).
+- **"Bring out your dead": `StaleMarkerPurge`** — the dead validators' markers were
+  stock `IMarker.PROBLEM` type, which nothing will ever revalidate, so they'd have sat
+  on `.js` files forever. The purge deletes markers of the *exact* stock type (typed
+  subtypes — Parsley, JDT, WTP — are never matched) on js/css/html/htm/xml files.
+  Exposed as a "Purge Stale Markers" button on the validation preference page and as
+  `/purgeMarkers?project?` on the dev server. A workspace run deleted 96 orphans.
+- **`/problems` markers now carry a `source` field** — `parsley` (our typed template
+  markers), `java` (JDT), `stock` (purgeable leftovers), `other` — so a report reader
+  can partition findings by the tool that wrote them instead of guessing from message
+  text.
+
+Deferred to issue #8: reusing Eclipse/WTP's JS/CSS support for the *inline* context, so
+inline and standalone code would get the same validators.
+
+### Full-workspace template revalidation + honest `/problems` counts
+
+Template validation is per-file and event-driven — a Java clean/rebuild never re-runs
+it, so template markers could go stale (fossils from before a severity fix, phantoms
+from type-resolution races). Now there's a bulk cure:
+
+- **`TemplateRevalidator`** — enumerates every validation target in a project
+  (component bundles once per `.wo`, standalone `.html` templates, derived resources
+  skipped; gated by `ParsleyProject.shouldHandleProject`) and re-runs
+  `WodBuilder.validateComponent` over each. A full-workspace run (~1850 components, 55
+  projects) takes ~40s.
+- **Preference-page integration** — a "Revalidate All Templates" button on the binding
+  validation preference page, plus the JDT pattern: changing any validation preference
+  now offers a full revalidation on Apply (snapshot comparison in `performOk`), since
+  severity changes only take effect where validation re-runs.
+- **`/revalidate?project?`** on the dev server — synchronous, returns
+  `{projects, components, canceled}`.
+- **`/problems` count bug fixed** — `count` was computed *after* the `limit` truncation
+  (so `limit=1` reported every project as having one problem). `count` is now the true
+  total via a dedicated `WorkspaceProblems.count()`, with the capped list size reported
+  separately as `shown`.
+
+### Dependency refresh: ph-css 8.x, modular helger stack, Xerces dropped
+
+- **Xerces deleted outright** — the JDK's built-in parser suffices; `lib/xercesImpl.jar`
+  and its manifest entry are gone.
+- **ph-css 7.0.3 → 8.2.1**, which meant replacing the ph-commons monolith with the
+  modular helger 12.2.5 stack (ph-base, ph-collection, ph-io, ph-annotations, ph-cache,
+  ph-mime, ph-statistics, ph-text, ph-typeconvert, plus jspecify 1.0.0). Call sites:
+  `ECSSVersion` was removed upstream, so `CSSReader.readFromString(css, ECSSVersion.LATEST)`
+  became `CSSReader.readFromString(css)` in `CSSOutlinePage` and `CSSAssistProcessor`.
+- **slf4j-api 2.0.15 → 2.0.18**, **Tycho 5.0.0 → 5.0.4**.
+- **Build lesson, recorded for posterity**: Tycho's compiler staleness check does not
+  notice jar-only classpath changes — after any `Bundle-ClassPath` edit, only
+  `mvn clean verify` is trustworthy. A non-clean `verify` produced a false green locally
+  while CI (correctly) failed on the removed `ECSSVersion`.
+
 ### Dev server: element-API lookup + a plain-tag binding lint
 
 Two additions to the dev server (`localhost:9485`), both surfacing the editor's own

@@ -39,6 +39,31 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- August 27, 2026 -->
+			<div class="card">
+				<h2 class="date-header">August 27, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Trustworthy markers: revalidate everything, purge the fossils</h3>
+					<p>Template validation runs per file, when a file changes &mdash; which means a Java clean/rebuild never re-checks your templates, and markers could quietly go stale: problems you'd already fixed, or findings stamped under old settings. Two new tools make the Problems view trustworthy again:</p>
+					<ul>
+						<li><strong>Revalidate All Templates</strong> &mdash; a button on the validation preference page (and <code>/revalidate</code> on the dev server) that re-runs template validation over every component in a project or the whole workspace, replacing every template marker with a freshly computed one. Changing a validation preference now offers to run it for you on Apply &mdash; so a severity change actually takes effect everywhere, not just in files you happen to touch next.</li>
+						<li><strong>Purge Stale Markers</strong> &mdash; deletes orphaned untyped problem markers on js/css/html/xml files: leftovers of long-removed validators that nothing would ever refresh, sitting on files forever as phantom errors. Markers owned by living tools (template validation, the Java compiler, WTP) are typed and never touched.</li>
+					</ul>
+					<p>And so you can tell who said what: <code>/problems</code> now labels every marker with its <code>source</code> &mdash; <code>parsley</code>, <code>java</code>, <code>stock</code>, or <code>other</code> &mdash; and reports the <em>true</em> problem count even when the returned list is capped.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Out of the standalone JS/CSS editing business</h3>
+					<p>Parsley is a <em>template</em> editor. The standalone <code>.js</code> and <code>.css</code> editors it inherited &mdash; and their validators, built on engines from another era (the JavaScript one flagged arrow functions and <code>const</code> as syntax errors) &mdash; competed badly with Eclipse's own current tooling. No more: freestanding JS and CSS files now open in Eclipse/WTP's editors, and the ancient embedded validation engines are deleted from the plugin entirely. What we <em>keep</em> is the part we own: <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> blocks inside templates still get syntax highlighting and completion, right where your bindings live.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Under the hood: dependencies brought current</h3>
+					<p>The plugin's embedded libraries got a spring clean: the CSS parser jumped a major version (ph-css 8.x with its modernized module stack), the bundled Xerces XML parser is gone in favor of the JDK's own, and several smaller libraries moved to their latest releases. Less vendored code, fewer stale engines, same editor.</p>
+				</div>
+			</div>
+
 			<!-- August 10, 2026 -->
 			<div class="card">
 				<h2 class="date-header">August 10, 2026</h2>
