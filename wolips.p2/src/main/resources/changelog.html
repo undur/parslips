@@ -39,6 +39,17 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- August 28, 2026 -->
+			<div class="card">
+				<h2 class="date-header">August 28, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Watch your agent work, live</h3>
+					<p>The dev server now keeps a record of every request it handles &mdash; what was asked, what came back, and how long it took &mdash; and turns it into a spectator sport. Open <strong><code>localhost:9485/watch</code></strong> in a browser and you get a live feed of everything driving your workspace, narrated in plain language as it happens: <em>&ldquo;Validated <strong>Main</strong> &mdash; clean&rdquo;</em>, <em>&ldquo;Launched <strong>MyApp</strong> &mdash; ready in 4.2s&rdquo;</em>, <em>&ldquo;Revalidated <strong>28 templates</strong> across ERExtensions&rdquo;</em> &mdash; with a running tally, timing on every request, and the raw request/response one click away.</p>
+					<p>Point an AI agent at your workspace, put <code>/watch</code> on a second screen, and watch it refresh, validate, launch and inspect in real time &mdash; the whole edit&rarr;build&rarr;run loop, visible. When nobody's watching, the same record quietly serves as an audit trail: <code>/activity</code> returns the feed as JSON, so &ldquo;what did the agent actually do to my workspace?&rdquo; always has an answer. The buffer is bounded (last 500 requests, large responses capped), costs nothing when idle, and adds no latency to requests &mdash; recording happens after the response is sent.</p>
+				</div>
+			</div>
+
 			<!-- August 27, 2026 -->
 			<div class="card">
 				<h2 class="date-header">August 27, 2026</h2>
