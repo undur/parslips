@@ -100,6 +100,8 @@ public class DevServer {
 		_httpServer.createContext("/console", new RequestHandler(new ConsoleHandler()));
 		_httpServer.createContext("/breakpoints", new RequestHandler(new BreakpointsHandler()));
 		_httpServer.createContext("/openProject", new RequestHandler(new OpenProjectHandler()));
+		_httpServer.createContext("/activity", new RequestHandler(new ActivityHandler()));
+		_httpServer.createContext("/watch", new RequestHandler(new WatchHandler()));
 		// "/" catches every otherwise-unmatched path, so the index doubles as the 404:
 		// a typo'd endpoint answers with the list of real ones.
 		_httpServer.createContext("/", new RequestHandler(new IndexHandler()));
@@ -145,17 +147,27 @@ public class DevServer {
 
 		@Override
 		public void handle(HttpExchange exchange) throws IOException {
+			// Recorded into the ActivityLog after the response is sent (never before —
+			// recording must not add latency), so /activity and /watch can show what
+			// the server is being asked to do.
+			final long startNanos = System.nanoTime();
+			final String path = exchange.getRequestURI().getPath();
+			final String rawQuery = exchange.getRequestURI().getRawQuery();
 			try {
-				Map<String, String> params = parseQuery(exchange.getRequestURI().getRawQuery());
+				Map<String, String> params = parseQuery(rawQuery);
 				// A handler may return a response body (e.g. validation JSON); a null
 				// return is the fire-and-forget case, answered with a plain "ok".
 				String body = _delegate.handle(params);
-				respond(exchange, 200, body != null ? body : "ok");
+				final String sent = body != null ? body : "ok";
+				respond(exchange, 200, sent);
+				ActivityLog.record(path, rawQuery, 200, elapsedMillis(startNanos), sent);
 			}
 			catch (Exception e) {
 				ComponenteditorPlugin.getDefault().log(e);
+				final String sent = "error: " + e.getMessage();
+				ActivityLog.record(path, rawQuery, 500, elapsedMillis(startNanos), sent);
 				try {
-					respond(exchange, 500, "error: " + e.getMessage());
+					respond(exchange, 500, sent);
 				}
 				catch (IOException ignored) {
 					// Connection already gone — nothing useful to do.
@@ -165,26 +177,36 @@ public class DevServer {
 				exchange.close();
 			}
 		}
+
+		private long elapsedMillis(long startNanos) {
+			return (System.nanoTime() - startNanos) / 1_000_000;
+		}
 	}
 
 	private static void respond(HttpExchange exchange, int code, String body) throws IOException {
 		byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
-		// Advertise JSON when the body is one, so clients (and curl | jq) treat it
-		// correctly; everything else is plain text.
-		String contentType = looksLikeJson(body) ? "application/json; charset=utf-8" : "text/plain; charset=utf-8";
-		exchange.getResponseHeaders().set("Content-Type", contentType);
+		// Advertise JSON or HTML when the body is one, so clients (curl | jq, and the
+		// browser opening /watch) treat it correctly; everything else is plain text.
+		exchange.getResponseHeaders().set("Content-Type", contentTypeFor(body));
 		exchange.sendResponseHeaders(code, bytes.length);
 		try (OutputStream os = exchange.getResponseBody()) {
 			os.write(bytes);
 		}
 	}
 
-	private static boolean looksLikeJson(String body) {
-		if (body == null || body.isEmpty()) {
-			return false;
+	private static String contentTypeFor(String body) {
+		if (body != null && !body.isEmpty()) {
+			char first = body.charAt(0);
+			if (first == '{' || first == '[') {
+				return "application/json; charset=utf-8";
+			}
+			// The /watch page is the one HTML response; a browser given text/plain
+			// would render its source instead of the page.
+			if (first == '<') {
+				return "text/html; charset=utf-8";
+			}
 		}
-		char first = body.charAt(0);
-		return first == '{' || first == '[';
+		return "text/plain; charset=utf-8";
 	}
 
 	/**

@@ -48,7 +48,8 @@ public class IndexHandlerTest {
 	 * That last rule is the one a naive brace-counter misses, because an even number of stray quotes
 	 * keeps the braces balanced by luck.
 	 */
-	private static void assertWellFormed(final String json) {
+	// Package-visible: ActivityLogTest reuses it to check the /activity feed's JSON.
+	static void assertWellFormed(final String json) {
 		final java.util.Deque<Character> stack = new java.util.ArrayDeque<>();
 		boolean inString = false;
 		boolean escaped = false;

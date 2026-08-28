@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Parslips — Live Activity</title>
+<style>
+	:root {
+		--bg: #0e1116;
+		--card: #161b23;
+		--card-hover: #1b212b;
+		--text: #d6dce5;
+		--dim: #7d8794;
+		--accent: #58d68d;
+		--amber: #f5b041;
+		--red: #ec7063;
+		--border: #232b36;
+	}
+	* { box-sizing: border-box; margin: 0; padding: 0; }
+	body {
+		background: var(--bg);
+		color: var(--text);
+		font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		padding: 24px 32px;
+	}
+	header {
+		display: flex;
+		align-items: baseline;
+		gap: 16px;
+		margin-bottom: 6px;
+	}
+	h1 {
+		font-size: 22px;
+		font-weight: 600;
+	}
+	h1 .leaf { margin-right: 6px; }
+	#state {
+		color: var(--dim);
+		font-size: 13px;
+	}
+	#state.live::before {
+		content: "●";
+		color: var(--accent);
+		margin-right: 5px;
+		animation: pulse 2s infinite;
+	}
+	#state.dead::before {
+		content: "●";
+		color: var(--red);
+		margin-right: 5px;
+	}
+	@keyframes pulse { 50% { opacity: 0.3; } }
+	#clear {
+		margin-left: auto;
+		background: none;
+		border: 1px solid var(--border);
+		color: var(--dim);
+		border-radius: 6px;
+		padding: 4px 12px;
+		font-size: 12px;
+		cursor: pointer;
+	}
+	#clear:hover { color: var(--text); border-color: var(--dim); }
+	#tally {
+		color: var(--dim);
+		font-size: 13px;
+		margin-bottom: 20px;
+	}
+	#tally b { color: var(--text); font-weight: 600; }
+	#feed { max-width: 1100px; }
+	.entry {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 9px 14px;
+		margin-bottom: 6px;
+		cursor: pointer;
+		animation: arrive 0.35s ease-out;
+	}
+	.entry:hover { background: var(--card-hover); }
+	@keyframes arrive {
+		from { opacity: 0; transform: translateY(-6px); }
+		to { opacity: 1; transform: none; }
+	}
+	.entry .time {
+		color: var(--dim);
+		font: 12px ui-monospace, "SF Mono", Menlo, monospace;
+		flex: none;
+	}
+	.entry .path {
+		color: var(--dim);
+		font: 12px ui-monospace, "SF Mono", Menlo, monospace;
+		flex: none;
+		min-width: 120px;
+	}
+	.entry .story { flex: 1; }
+	.entry .story b { font-weight: 600; }
+	.entry.err .story { color: var(--red); }
+	.entry .ms {
+		flex: none;
+		font: 12px ui-monospace, "SF Mono", Menlo, monospace;
+		color: var(--dim);
+	}
+	.entry .ms.mid { color: var(--amber); }
+	.entry .ms.slow { color: var(--red); }
+	.raw {
+		display: none;
+		grid-column: 1 / -1;
+		background: #0a0d12;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		margin: -2px 0 6px;
+		padding: 10px 14px;
+		font: 12px/1.6 ui-monospace, "SF Mono", Menlo, monospace;
+		color: var(--dim);
+		white-space: pre-wrap;
+		word-break: break-all;
+		max-height: 320px;
+		overflow: auto;
+	}
+	.raw.open { display: block; }
+	.raw .k { color: var(--accent); }
+	#empty {
+		color: var(--dim);
+		padding: 40px 0;
+		text-align: center;
+	}
+</style>
+</head>
+<body>
+	<header>
+		<h1><span class="leaf">🌿</span>Parslips — Live Activity</h1>
+		<span id="state">connecting…</span>
+		<button id="clear" title="Empty the activity buffer">clear</button>
+	</header>
+	<div id="tally"></div>
+	<div id="feed"><div id="empty">Waiting for activity — point an agent at the dev server.</div></div>
+
+<script>
+"use strict";
+
+let lastSeq = 0;
+const counts = { requests: 0, validations: 0, builds: 0, launches: 0, lookups: 0, errors: 0 };
+const MAX_DOM_ENTRIES = 200;
+
+function params(entry) {
+	const p = {};
+	for (const [k, v] of new URLSearchParams(entry.query || "")) {
+		p[k] = v;
+	}
+	return p;
+}
+
+function json(entry) {
+	const r = entry.response || "";
+	if (!entry.truncated && (r.startsWith("{") || r.startsWith("["))) {
+		try { return JSON.parse(r); } catch (e) { /* fall through */ }
+	}
+	return null;
+}
+
+function seconds(ms) {
+	return (ms / 1000).toFixed(1) + "s";
+}
+
+/* Turns one feed entry into a human sentence. Returns HTML (values escaped via esc). */
+function narrate(entry) {
+	const p = params(entry);
+	const r = json(entry);
+	const b = (s) => "<b>" + esc(s) + "</b>";
+
+	if (entry.status !== 200) {
+		return "Failed: " + esc(entry.response.slice(0, 200));
+	}
+	/* Some handlers answer refusals as {"error": ...} with a 200 — narrate those as
+	   refusals rather than feeding an error object to the per-endpoint narrators. */
+	if (r && r.error) {
+		return "Refused " + esc(entry.path) + " — " + esc(r.error);
+	}
+	switch (entry.path) {
+		case "/refreshProject": {
+			const target = p.project ? b(p.project) : "all projects";
+			if (entry.response === "ok") return "Refreshed " + target + " — build clean";
+			const n = r && r.buildErrors ? r.buildErrors.length : null;
+			return "Refreshed " + target + (n !== null ? " — <b>" + n + " build error" + (n === 1 ? "" : "s") + "</b>" : "");
+		}
+		case "/validate": {
+			const n = r && r.problems ? r.problems.length : null;
+			const name = b(p.component || "?");
+			if (r && r.found === false) return "Tried to validate " + name + " — not found";
+			if (n === 0) return "Validated " + name + " — clean";
+			if (n !== null) return "Validated " + name + " — <b>" + n + " problem" + (n === 1 ? "" : "s") + "</b>";
+			return "Validated " + name;
+		}
+		case "/revalidate":
+			if (r) return "Revalidated <b>" + r.components + " templates</b> across " + r.projects + " project" + (r.projects === 1 ? "" : "s");
+			return "Revalidated templates";
+		case "/purgeMarkers":
+			if (r) return "Purged <b>" + r.deleted + " stale markers</b> from " + r.files + " file" + (r.files === 1 ? "" : "s");
+			return "Purged stale markers";
+		case "/elementApi":
+			return "Looked up the API of " + b(p.element || "?") + (p.project ? " in " + b(p.project) : "");
+		case "/launch": {
+			const name = p.config || p.app;
+			if (!name) return "Listed the launch configurations";
+			if (r && r.launched === false) return "Launch of " + b(name) + " refused — " + esc(r.reason || "");
+			if (r && r.ready === true) return "Launched " + b(name) + " — ready in " + seconds(r.startupMillis || 0);
+			if (r && r.ready === false) return "Launched " + b(name) + " — <b>died during startup</b>";
+			return "Launched " + b(name);
+		}
+		case "/stop":
+			return "Stopped " + b(p.app || p.config || "?");
+		case "/restart":
+			return "Restarted " + b(p.app || p.config || "?") + (p.refresh ? " after rebuilding " + b(p.refresh) : "");
+		case "/status":
+			return "Checked status" + (p.app ? " of " + b(p.app) : " of the workspace");
+		case "/problems": {
+			const scope = p.project ? " in " + b(p.project) : "";
+			if (r && typeof r.count === "number") return "Read problems" + scope + " — <b>" + r.count + "</b>";
+			if (r && r.projects) return "Read problems across the workspace";
+			return "Read problems" + scope;
+		}
+		case "/console":
+			return "Read the console of " + b(p.app || p.config || "?");
+		case "/breakpoints":
+			if (p.skipAll === "true") return "Disarmed all breakpoints";
+			if (p.skipAll === "false") return "Re-armed breakpoints";
+			return "Checked the workspace breakpoints";
+		case "/openProject":
+			return "Opened project " + b(p.project || "?") + " (with its dependencies)";
+		case "/openComponent":
+			return "Opened " + b(p.component || "?") + " in the editor";
+		case "/openJavaFile":
+			return "Opened " + b(p.className || "?") + (p.lineNumber ? " at line " + esc(p.lineNumber) : "");
+		case "/refresh":
+			return "Refreshed " + b(p.path || "?");
+		case "/apps": {
+			const n = r && r.apps ? r.apps.length : null;
+			return "Discovered running apps" + (n !== null ? " — <b>" + n + "</b>" : "");
+		}
+		case "/registerApp":
+			return "App " + b(p.name || "?") + " announced itself on port " + esc(p.port || "?");
+		case "/":
+		case "/help":
+			return "Read the endpoint index";
+		default:
+			return esc(entry.path);
+	}
+}
+
+function tallyCategory(path) {
+	if (path === "/validate" || path === "/revalidate") return "validations";
+	if (path === "/refreshProject" || path === "/refresh") return "builds";
+	if (path === "/launch" || path === "/restart" || path === "/stop") return "launches";
+	if (path === "/elementApi" || path === "/problems" || path === "/status" || path === "/apps" || path === "/console") return "lookups";
+	return null;
+}
+
+function esc(s) {
+	return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderTally() {
+	document.getElementById("tally").innerHTML =
+		"<b>" + counts.requests + "</b> requests · " +
+		"<b>" + counts.validations + "</b> validations · " +
+		"<b>" + counts.builds + "</b> refreshes · " +
+		"<b>" + counts.launches + "</b> launches · " +
+		"<b>" + counts.lookups + "</b> lookups" +
+		(counts.errors ? " · <b style='color:var(--red)'>" + counts.errors + "</b> errors" : "");
+}
+
+function addEntry(entry) {
+	counts.requests++;
+	if (entry.status !== 200) counts.errors++;
+	const cat = tallyCategory(entry.path);
+	if (cat) counts[cat]++;
+
+	const empty = document.getElementById("empty");
+	if (empty) empty.remove();
+
+	const div = document.createElement("div");
+	div.className = "entry" + (entry.status !== 200 ? " err" : "");
+	const t = new Date(entry.time);
+	const hh = String(t.getHours()).padStart(2, "0");
+	const mm = String(t.getMinutes()).padStart(2, "0");
+	const ss = String(t.getSeconds()).padStart(2, "0");
+	const msClass = entry.millis >= 2000 ? "slow" : entry.millis >= 100 ? "mid" : "";
+	div.innerHTML =
+		'<span class="time">' + hh + ":" + mm + ":" + ss + "</span>" +
+		'<span class="path">' + esc(entry.path) + "</span>" +
+		'<span class="story">' + narrate(entry) + "</span>" +
+		'<span class="ms ' + msClass + '">' + entry.millis + " ms</span>";
+
+	const raw = document.createElement("div");
+	raw.className = "raw";
+	raw.textContent =
+		"GET " + entry.path + (entry.query ? "?" + entry.query : "") + "\n" +
+		"→ " + entry.status + " · " + entry.responseLength + " chars" + (entry.truncated ? " (truncated below)" : "") + "\n\n" +
+		entry.response;
+	div.addEventListener("click", () => raw.classList.toggle("open"));
+
+	const feed = document.getElementById("feed");
+	feed.prepend(raw);
+	feed.prepend(div);
+	while (feed.children.length > MAX_DOM_ENTRIES * 2) {
+		feed.lastChild.remove();
+	}
+}
+
+async function poll() {
+	try {
+		const res = await fetch("/activity?since=" + lastSeq);
+		const data = await res.json();
+		for (const entry of data.entries) {
+			addEntry(entry);
+		}
+		lastSeq = data.lastSeq;
+		renderTally();
+		const state = document.getElementById("state");
+		state.className = "live";
+		state.textContent = "live";
+	}
+	catch (e) {
+		const state = document.getElementById("state");
+		state.className = "dead";
+		state.textContent = "dev server unreachable";
+	}
+}
+
+document.getElementById("clear").addEventListener("click", async () => {
+	await fetch("/activity?clear=true&since=999999999");
+	document.getElementById("feed").innerHTML = "";
+	for (const k of Object.keys(counts)) counts[k] = 0;
+	lastSeq = 0;
+	renderTally();
+});
+
+renderTally();
+poll();
+setInterval(poll, 1000);
+</script>
+</body>
+</html>

@@ -12,6 +12,30 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: activity feed + live spectator page (`/activity`, `/watch`)
+
+The dev server now records every request it handles — path, query, status, duration and
+the response body — into a bounded in-memory ring (`ActivityLog`, same philosophy as
+`ConsoleBuffer`: 500 entries, 16k per response, recorded *after* the response is sent so
+it never adds latency). Two new endpoints expose it:
+
+- **`/activity`** — the feed as JSON, with a `since=SEQ` poll cursor (a client remembers
+  the `lastSeq` it saw and asks for what came after) and `clear=true` for resetting.
+  Requests to `/activity` and `/watch` themselves are excluded — the watcher must not
+  pollute the feed it watches. Truncated responses report their full `responseLength`.
+- **`/watch`** — a live spectator page: a single self-contained HTML page (served from a
+  bundle resource next to `WatchHandler`) that polls `/activity` every second and renders
+  the feed as *narrated* activity — "Validated **Main** — clean", "Launched **MyApp** —
+  ready in 4.2s", "Revalidated **1858 templates** across 55 projects" — with a running
+  tally, duration coloring, and click-to-expand raw request/response. Put it on a
+  projector and watch an agent work the workspace.
+
+Supporting change: dev-server responses starting with `<` are now served as `text/html`
+(previously only JSON was sniffed; everything else was `text/plain`), so `/watch` renders
+instead of displaying its source. Beyond the demo value, the feed doubles as an audit
+trail — "what did the agent actually do to my workspace?" — and a debugging tool for the
+dev loop itself.
+
 ### Exit the standalone JS/CSS editing business; purge tooling for the fossils (#4)
 
 Parsley is a template editor; the standalone `.js`/`.css` editors and their validators

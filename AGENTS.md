@@ -58,6 +58,8 @@ configurable in Eclipse prefs.
 | `/openComponent` | `app?`, `component`, `lineNumber?`, `offset?`, `length?` | Open a component, reveal a position. |
 | `/openJavaFile` | `className`, `lineNumber`, `app?` | Open a Java file at a line. |
 | `/registerApp` | `name`, `port`, `pid?`, `runtime?` | (App-side, automatic) An app announces its port and framework at startup. You won't call this. |
+| `/activity` | `since?`, `clear?` | The request feed: every handled request (path, query, status, duration, capped response) as JSON. `since=SEQ` is the poll cursor. Self-excluding. |
+| `/watch` | | A live spectator page (HTML): narrated activity feed with a running tally — open in a browser to watch an agent work. |
 
 ### `/launch` and `/stop` — start and stop apps
 
