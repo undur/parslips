@@ -17,9 +17,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.ui.PlatformUI;
-import org.objectstyle.wolips.bindings.api.ApiSnapshot;
-import org.objectstyle.wolips.bindings.api.ApiUtils;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
@@ -229,13 +226,18 @@ public class WodCompletionUtils {
     String partialToken = WodCompletionUtils.partialToken(token, tokenOffset, offset);
     boolean showReflectionBindings = true;
 
-    // API files:
+    // The element's API — resolved through the same seam validation uses (the element's own
+    // .apiext, then bundled/global .apiext, then legacy .api), so completion offers exactly the
+    // bindings validation will accept. Reading only the legacy .api here left every element
+    // documented solely by .apiext (all of ng-objects') without binding completion.
     try {
-      ApiSnapshot api = ApiUtils.findApiSnapshot(elementType, cache.getApiCache(project));
+      final org.objectstyle.wolips.bindings.api.ElementApiResolver.ResolvedElementApi resolved =
+          org.objectstyle.wolips.bindings.api.ElementApiResolver.resolve(elementType, project, elementType.getElementName(), elementType.getElementName());
+      final org.objectstyle.wolips.bindings.api.ApiextModel api = resolved.getModel();
       if (api != null) {
         String lowercasePartialToken = partialToken.toLowerCase();
-        List<IApiBinding> bindings = api.getBindings();
-        for (IApiBinding binding : bindings) {
+        List<org.objectstyle.wolips.bindings.api.ApiextModel.Binding> bindings = api.getBindings();
+        for (org.objectstyle.wolips.bindings.api.ApiextModel.Binding binding : bindings) {
           String bindingName = binding.getName();
           String lowercaseBindingName = bindingName.toLowerCase();
           if (lowercaseBindingName.startsWith(lowercasePartialToken)) {

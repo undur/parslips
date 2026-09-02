@@ -12,6 +12,20 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Binding completion reads `.apiext` — the same seam as validation
+
+Attribute (binding) completion on an inline tag, and binding-name completion in the `.wod`
+editor, read only the legacy `.api` snapshot and `WebObjectDefinitions.xml`
+(`ApiUtils.findApiSnapshot` / `findGlobalApiSnapshotByClassName`), never `.apiext` — while
+validation resolves through `ElementApiResolver`, which knows all of them. ng elements used to
+get completion only through the NG→WO bridge into `WebObjectDefinitions.xml`; with that gone
+they validated (via their `.apiext`) but offered no bindings. Both completion paths
+(`WodCompletionUtils.fillInBindingNameCompletionProposals`, `InlineWodTagInfo.loadAttributeInfo`)
+now resolve through `ElementApiResolver` too, so completion offers exactly the bindings
+validation will accept, carries `required` (pre-inserted) and derives has-body from the
+element's `content` policy. `InlineWodTagInfo.applyApiMetadata` (legacy-`.api` only) is folded
+into that.
+
 ### Temporary bridge: bundled copies of ng-objects' tag registry and `.apiext` files
 
 ng-appserver 0.1.1 — the release most projects will sit on for a while — predates the shipped

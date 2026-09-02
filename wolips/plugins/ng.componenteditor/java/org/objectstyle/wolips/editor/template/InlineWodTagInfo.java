@@ -7,10 +7,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.objectstyle.wolips.bindings.api.ApiCache;
-import org.objectstyle.wolips.bindings.api.ApiModelException;
-import org.objectstyle.wolips.bindings.api.ApiSnapshot;
-import org.objectstyle.wolips.bindings.api.ApiUtils;
-import org.objectstyle.wolips.bindings.api.IApiBinding;
+import org.objectstyle.wolips.bindings.api.ApiextModel;
+import org.objectstyle.wolips.bindings.api.ElementApiResolver;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -127,12 +125,13 @@ public class InlineWodTagInfo extends TagInfo {
         String expandedName = bindingSourceElementName();
         IType elementType = BindingReflectionUtils.findElementType(_javaProject, expandedName, false, _cache);
         _resolvedElementType = elementType;
-        // Try to get binding info from the global API definitions
-        // (WebObjectDefinitions.xml). This covers both framework elements
-        // whose bindings aren't discoverable via reflection (e.g. NG
-        // elements that use private association fields) and elements
-        // whose type isn't on the classpath at all.
-        ApiSnapshot api = ApiUtils.findGlobalApiSnapshotByClassName(expandedName);
+
+        // The element's API, resolved through the same seam validation uses: its own .apiext
+        // (e.g. the one ng-appserver ships for each ng element), the bundled/global .apiext,
+        // then legacy .api / WebObjectDefinitions.xml. Works with or without a type on the
+        // classpath, and covers bindings reflection can't see (ng elements read theirs from an
+        // association map — nothing to reflect over).
+        final ApiextModel api = ElementApiResolver.resolve(elementType, _javaProject, expandedName, expandedName).getModel();
 
         if (elementType != null) {
           Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();
@@ -141,75 +140,35 @@ public class InlineWodTagInfo extends TagInfo {
             AttributeInfo attrInfo = new AttributeInfo(proposal.getProposal(), true);
             addAttributeInfo(attrInfo);
           }
+        }
 
-          // Supplement with global API bindings if available. This adds
-          // bindings that aren't discoverable via Java reflection (e.g.
-          // NG dynamic elements that declare bindings via association maps).
-          if (api != null) {
-            Set<String> existingNames = new HashSet<String>();
-            for (AttributeInfo existing : super.getAttributeInfo()) {
-              existingNames.add(existing.getAttributeName());
+        if (api != null) {
+          // Supplement with (or, without a type, consist of) the declared bindings, and carry
+          // the declaration's metadata: required bindings are pre-inserted by the completion,
+          // and the content policy decides between a self-closing and an opening+closing tag.
+          Set<String> existingNames = new HashSet<String>();
+          for (AttributeInfo existing : super.getAttributeInfo()) {
+            existingNames.add(existing.getAttributeName());
+          }
+          for (ApiextModel.Binding binding : api.getBindings()) {
+            if (!existingNames.contains(binding.getName())) {
+              addAttributeInfo(new AttributeInfo(binding.getName(), true, AttributeInfo.NONE, binding.isRequired()));
             }
-            for (IApiBinding binding : api.getBindings()) {
-              if (!existingNames.contains(binding.getName())) {
-                addAttributeInfo(new AttributeInfo(binding.getName(), true, AttributeInfo.NONE, binding.isRequired()));
+            else if (binding.isRequired()) {
+              for (AttributeInfo attr : super.getAttributeInfo()) {
+                if (attr.getAttributeName().equals(binding.getName())) {
+                  attr.setRequired(true);
+                }
               }
             }
           }
-
-          applyApiMetadata(elementType);
-        }
-        else if (api != null) {
-          // Element type not found in classpath; use global API only
-          for (IApiBinding binding : api.getBindings()) {
-            addAttributeInfo(new AttributeInfo(binding.getName(), true, AttributeInfo.NONE, binding.isRequired()));
-          }
-          setHasBody(api.isComponentContent());
+          setHasBody(api.getContent() != ApiextModel.Content.FORBIDDEN);
         }
         _attributeInfoCached = true;
       }
       catch (JavaModelException e) {
         HTMLPlugin.logException(e);
       }
-    }
-  }
-
-  /**
-   * Looks up the element's {@code .api} file (project-local or global) and
-   * applies metadata from it:
-   * <ul>
-   *   <li>{@code wocomponentcontent} &rarr; {@link #setHasBody(boolean)} (controls
-   *       self-closing vs opening+closing tag in autocomplete)</li>
-   *   <li>{@code required} bindings &rarr; marks corresponding {@link AttributeInfo}
-   *       entries so they are pre-inserted in the completion with cursor
-   *       positioned inside the quotes</li>
-   * </ul>
-   */
-  private void applyApiMetadata(IType elementType) {
-    try {
-      ApiSnapshot api = ApiUtils.findApiSnapshot(elementType, _cache.getApiCache(_javaProject));
-      if (api != null) {
-        setHasBody(api.isComponentContent());
-
-        // Build a set of required binding names from the API
-        Set<String> requiredBindings = new HashSet<String>();
-        for (IApiBinding binding : api.getBindings()) {
-          if (binding.isRequired()) {
-            requiredBindings.add(binding.getName());
-          }
-        }
-
-        // Mark matching AttributeInfo entries as required
-        if (!requiredBindings.isEmpty()) {
-          for (AttributeInfo attr : super.getAttributeInfo()) {
-            if (requiredBindings.contains(attr.getAttributeName())) {
-              attr.setRequired(true);
-            }
-          }
-        }
-      }
-    } catch (ApiModelException e) {
-      // Non-fatal — fall back to defaults
     }
   }
 
