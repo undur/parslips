@@ -1,17 +1,21 @@
 package org.objectstyle.wolips.devserver;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.ui.DebugUITools;
-import org.eclipse.swt.widgets.Display;
 
 /**
  * Launches an Eclipse launch configuration — so an external tool or agent can start an
@@ -25,14 +29,16 @@ import org.eclipse.swt.widgets.Display;
  *       because the dev loop (hot-code-replace, HotswapAgent) needs a debug JVM.</li>
  *   <li>{@code open} — {@code true} to open the config's project if it is closed in the
  *       workspace (and build it) instead of refusing to launch.</li>
- *   <li>{@code ignoreErrors} — {@code true} to launch even when the project has compile
- *       errors (by default the launch is refused and the errors are reported).</li>
+ *   <li>{@code ignoreErrors} — {@code true} to launch even when the project or one of the
+ *       projects it depends on has compile errors (by default the launch is refused and
+ *       the broken projects and their errors are reported).</li>
  *   <li>{@code allowMultiple} — {@code true} to launch even when a launch of the same
  *       config is already running (by default that is refused: the second instance
  *       usually just loses a port-bind fight).</li>
  *   <li>{@code waitForPort} — a TCP port; when given, the response is delayed until
  *       something listens on that port (success), the launched process terminates
- *       (failure, with a pointer at {@code /console}), or {@code timeout} elapses.</li>
+ *       (failure, with a pointer at {@code /console}), a modal dialog appears (failure,
+ *       with the dialog and a pointer at {@code /dialogs}), or {@code timeout} elapses.</li>
  *   <li>{@code timeout} — seconds to wait for {@code waitForPort} (default 60).</li>
  * </ul>
  *
@@ -49,11 +55,45 @@ import org.eclipse.swt.widgets.Display;
  * the choice is still ambiguous, nothing is launched — the candidates are returned for
  * the caller to choose from, because guessing wrong could start the wrong environment.
  *
- * <p>Launching runs on the UI thread (the debug UI requires it) via {@code syncExec},
- * and uses {@link DebugUITools#launch} so it behaves exactly like the Run/Debug button
- * (save, build, open console).
+ * <h2>No dialogs, ever</h2>
+ * Eclipse's own launch path asks the user things: "Errors exist in required project(s)
+ * — proceed?", "Save modified resources?", "Switch to debug mode?". Those are modal
+ * dialogs on the UI thread — invisible to an external caller, who only sees a launch
+ * that never becomes ready and then starts "fixing" a problem that is really a dialog
+ * waiting for a click. So this handler takes over every decision Eclipse would have
+ * prompted for, and launches with Eclipse's prompting disabled:
+ * <ol>
+ *   <li>It checks the same project set Eclipse checks — the launched project plus its
+ *       transitive references ({@link LaunchClosure}) — after the same incremental
+ *       pre-launch build, and refuses with the broken projects' names and errors (and
+ *       the recovery command: a clean rebuild of the dependency usually fixes it).</li>
+ *   <li>It launches synchronously on the request thread via
+ *       {@link ILaunchConfiguration#launch(String, org.eclipse.core.runtime.IProgressMonitor, boolean, boolean)}
+ *       with the debug framework's status handlers switched off for the duration
+ *       ({@link #ENABLE_STATUS_HANDLERS} — the platform's own headless-launching switch).
+ *       Every prompt point in the launch delegate then continues silently, and a launch
+ *       failure comes back as a {@link CoreException} — reported as JSON — instead of an
+ *       error dialog. (A launch the developer fires by hand during those few seconds also
+ *       goes unprompted; that's the accepted cost.) Unsaved editor buffers are NOT saved
+ *       — the launch reflects what's on disk, which is what an external editor writes.</li>
+ * </ol>
+ * Dialogs from <em>other</em> sources (hot-code-replace failures, other tooling) can still
+ * appear; the wait loop reports one that shows up mid-wait so the caller can answer it
+ * through {@code /dialogs}.
  */
 class LaunchHandler implements DevServerHandler {
+
+	/** The debug framework's preference node. */
+	static final String DEBUG_CORE_PREFS = "org.eclipse.debug.core";
+
+	/**
+	 * The debug framework's master switch for status handlers — the mechanism behind all
+	 * of its launch-time prompts. With it off, {@code DebugPlugin.getStatusHandler} returns
+	 * null and the launch delegate's prompt points continue without asking. This is the
+	 * platform's documented way to launch headlessly; we flip it only around our own
+	 * synchronous launch call and restore it in a {@code finally}.
+	 */
+	static final String ENABLE_STATUS_HANDLERS = "org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS";
 
 	@Override
 	public String handle(Map<String, String> params) throws Exception {
@@ -100,14 +140,20 @@ class LaunchHandler implements DevServerHandler {
 			}
 		}
 
-		if (project != null && project.isOpen() && !"true".equalsIgnoreCase(params.get("ignoreErrors"))) {
-			// Java compile / build-path errors only: template-validation markers don't
-			// prevent a launch and must not block one.
-			final List<WorkspaceProblems.Problem> errors = WorkspaceProblems.javaErrors(project, 10);
-			if (!errors.isEmpty()) {
-				return "{\"launched\":false,\"reason\":\"project \\\"" + DevServerJson.escape(projectName)
-						+ "\\\" has compile errors\",\"problems\":" + WorkspaceProblems.toJsonArray(errors)
-						+ openedNote + ",\"hint\":\"fix them, or pass ignoreErrors=true\"}";
+		if (project != null && project.isOpen()) {
+			// The same set Eclipse's launch delegate checks (project + transitive references),
+			// after the same incremental pre-launch build — so the error check sees the
+			// build's outcome, and a broken DEPENDENCY is refused here, as data, instead of
+			// surfacing as Eclipse's "Errors exist in required project(s)" dialog.
+			final List<IProject> closure = LaunchClosure.of(project);
+			LaunchClosure.build(closure);
+			if (!"true".equalsIgnoreCase(params.get("ignoreErrors"))) {
+				// Java compile / build-path errors only: template-validation markers don't
+				// prevent a launch and must not block one.
+				final List<IProject> broken = LaunchClosure.withErrors(closure);
+				if (!broken.isEmpty()) {
+					return refusalForErrors(projectName, broken, openedNote);
+				}
 			}
 		}
 
@@ -118,37 +164,105 @@ class LaunchHandler implements DevServerHandler {
 
 		// ---- Launch. ----
 
-		// Snapshot the launches that exist BEFORE we fire, so the wait loop can tell the
-		// launch we're creating apart from an older (terminated) launch of the same config
-		// still listed by the launch manager — matching by config name alone made a restart
-		// report "terminated during startup" while the new process was starting fine.
-		final java.util.Set<ILaunch> preexisting = new java.util.HashSet<>(java.util.Arrays.asList(DebugPlugin.getDefault().getLaunchManager().getLaunches()));
+		// Dialogs already open before we launch are the developer's business (a
+		// Preferences window, say) — the wait loop only reports ones that appear after.
+		final Set<String> dialogsBefore = dialogTitles(ModalDialogs.list());
 
-		final AtomicReference<String> error = new AtomicReference<>();
-		Display.getDefault().syncExec(() -> {
-			try {
-				// build=true so classes are fresh; behaves like pressing Run/Debug.
-				DebugUITools.launch(config, mode);
-			}
-			catch (Throwable t) {
-				error.set(String.valueOf(t));
-			}
-		});
-
-		if (error.get() != null) {
+		final ILaunch launch;
+		try {
+			launch = launchWithoutPrompts(config, mode);
+		}
+		catch (CoreException e) {
+			// The failure Eclipse would have shown in an error dialog, as data.
 			return "{\"launched\":false,\"config\":\"" + DevServerJson.escape(config.getName())
-					+ "\",\"error\":\"" + DevServerJson.escape(error.get()) + "\"}";
+					+ "\",\"error\":\"" + DevServerJson.escape(e.getStatus().getMessage()) + "\"}";
+		}
+		if (launch == null) {
+			return "{\"launched\":false,\"config\":\"" + DevServerJson.escape(config.getName())
+					+ "\",\"reason\":\"a pre-launch check cancelled the launch\"}";
 		}
 
 		// ---- Optionally wait until the app is actually ready (or provably dead). ----
 
 		final String waitForPort = params.get("waitForPort");
 		if (waitForPort != null && !waitForPort.isEmpty()) {
-			return waitJson(config, mode, openedNote, preexisting, Integer.parseInt(waitForPort), timeoutSeconds(params));
+			return waitJson(config, mode, openedNote, launch, dialogsBefore, Integer.parseInt(waitForPort), timeoutSeconds(params));
 		}
 
 		return "{\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName())
 				+ "\",\"mode\":\"" + mode + "\"" + openedNote + "}";
+	}
+
+	/**
+	 * Launches synchronously with the debug framework's prompting disabled (see the class
+	 * doc). {@code build=false} because the closure was already built in preflight —
+	 * building again here would only re-run the pre-launch checks we've already made.
+	 */
+	private static ILaunch launchWithoutPrompts(ILaunchConfiguration config, String mode) throws CoreException {
+		final IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(DEBUG_CORE_PREFS);
+		// Remember the raw prior value (null = "not set, platform default applies") so the
+		// restore leaves the node exactly as found. Deliberately not flushed to disk: the
+		// override is transient and must never outlive this call.
+		final String previous = prefs.get(ENABLE_STATUS_HANDLERS, null);
+		prefs.putBoolean(ENABLE_STATUS_HANDLERS, false);
+		try {
+			return config.launch(mode, new NullProgressMonitor(), false, true);
+		}
+		finally {
+			if (previous == null) {
+				prefs.remove(ENABLE_STATUS_HANDLERS);
+			}
+			else {
+				prefs.put(ENABLE_STATUS_HANDLERS, previous);
+			}
+		}
+	}
+
+	/** The refusal for compile errors in the launch closure: the broken projects, their errors, and the way out. */
+	private static String refusalForErrors(String launchedProject, List<IProject> broken, String openedNote) {
+		final List<String> names = new ArrayList<>();
+		final StringBuilder projects = new StringBuilder("[");
+		for (final IProject p : broken) {
+			names.add(p.getName());
+			if (projects.length() > 1) {
+				projects.append(',');
+			}
+			projects.append("{\"project\":\"").append(DevServerJson.escape(p.getName()))
+					.append("\",\"problems\":").append(WorkspaceProblems.toJsonArray(WorkspaceProblems.javaErrors(p, 10)))
+					.append('}');
+		}
+		projects.append(']');
+
+		final boolean onlyItself = names.size() == 1 && names.get(0).equals(launchedProject);
+		final String reason = onlyItself
+				? "project \"" + launchedProject + "\" has compile errors"
+				: "compile errors in required project(s): " + String.join(", ", names);
+		return "{\"launched\":false,\"reason\":\"" + DevServerJson.escape(reason)
+				+ "\",\"errorProjects\":" + projects + openedNote
+				+ ",\"hint\":\"" + DevServerJson.escape(brokenProjectsHint(names)) + "\"}";
+	}
+
+	/**
+	 * The recovery advice for broken projects in the closure. Stale build state is the
+	 * usual cause (a dependency edited on disk, half-built, or built against an older
+	 * neighbour), and a clean rebuild of the dependency is the usual cure — so the hint
+	 * names the exact call per project, then the override.
+	 */
+	static String brokenProjectsHint(List<String> brokenProjects) {
+		final List<String> calls = new ArrayList<>();
+		for (final String name : brokenProjects) {
+			calls.add("/refreshProject?project=" + name + "&clean=true");
+		}
+		return "usually stale build state — clean-rebuild the broken project(s): " + String.join(" ; ", calls)
+				+ " — then retry; or pass ignoreErrors=true to launch anyway";
+	}
+
+	private static Set<String> dialogTitles(ModalDialogs.Snapshot snapshot) {
+		final Set<String> titles = new HashSet<>();
+		for (final ModalDialogs.Dialog dialog : snapshot.dialogs) {
+			titles.add(dialog.title);
+		}
+		return titles;
 	}
 
 	private static int timeoutSeconds(Map<String, String> params) {
@@ -164,10 +278,11 @@ class LaunchHandler implements DevServerHandler {
 	}
 
 	/**
-	 * Polls until the port answers, the launched process dies, or the timeout elapses —
-	 * so the caller's next request can't race a still-booting (or already-dead) app.
+	 * Polls until the port answers, the launched process dies, a modal dialog appears, or
+	 * the timeout elapses — so the caller's next request can't race a still-booting (or
+	 * already-dead, or blocked) app.
 	 */
-	private static String waitJson(ILaunchConfiguration config, String mode, String openedNote, java.util.Set<ILaunch> preexisting, int port, int timeoutSeconds) throws InterruptedException {
+	private static String waitJson(ILaunchConfiguration config, String mode, String openedNote, ILaunch launch, Set<String> dialogsBefore, int port, int timeoutSeconds) throws InterruptedException {
 		final long start = System.currentTimeMillis();
 		final long deadline = start + timeoutSeconds * 1000L;
 		final String base = "\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName()) + "\",\"mode\":\"" + mode + "\"" + openedNote;
@@ -177,12 +292,18 @@ class LaunchHandler implements DevServerHandler {
 				return "{" + base + ",\"ready\":true,\"port\":" + port
 						+ ",\"startupMillis\":" + (System.currentTimeMillis() - start) + "}";
 			}
-			// Only the launch created by THIS request counts — older launches of the same
-			// config linger in the manager (terminated) and must not be mistaken for ours.
-			final ILaunch launch = findLaunch(config.getName(), preexisting);
-			if (launch != null && launch.isTerminated()) {
+			if (launch.isTerminated()) {
 				return "{" + base + ",\"ready\":false,\"reason\":\"process terminated during startup\""
 						+ ",\"hint\":\"see /console?app=" + DevServerJson.escape(config.getName()) + " for the output\"}";
+			}
+			// A dialog that appeared since we launched is, in all likelihood, about this
+			// launch — and nothing will progress until it's answered. Say so, with the
+			// dialog itself, rather than letting the caller time out in the dark.
+			for (final ModalDialogs.Dialog dialog : ModalDialogs.list().dialogs) {
+				if (!dialogsBefore.contains(dialog.title)) {
+					return "{" + base + ",\"ready\":false,\"reason\":\"blocked by a modal dialog\",\"dialog\":" + dialog.toJson()
+							+ ",\"hint\":\"answer it with /dialogs?press=BUTTON (one of the dialog's buttons) or /dialogs?close=true, then check /status\"}";
+				}
 			}
 			Thread.sleep(500);
 		}
@@ -202,16 +323,8 @@ class LaunchHandler implements DevServerHandler {
 
 	/** The most recent launch of the given config, running or not; null when none exists. */
 	static ILaunch findLaunch(String configName) {
-		return findLaunch(configName, java.util.Set.of());
-	}
-
-	/** Like {@link #findLaunch(String)}, but ignoring the given (pre-existing) launches. */
-	static ILaunch findLaunch(String configName, java.util.Set<ILaunch> ignored) {
 		ILaunch found = null;
 		for (final ILaunch launch : DebugPlugin.getDefault().getLaunchManager().getLaunches()) {
-			if (ignored.contains(launch)) {
-				continue;
-			}
 			final ILaunchConfiguration c = launch.getLaunchConfiguration();
 			if (c != null && configName.equalsIgnoreCase(c.getName())) {
 				found = launch;

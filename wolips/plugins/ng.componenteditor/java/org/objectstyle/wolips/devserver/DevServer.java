@@ -102,6 +102,7 @@ public class DevServer {
 		_httpServer.createContext("/openProject", new RequestHandler(new OpenProjectHandler()));
 		_httpServer.createContext("/activity", new RequestHandler(new ActivityHandler()));
 		_httpServer.createContext("/watch", new RequestHandler(new WatchHandler()));
+		_httpServer.createContext("/dialogs", new RequestHandler(new DialogsHandler()));
 		// "/" catches every otherwise-unmatched path, so the index doubles as the 404:
 		// a typo'd endpoint answers with the list of real ones.
 		_httpServer.createContext("/", new RequestHandler(new IndexHandler()));

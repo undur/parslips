@@ -148,8 +148,9 @@ class RefreshProjectHandler implements DevServerHandler {
 	 * Blocks until Eclipse's refresh and build jobs have drained, so callers can
 	 * treat a successful response as "the rebuild is done." Best-effort: a join may
 	 * be interrupted, in which case we simply return (the caller can retry).
+	 * Package-visible: {@link LaunchClosure} uses it after its pre-launch build.
 	 */
-	private static void waitForBuildToSettle() {
+	static void waitForBuildToSettle() {
 		final IJobManager jobs = Job.getJobManager();
 		final Object[] families = {
 				ResourcesPlugin.FAMILY_MANUAL_REFRESH,

@@ -12,6 +12,45 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: launches that never raise a dialog, and `/dialogs` for the ones that do
+
+The failure an agent hit most: `/launch` reported `launched:true`, then Eclipse's own
+launch check found compile errors in a project the app *depends on* and raised its
+"Errors exist in required project(s) — Proceed with launch?" dialog on the UI thread.
+The agent couldn't see it; its `waitForPort` timed out with a useless "see /console"
+hint, and it started "fixing" a problem that was really a dialog waiting for a click.
+Three changes, verified against the debug framework's launch code:
+
+- **Preflight checks the whole launch closure.** New `LaunchClosure` computes what
+  Eclipse's Java launch delegate computes — the launched project plus its transitive
+  `getReferencedProjects()`, in build order — runs the same incremental pre-launch build
+  over it, and then checks every project for Java errors. A broken dependency is now
+  refused as data: `errorProjects` (each with its first 10 errors) and a `hint` naming
+  the recovery per project (`/refreshProject?project=X&clean=true` — stale build state
+  is the usual cause and a clean rebuild the usual cure) plus the `ignoreErrors=true`
+  override.
+- **Launches are synchronous and prompt-free.** `LaunchHandler` no longer goes through
+  `DebugUITools.launch` (a background job with UI prompts); it calls
+  `ILaunchConfiguration.launch(mode, monitor, build=false, register=true)` on the request
+  thread with the debug framework's status handlers disabled for the duration
+  (`org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS=false`, the platform's own
+  headless-launching switch; restored in `finally`, never flushed). Every prompt point in
+  the launch delegate — errors-in-workspace, save-before-launch, switch-to-debug —
+  continues silently, and a launch failure comes back as a `CoreException` → JSON
+  `error` instead of an error dialog. Unsaved editor buffers are not saved (the launch
+  reflects the on-disk state an external editor writes). The wait loop now uses the
+  `ILaunch` returned by the launch call rather than the pre-existing-launches snapshot
+  workaround.
+- **`/dialogs` — see and answer modal dialogs.** New `ModalDialogs` walks the visible
+  modal shells on the SWT thread (bounded by a 3s timeout, reporting the UI thread as
+  unresponsive rather than hanging the request) and reports title, label/link text, and
+  buttons; `press=BUTTON` fires the button's selection listeners (case-insensitive,
+  mnemonic- and ellipsis-insensitive matching), `close=true` closes the shell,
+  `title=` targets a specific dialog. `/status` now carries the same `dialogs` list, and
+  the `/launch` wait loop returns immediately with `reason:"blocked by a modal dialog"`
+  and the dialog itself when one appears after the launch (pre-existing dialogs, e.g. a
+  Preferences window the developer left open, are ignored).
+
 ### Dev server: activity feed + live spectator page (`/activity`, `/watch`)
 
 The dev server now records every request it handles — path, query, status, duration and

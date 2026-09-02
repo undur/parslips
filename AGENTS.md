@@ -48,7 +48,8 @@ configurable in Eclipse prefs.
 | `/elementApi` | `element`, `project?`, `raw?` | An element's resolved binding API as JSON (types, pull/push, constraints with messages); aliases and shortcuts resolve. `raw=true` = the .apiext XML. |
 | `/problems` | `project?`, `severity?`, `limit?` | Problem markers as JSON; `count` is the true total, entries carry a `source` (parsley/java/stock/other). |
 | `/console` | `app`/`config`, `tail?` | A launch's console output — kept after the process dies (the startup post-mortem). |
-| `/launch` | `config?`/`app?`, `mode?`, `open?`, `ignoreErrors?`, `allowMultiple?`, `waitForPort?`, `timeout?` | List launch configs, or start one — with preflight refusals and wait-until-ready. |
+| `/launch` | `config?`/`app?`, `mode?`, `open?`, `ignoreErrors?`, `allowMultiple?`, `waitForPort?`, `timeout?` | List launch configs, or start one — with preflight refusals (incl. compile errors in any project the app depends on, with the clean-rebuild call that fixes them) and wait-until-ready. Never raises Eclipse's launch dialogs. |
+| `/dialogs` | `press?`, `close?`, `title?` | See and answer Eclipse's modal dialogs — the stop-the-world prompts you can't see. List them; `press=BUTTON` presses one; `close=true` closes the topmost. |
 | `/stop` | `app`, `force?` | Stop a running app (terminate, or `force=true` to hard-kill). |
 | `/restart` | `app`, `refresh?` + `/launch` params | stop → refresh+rebuild → launch → wait, in one call. |
 | `/openProject` | `project`\|`all`, `related?` | Open a closed project with its workspace dependencies (pom-resolved). |

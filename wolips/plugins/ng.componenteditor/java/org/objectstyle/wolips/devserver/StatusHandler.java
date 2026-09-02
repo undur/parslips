@@ -42,7 +42,16 @@ class StatusHandler implements DevServerHandler {
 			first = false;
 			b.append(statusJson(config, projectName));
 		}
-		b.append("]}");
+		b.append(']');
+		// Open modal dialogs are part of "what is this workspace doing right now" — they
+		// block everything, and a caller who can't see the screen has no other way to
+		// learn one is up.
+		final ModalDialogs.Snapshot dialogs = ModalDialogs.list();
+		b.append(",\"dialogs\":").append(dialogs.dialogsJson());
+		if (!dialogs.uiResponsive) {
+			b.append(",\"uiResponsive\":false");
+		}
+		b.append('}');
 		return b.toString();
 	}
 
