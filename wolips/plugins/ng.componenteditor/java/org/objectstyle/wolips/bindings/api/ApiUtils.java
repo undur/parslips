@@ -145,10 +145,11 @@ public class ApiUtils {
 				}
 
 				// NG elements share the same bindings as their WO counterparts.
-				// If "NGConditional" isn't found, try "WOConditional". This is a
-				// temporary bridge until NG has its own API definitions.
+				// If "NGConditional" isn't found, try "WOConditional" (NGElementNames knows
+				// the spellings that aren't a plain prefix swap). This is a temporary
+				// bridge until NG has its own API definitions.
 				if (simpleName.startsWith("NG")) {
-					return _globalApiSnapshots.get("WO" + simpleName.substring(2));
+					return _globalApiSnapshots.get(NGElementNames.toWO(simpleName));
 				}
 			}
 		} catch (Throwable t) {
@@ -227,7 +228,7 @@ public class ApiUtils {
 			// NG elements share their WO counterpart's definition (see the global XML
 			// lookup) — fall back to the WO name so a bundled WOFoo.apiext also documents NGFoo.
 			if (simpleName.startsWith("NG")) {
-				return readBundledApiext(bundle, "WO" + simpleName.substring(2));
+				return readBundledApiext(bundle, NGElementNames.toWO(simpleName));
 			}
 		} catch (Throwable t) {
 			// Any failure (missing folder, IO, etc.) just means "no bundled .apiext".

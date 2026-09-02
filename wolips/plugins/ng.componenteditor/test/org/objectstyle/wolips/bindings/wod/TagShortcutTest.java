@@ -294,6 +294,13 @@ public class TagShortcutTest {
 	}
 
 	@Test
+	public void woToNGClassName_usesNGSpellingWhereItDiverges() {
+		// ng-objects spells this one NGCheckbox, not the prefix-swapped NGCheckBox — the
+		// editor must resolve <wo:checkbox> to the class that actually exists.
+		assertEquals("NGCheckbox", TagShortcut.woToNGClassName("WOCheckBox"));
+	}
+
+	@Test
 	public void woToNGClassName_nonWOPrefix_unchanged() {
 		assertEquals("ERXLocalizedString", TagShortcut.woToNGClassName("ERXLocalizedString"));
 	}

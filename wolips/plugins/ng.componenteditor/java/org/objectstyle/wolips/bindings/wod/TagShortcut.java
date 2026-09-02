@@ -55,14 +55,18 @@ public class TagShortcut {
   }
 
   /**
-   * Translates a WO-prefixed class name to its NG equivalent by swapping
-   * the "WO" prefix for "NG". Non-WO-prefixed names pass through unchanged.
+   * Translates a WO-prefixed class name to its NG equivalent ("WOConditional" → "NGConditional",
+   * "WOCheckBox" → "NGCheckbox"). Non-WO-prefixed names pass through unchanged. The mapping —
+   * including the spellings where ng-objects diverges from a plain prefix swap — lives in
+   * {@link org.objectstyle.wolips.bindings.api.NGElementNames}, shared with the reverse lookup
+   * that finds an NG element's binding definitions.
+   *
+   * <p>This whole bridge is a stopgap for ng projects that declare no
+   * {@code parsley-tag-aliases.properties}: when a project does, the alias resolver
+   * mirrors the runtime registry exactly and this code isn't consulted.
    */
   static String woToNGClassName(String className) {
-    if (className != null && className.startsWith("WO")) {
-      return "NG" + className.substring(2);
-    }
-    return className;
+    return org.objectstyle.wolips.bindings.api.NGElementNames.toNG(className);
   }
 
   public void setActual(String actual) {

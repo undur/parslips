@@ -12,6 +12,28 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: `<wo:checkbox>` broken in ng-objects projects — and the registry moved to the runtime
+
+Reported by an agent: `<wo:checkbox>` validated as "class for 'NGCheckBox' missing… did you
+mean 'NGCheckbox'?" on a tag the runtime renders fine. Two mirror-image prefix swaps were
+each assuming WO/NG name parity, which ng-objects breaks in exactly one place
+(`WOCheckBox` vs `NGCheckbox`): the legacy shortcut expansion for ng projects
+(`TagShortcut`: `WOCheckBox` → "NGCheckBox") and the binding-definition lookup for ng
+elements (`ApiUtils`: `NGCheckbox` → "WOCheckbox"). Both now go through one bridge,
+`NGElementNames` (`toNG`/`toWO`), which carries the divergent spellings once — a survey of
+all 69 legacy shortcuts against ng-objects' element classes found only this one; every other
+bridging failure is an element ng-objects genuinely doesn't have.
+
+The root cause was structural, and is fixed upstream in the same sweep: ng-objects
+registered its tag names in code (`NGCorePlugin`), so the editor had nothing to read for ng
+projects and guessed from the WebObjects table. ng-appserver now ships
+`parsley-tag-aliases.properties` as the single source of truth — `NGElementManager` loads
+every such file on the classpath (first declaration wins, conflicts warned, recursive
+resolution with a cycle guard) and the editor's existing `ParsleyTagAliasResolver` reads
+the same files — so for ng projects the editor resolves tags exactly as the runtime does
+and the WO→NG shortcut bridge is no longer consulted. What remains of the bridge is the
+NG→WO side for binding definitions, until ng-objects ships its own `.apiext` files.
+
 ### Dev server: launches that never raise a dialog, and `/dialogs` for the ones that do
 
 The failure an agent hit most: `/launch` reported `launched:true`, then Eclipse's own
