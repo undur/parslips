@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### ng projects are no longer offered WebObjects-only tag shortcuts
+
+When an ng project declares no Parsley tag aliases (its ng-appserver predates the shipped
+`parsley-tag-aliases.properties` — e.g. a released 0.1.1), the editor falls back to the legacy
+WOLips tag-shortcut table for `<wo:` completion, "did you mean" suggestions and the Element
+Reference. That table is WebObjects' vocabulary, so an ng project was offered `VBScript`,
+`applet`, `frame`… for classes that don't exist in ng-objects. `TagShortcut.applicableTo`
+now filters the table, for ng projects, to shortcuts whose bridged NG class actually exists
+on the project's classpath (`str` stays, `VBScript` goes); all three sites use it. WO projects
+are unaffected, and ng projects on an alias-shipping ng-appserver never reach this fallback.
+
 ### ng elements are documented by ng-objects' own `.apiext` — the WO definitions no longer apply to them
 
 Until now an ng element's bindings came from the WebObjects element of the same name (`NGString`

@@ -66,7 +66,6 @@ import org.eclipse.jface.text.Position;
 import org.objectstyle.wolips.bindings.Activator;
 import org.objectstyle.wolips.bindings.preferences.BindingValidationPreferences;
 import org.objectstyle.wolips.bindings.preferences.SeverityPolicy;
-import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
 import org.objectstyle.wolips.bindings.api.ApiSnapshot;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
@@ -338,7 +337,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     	IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
 	    if (elementType == null || (!elementType.getElementName().equals(elementTypeName) && !elementType.getFullyQualifiedName().equals(elementTypeName))) {
 	      // Compute "did you mean?" suggestions for the mistyped element type name.
-	      List<String> suggestions = suggestElementTypeNames(javaProject, elementTypeName);
+	      List<String> suggestions = suggestElementTypeNames(javaProject, elementTypeName, typeCache);
 	      String message = "The class for '" + elementTypeName + "' is either missing or does not extend a known element root type (NGElement/WOElement).";
 	      if (!suggestions.isEmpty()) {
 	        if (suggestions.size() == 1) {
@@ -487,7 +486,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
    * @param invalidName the mistyped element type name
    * @return suggestions sorted by relevance (case-only matches first, then by edit distance)
    */
-  private List<String> suggestElementTypeNames(IJavaProject javaProject, String invalidName) {
+  private List<String> suggestElementTypeNames(IJavaProject javaProject, String invalidName, TypeCache typeCache) {
     try {
       TypeNameCollector collector = new TypeNameCollector(javaProject, false);
       BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, new NullProgressMonitor());
@@ -512,7 +511,11 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
         }
       }
       else {
-        for (TagShortcut tagShortcut : ApiCache.getTagShortcuts()) {
+        // Legacy shortcuts — only the ones that apply to this project (an ng project is never
+        // told it "meant" VBScript).
+        final org.objectstyle.wolips.variables.ParsleyProject parsleyProject = javaProject == null ? null
+            : (org.objectstyle.wolips.variables.ParsleyProject) javaProject.getProject().getAdapter(org.objectstyle.wolips.variables.ParsleyProject.class);
+        for (TagShortcut tagShortcut : TagShortcut.applicableTo(javaProject, parsleyProject, typeCache)) {
           String shortcutName = tagShortcut.getShortcut();
           if (!simpleNames.contains(shortcutName)) {
             simpleNames.add(shortcutName);

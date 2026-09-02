@@ -197,9 +197,11 @@ public final class ElementCatalog {
 				}
 			}
 			else {
-				for (final TagShortcut shortcut : ApiCache.getTagShortcuts()) {
+				// Legacy shortcuts, restricted to the ones whose class exists in an ng project.
+				final org.objectstyle.wolips.variables.ParsleyProject parsleyProject = (org.objectstyle.wolips.variables.ParsleyProject) project.getProject().getAdapter(org.objectstyle.wolips.variables.ParsleyProject.class);
+				for (final TagShortcut shortcut : TagShortcut.applicableTo(project, parsleyProject, new org.objectstyle.wolips.bindings.wod.TypeCache())) {
 					final String name = shortcut.getShortcut();
-					final String actual = shortcut.getActual();
+					final String actual = shortcut.getActual(parsleyProject);
 					if (name == null || actual == null) {
 						continue;
 					}

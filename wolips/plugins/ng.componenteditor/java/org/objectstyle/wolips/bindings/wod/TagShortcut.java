@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jdt.core.IJavaProject;
+import org.objectstyle.wolips.bindings.api.ApiCache;
+import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.variables.ParsleyProject;
 
 public class TagShortcut {
@@ -67,6 +70,36 @@ public class TagShortcut {
    */
   static String woToNGClassName(String className) {
     return org.objectstyle.wolips.bindings.api.NGElementNames.toNG(className);
+  }
+
+  /**
+   * The legacy tag shortcuts that apply to a project — the list to complete, suggest and
+   * catalogue from when the project declares no Parsley tag aliases.
+   *
+   * <p>For a WebObjects project that is the whole preference table. For an ng-objects project
+   * the table is a guess (WO names bridged to NG names, see {@link #getActual(ParsleyProject)}),
+   * so it is filtered to the shortcuts whose bridged class actually exists on the project's
+   * classpath: {@code str} stays (NGString exists), {@code VBScript} goes (there is no
+   * NGVBScript). Without this, an ng project on an ng-appserver that predates the shipped
+   * {@code parsley-tag-aliases.properties} was offered the WebObjects vocabulary wholesale.
+   */
+  public static List<TagShortcut> applicableTo(IJavaProject javaProject, ParsleyProject parsleyProject, TypeCache typeCache) {
+    final List<TagShortcut> all = ApiCache.getTagShortcuts();
+    if (javaProject == null || parsleyProject == null || !parsleyProject.isNGProject()) {
+      return all;
+    }
+    final List<TagShortcut> applicable = new ArrayList<TagShortcut>();
+    for (TagShortcut shortcut : all) {
+      try {
+        if (BindingReflectionUtils.findElementType(javaProject, shortcut.getActual(parsleyProject), false, typeCache) != null) {
+          applicable.add(shortcut);
+        }
+      }
+      catch (Exception e) {
+        // An unresolvable class is exactly a shortcut that doesn't apply.
+      }
+    }
+    return applicable;
   }
 
   public void setActual(String actual) {
