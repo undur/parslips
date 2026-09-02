@@ -39,6 +39,18 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- August 29, 2026 -->
+			<div class="card">
+				<h2 class="date-header">August 29, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Launches that can't stop the world</h3>
+					<p>The most common way an agent-driven session went wrong: the agent asks the dev server to launch an app, a project the app <em>depends on</em> has a compile error, and Eclipse does what Eclipse does &mdash; puts up <em>&ldquo;Errors exist in required project(s). Proceed with launch?&rdquo;</em> and waits for a click. The agent can't see the dialog. All it sees is a launch that never becomes ready, so it starts &ldquo;fixing&rdquo; a problem that is really a button waiting to be pressed.</p>
+					<p>That dialog can no longer happen. <code>/launch</code> now checks exactly what Eclipse checks &mdash; the app <strong>and every project it depends on</strong>, after the same pre-launch build &mdash; and makes the decision itself: a broken dependency comes back as a refusal naming the project, its errors, and the fix (a clean rebuild of that project, which is what it almost always takes). Then it launches with Eclipse's own prompting switched off for the duration, so nothing &mdash; not the errors prompt, not save-before-launch, not switch-to-debug &mdash; can interrupt. Launch failures come back as data, not as error dialogs.</p>
+					<p>And for every <em>other</em> modal Eclipse might raise &mdash; a failed hot code replace, a perspective-switch prompt, some other tool's error &mdash; there's <strong><code>/dialogs</code></strong>: it lists the open dialogs with their message and buttons, and can press one (<code>?press=Proceed</code>) or close it. <code>/status</code> reports open dialogs too, and a launch that's waiting for the app to come up returns immediately if a dialog appears, with the dialog in the response. An agent that used to be stuck in the dark can now see the door and open it.</p>
+				</div>
+			</div>
+
 			<!-- August 28, 2026 -->
 			<div class="card">
 				<h2 class="date-header">August 28, 2026</h2>
