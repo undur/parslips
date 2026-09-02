@@ -94,14 +94,13 @@ public final class ElementApiResolver {
 	 * @return the resolution; never null (use {@link ResolvedElementApi#exists()} to test for NONE)
 	 */
 	public static ResolvedElementApi resolve(IType elementType, String primaryName, String altName, String displayName, ApiCache cache) {
-		// 1) project .apiext
+		// 1) the element's own .apiext — shipped by its framework/project (an ng-objects element's
+		//    package resource, a WO framework's Resources/ entry, or a sibling of a project .api).
+		//    Cached and stamp-validated: this runs for every tag on every save.
 		if (elementType != null) {
-			final byte[] apiextBytes = ApiUtils.findApiextBytes(elementType);
-			if (apiextBytes != null) {
-				final ApiextModel m = ApiextModel.parse(apiextBytes);
-				if (m != null) {
-					return new ResolvedElementApi(Kind.APIEXT, m);
-				}
+			final ApiextModel m = ApiUtils.findElementApiextModel(elementType);
+			if (m != null) {
+				return new ResolvedElementApi(Kind.APIEXT, m);
 			}
 		}
 

@@ -2,6 +2,7 @@ package org.objectstyle.wolips.bindings.api;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashSet;
@@ -12,6 +13,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClassFile;
@@ -144,13 +147,6 @@ public class ApiUtils {
 					}
 				}
 
-				// NG elements share the same bindings as their WO counterparts.
-				// If "NGConditional" isn't found, try "WOConditional" (NGElementNames knows
-				// the spellings that aren't a plain prefix swap). This is a temporary
-				// bridge until NG has its own API definitions.
-				if (simpleName.startsWith("NG")) {
-					return _globalApiSnapshots.get(NGElementNames.toWO(simpleName));
-				}
 			}
 		} catch (Throwable t) {
 			// ignore
@@ -223,12 +219,6 @@ public class ApiUtils {
 				if (bytes != null) {
 					return bytes;
 				}
-			}
-
-			// NG elements share their WO counterpart's definition (see the global XML
-			// lookup) — fall back to the WO name so a bundled WOFoo.apiext also documents NGFoo.
-			if (simpleName.startsWith("NG")) {
-				return readBundledApiext(bundle, NGElementNames.toWO(simpleName));
 			}
 		} catch (Throwable t) {
 			// Any failure (missing folder, IO, etc.) just means "no bundled .apiext".
@@ -551,69 +541,195 @@ public class ApiUtils {
 	}
 
 	/**
-	 * Reads the raw bytes of the {@code .apiext} sibling for an element, if one exists
-	 * next to its {@code .api} file. The {@code .apiext} format is the in-flux extended
-	 * element API AjaxSlim is prototyping; this just <em>locates and reads</em> it — the
-	 * caller parses (and decides parsability, the in-flux gate).
-	 *
-	 * <p>Resolution mirrors {@link #findApiFile}: an {@code .apiext} lives in the same
-	 * place as the {@code .api} (jar {@code Resources/}, folder-style sibling, or source
-	 * sibling), with the extension swapped.
-	 *
-	 * @return the file bytes, or null if there is no readable {@code .apiext} sibling
+	 * Where an element's own {@code .apiext} lives: a stable cache key (the file, or
+	 * {@code jar!entry}), a modification stamp for cache validation, and a way to read it.
 	 */
-	public static byte[] findApiextBytes(IType elementType) {
+	private static final class ApiextSource {
+		final String key;
+		final long stamp;
+		final java.util.function.Supplier<byte[]> reader;
+
+		ApiextSource(String key, long stamp, java.util.function.Supplier<byte[]> reader) {
+			this.key = key;
+			this.stamp = stamp;
+			this.reader = reader;
+		}
+	}
+
+	/** Parsed element-own {@code .apiext} models, keyed by {@link ApiextSource#key}; a miss caches a null model. */
+	private static final Map<String, Object[]> _elementApiextModels = new java.util.concurrent.ConcurrentHashMap<>();
+
+	/**
+	 * Locates the {@code .apiext} that documents THIS element type — the file the element's own
+	 * framework or project ships, as opposed to the editor's bundled/global definitions. Three
+	 * conventions, in order:
+	 * <ol>
+	 *   <li><b>Classpath resource in the element's package</b> — {@code <package path>/<Type>.apiext},
+	 *       the ng-objects convention (ng-appserver ships e.g.
+	 *       {@code ng/appserver/templating/elements/NGString.apiext} in {@code src/main/resources}).
+	 *       Found inside a dependency jar, in a class-folder library, or — for a workspace project —
+	 *       in any of its source folders or its output folder.</li>
+	 *   <li><b>WebObjects framework jar</b> — {@code Resources/<Type>.apiext} inside the jar.</li>
+	 *   <li><b>WebObjects source project</b> — {@code <Type>.apiext} next to the located {@code .api}.</li>
+	 * </ol>
+	 */
+	private static ApiextSource locateElementApiext(IType elementType) {
 		if (elementType == null) {
 			return null;
 		}
 		try {
+			final String fileName = elementType.getElementName() + ".apiext";
 			final IOpenable typeContainer = elementType.getOpenable();
 
 			if (typeContainer instanceof IClassFile) {
 				final IJavaElement parent = ((IClassFile) typeContainer).getParent();
 				if (parent instanceof IPackageFragment) {
-					final IJavaElement parentParent = ((IPackageFragment) parent).getParent();
+					final IPackageFragment pkg = (IPackageFragment) parent;
+					final IJavaElement root = pkg.getParent();
+					final String packageEntry = pkg.getElementName().replace('.', '/') + (pkg.getElementName().isEmpty() ? "" : "/") + fileName;
 
-					// jar-style framework: Resources/TypeName.apiext inside the jar
-					if (parentParent instanceof IPackageFragmentRoot && "jar".equalsIgnoreCase(parentParent.getPath().getFileExtension())) {
-						final String jarResourcePath = "Resources/" + elementType.getElementName() + ".apiext";
-						final File jarOSFile = new File(parentParent.getPath().toOSString());
-						if (jarOSFile.exists()) {
-							try (JarFile jarFile = new JarFile(jarOSFile)) {
-								final JarEntry je = jarFile.getJarEntry(jarResourcePath);
-								if (je != null && je.getSize() != 0) {
-									try (InputStream is = jarFile.getInputStream(je)) {
-										return is.readAllBytes();
-									}
-								}
+					if (root instanceof IPackageFragmentRoot) {
+						final IPath rootPath = root.getPath();
+						final File rootFile = rootPath.toFile();
+						if ("jar".equalsIgnoreCase(rootPath.getFileExtension()) && rootFile.isFile()) {
+							// 1) package resource inside the jar, then 2) the WO Resources/ convention
+							final ApiextSource inPackage = jarEntrySource(rootFile, packageEntry);
+							if (inPackage != null) {
+								return inPackage;
+							}
+							return jarEntrySource(rootFile, "Resources/" + fileName);
+						}
+						// A class-folder library (a target/classes-style directory on the classpath).
+						final IResource folder = ResourcesPlugin.getWorkspace().getRoot().findMember(rootPath);
+						if (folder != null && folder.getType() == IResource.FOLDER) {
+							final ApiextSource inFolder = workspaceFileSource(((org.eclipse.core.resources.IFolder) folder).getFile(new org.eclipse.core.runtime.Path(packageEntry)));
+							if (inFolder != null) {
+								return inFolder;
+							}
+						}
+						else if (rootFile.isDirectory()) {
+							final ApiextSource onDisk = diskFileSource(new File(rootFile, packageEntry));
+							if (onDisk != null) {
+								return onDisk;
 							}
 						}
 					}
 
-					// folder-style: TypeName.apiext sibling
-					final IPath packagePath = ((IPackageFragment) parent).getPath();
-					final IPath apiextPath = packagePath.removeLastSegments(2).append(elementType.getElementName()).addFileExtension("apiext");
-					final File apiextFile = apiextPath.toFile();
-					if (apiextFile.exists()) {
-						return Files.readAllBytes(apiextFile.toPath());
+					// Legacy folder-style WO framework: TypeName.apiext two levels up from the package.
+					final IPath apiextPath = pkg.getPath().removeLastSegments(2).append(fileName);
+					final ApiextSource legacy = diskFileSource(apiextPath.toFile());
+					if (legacy != null) {
+						return legacy;
 					}
 				}
-			} else if (typeContainer instanceof ICompilationUnit) {
-				// Source file: the .apiext sits next to the located .api.
-				final LocalizedComponentsLocateResult locate = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(elementType.getJavaProject().getProject(), elementType.getElementName());
+			}
+			else if (typeContainer instanceof ICompilationUnit) {
+				// 1) A package resource in one of the project's source folders (src/main/resources
+				//    included — that's where ng frameworks keep theirs) or in its output folder.
+				final IJavaProject javaProject = elementType.getJavaProject();
+				final IPackageFragment pkg = elementType.getPackageFragment();
+				final IPath relative = new org.eclipse.core.runtime.Path(pkg.getElementName().replace('.', '/')).append(fileName);
+				for (final IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
+					if (root.getKind() != IPackageFragmentRoot.K_SOURCE) {
+						continue;
+					}
+					final ApiextSource inSource = workspaceFileSource(ResourcesPlugin.getWorkspace().getRoot().getFile(root.getPath().append(relative)));
+					if (inSource != null) {
+						return inSource;
+					}
+				}
+				final IPath output = javaProject.getOutputLocation();
+				if (output != null) {
+					final ApiextSource inOutput = workspaceFileSource(ResourcesPlugin.getWorkspace().getRoot().getFile(output.append(relative)));
+					if (inOutput != null) {
+						return inOutput;
+					}
+				}
+
+				// 3) WebObjects source project: the .apiext sits next to the located .api.
+				final LocalizedComponentsLocateResult locate = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(javaProject.getProject(), elementType.getElementName());
 				final IFile apiFile = locate.getDotApi();
 				if (apiFile != null) {
-					final IFile apiextFile = apiFile.getParent().getFile(new org.eclipse.core.runtime.Path(elementType.getElementName() + ".apiext"));
-					if (apiextFile.exists() && apiextFile.getLocation() != null) {
-						return Files.readAllBytes(apiextFile.getLocation().toFile().toPath());
-					}
+					return workspaceFileSource(apiFile.getParent().getFile(new org.eclipse.core.runtime.Path(fileName)));
 				}
 			}
 		}
 		catch (Exception e) {
-			// Locating/reading failed — treat as "no .apiext", caller falls back to .api.
+			// Locating failed — treat as "no .apiext", caller falls back to .api.
 		}
 		return null;
+	}
+
+	private static ApiextSource jarEntrySource(File jarOSFile, String entryName) {
+		try (JarFile jarFile = new JarFile(jarOSFile)) {
+			final JarEntry je = jarFile.getJarEntry(entryName);
+			if (je == null || je.getSize() == 0) {
+				return null;
+			}
+		}
+		catch (IOException e) {
+			return null;
+		}
+		return new ApiextSource(jarOSFile.getAbsolutePath() + "!" + entryName, jarOSFile.lastModified(), () -> {
+			try (JarFile jarFile = new JarFile(jarOSFile); InputStream is = jarFile.getInputStream(jarFile.getJarEntry(entryName))) {
+				return is.readAllBytes();
+			}
+			catch (IOException e) {
+				return null;
+			}
+		});
+	}
+
+	private static ApiextSource workspaceFileSource(IFile file) {
+		if (file == null || !file.exists() || file.getLocation() == null) {
+			return null;
+		}
+		return diskFileSource(file.getLocation().toFile());
+	}
+
+	private static ApiextSource diskFileSource(File file) {
+		if (file == null || !file.isFile()) {
+			return null;
+		}
+		return new ApiextSource(file.getAbsolutePath(), file.lastModified(), () -> {
+			try {
+				return Files.readAllBytes(file.toPath());
+			}
+			catch (IOException e) {
+				return null;
+			}
+		});
+	}
+
+	/**
+	 * Locates and reads the {@code .apiext} that documents the given element type — the one its
+	 * own framework/project ships (see {@link #locateElementApiext}). Returns null when there is
+	 * none; callers then fall back to the bundled/global definitions and legacy {@code .api}.
+	 */
+	public static byte[] findApiextBytes(IType elementType) {
+		final ApiextSource source = locateElementApiext(elementType);
+		return source == null ? null : source.reader.get();
+	}
+
+	/**
+	 * Like {@link #findApiextBytes} but returns the PARSED model, cached per source file and
+	 * revalidated by modification stamp — this is on the validation hot path (every {@code <wo:…>}
+	 * in an ng project resolves through here on every save), so the XML must not be re-read and
+	 * re-parsed per element. A file that fails to parse is cached as a miss until it changes.
+	 */
+	public static ApiextModel findElementApiextModel(IType elementType) {
+		final ApiextSource source = locateElementApiext(elementType);
+		if (source == null) {
+			return null;
+		}
+		final Object[] cached = _elementApiextModels.get(source.key);
+		if (cached != null && ((Long) cached[0]).longValue() == source.stamp) {
+			return (ApiextModel) cached[1];
+		}
+		final byte[] bytes = source.reader.get();
+		final ApiextModel model = bytes == null ? null : ApiextModel.parse(bytes);
+		_elementApiextModels.put(source.key, new Object[] { Long.valueOf(source.stamp), model });
+		return model;
 	}
 
 	// ---- Valid values lookup ------------------------------------------------

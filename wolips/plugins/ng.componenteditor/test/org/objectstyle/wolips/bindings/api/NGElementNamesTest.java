@@ -5,30 +5,24 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-/** The WO ↔ NG name bridge, both directions, including the one spelling that isn't a prefix swap. */
+/** The WO → NG name bridge used to expand legacy tag shortcuts in ng projects. */
 public class NGElementNamesTest {
 
 	@Test
-	public void prefixSwapInBothDirections() {
+	public void prefixSwap() {
 		assertEquals("NGString", NGElementNames.toNG("WOString"));
 		assertEquals("NGConditional", NGElementNames.toNG("WOConditional"));
-		assertEquals("WOString", NGElementNames.toWO("NGString"));
-		assertEquals("WOConditional", NGElementNames.toWO("NGConditional"));
 	}
 
 	@Test
-	public void checkboxSpellingDivergesAndRoundTrips() {
+	public void checkboxSpellingDiverges() {
 		assertEquals("NGCheckbox", NGElementNames.toNG("WOCheckBox"));
-		assertEquals("WOCheckBox", NGElementNames.toWO("NGCheckbox"));
-		assertEquals("WOCheckBox", NGElementNames.toWO(NGElementNames.toNG("WOCheckBox")));
 	}
 
 	@Test
 	public void otherNamesPassThrough() {
 		assertEquals("ERXWOString", NGElementNames.toNG("ERXWOString"));
-		assertEquals("ERXWOString", NGElementNames.toWO("ERXWOString"));
 		assertEquals("", NGElementNames.toNG(""));
 		assertNull(NGElementNames.toNG(null));
-		assertNull(NGElementNames.toWO(null));
 	}
 }

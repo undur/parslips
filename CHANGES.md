@@ -12,6 +12,29 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### ng elements are documented by ng-objects' own `.apiext` — the WO definitions no longer apply to them
+
+Until now an ng element's bindings came from the WebObjects element of the same name (`NGString`
+→ the bundled `WOString.apiext` / `WebObjectDefinitions.xml`), via an NG→WO prefix swap in
+`ApiUtils`. That was wrong in principle — the APIs aren't necessarily the same — and broke in
+practice (`NGCheckbox`). Two changes:
+
+- **ng-appserver ships a `.apiext` for every registered element** (26 files, authored from the
+  element sources), as classpath resources in the element's own package:
+  `ng/appserver/templating/elements/NGString.apiext` etc. ng-objects is now the authority on
+  its elements' APIs, exactly as it is on their tag names.
+- **The editor locates an element's own `.apiext` as a package resource** — `ApiUtils.locateElementApiext`
+  looks for `<package path>/<Type>.apiext` inside a dependency jar, in a class-folder library, or
+  (for a workspace project) in any source folder or the output folder — before the WebObjects
+  conventions (`Resources/<Type>.apiext` in a framework jar; a sibling of the located `.api`).
+  Parsed models are cached per source and revalidated by modification stamp
+  (`findElementApiextModel`), since this is the per-tag validation hot path; previously a
+  project `.apiext` was re-read and re-parsed on every resolution.
+- **The NG→WO fallback is gone** (both the `WebObjectDefinitions.xml` and bundled-`.apiext`
+  sites; `NGElementNames` keeps only the WO→NG direction used by the legacy shortcut bridge).
+  An ng element without a shipped `.apiext` now simply has no binding definition — honest,
+  rather than borrowing a WebObjects contract.
+
 ### Fix: `<wo:checkbox>` broken in ng-objects projects — and the registry moved to the runtime
 
 Reported by an agent: `<wo:checkbox>` validated as "class for 'NGCheckBox' missing… did you
