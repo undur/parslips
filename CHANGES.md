@@ -12,6 +12,25 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Temporary bridge: bundled copies of ng-objects' tag registry and `.apiext` files
+
+ng-appserver 0.1.1 — the release most projects will sit on for a while — predates the shipped
+`parsley-tag-aliases.properties` and element `.apiext` files, so an ng project on it had no tag
+registry and (after dropping the WO fallback) no binding definitions. Rather than reach back
+to the WebObjects declarations, the plugin now bundles **verbatim copies** of ng-appserver's
+own files under `apiext/ng/` (26 `.apiext` + the registry) and uses them as the last resort:
+
+- `ParsleyTagAliasResolver` uses the bundled registry when an **ng project's** classpath
+  declares no aliases (gated on `isNGProject()`; WO projects never see it) — so ng projects
+  always get ng's vocabulary for completion/validation, never the legacy WO shortcut table.
+- `ApiUtils.readBundledApiext` falls back to `/apiext/ng/<Type>.apiext` after the WO bundle.
+
+A real file on the classpath always wins (element-own `.apiext` first; alias fallback only
+when none was found). ng-objects stays the source of truth: `apiext/ng/sync.sh` re-copies,
+`apiext/ng/README.md` explains, and `BundledNGDefinitionsTest` guards drift (every copy
+parses, every tag targets a definition, every definition is reachable). Delete the folder and
+the two fallbacks once an ng-appserver shipping its own is the floor.
+
 ### ng projects are no longer offered WebObjects-only tag shortcuts
 
 When an ng project declares no Parsley tag aliases (its ng-appserver predates the shipped

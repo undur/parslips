@@ -209,7 +209,43 @@ public final class ParsleyTagAliasResolver {
 		} catch (Throwable t) {
 			// Best-effort: a classpath problem just means "no aliases".
 		}
+
+		// Temporary bridge: an ng project whose ng-appserver predates the shipped
+		// parsley-tag-aliases.properties (e.g. the 0.1.1 release) declares nothing — and the
+		// alternative fallback, the legacy WebObjects shortcut table, is the wrong vocabulary
+		// for it. So use the bundled copy of ng-objects' own registry instead. A real file on
+		// the classpath always wins (we only get here when none was found); the copy is synced
+		// from ng-objects (see apiext/ng/README.md) and goes away once an ng-appserver that
+		// ships its own is the floor.
+		if (merged.isEmpty() && isNGProject( project )) {
+			mergeFirstWins( merged, bundledNGAliases() );
+		}
 		return Collections.unmodifiableMap( merged );
+	}
+
+	private static boolean isNGProject(IJavaProject project) {
+		try {
+			final org.objectstyle.wolips.variables.ParsleyProject parsleyProject = (org.objectstyle.wolips.variables.ParsleyProject) project.getProject().getAdapter( org.objectstyle.wolips.variables.ParsleyProject.class );
+			return parsleyProject != null && parsleyProject.isNGProject();
+		} catch (Throwable t) {
+			return false;
+		}
+	}
+
+	/** The bundled copy of ng-appserver's tag registry ({@code /apiext/ng/parsley-tag-aliases.properties}), or empty. */
+	private static Properties bundledNGAliases() {
+		final Properties props = new Properties();
+		try {
+			final java.net.URL url = tk.eclipse.plugin.htmleditor.HTMLPlugin.getDefault().getBundle().getEntry( "/apiext/ng/" + ALIASES_RESOURCE );
+			if (url != null) {
+				try (InputStream in = url.openStream()) {
+					props.load( in );
+				}
+			}
+		} catch (Throwable t) {
+			// no bundled copy — nothing to bridge with
+		}
+		return props;
 	}
 
 	/** Reads the alias resource from a project's default output folder (e.g. target/classes). */

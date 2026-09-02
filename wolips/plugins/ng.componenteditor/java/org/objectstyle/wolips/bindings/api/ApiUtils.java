@@ -256,8 +256,20 @@ public class ApiUtils {
 	 * Reads {@code apiext/<name>.apiext} from the plugin bundle, or returns null if the
 	 * entry doesn't exist or can't be read.
 	 */
+	/**
+	 * Reads a bundled {@code .apiext}: the editor's own WebObjects definitions under
+	 * {@code /apiext/}, then the <b>bundled copies of ng-objects' definitions</b> under
+	 * {@code /apiext/ng/}. The latter is a temporary bridge: ng-appserver ships these same files
+	 * as package resources (found first, via {@link #locateElementApiext}), but projects on an
+	 * ng-appserver release that predates them would otherwise have no binding definitions at all.
+	 * The copies are synced from ng-objects (see {@code apiext/ng/README.md}) and go away once
+	 * an ng-appserver that ships its own is the floor.
+	 */
 	private static byte[] readBundledApiext(Bundle bundle, String name) {
 		URL url = bundle.getEntry("/apiext/" + name + ".apiext");
+		if (url == null) {
+			url = bundle.getEntry("/apiext/ng/" + name + ".apiext");
+		}
 		if (url == null) {
 			return null;
 		}
