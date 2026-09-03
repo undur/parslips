@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: parslips.tooling
 Bundle-Name: Parslips Template Tooling
 Bundle-SymbolicName: parslips.tooling
-Bundle-Version: 5.0.3.qualifier
+Bundle-Version: 5.7.0.qualifier
 Bundle-Vendor: ng-objects
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-ActivationPolicy: lazy

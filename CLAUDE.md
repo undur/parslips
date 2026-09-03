@@ -137,6 +137,23 @@ This codebase was extracted from WOLips which had significant dead code. When yo
 - Do NOT include `Co-Authored-By` lines
 - **Never push to remote without asking first.** Commit locally, then let the user review and test before pushing. This keeps the remote history clean.
 
+## Releases: a public changelog card IS a release
+
+The whoacommunity site (and anyone else) reads this project's history from GitHub releases,
+so every card added to `wolips.p2/src/main/resources/changelog.html` is published as one. The
+release history was backfilled from the changelog in September 2026 (v5.0.0 … v5.6.0), and from
+there on the rule is:
+
+1. **Bump the version first**, so GitHub, Eclipse's About dialog and the p2 site agree:
+   `mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z-SNAPSHOT -Dtycho.mode=maven`
+   — a **minor** bump for a feature card, a **patch** bump for a fix-only card.
+2. Add the changelog card, commit (card + bump together is fine), push.
+3. `tools/changelog_release.py release X.Y.Z` — tags HEAD as `vX.Y.Z`, pushes the tag and creates
+   the GitHub release: named after the card's headline, with the card rendered as Markdown notes.
+
+Never publish a release without its changelog card, and never add a card without releasing —
+the two are the same act. Ask before pushing/releasing, as with any push.
+
 ## CHANGES.md
 
 `CHANGES.md` at the repository root is the detailed project changelog. It documents every significant change since the initial WOLips extraction. Consult it for:

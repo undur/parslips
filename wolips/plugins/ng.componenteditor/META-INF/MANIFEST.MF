@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: ng.componenteditor
 Bundle-Name: Parsley Template Editor
 Bundle-SymbolicName: ng.componenteditor; singleton:=true
-Bundle-Version: 5.0.3.qualifier
+Bundle-Version: 5.7.0.qualifier
 Bundle-Activator: tk.eclipse.plugin.htmleditor.HTMLPlugin
 Bundle-Vendor: ng-objects
 Bundle-Localization: plugin

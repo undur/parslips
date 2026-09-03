@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/ng.componenteditor.feature_5.0.3.qualifier.jar" id="ng.componenteditor.feature" version="5.0.3.qualifier">
+   <feature url="features/ng.componenteditor.feature_5.7.0.qualifier.jar" id="ng.componenteditor.feature" version="5.7.0.qualifier">
       <category name="parsley"/>
    </feature>
    <category-def name="parsley" label="Parsley Template Editor">

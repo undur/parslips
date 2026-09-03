@@ -44,81 +44,28 @@
 				<h2 class="date-header">August 29, 2026</h2>
 
 				<div class="changelog-entry">
-					<h3>Launches that can't stop the world</h3>
-					<p>The most common way an agent-driven session went wrong: the agent asks the dev server to launch an app, a project the app <em>depends on</em> has a compile error, and Eclipse does what Eclipse does &mdash; puts up <em>&ldquo;Errors exist in required project(s). Proceed with launch?&rdquo;</em> and waits for a click. The agent can't see the dialog. All it sees is a launch that never becomes ready, so it starts &ldquo;fixing&rdquo; a problem that is really a button waiting to be pressed.</p>
-					<p>That dialog can no longer happen. <code>/launch</code> now checks exactly what Eclipse checks &mdash; the app <strong>and every project it depends on</strong>, after the same pre-launch build &mdash; and makes the decision itself: a broken dependency comes back as a refusal naming the project, its errors, and the fix (a clean rebuild of that project, which is what it almost always takes). Then it launches with Eclipse's own prompting switched off for the duration, so nothing &mdash; not the errors prompt, not save-before-launch, not switch-to-debug &mdash; can interrupt. Launch failures come back as data, not as error dialogs.</p>
-					<p>And for every <em>other</em> modal Eclipse might raise &mdash; a failed hot code replace, a perspective-switch prompt, some other tool's error &mdash; there's <strong><code>/dialogs</code></strong>: it lists the open dialogs with their message and buttons, and can press one (<code>?press=Proceed</code>) or close it. <code>/status</code> reports open dialogs too, and a launch that's waiting for the app to come up returns immediately if a dialog appears, with the dialog in the response. An agent that used to be stuck in the dark can now see the door and open it.</p>
+					<h3>The dev server grows up</h3>
+					<p>A summer of work on the built-in dev server (<code>localhost:9485</code>) &mdash; the HTTP surface that lets external tools and AI agents drive Eclipse. It now reports what actually <em>happened</em>, not just that a command was relayed: <code>/status</code> (what's running, per launch config), <code>/console</code> (a launch's output, kept after the process dies), <code>/launch</code> with preflight refusals and <code>waitForPort</code>, <code>/restart</code>, <code>/openProject</code> (a project plus its workspace dependencies), <code>/problems</code>, <code>/breakpoints</code>, and a self-describing index at <code>/</code>. <code>/refreshProject</code> returns a build report instead of <code>ok</code> when the build produced errors.</p>
 				</div>
-			</div>
-
-			<!-- August 28, 2026 -->
-			<div class="card">
-				<h2 class="date-header">August 28, 2026</h2>
-
-				<div class="changelog-entry">
-					<h3>Watch your agent work, live</h3>
-					<p>The dev server now keeps a record of every request it handles &mdash; what was asked, what came back, and how long it took &mdash; and turns it into a spectator sport. Open <strong><code>localhost:9485/watch</code></strong> in a browser and you get a live feed of everything driving your workspace, narrated in plain language as it happens: <em>&ldquo;Validated <strong>Main</strong> &mdash; clean&rdquo;</em>, <em>&ldquo;Launched <strong>MyApp</strong> &mdash; ready in 4.2s&rdquo;</em>, <em>&ldquo;Revalidated <strong>28 templates</strong> across ERExtensions&rdquo;</em> &mdash; with a running tally, timing on every request, and the raw request/response one click away.</p>
-					<p>Point an AI agent at your workspace, put <code>/watch</code> on a second screen, and watch it refresh, validate, launch and inspect in real time &mdash; the whole edit&rarr;build&rarr;run loop, visible. When nobody's watching, the same record quietly serves as an audit trail: <code>/activity</code> returns the feed as JSON, so &ldquo;what did the agent actually do to my workspace?&rdquo; always has an answer. The buffer is bounded (last 500 requests, large responses capped), costs nothing when idle, and adds no latency to requests &mdash; recording happens after the response is sent.</p>
-				</div>
-			</div>
-
-			<!-- August 27, 2026 -->
-			<div class="card">
-				<h2 class="date-header">August 27, 2026</h2>
-
-				<div class="changelog-entry">
-					<h3>Trustworthy markers: revalidate everything, purge the fossils</h3>
-					<p>Template validation runs per file, when a file changes &mdash; which means a Java clean/rebuild never re-checks your templates, and markers could quietly go stale: problems you'd already fixed, or findings stamped under old settings. Two new tools make the Problems view trustworthy again:</p>
-					<ul>
-						<li><strong>Revalidate All Templates</strong> &mdash; a button on the validation preference page (and <code>/revalidate</code> on the dev server) that re-runs template validation over every component in a project or the whole workspace, replacing every template marker with a freshly computed one. Changing a validation preference now offers to run it for you on Apply &mdash; so a severity change actually takes effect everywhere, not just in files you happen to touch next.</li>
-						<li><strong>Purge Stale Markers</strong> &mdash; deletes orphaned untyped problem markers on js/css/html/xml files: leftovers of long-removed validators that nothing would ever refresh, sitting on files forever as phantom errors. Markers owned by living tools (template validation, the Java compiler, WTP) are typed and never touched.</li>
-					</ul>
-					<p>And so you can tell who said what: <code>/problems</code> now labels every marker with its <code>source</code> &mdash; <code>parsley</code>, <code>java</code>, <code>stock</code>, or <code>other</code> &mdash; and reports the <em>true</em> problem count even when the returned list is capped.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Out of the standalone JS/CSS editing business</h3>
-					<p>Parsley is a <em>template</em> editor. The standalone <code>.js</code> and <code>.css</code> editors it inherited &mdash; and their validators, built on engines from another era (the JavaScript one flagged arrow functions and <code>const</code> as syntax errors) &mdash; competed badly with Eclipse's own current tooling. No more: freestanding JS and CSS files now open in Eclipse/WTP's editors, and the ancient embedded validation engines are deleted from the plugin entirely. What we <em>keep</em> is the part we own: <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> blocks inside templates still get syntax highlighting and completion, right where your bindings live.</p>
-				</div>
-
-				<div class="changelog-entry">
-					<h3>Under the hood: dependencies brought current</h3>
-					<p>The plugin's embedded libraries got a spring clean: the CSS parser jumped a major version (ph-css 8.x with its modernized module stack), the bundled Xerces XML parser is gone in favor of the JDK's own, and several smaller libraries moved to their latest releases. Less vendored code, fewer stale engines, same editor.</p>
-				</div>
-			</div>
-
-			<!-- August 10, 2026 -->
-			<div class="card">
-				<h2 class="date-header">August 10, 2026</h2>
 
 				<div class="changelog-entry">
 					<h3>Ask the editor what a tag can do</h3>
-					<p>Two additions to the editor's dev server (<code>localhost:9485</code>), the HTTP surface external tools and AI agents drive &mdash; both aimed at the same thing: giving a tool the editor's own understanding of your templates, instead of making it guess.</p>
-					<ul>
-						<li><strong><code>/elementApi</code></strong> &mdash; the resolved binding API of any element, as JSON. Ask for <code>WOPopUpButton</code> (or <code>str</code>, or <code>link</code> &mdash; tag aliases and shortcuts resolve just like they do in a template) and you get back every binding with its accepted types, its direction (does the element <em>read</em> it, <em>write</em> it back, or both), whether it's required, its default, and the cross-binding rules &mdash; each with the same plain-English message the hover shows (<em>&ldquo;exactly one of&hellip; must be bound&rdquo;</em>). It's the editor's hover, as data. An agent that used to open <code>WOPopUpButton.java</code> to work out its bindings now asks in one call.</li>
-						<li><strong>A new <code>/validate</code> check</strong> &mdash; the <code>$</code>-on-a-plain-tag trap. Writing <code>style="$highlight"</code> on a raw <code>&lt;div&gt;</code> renders the literal text <code>$highlight</code>, because plain HTML tags don't evaluate bindings &mdash; a mistake that hides until you look at the page. Validation now catches it with a precise warning that names the fix (use a <code>wo:</code> element or container). That whole class of bug is now caught before render.</li>
-					</ul>
-					<p>These pair with new endpoints on the <em>runtime</em> side (in ng-objects and wonder-slim): an <strong><code>eval</code></strong> endpoint that runs a Java snippet inside the live application &mdash; a REPL against your real objects and data, not a reconstruction &mdash; and a <strong><code>problems</code></strong> endpoint that returns the binding errors the app rendered into a page as data instead of markup to be scraped. Together they close the other half of the loop: not just <em>make the change take effect</em>, but <em>exercise it and observe the truth</em>.</p>
+					<p><code>/elementApi</code> returns any element's resolved binding API as JSON &mdash; types, direction, required, defaults, cross-binding rules with their plain-English messages &mdash; the editor's hover, as data. Validation also gained a check for the <code>$</code>-on-a-plain-tag trap. Paired with runtime-side <code>eval</code> and <code>problems</code> endpoints in ng-objects and wonder-slim.</p>
 				</div>
-			</div>
-
-			<!-- July 9, 2026 -->
-			<div class="card">
-				<h2 class="date-header">July 9, 2026</h2>
 
 				<div class="changelog-entry">
-					<h3>The dev server grows up: outcomes, not just commands</h3>
-					<p>The built-in dev server (<code>localhost:9485</code>) &mdash; the HTTP surface that lets external tools and AI agents drive Eclipse &mdash; now reports what actually <em>happened</em>, not just that a command was relayed. A batch of new endpoints and fixes, all born from real agent usage:</p>
-					<ul>
-						<li><strong><code>/status</code></strong> &mdash; what's running, per launch config: mode, uptime, project open state, compile errors, and the app's self-registered port with a live reachability check.</li>
-						<li><strong><code>/console</code></strong> &mdash; a launch's console output over HTTP, kept <em>after the process dies</em> &mdash; so startup failures finally have a readable post-mortem.</li>
-						<li><strong><code>/launch</code> preflight</strong> &mdash; instead of pretending to succeed, a launch now refuses with a named reason (closed project, compile errors, already running), each with the parameter that overrides it. And <code>waitForPort</code> blocks until the app answers, provably died, or timed out.</li>
-						<li><strong><code>/openProject</code></strong> &mdash; opens a closed project <em>together with its workspace dependencies</em>, resolved transitively from the poms (Maven workspace resolution only sees open projects, so opening just one is rarely enough), and clean-builds them. A fully closed workspace to a running, verified app is now one call.</li>
-						<li><strong><code>/restart</code></strong> &mdash; stop, wait for termination, rebuild chosen projects, relaunch, wait for ready. The whole edit-cycle dance in one request.</li>
-						<li><strong><code>/problems</code></strong> and <strong><code>/breakpoints</code></strong> &mdash; the Problems view as JSON, and a list of workspace breakpoints with a &ldquo;Skip All&rdquo; toggle (for the classic forgotten-breakpoint-on-a-hot-class mystery).</li>
-						<li><strong><code>/</code></strong> &mdash; the server describes itself: a JSON index of every endpoint, so a tool landing cold can discover the API instead of guessing.</li>
-					</ul>
-					<p><code>/refreshProject</code> also stopped answering <code>ok</code> when the build produced compile errors &mdash; it now returns a build report naming them, so &ldquo;my edit did nothing&rdquo; mysteries end at the response instead of an hour later.</p>
+					<h3>Trustworthy markers</h3>
+					<p><strong>Revalidate All Templates</strong> (a preference-page button and <code>/revalidate</code>) re-runs template validation over a project or the whole workspace, and <strong>Purge Stale Markers</strong> (<code>/purgeMarkers</code>) deletes orphaned markers left by validators that no longer exist. <code>/problems</code> labels every marker with its source. Along the way: the standalone JS/CSS editors and their ancient validation engines are gone (Eclipse owns those files; inline blocks in templates keep highlighting and completion), and the plugin's embedded libraries were brought current.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Watch your agent work, live</h3>
+					<p>The dev server records every request it handles, and <code>/watch</code> turns that into a live, narrated feed (<em>&ldquo;Validated <strong>Main</strong> &mdash; clean&rdquo;</em>, <em>&ldquo;Launched <strong>MyApp</strong> &mdash; ready in 4.2s&rdquo;</em>) with a running tally. <code>/activity</code> serves the same record as JSON &mdash; an audit trail of what an agent actually did to your workspace.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Launches that can't stop the world</h3>
+					<p>Eclipse's <em>&ldquo;Errors exist in required project(s). Proceed?&rdquo;</em> dialog can no longer strand an agent: <code>/launch</code> checks the app <strong>and every project it depends on</strong>, refuses with the broken projects and the fix, and launches with Eclipse's prompting switched off. For every other modal, <code>/dialogs</code> lists them and can press a button &mdash; and a launch that's waiting for the app returns at once if one appears.</p>
 				</div>
 			</div>
 
