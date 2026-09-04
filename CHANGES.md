@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: wonder-slim 8.0.4, vermilingua 1.1.7
+
+The New WO Project wizard's generated pom now references wonder-slim 8.0.4 (ERExtensions,
+ERLoggingReload4j, Ajax) and vermilingua-maven-plugin 1.1.7 (both WO and ng templates).
+
 ### Binding completion reads `.apiext` — the same seam as validation
 
 Attribute (binding) completion on an inline tag, and binding-name completion in the `.wod`
