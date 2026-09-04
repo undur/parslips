@@ -8,9 +8,12 @@ it". Used both for the standing rule (every new card gets a release) and for the
 	changelog_release.py list                 # the cards: date, headline, entry count
 	changelog_release.py notes "August 29, 2026"   # Markdown notes for one card (stdout)
 	changelog_release.py title "August 29, 2026"   # the card's headline (first entry)
-	changelog_release.py release 5.7.0        # THE RULE: publish the newest card as release v5.7.0
+	changelog_release.py pending              # CHANGES.md entries since the last release tag (the card's raw material)
+	changelog_release.py release 5.7.0        # publish the newest card as release v5.7.0
 
-The `release` step is the standing rule "a public changelog card is a release": it takes the
+A release is decided, not triggered: CHANGES.md moves with every change, and when there's a
+story worth telling a public changelog card is distilled from what accumulated (`pending`
+lists it). The `release` step then publishes that card: it takes the
 newest card, checks the bundle already carries that version (bump first with
 `mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z-SNAPSHOT -Dtycho.mode=maven`,
 so the number on GitHub, in Eclipse's About dialog and on the p2 site agree), tags HEAD as
@@ -84,6 +87,20 @@ def find(date):
 MANIFEST = Path(__file__).resolve().parent.parent / "wolips/plugins/ng.componenteditor/META-INF/MANIFEST.MF"
 
 
+def pending():
+	"""Prints the CHANGES.md section headings added since the newest release tag."""
+	tags = subprocess.run(['git', 'tag', '--sort=-v:refname', '--list', 'v[0-9]*'], capture_output=True, text=True).stdout.split()
+	if not tags:
+		sys.exit('no release tags')
+	last = tags[0]
+	diff = subprocess.run(['git', 'diff', f'{last}..HEAD', '--', 'CHANGES.md'], capture_output=True, text=True).stdout
+	headings = [line[5:] for line in diff.splitlines() if line.startswith('+### ')]
+	commits = subprocess.run(['git', 'rev-list', '--count', f'{last}..HEAD'], capture_output=True, text=True).stdout.strip()
+	print(f'since {last} ({commits} commits), CHANGES.md gained {len(headings)} entries:')
+	for h in headings:
+		print('  - ' + h)
+
+
 def release(version):
 	"""Publishes the newest changelog card as GitHub release v<version> from HEAD."""
 	tag = 'v' + version
@@ -116,5 +133,7 @@ if __name__ == '__main__':
 		print(find(sys.argv[2])[1][0][0])
 	elif cmd == 'release':
 		release(sys.argv[2])
+	elif cmd == 'pending':
+		pending()
 	else:
 		sys.exit(__doc__)

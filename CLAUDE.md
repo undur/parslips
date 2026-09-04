@@ -46,8 +46,9 @@ wolips/
 # Full build (from repo root)
 mvn verify
 
-# Plugin only (faster for iteration)
-mvn verify -pl wolips/plugins/ng.componenteditor -am -Dtycho.localArtifacts=ignore
+# Plugin only (faster for iteration). wolips.targetplatform must be in the reactor: the
+# target definition is resolved from it, and it is never installed to ~/.m2.
+mvn verify -pl wolips.targetplatform,wolips/plugins/ng.componenteditor -am -Dtycho.localArtifacts=ignore
 
 # Build and install into Eclipse
 ./install.sh /path/to/Eclipse.app
@@ -137,22 +138,34 @@ This codebase was extracted from WOLips which had significant dead code. When yo
 - Do NOT include `Co-Authored-By` lines
 - **Never push to remote without asking first.** Commit locally, then let the user review and test before pushing. This keeps the remote history clean.
 
-## Releases: a public changelog card IS a release
+## Releases: decided, not triggered
 
-The whoacommunity site (and anyone else) reads this project's history from GitHub releases,
-so every card added to `wolips.p2/src/main/resources/changelog.html` is published as one. The
-release history was backfilled from the changelog in September 2026 (v5.0.0 … v5.6.0), and from
-there on the rule is:
+Two records, two rhythms:
 
-1. **Bump the version first**, so GitHub, Eclipse's About dialog and the p2 site agree:
+- **`CHANGES.md` moves with every change.** Every significant commit adds an entry there
+  (the detailed, developer-facing record; see below). This is continuous and unceremonious.
+- **A release is an occasional, deliberate aggregation.** When there's a story worth telling
+  — a coherent batch of work, not a day's commits — a card is added to the public changelog
+  (`wolips.p2/src/main/resources/changelog.html`), written for users, distilled from the
+  `CHANGES.md` entries and commits since the last release. That card IS the release: the
+  whoacommunity site and everyone else read this project's history from GitHub releases,
+  and every card is published as one. Never a card without a release, never a release
+  without a card; and no daily releases — small changes wait for the next story.
+
+Publishing a release:
+
+1. `tools/changelog_release.py pending` — the `CHANGES.md` entries since the last release
+   tag, i.e. the raw material for the card.
+2. **Bump the version first**, so GitHub, Eclipse's About dialog and the p2 site agree:
    `mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z-SNAPSHOT -Dtycho.mode=maven`
-   — a **minor** bump for a feature card, a **patch** bump for a fix-only card.
-2. Add the changelog card, commit (card + bump together is fine), push.
-3. `tools/changelog_release.py release X.Y.Z` — tags HEAD as `vX.Y.Z`, pushes the tag and creates
-   the GitHub release: named after the card's headline, with the card rendered as Markdown notes.
+   — a **minor** bump when the card carries features, a **patch** bump for a fix-only card.
+   (Note: the plugin-only build then needs `wolips.targetplatform` in its `-pl` list.)
+3. Add the card, commit (card + bump together is fine), push.
+4. `tools/changelog_release.py release X.Y.Z` — tags HEAD as `vX.Y.Z`, pushes the tag and
+   creates the GitHub release: named after the card's headline, with the card as notes.
 
-Never publish a release without its changelog card, and never add a card without releasing —
-the two are the same act. Ask before pushing/releasing, as with any push.
+The history was backfilled from the changelog in September 2026 (v5.0.0 … v5.6.0, numbered
+minor-per-month, patch-per-card). Ask before pushing/releasing, as with any push.
 
 ## CHANGES.md
 
@@ -176,7 +189,7 @@ When making significant changes, add an entry to CHANGES.md.
 1. Search for references (callers, implementations, plugin.xml registrations)
 2. Remove the code
 3. Clean up imports
-4. Build to verify: `mvn verify -pl wolips/plugins/ng.componenteditor -am -Dtycho.localArtifacts=ignore`
+4. Build to verify: `mvn verify -pl wolips.targetplatform,wolips/plugins/ng.componenteditor -am -Dtycho.localArtifacts=ignore`
 5. Document in CHANGES.md if it's a significant removal
 
 ### Fixing editor association issues

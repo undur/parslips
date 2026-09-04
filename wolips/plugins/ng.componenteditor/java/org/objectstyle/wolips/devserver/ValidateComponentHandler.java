@@ -71,7 +71,7 @@ class ValidateComponentHandler implements DevServerHandler {
 
 		final ElementDescriptor descriptor = resolveDescriptor(componentName, appName);
 		if (descriptor == null || descriptor.getHtmlFile() == null) {
-			return notFoundJson(componentName);
+			return notFoundJson(componentName, appName);
 		}
 
 		final IFile htmlFile = descriptor.getHtmlFile();
@@ -215,7 +215,31 @@ class ValidateComponentHandler implements DevServerHandler {
 		return b.toString();
 	}
 
-	private static String notFoundJson(String componentName) {
-		return "{\"component\":\"" + DevServerJson.escape(componentName) + "\",\"found\":false,\"problems\":[]}";
+	/**
+	 * {@code found:false} with the reason a caller can act on. Three things produce it, and
+	 * they need different fixes: the hinted project is closed (open it), the hinted project
+	 * doesn't exist (a typo'd name), or no open project has the component (a typo'd component
+	 * name, or its project isn't in the workspace). A bare {@code found:false} sent agents
+	 * chasing the wrong one.
+	 */
+	private static String notFoundJson(String componentName, String appName) {
+		String reason;
+		if (appName != null && !appName.isEmpty()) {
+			final IProject hinted = ResourcesPlugin.getWorkspace().getRoot().getProject(appName);
+			if (hinted == null || !hinted.exists()) {
+				reason = "no project named '" + appName + "' in the workspace; searched every open project instead";
+			}
+			else if (!hinted.isOpen()) {
+				reason = "project '" + appName + "' is CLOSED in the workspace (see projectOpen in /status); open it with /openProject?project=" + appName;
+			}
+			else {
+				reason = "no component named '" + componentName + "' in project '" + appName + "' (or any open project)";
+			}
+		}
+		else {
+			reason = "no component named '" + componentName + "' in any open project; its project may be closed (see /status) or the name misspelled";
+		}
+		return "{\"component\":\"" + DevServerJson.escape(componentName) + "\",\"found\":false,\"reason\":\""
+				+ DevServerJson.escape(reason) + "\",\"problems\":[]}";
 	}
 }
