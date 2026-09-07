@@ -64,7 +64,17 @@ class ProblemsHandler implements DevServerHandler {
 					.append(",\"problems\":").append(WorkspaceProblems.toJsonArray(problems))
 					.append('}');
 		}
-		b.append("]}");
+		b.append(']');
+		if (first && projectName != null && !projectName.isEmpty()) {
+			// Nothing matched the named project: closed, or not in the workspace. An empty
+			// list without a reason sent callers indexing projects[0] into a crash.
+			final IProject named = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+			final String reason = named != null && named.exists()
+					? (named.isOpen() ? "project '" + projectName + "' has no problems at this severity" : "project '" + projectName + "' is closed")
+					: "no project named '" + projectName + "' in the workspace";
+			b.append(",\"reason\":\"").append(DevServerJson.escape(reason)).append('"');
+		}
+		b.append('}');
 		return b.toString();
 	}
 }

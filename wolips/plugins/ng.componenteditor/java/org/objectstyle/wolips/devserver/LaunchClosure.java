@@ -11,6 +11,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 
 /**
  * The set of projects a Java launch actually depends on — the launched project plus every
@@ -75,10 +76,33 @@ final class LaunchClosure {
 	 * the compile-error check trustworthy.
 	 */
 	static void build(List<IProject> closure) throws CoreException {
+		awaitClasspathJobs();
 		for (final IProject project : closure) {
 			project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
 		}
 		RefreshProjectHandler.waitForBuildToSettle();
+	}
+
+	/**
+	 * Joins running jobs that maintain project classpaths - m2e's "Updating Maven project"
+	 * and its relatives, which run after a project is opened or its pom changes. They are not
+	 * in the build job families, so {@link RefreshProjectHandler#waitForBuildToSettle} can't
+	 * see them, and a project checked while one runs shows transient "cannot be resolved"
+	 * errors that vanish seconds later - which refused launches for errors nobody could find.
+	 * Matched by job name (no compile-time m2e dependency); bounded per job.
+	 */
+	static void awaitClasspathJobs() {
+		for (final Job job : Job.getJobManager().find(null)) {
+			final String name = job.getName() == null ? "" : job.getName().toLowerCase();
+			if (name.contains("maven") || name.contains("classpath")) {
+				try {
+					job.join(60_000, new NullProgressMonitor());
+				}
+				catch (Exception e) {
+					// interrupted or timed out - proceed with whatever state we have
+				}
+			}
+		}
 	}
 
 	/** The projects in the closure that hold Java compile or build-path errors, in build order. */

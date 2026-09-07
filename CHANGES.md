@@ -12,6 +12,34 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: lessons from a field report (app-start trouble)
+
+An agent's day of app-start trouble on a real project produced a field report; the plugin
+side of it:
+
+- **`/openProject?project=all` is gone.** It opened 30+ unrelated projects for an agent that
+  just wanted its own; the developer closed them again and the app's project with them.
+  Opening a project with its dependency closure (`/openProject?project=NAME`,
+  `/launch?open=true`) is the tool; `all` now answers with an error saying so.
+- **`/launch` no longer refuses on transient errors.** Right after a project is opened (or
+  a pom changes) m2e's classpath jobs are still running; they aren't in the build job
+  families the preflight joined, and the workspace briefly shows "cannot be resolved"
+  errors that vanish seconds later — the report's "compile errors nobody could find".
+  `LaunchClosure.awaitClasspathJobs()` joins running jobs whose names mention Maven or
+  classpath (bounded, no m2e dependency) before the pre-launch build, and the preflight
+  settles and re-checks once before refusing. (Template markers were never counted: the
+  check uses JDT marker types only.)
+- **`/console` explains a silent death.** `ConsoleBuffer` stamps when a launch's process
+  terminated (debug TERMINATE events) and `Buffer.supersededBy()` finds a launch of the
+  same project that started shortly before — the signature of a port clash, where a second
+  instance (typically started from the Eclipse UI, bypassing the preflight) makes the
+  frameworks stop the earlier one cleanly: exit 1, normal console, no stack trace. The
+  header now carries `ended:` and a `# note:` line saying so.
+- **`/problems?project=X` says why it's empty** (`reason`: clean, closed, or unknown project)
+  instead of a bare `projects:[]` that callers indexed into a crash.
+- **`/restart`'s `refresh[]` is valid JSON.** It embedded the refresh handler's plain `ok`
+  as an array element; a clean refresh is now `{"project","refreshed":true,"buildErrors":0}`.
+
 ### New-project templates: wonder-slim 8.0.4, vermilingua 1.1.7
 
 The New WO Project wizard's generated pom now references wonder-slim 8.0.4 (ERExtensions,

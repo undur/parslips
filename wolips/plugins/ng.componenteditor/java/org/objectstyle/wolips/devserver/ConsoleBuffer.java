@@ -3,6 +3,7 @@ package org.objectstyle.wolips.devserver;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.debug.core.DebugEvent;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -52,6 +53,8 @@ final class ConsoleBuffer {
 		final String configName;
 		final String projectName;
 		final long startedEpochMillis;
+		/** When the process terminated (epoch millis), 0 while running or when never observed. */
+		volatile long endedEpochMillis;
 		private final ILaunch _launch;
 		private final StringBuilder _text = new StringBuilder();
 
@@ -75,6 +78,30 @@ final class ConsoleBuffer {
 
 		boolean isTerminated() {
 			return _launch.isTerminated();
+		}
+
+		/**
+		 * Another launch of the SAME project that started shortly before this one ended, or
+		 * null. That pattern is the signature of a port clash: a second instance (typically
+		 * started by the developer from the Eclipse UI, which bypasses /launch's preflight)
+		 * claims the port and the frameworks stop the earlier instance cleanly and silently -
+		 * exit 1, a normal console, no stack trace. Agents mistook that for a crash.
+		 */
+		Buffer supersededBy() {
+			if (endedEpochMillis == 0) {
+				return null;
+			}
+			for (final Buffer other : _byConfigName.values()) {
+				if (other == this || other._launch == _launch || other.projectName == null
+						|| !other.projectName.equalsIgnoreCase(projectName)) {
+					continue;
+				}
+				final long lead = endedEpochMillis - other.startedEpochMillis;
+				if (lead >= -2_000 && lead <= 90_000) {
+					return other;
+				}
+			}
+			return null;
 		}
 
 		/** The process exit value, or null while running / when unavailable. */
@@ -114,6 +141,21 @@ final class ConsoleBuffer {
 			@Override
 			public void launchRemoved(ILaunch launch) {
 				// Keep the buffer: post-mortem reads of removed launches are still useful.
+			}
+		});
+
+		// Stamp the moment a launch's process terminates: the /console header reports it,
+		// and supersededBy() needs it to recognise a port-clash stop.
+		DebugPlugin.getDefault().addDebugEventListener(events -> {
+			for (final DebugEvent event : events) {
+				if (event.getKind() == DebugEvent.TERMINATE && event.getSource() instanceof IProcess) {
+					final ILaunch launch = ((IProcess) event.getSource()).getLaunch();
+					for (final Buffer buffer : _byConfigName.values()) {
+						if (buffer._launch == launch && buffer.endedEpochMillis == 0) {
+							buffer.endedEpochMillis = System.currentTimeMillis();
+						}
+					}
+				}
 			}
 		});
 

@@ -25,19 +25,15 @@ class OpenProjectHandler implements DevServerHandler {
 	public String handle(Map<String, String> params) throws Exception {
 		final String name = params.get("project");
 		if (name == null || name.isEmpty()) {
-			return "{\"error\":\"missing required parameter 'project' (a project name, or 'all')\"}";
+			return "{\"error\":\"missing required parameter 'project'\"}";
 		}
 
+		// 'all' used to open every closed project in the workspace. Removed: an agent that
+		// found its project closed reached for it, opened 30+ unrelated projects, and the
+		// developer closed them all again - project included - later that day. Opening a
+		// project with its dependency closure (below, or /launch?open=true) is the tool.
 		if ("all".equalsIgnoreCase(name)) {
-			final ProjectOpener.Result result = new ProjectOpener.Result();
-			for (final IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
-				if (project.exists() && !project.isOpen()) {
-					// Reuse the walker per closed project so building/settling happens once each;
-					// visiting an already-opened project is a no-op.
-					result.opened.addAll(ProjectOpener.openWithRelated(project).opened);
-				}
-			}
-			return "{\"opened\":" + DevServerJson.stringArray(result.opened) + "}";
+			return "{\"error\":\"'all' is not supported - open the project you need (its workspace dependencies come along), or use /launch?config=NAME&open=true\"}";
 		}
 
 		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);

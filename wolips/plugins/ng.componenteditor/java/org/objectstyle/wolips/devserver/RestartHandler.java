@@ -55,7 +55,12 @@ class RestartHandler implements DevServerHandler {
 					combined.append(',');
 				}
 				first = false;
-				combined.append(result != null ? result : "{\"project\":\"" + DevServerJson.escape(projectName.trim()) + "\",\"refreshed\":true}");
+				// The refresher answers a bare "ok" on a clean build (a plain-text contract for
+				// its own callers) - as an array element that made this response invalid JSON.
+				final boolean clean = result == null || "ok".equals(result);
+				combined.append(clean
+						? "{\"project\":\"" + DevServerJson.escape(projectName.trim()) + "\",\"refreshed\":true,\"buildErrors\":0}"
+						: result);
 			}
 			refreshResult = combined.append(']').toString();
 		}

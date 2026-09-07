@@ -16,8 +16,8 @@ import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
  * endpoint, and encapsulates the "which config did you mean?" logic.
  *
  * <p>The tricky part is that one project often has several configs pointing at
- * different environments — e.g. {@code Strimillinn - Local} and
- * {@code Strimillinn - Production}. Firing the wrong one (Production while you're
+ * different environments — e.g. {@code MyApp - Local} and
+ * {@code MyApp - Production}. Firing the wrong one (Production while you're
  * working locally) is a genuine footgun, so resolution refuses to guess when the
  * choice is ambiguous; it returns the candidates instead and lets the caller pick.
  *

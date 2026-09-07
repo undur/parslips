@@ -150,7 +150,16 @@ class LaunchHandler implements DevServerHandler {
 			if (!"true".equalsIgnoreCase(params.get("ignoreErrors"))) {
 				// Java compile / build-path errors only: template-validation markers don't
 				// prevent a launch and must not block one.
-				final List<IProject> broken = LaunchClosure.withErrors(closure);
+				List<IProject> broken = LaunchClosure.withErrors(closure);
+				if (!broken.isEmpty()) {
+					// Errors right after a build are sometimes transient - a classpath job
+					// (m2e) finishing late re-triggers a build that clears them. Settle once
+					// more and re-check before refusing, so we don't refuse on a snapshot the
+					// caller can't reproduce a few seconds later.
+					LaunchClosure.awaitClasspathJobs();
+					RefreshProjectHandler.waitForBuildToSettle();
+					broken = LaunchClosure.withErrors(closure);
+				}
 				if (!broken.isEmpty()) {
 					return refusalForErrors(projectName, broken, openedNote);
 				}
