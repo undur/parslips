@@ -34,4 +34,16 @@ public class LaunchPortsTest {
 		assertEquals("-mainClass Foo -WOPort 1201", LaunchPorts.appendArguments("-mainClass Foo ", "-WOPort 1201"));
 		assertEquals("-mainClass Foo", LaunchPorts.appendArguments("-mainClass Foo", ""));
 	}
+
+	@Test
+	public void applicationLaunchIsThePrincipalClassOrAnExplicitPort() {
+		// the app itself
+		assertEquals(true, LaunchPorts.isApplicationLaunch("", "", "myapp.Application", "myapp.Application"));
+		// a utility main in the same project: not the app, so no port decisions
+		assertEquals(false, LaunchPorts.isApplicationLaunch("", "", "myapp.tools.Importer", "myapp.Application"));
+		// an explicit port makes any launch an application launch
+		assertEquals(true, LaunchPorts.isApplicationLaunch("-WOPort 1300", "", "myapp.tools.Server", "myapp.Application"));
+		// no principalClass declared and no port: unknown, treated as not-the-app
+		assertEquals(false, LaunchPorts.isApplicationLaunch("", "", "myapp.Application", null));
+	}
 }

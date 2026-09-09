@@ -35,6 +35,9 @@ public class BuildProperties {
 		/** Project type: "framework" or "application". Used by the Vermilingua build plugin. */
 		PROJECT_TYPE("project.type", "Project type (framework or application)"),
 
+		/** The application's main class — what a launch of "the app" (as opposed to a utility main) runs. */
+		PRINCIPAL_CLASS("principalClass", "The application's main class"),
+
 		/** Inline binding prefix (e.g. "$"). */
 		INLINE_BINDING_PREFIX("component.inlineBindingPrefix", "Inline binding prefix"),
 
@@ -192,6 +195,12 @@ public class BuildProperties {
 	 * Returns the configured inline binding prefix for this project (e.g. "$"),
 	 * falling back to the workspace default.
 	 */
+	/** The application's main class ({@code principalClass}), or null when the project doesn't declare one. */
+	public String getPrincipalClass() {
+		final String value = get(Key.PRINCIPAL_CLASS.key());
+		return value == null || value.isBlank() ? null : value.trim();
+	}
+
 	public String getInlineBindingPrefix() {
 		ensureDefaultsInitialized();
 		return get(Key.INLINE_BINDING_PREFIX, _inlineBindingPrefixDefault);

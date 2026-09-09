@@ -193,8 +193,13 @@ class LaunchHandler implements DevServerHandler {
 					+ "\\\" is already running\",\"hint\":\"use /stop or /restart, pass port=N to run a second instance alongside, or allowMultiple=true\"}";
 		}
 
+		// Port decisions apply to launches of THE application (explicit -WOPort, or the
+		// project's principalClass as main type). A utility main in the same project neither
+		// wants the dev port nor holds it - it must not be refused because the app is up.
+		final boolean applicationLaunch = requestedPort != null || LaunchPorts.isApplicationLaunch(config);
+
 		String stoppedNote = "";
-		if (LaunchPorts.isHeld(targetPort)) {
+		if (applicationLaunch && LaunchPorts.isHeld(targetPort)) {
 			final List<String> holders = LaunchPorts.holdersOf(targetPort);
 			if (!stopOthers) {
 				final String holder = holders.isEmpty()
@@ -261,7 +266,7 @@ class LaunchHandler implements DevServerHandler {
 
 		// ---- Optionally wait until the app is actually ready (or provably dead). ----
 
-		final String portNote = ",\"port\":" + targetPort + stoppedNote + openedNote;
+		final String portNote = (applicationLaunch ? ",\"port\":" + targetPort : "") + stoppedNote + openedNote;
 		final String waitForPort = params.get("waitForPort");
 		if (waitForPort != null && !waitForPort.isEmpty()) {
 			return waitJson(config, mode, portNote, launch, dialogsBefore, Integer.parseInt(waitForPort), timeoutSeconds(params));

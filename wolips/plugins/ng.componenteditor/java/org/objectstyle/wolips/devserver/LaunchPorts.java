@@ -89,6 +89,44 @@ final class LaunchPorts {
 		return copy;
 	}
 
+	/**
+	 * Whether a configuration launches THE application, as opposed to a utility main class
+	 * that happens to live in the same project (a data importer, a one-off script). Only
+	 * application launches take part in port decisions: a utility neither wants the dev
+	 * port nor holds it, and refusing to run one because the app is up would be absurd.
+	 * An application launch is one that names a port explicitly, or whose main class is
+	 * the project's declared {@code principalClass} (build.properties).
+	 */
+	static boolean isApplicationLaunch(ILaunchConfiguration config) {
+		try {
+			final String programArgs = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "");
+			final String vmArgs = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
+			final String mainType = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "");
+			final String projectName = LaunchConfigs.projectNameOf(config);
+			String principalClass = null;
+			if (!projectName.isEmpty()) {
+				final org.eclipse.core.resources.IProject project = org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+				final org.objectstyle.wolips.variables.ParsleyProject parsleyProject = project == null ? null
+						: (org.objectstyle.wolips.variables.ParsleyProject) project.getAdapter(org.objectstyle.wolips.variables.ParsleyProject.class);
+				if (parsleyProject != null && parsleyProject.getBuildProperties() != null) {
+					principalClass = parsleyProject.getBuildProperties().getPrincipalClass();
+				}
+			}
+			return isApplicationLaunch(programArgs, vmArgs, mainType, principalClass);
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+
+	/** The pure rule behind {@link #isApplicationLaunch(ILaunchConfiguration)}. */
+	static boolean isApplicationLaunch(String programArgs, String vmArgs, String mainType, String principalClass) {
+		if (portFromArguments(programArgs, vmArgs) != null) {
+			return true;
+		}
+		return principalClass != null && mainType != null && !mainType.isBlank() && principalClass.equals(mainType.trim());
+	}
+
 	/** Whether something is listening on the port right now (a TCP connect on loopback). */
 	static boolean isHeld(int port) {
 		try (java.net.Socket socket = new java.net.Socket()) {
@@ -118,7 +156,7 @@ final class LaunchPorts {
 			if (launch.isTerminated() || config == null || !LaunchConfigs.isJavaApplication(config)) {
 				continue;
 			}
-			if (portOf(config) == port) {
+			if (isApplicationLaunch(config) && portOf(config) == port) {
 				final String name = config.getName();
 				final String project = LaunchConfigs.projectNameOf(config);
 				// A registered app usually announces itself under its project name; don't

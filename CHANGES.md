@@ -31,6 +31,11 @@ an external caller only sees as an app dying. `/launch` now decides it explicitl
   second instance of an already-running config is allowed when `port` is given.
 - **`args=…`** appends further program arguments the same way.
 - Responses carry `port` (the target) and the wait result's port is now `readyPort`.
+- **Only launches of the application take part.** A config counts as the app when it
+  names a port explicitly or its main class is the project's declared `principalClass`
+  (`build.properties`; new `BuildProperties.getPrincipalClass()`). Utility mains in the
+  same project (importers, one-off scripts) skip the port preflight and never count as
+  holders — without this, a utility would have been refused whenever the app was up.
 
 ### Build: resolve the target platform at JavaSE-25
 
