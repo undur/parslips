@@ -12,6 +12,33 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: `/launch` decides port clashes — `stopOthers`, `port`, `args`
+
+Development apps share port 1200 by convention, so launching one while another runs is a
+clash the runtimes resolve silently (the earlier instance is stopped or evicted) — which
+an external caller only sees as an app dying. `/launch` now decides it explicitly:
+
+- **Preflight refuses when the target port is held**, naming the holder(s): registered
+  apps that announced the port and Eclipse launches whose config resolves to it (new
+  `LaunchPorts`: `-WOPort N` from program args, `-DWOPort=N` from VM args, else 1200).
+- **`stopOthers=true`** stops the holders through the `/stop` logic, waits for the port to
+  free up, then launches; the response lists `stopped`. Holders the dev server can't name
+  (a process outside Eclipse) are refused with an `lsof` hint.
+- **`port=N`** launches on another port: a `-WOPort N` program argument is injected into
+  an **unsaved working copy** of the configuration (`ILaunchConfiguration.getWorkingCopy()`
+  is launchable without saving; the saved config is untouched, and the launch keeps the
+  config's name so console/status/stop keep working). `waitForPort` defaults to N. A
+  second instance of an already-running config is allowed when `port` is given.
+- **`args=…`** appends further program arguments the same way.
+- Responses carry `port` (the target) and the wait result's port is now `readyPort`.
+
+### Build: resolve the target platform at JavaSE-25
+
+The target definition tracks `releases/latest/`; Eclipse 2026-09 (4.41) shipped with a
+committers package that requires JavaSE-25, so resolution at the bundles' BREE (JavaSE-21)
+failed. `target-platform-configuration` now sets `executionEnvironment` to JavaSE-25 for
+resolution (the bundles' BREE stays JavaSE-21), and CI builds on JDK 25.
+
 ### Dev server: lessons from a field report (app-start trouble)
 
 An agent's day of app-start trouble on a real project produced a field report; the plugin

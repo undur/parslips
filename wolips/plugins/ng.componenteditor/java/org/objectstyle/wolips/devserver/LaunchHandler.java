@@ -40,7 +40,21 @@ import org.eclipse.debug.core.ILaunchManager;
  *       (failure, with a pointer at {@code /console}), a modal dialog appears (failure,
  *       with the dialog and a pointer at {@code /dialogs}), or {@code timeout} elapses.</li>
  *   <li>{@code timeout} — seconds to wait for {@code waitForPort} (default 60).</li>
+ *   <li>{@code port} — launch on this port instead of the configuration's own (a
+ *       {@code -WOPort} argument injected into an unsaved working copy; see
+ *       {@link LaunchPorts}). Also the default for {@code waitForPort}.</li>
+ *   <li>{@code args} — extra program arguments appended the same way.</li>
+ *   <li>{@code stopOthers} — {@code true} to stop whatever holds the target port before
+ *       launching (the development-shop default: one dev port, the app being worked on
+ *       gets it).</li>
  * </ul>
+ *
+ * <h2>Ports</h2>
+ * Development apps share a port by convention (1200 unless the config says otherwise),
+ * so launching one while another runs is a clash the frameworks resolve silently — the
+ * earlier instance is stopped or evicted, and an external caller only sees an app die.
+ * Preflight makes it explicit: if the target port is held, the launch is refused naming
+ * the holder, with the two ways out — {@code stopOthers=true} or {@code port=N}.
  *
  * <h2>Truthfulness</h2>
  * The contract an external caller actually needs is not "Eclipse was asked to launch"
@@ -166,9 +180,63 @@ class LaunchHandler implements DevServerHandler {
 			}
 		}
 
-		if (!"true".equalsIgnoreCase(params.get("allowMultiple")) && findRunningLaunch(config.getName()) != null) {
+		// ---- Ports: decide the clash explicitly instead of letting the runtimes fight. ----
+
+		final Integer requestedPort = parsePort(params.get("port"));
+		final int targetPort = requestedPort != null ? requestedPort.intValue() : LaunchPorts.portOf(config);
+		final boolean stopOthers = "true".equalsIgnoreCase(params.get("stopOthers"));
+
+		// A second instance of the same config is only refused when it would land on the
+		// same port; with port=N the caller explicitly wants one alongside.
+		if (requestedPort == null && !"true".equalsIgnoreCase(params.get("allowMultiple")) && findRunningLaunch(config.getName()) != null) {
 			return "{\"launched\":false,\"reason\":\"a launch of \\\"" + DevServerJson.escape(config.getName())
-					+ "\\\" is already running\",\"hint\":\"use /stop or /restart, or pass allowMultiple=true\"}";
+					+ "\\\" is already running\",\"hint\":\"use /stop or /restart, pass port=N to run a second instance alongside, or allowMultiple=true\"}";
+		}
+
+		String stoppedNote = "";
+		if (LaunchPorts.isHeld(targetPort)) {
+			final List<String> holders = LaunchPorts.holdersOf(targetPort);
+			if (!stopOthers) {
+				final String holder = holders.isEmpty()
+						? "a process the dev server doesn't know (not a registered app or an Eclipse launch - see lsof -nP -iTCP:" + targetPort + " -sTCP:LISTEN)"
+						: "\"" + String.join("\", \"", holders) + "\"";
+				return "{\"launched\":false,\"reason\":\"port " + targetPort + " is in use by " + DevServerJson.escape(holder)
+						+ "\",\"port\":" + targetPort + ",\"holders\":" + DevServerJson.stringArray(holders)
+						+ ",\"hint\":\"pass stopOthers=true to stop it and take the port (the usual choice in development), or port=" + (targetPort + 1) + " to run alongside it\"}";
+			}
+			if (holders.isEmpty()) {
+				return "{\"launched\":false,\"reason\":\"port " + targetPort + " is in use by a process the dev server can't stop (not a registered app or an Eclipse launch)\",\"port\":" + targetPort
+						+ ",\"hint\":\"lsof -nP -iTCP:" + targetPort + " -sTCP:LISTEN to find it, or pass port=" + (targetPort + 1) + "\"}";
+			}
+			final StopHandler stopper = new StopHandler();
+			for (final String holder : holders) {
+				final Map<String, String> stopParams = new java.util.HashMap<>();
+				stopParams.put("app", holder);
+				stopper.handle(stopParams);
+			}
+			// Give the stopped instance a moment to actually release the port.
+			final long releaseDeadline = System.currentTimeMillis() + 20_000;
+			while (LaunchPorts.isHeld(targetPort) && System.currentTimeMillis() < releaseDeadline) {
+				Thread.sleep(250);
+			}
+			if (LaunchPorts.isHeld(targetPort)) {
+				return "{\"launched\":false,\"reason\":\"port " + targetPort + " is still in use after stopping " + DevServerJson.escape(String.join(", ", holders))
+						+ "\",\"stopped\":" + DevServerJson.stringArray(holders) + ",\"hint\":\"try /stop?app=NAME&force=true, or port=" + (targetPort + 1) + "\"}";
+			}
+			stoppedNote = ",\"stopped\":" + DevServerJson.stringArray(holders);
+		}
+
+		// Extra program arguments go into an unsaved working copy; the saved config is untouched.
+		ILaunchConfiguration toLaunch = config;
+		final StringBuilder extraArguments = new StringBuilder();
+		if (requestedPort != null) {
+			extraArguments.append("-WOPort ").append(requestedPort);
+		}
+		if (params.get("args") != null && !params.get("args").isBlank()) {
+			extraArguments.append(extraArguments.length() > 0 ? " " : "").append(params.get("args").trim());
+		}
+		if (extraArguments.length() > 0) {
+			toLaunch = LaunchPorts.withExtraArguments(config, extraArguments.toString());
 		}
 
 		// ---- Launch. ----
@@ -179,7 +247,7 @@ class LaunchHandler implements DevServerHandler {
 
 		final ILaunch launch;
 		try {
-			launch = launchWithoutPrompts(config, mode);
+			launch = launchWithoutPrompts(toLaunch, mode);
 		}
 		catch (CoreException e) {
 			// The failure Eclipse would have shown in an error dialog, as data.
@@ -193,13 +261,18 @@ class LaunchHandler implements DevServerHandler {
 
 		// ---- Optionally wait until the app is actually ready (or provably dead). ----
 
+		final String portNote = ",\"port\":" + targetPort + stoppedNote + openedNote;
 		final String waitForPort = params.get("waitForPort");
 		if (waitForPort != null && !waitForPort.isEmpty()) {
-			return waitJson(config, mode, openedNote, launch, dialogsBefore, Integer.parseInt(waitForPort), timeoutSeconds(params));
+			return waitJson(config, mode, portNote, launch, dialogsBefore, Integer.parseInt(waitForPort), timeoutSeconds(params));
+		}
+		if (requestedPort != null) {
+			// The caller chose the port, so readiness on it is knowable - wait by default.
+			return waitJson(config, mode, portNote, launch, dialogsBefore, requestedPort.intValue(), timeoutSeconds(params));
 		}
 
 		return "{\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName())
-				+ "\",\"mode\":\"" + mode + "\"" + openedNote + "}";
+				+ "\",\"mode\":\"" + mode + "\"" + portNote + "}";
 	}
 
 	/**
@@ -266,6 +339,19 @@ class LaunchHandler implements DevServerHandler {
 				+ " — then retry; or pass ignoreErrors=true to launch anyway";
 	}
 
+	private static Integer parsePort(String value) {
+		if (value == null || value.isBlank()) {
+			return null;
+		}
+		try {
+			final int port = Integer.parseInt(value.trim());
+			return port > 0 && port < 65536 ? Integer.valueOf(port) : null;
+		}
+		catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
 	private static Set<String> dialogTitles(ModalDialogs.Snapshot snapshot) {
 		final Set<String> titles = new HashSet<>();
 		for (final ModalDialogs.Dialog dialog : snapshot.dialogs) {
@@ -298,7 +384,7 @@ class LaunchHandler implements DevServerHandler {
 
 		while (System.currentTimeMillis() < deadline) {
 			if (portAnswers(port)) {
-				return "{" + base + ",\"ready\":true,\"port\":" + port
+				return "{" + base + ",\"ready\":true,\"readyPort\":" + port
 						+ ",\"startupMillis\":" + (System.currentTimeMillis() - start) + "}";
 			}
 			if (launch.isTerminated()) {
