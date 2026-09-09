@@ -210,6 +210,10 @@
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>target-platform-configuration</artifactId>
 				<configuration>
+					<!-- The target tracks releases/latest; Eclipse 2026-09 (4.41) needs JavaSE-25 to
+					     resolve, so dependency resolution runs at 25. The bundles' own BREE stays
+					     JavaSE-21 (what they compile against). -->
+					<executionEnvironment>JavaSE-25</executionEnvironment>
 					<environments>
 						<environment>
 							<os>linux</os>
