@@ -38,9 +38,20 @@ import java.nio.file.Path;
  */
 public class WOProjectCreator {
 
+	/** What to generate. */
+	public enum Kind {
+		/** An ng-objects application (standalone templates, {@code project.base=ng}). */
+		NG_APP,
+		/** A WebObjects/wonder-slim application (bundle templates, {@code project.base=wo}). */
+		WO_APP,
+		/** A plain Maven jar project — supporting logic, no web framework. */
+		MAVEN
+	}
+
 	private final String _projectName;
 	private final String _packageName;
 	private final boolean _isNG;
+	private final Kind _kind;
 	private final Path _projectDir;
 
 	/**
@@ -50,10 +61,81 @@ public class WOProjectCreator {
 	 * @param projectDir   the directory where files will be written
 	 */
 	public WOProjectCreator(String projectName, String packageName, boolean isNG, Path projectDir) {
+		this(projectName, packageName, isNG ? Kind.NG_APP : Kind.WO_APP, projectDir);
+	}
+
+	/**
+	 * @param projectName  the project name (also used as Maven artifactId)
+	 * @param packageName  the Java package for generated classes (also the Maven groupId)
+	 * @param kind         which template to generate
+	 * @param projectDir   the directory where files will be written
+	 */
+	public WOProjectCreator(String projectName, String packageName, Kind kind, Path projectDir) {
 		_projectName = projectName;
 		_packageName = packageName;
-		_isNG = isNG;
+		_kind = kind;
+		_isNG = kind == Kind.NG_APP;
 		_projectDir = projectDir;
+	}
+
+	/**
+	 * The default Java package for a project name: lower-cased, hyphens and underscores
+	 * become dots, anything that can't be part of an identifier is dropped
+	 * ({@code my-cool_app} → {@code my.cool.app}). Shared by the wizard and the dev server.
+	 */
+	public static String derivePackageName(String projectName) {
+		final String name = projectName.toLowerCase().replace('-', '.').replace('_', '.');
+		final StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < name.length(); i++) {
+			final char c = name.charAt(i);
+			if (c == '.' || Character.isJavaIdentifierPart(c)) {
+				sb.append(c);
+			}
+		}
+		// Collapse empty segments and segments that start with a digit (not valid identifiers).
+		final StringBuilder out = new StringBuilder();
+		for (final String segment : sb.toString().split("\\.")) {
+			if (segment.isEmpty()) {
+				continue;
+			}
+			if (out.length() > 0) {
+				out.append('.');
+			}
+			out.append(Character.isJavaIdentifierStart(segment.charAt(0)) ? segment : "_" + segment);
+		}
+		return out.toString();
+	}
+
+	/** @return null when the name is usable as a project/artifact name, else what's wrong with it. */
+	public static String validateProjectName(String projectName) {
+		if (projectName == null || projectName.isBlank()) {
+			return "project name is empty";
+		}
+		if (!projectName.matches("[A-Za-z0-9][A-Za-z0-9._-]*")) {
+			return "project name may only contain letters, digits, '.', '_' and '-', and must start with a letter or digit";
+		}
+		if (derivePackageName(projectName).isEmpty()) {
+			return "no Java package can be derived from the project name";
+		}
+		return null;
+	}
+
+	/** @return null when the package name is a valid Java package, else what's wrong with it. */
+	public static String validatePackageName(String packageName) {
+		if (packageName == null || packageName.isBlank()) {
+			return "package name is empty";
+		}
+		for (final String segment : packageName.split("\\.", -1)) {
+			if (segment.isEmpty() || !Character.isJavaIdentifierStart(segment.charAt(0)) || !segment.chars().allMatch(Character::isJavaIdentifierPart)) {
+				return "'" + packageName + "' is not a valid Java package name";
+			}
+		}
+		return null;
+	}
+
+	/** The application's main class for the app kinds ({@code <package>.Application}); null for {@link Kind#MAVEN}. */
+	public String mainClassName() {
+		return _kind == Kind.MAVEN ? null : _packageName + ".Application";
 	}
 
 	/**
@@ -66,6 +148,10 @@ public class WOProjectCreator {
 	 */
 	public Path createProject() throws IOException {
 		Files.createDirectories(_projectDir);
+
+		if (_kind == Kind.MAVEN) {
+			return createMavenProject();
+		}
 
 		// 1. Create folder structure
 		String packagePath = _packageName.replace('.', '/');
@@ -115,6 +201,52 @@ public class WOProjectCreator {
 		}
 
 		return _projectDir.resolve(componentBase + "Main.html");
+	}
+
+	/**
+	 * A plain Maven jar project: a pom, the standard source folders, and the project's
+	 * package on both the main and test side (so the first class has an obvious home).
+	 *
+	 * @return the path to the pom.xml
+	 */
+	private Path createMavenProject() throws IOException {
+		final String packagePath = _packageName.replace('.', '/');
+		Files.createDirectories(_projectDir.resolve("src/main/java/" + packagePath));
+		Files.createDirectories(_projectDir.resolve("src/main/resources"));
+		Files.createDirectories(_projectDir.resolve("src/test/java/" + packagePath));
+		writeFile("pom.xml", generateMavenPomXml());
+		return _projectDir.resolve("pom.xml");
+	}
+
+	private String generateMavenPomXml() {
+		return String.format("""
+				<?xml version="1.0" encoding="UTF-8"?>
+				<project xmlns="http://maven.apache.org/POM/4.0.0"
+				\t\txmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				\t\txsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+				\t<modelVersion>4.0.0</modelVersion>
+
+				\t<groupId>%s</groupId>
+				\t<artifactId>%s</artifactId>
+				\t<version>1.0.0-SNAPSHOT</version>
+				\t<packaging>jar</packaging>
+
+				\t<properties>
+				\t\t<maven.compiler.source>21</maven.compiler.source>
+				\t\t<maven.compiler.target>21</maven.compiler.target>
+				\t\t<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+				\t</properties>
+
+				\t<dependencies>
+				\t\t<dependency>
+				\t\t\t<groupId>org.junit.jupiter</groupId>
+				\t\t\t<artifactId>junit-jupiter</artifactId>
+				\t\t\t<version>5.11.4</version>
+				\t\t\t<scope>test</scope>
+				\t\t</dependency>
+				\t</dependencies>
+				</project>
+				""", _packageName, _projectName);
 	}
 
 	/**
@@ -213,6 +345,11 @@ public class WOProjectCreator {
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>Ajax</artifactId>
 				\t\t\t<version>8.0.4</version>
+				\t\t</dependency>
+				\t\t<dependency>
+				\t\t\t<groupId>is.rebbi</groupId>
+				\t\t\t<artifactId>wo-adaptor-jetty</artifactId>
+				\t\t\t<version>0.11.0</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>com.webobjects</groupId>
@@ -428,6 +565,10 @@ public class WOProjectCreator {
 	 */
 	private String generateWOProperties() {
 		return String.format("""
+				# The HTTP adaptor. Declared here (and wo-adaptor-jetty is a dependency in the pom) so
+				# the app runs the same everywhere, whatever a machine's ~/WebObjects.properties says.
+				WOAdaptor=WOAdaptorJetty
+
 				log4j.rootCategory=INFO, stdout
 
 				log4j.appender.stdout=org.apache.log4j.ConsoleAppender

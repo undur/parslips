@@ -3,24 +3,14 @@ package org.objectstyle.wolips.wizards;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.project.IMavenProjectImportResult;
 import org.eclipse.m2e.core.project.IProjectConfigurationManager;
-import org.eclipse.m2e.core.project.LocalProjectScanner;
-import org.eclipse.m2e.core.project.MavenProjectInfo;
-import org.eclipse.m2e.core.project.ProjectImportConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -121,41 +111,7 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 	 * </ul>
 	 */
 	private String derivePackageName() {
-		String name = getProjectName().toLowerCase();
-
-		// Replace hyphens and underscores with dots (common Maven convention)
-		name = name.replace('-', '.').replace('_', '.');
-
-		// Strip characters not valid in Java identifiers (keeping dots as separators)
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < name.length(); i++) {
-			char c = name.charAt(i);
-			if (c == '.' || Character.isJavaIdentifierPart(c)) {
-				sb.append(c);
-			}
-		}
-		name = sb.toString();
-
-		// Collapse consecutive dots and trim leading/trailing dots
-		name = name.replaceAll("\\.{2,}", ".").replaceAll("^\\.|\\.$", "");
-
-		// Ensure each segment starts with a letter (Java requirement)
-		String[] segments = name.split("\\.");
-		sb = new StringBuilder();
-		for (int i = 0; i < segments.length; i++) {
-			if (segments[i].isEmpty()) {
-				continue;
-			}
-			if (sb.length() > 0) {
-				sb.append('.');
-			}
-			if (Character.isDigit(segments[i].charAt(0))) {
-				sb.append('_');
-			}
-			sb.append(segments[i]);
-		}
-
-		return sb.toString();
+		return WOProjectCreator.derivePackageName(getProjectName());
 	}
 
 	/**
@@ -235,60 +191,8 @@ public class WOProjectCreationPage extends WizardNewProjectCreationPage {
 		}
 	}
 
-	/**
-	 * Imports a directory containing a pom.xml as a Maven project using m2e.
-	 *
-	 * <p>This is equivalent to the user doing File → Import → Existing Maven Projects.
-	 * m2e handles all Eclipse project configuration: natures, builders, classpath,
-	 * source folders, dependency resolution.
-	 *
-	 * @param projectDir  the directory containing the pom.xml
-	 * @return the imported IProject, or null if import failed
-	 */
+	/** Imports the generated directory as a Maven project (shared with the dev server). */
 	private IProject importMavenProject(File projectDir) throws CoreException, InterruptedException {
-		IProjectConfigurationManager configManager = MavenPlugin.getProjectConfigurationManager();
-
-		// Scan for pom.xml in the project directory
-		LocalProjectScanner scanner = new LocalProjectScanner(
-				Collections.singletonList(projectDir.getAbsolutePath()),
-				false,                                              // don't search for nested projects
-				MavenPlugin.getMavenModelManager());
-		scanner.run(new NullProgressMonitor());
-
-		// Collect found Maven project(s)
-		Collection<MavenProjectInfo> projects = collectProjects(scanner.getProjects());
-		if (projects.isEmpty()) {
-			return null;
-		}
-
-		// Import into Eclipse workspace
-		ProjectImportConfiguration importConfig = new ProjectImportConfiguration();
-		List<IMavenProjectImportResult> results = configManager.importProjects(
-				projects,
-				importConfig,
-				new NullProgressMonitor());
-
-		// Return the first successfully imported project
-		for (IMavenProjectImportResult result : results) {
-			IProject project = result.getProject();
-			if (project != null && project.exists()) {
-				return project;
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Recursively collects all {@link MavenProjectInfo} from the scanner results,
-	 * flattening any nested project hierarchies.
-	 */
-	private Collection<MavenProjectInfo> collectProjects(Collection<MavenProjectInfo> input) {
-		List<MavenProjectInfo> result = new ArrayList<>();
-		for (MavenProjectInfo info : input) {
-			result.add(info);
-			result.addAll(collectProjects(info.getProjects()));
-		}
-		return result;
+		return MavenProjectImporter.importProject(projectDir);
 	}
 }

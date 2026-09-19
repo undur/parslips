@@ -228,6 +228,18 @@ function narrate(entry) {
 			if (p.skipAll === "true") return "Disarmed all breakpoints";
 			if (p.skipAll === "false") return "Re-armed breakpoints";
 			return "Checked the workspace breakpoints";
+		case "/createProject": {
+			const name = b(p.name || "?");
+			if (r && r.created === false) return "Could not create project " + name + " — " + esc(r.reason || "");
+			let story = "Created " + name + " from the " + b((r && r.template) || p.template || "?") + " template";
+			if (r && r.compileErrors) story += " — <b>" + r.compileErrors + " compile error" + (r.compileErrors === 1 ? "" : "s") + "</b>";
+			if (r && r.launch && r.launch.ready === true) story += " and launched it — ready in " + seconds(r.launch.startupMillis || 0);
+			else if (r && r.launch && r.launch.launched === false) story += " — launch refused: " + esc(r.launch.reason || "");
+			return story;
+		}
+		case "/importProject":
+			if (r && r.imported === false) return "Did not import — " + esc(r.reason || "");
+			return "Imported " + b((r && r.project) || p.path || "?") + " into the workspace" + (r && r.launchConfig ? " (launchable as " + b(r.launchConfig) + ")" : "");
 		case "/openProject":
 			return "Opened project " + b(p.project || "?") + " (with its dependencies)";
 		case "/openComponent":
@@ -253,7 +265,7 @@ function narrate(entry) {
 function tallyCategory(path) {
 	if (path === "/validate" || path === "/revalidate") return "validations";
 	if (path === "/refreshProject" || path === "/refresh") return "builds";
-	if (path === "/launch" || path === "/restart" || path === "/stop") return "launches";
+	if (path === "/launch" || path === "/restart" || path === "/stop" || path === "/createProject") return "launches";
 	if (path === "/elementApi" || path === "/problems" || path === "/status" || path === "/apps" || path === "/console") return "lookups";
 	return null;
 }

@@ -12,6 +12,35 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: `/createProject` and `/importProject` — from nothing to a running app
+
+An agent could edit, build, launch and observe — but not *begin*: new projects were created
+on disk and then imported into Eclipse by hand. Two endpoints close that loop:
+
+- **`/createProject?name=…&template=ng-objects-app|wonder-slim-app|maven`** generates the
+  project from the bundled templates (the New Project wizard's generator), imports it through
+  m2e, waits for the classpath jobs and first build to settle, reports compile errors, gives
+  an application a launch configuration, and with `launch=true` launches it (all `/launch`
+  parameters pass through). `package` defaults to one derived from the name; `location` is
+  the parent directory (default: the workspace directory). It refuses rather than overwrite
+  an existing workspace project or a non-empty directory.
+- **`/importProject?path=…`** imports an existing Maven project directory through m2e; an
+  application (`principalClass` in `build.properties`) gets a launch configuration when it has
+  none. A directory already in the workspace is reported, not imported twice.
+
+Supporting changes: `WOProjectCreator` gained a `Kind` (`NG_APP`, `WO_APP`, and a new plain
+`MAVEN` jar template for supporting logic) plus shared `derivePackageName` /
+`validateProjectName` / `validatePackageName` helpers; the wizard's private m2e import became
+`MavenProjectImporter` (wizard and dev server import identically); `LaunchConfigCreator`
+creates a minimal, portable Java-application config (project, main class, m2e classpath
+providers — nothing machine-specific). `/watch` narrates both endpoints.
+
+Found by the first live run: the `wonder-slim-app` template neither depended on an HTTP
+adaptor nor selected one, so a generated app died at startup ("Unable to locate class named:
+WOAdaptorJetty") on any machine whose `~/WebObjects.properties` selects the Jetty adaptor.
+The template now depends on `is.rebbi:wo-adaptor-jetty:0.11.0` and sets
+`WOAdaptor=WOAdaptorJetty` in its own `Properties`, so it runs the same everywhere.
+
 ### Dev server: `/launch` decides port clashes — `stopOthers`, `port`, `args`
 
 Development apps share port 1200 by convention, so launching one while another runs is a
