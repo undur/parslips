@@ -347,11 +347,6 @@ public class WOProjectCreator {
 				\t\t\t<version>8.0.4</version>
 				\t\t</dependency>
 				\t\t<dependency>
-				\t\t\t<groupId>is.rebbi</groupId>
-				\t\t\t<artifactId>wo-adaptor-jetty</artifactId>
-				\t\t\t<version>0.11.0</version>
-				\t\t</dependency>
-				\t\t<dependency>
 				\t\t\t<groupId>com.webobjects</groupId>
 				\t\t\t<artifactId>JavaWebObjects</artifactId>
 				\t\t\t<version>5.4.3</version>
@@ -565,10 +560,6 @@ public class WOProjectCreator {
 	 */
 	private String generateWOProperties() {
 		return String.format("""
-				# The HTTP adaptor. Declared here (and wo-adaptor-jetty is a dependency in the pom) so
-				# the app runs the same everywhere, whatever a machine's ~/WebObjects.properties says.
-				WOAdaptor=WOAdaptorJetty
-
 				log4j.rootCategory=INFO, stdout
 
 				log4j.appender.stdout=org.apache.log4j.ConsoleAppender

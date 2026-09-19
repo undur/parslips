@@ -44,12 +44,6 @@ Supporting changes: `WOProjectCreator` gained a `Kind` (`NG_APP`, `WO_APP`, and 
 creates a minimal, portable Java-application config (project, main class, m2e classpath
 providers — nothing machine-specific). `/watch` narrates both endpoints.
 
-Found by the first live run: the `wonder-slim-app` template neither depended on an HTTP
-adaptor nor selected one, so a generated app died at startup ("Unable to locate class named:
-WOAdaptorJetty") on any machine whose `~/WebObjects.properties` selects the Jetty adaptor.
-The template now depends on `is.rebbi:wo-adaptor-jetty:0.11.0` and sets
-`WOAdaptor=WOAdaptorJetty` in its own `Properties`, so it runs the same everywhere.
-
 ### Dev server: `/launch` decides port clashes — `stopOthers`, `port`, `args`
 
 Development apps share port 1200 by convention, so launching one while another runs is a

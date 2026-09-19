@@ -63,14 +63,13 @@ public class WOProjectCreatorKindsTest {
 	}
 
 	@Test
-	public void woAppCarriesItsAdaptor() throws Exception {
-		// A generated WO app must not depend on a machine's ~/WebObjects.properties: the adaptor it
-		// selects is declared in its own Properties AND is a dependency in its pom. (A template
-		// that named neither died at startup wherever WOAdaptorJetty was the global default.)
+	public void woAppDoesNotPickAnAdaptor() throws Exception {
+		// The template stays adaptor-neutral: no adaptor dependency, no WOAdaptor setting. Which
+		// adaptor runs is the machine's or the project's later choice, not the template's.
 		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
 		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, dir).createProject();
 
-		assertTrue(Files.readString(dir.resolve("pom.xml")).contains("<artifactId>wo-adaptor-jetty</artifactId>"));
-		assertTrue(Files.readString(dir.resolve("src/main/woresources/Properties")).contains("WOAdaptor=WOAdaptorJetty"));
+		assertFalse(Files.readString(dir.resolve("pom.xml")).contains("wo-adaptor-jetty"));
+		assertFalse(Files.readString(dir.resolve("src/main/woresources/Properties")).contains("WOAdaptor"));
 	}
 }
