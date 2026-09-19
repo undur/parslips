@@ -39,6 +39,37 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- September 19, 2026 -->
+			<div class="card">
+				<h2 class="date-header">September 19, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>From nothing to a running app</h3>
+					<p>An agent could already edit, build, launch and observe a project through the dev server &mdash; but it couldn't <em>begin</em> one. New projects were written to disk and then imported into Eclipse by hand. That last manual step is gone: <strong><code>/createProject</code></strong> generates a project from the bundled templates (<code>ng-objects-app</code>, <code>wonder-slim-app</code>, or a new plain <code>maven</code> library for supporting logic), imports it through m2e, waits for the workspace to settle, reports compile errors, gives an application a launch configuration &mdash; and with <code>launch=true</code> starts it. One call, a few seconds, and there is a running app in Eclipse ready for the edit loop, hot code replacement included. <strong><code>/importProject</code></strong> does the same for a project that already exists on disk. Both refuse rather than overwrite anything.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>One dev port, decided out loud</h3>
+					<p>Development apps share a port by convention, so starting one while another runs used to end with the frameworks quietly stopping the earlier app &mdash; which an agent only ever saw as an app mysteriously dying. <code>/launch</code> now decides it explicitly: a held port is a refusal that names the holder, <code>stopOthers=true</code> takes the port, and <code>port=1201</code> runs alongside instead &mdash; the argument is injected into an unsaved copy of the launch configuration, so yours is never edited. When an app <em>does</em> get stopped by a second instance, <code>/console</code> now says so instead of showing a clean log and an unexplained exit code.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>ng-objects elements, described by ng-objects</h3>
+					<p>In ng-objects projects the editor used to borrow its knowledge of each element from the WebObjects element of the same name &mdash; right often enough to be convincing, wrong wherever the two differ. ng-objects now declares its own tag names and ships its own element definitions, and the editor reads those: completion offers ng's tags and nothing from the WebObjects world, bindings validate against the real contract (<code>&lt;wo:checkbox&gt;</code> has <code>checked</code>, not WebObjects' <code>value</code>/<code>selection</code> pair), and binding completion and validation finally agree with each other. Projects on an ng-objects release that predates these files get the same definitions from a copy bundled with the editor.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Smaller things</h3>
+					<ul>
+						<li><code>/validate</code> says <em>why</em> a component wasn't found &mdash; closed project, unknown project, or no such component &mdash; and <code>/problems</code> says why a project's list is empty.</li>
+						<li>A launch is no longer refused for compile errors that vanish a moment later: the preflight waits for Maven's classpath work after a project is opened.</li>
+						<li>Apps launched through the dev server get their console in Eclipse even in a freshly started session.</li>
+						<li><code>/openProject?project=all</code> is gone; opening a project brings its workspace dependencies along, which is the useful thing.</li>
+						<li>The new-project templates reference wonder-slim 8.0.4 and vermilingua 1.1.7.</li>
+					</ul>
+				</div>
+			</div>
+
 			<!-- August 29, 2026 -->
 			<div class="card">
 				<h2 class="date-header">August 29, 2026</h2>

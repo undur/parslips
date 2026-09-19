@@ -163,6 +163,10 @@ Publishing a release:
 3. Add the card, commit (card + bump together is fine), push.
 4. `tools/changelog_release.py release X.Y.Z` — tags HEAD as `vX.Y.Z`, pushes the tag and
    creates the GitHub release: named after the card's headline, with the card as notes.
+5. **Release the skill under the same version.** `parslips-skill` (the agent-facing guide to
+   the dev server, `~/git/parslips-skill`) travels with the plugin: bring its docs up to date
+   with what the release contains, then tag it `vX.Y.Z` and create its GitHub release, so
+   "skill vX.Y.Z" always means "documents plugin X.Y.Z".
 
 The history was backfilled from the changelog in September 2026 (v5.0.0 … v5.6.0, numbered
 minor-per-month, patch-per-card). Ask before pushing/releasing, as with any push.
