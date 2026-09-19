@@ -12,6 +12,14 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Removed the dead WOLips launch-defaults message key
+
+`org.objectstyle.wolips.Preference.Launch_Global` in `PreferencesMessages.properties` was a
+leftover from WOLips' launch UI: a list of default launch arguments nothing in this plugin
+reads. Among them was `-WOAdaptor WODefaultAdaptor` — a manual adaptor setting of exactly the
+kind that is now obsolete, since `wo-adaptor-jetty` (0.12.0+) selects itself when it is a
+dependency. Removed.
+
 ### Fix: dev-server launches had no console in a fresh Eclipse session
 
 Process consoles are created by the debug UI's `ProcessConsoleManager`, which only exists
