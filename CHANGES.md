@@ -12,6 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: vermilingua 1.1.10
+
+Both generated poms (ng-objects-app and wonder-slim-app) now reference
+vermilingua-maven-plugin 1.1.10. The wonder-slim-app template stays adaptor-neutral for now:
+`wo-adaptor-jetty` selects itself as a dependency since 0.12.0, but it is still in development,
+so it isn't a default dependency yet.
+
 ### Removed the dead WOLips launch-defaults message key
 
 `org.objectstyle.wolips.Preference.Launch_Global` in `PreferencesMessages.properties` was a

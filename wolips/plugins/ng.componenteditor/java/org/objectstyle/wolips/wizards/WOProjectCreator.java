@@ -302,7 +302,7 @@ public class WOProjectCreator {
 					\t\t\t<plugin>
 					\t\t\t\t<groupId>is.rebbi</groupId>
 					\t\t\t\t<artifactId>vermilingua-maven-plugin</artifactId>
-					\t\t\t\t<version>1.1.7</version>
+					\t\t\t\t<version>1.1.10</version>
 					\t\t\t\t<extensions>true</extensions>
 					\t\t\t</plugin>
 					\t\t</plugins>
@@ -364,7 +364,7 @@ public class WOProjectCreator {
 				\t\t\t<plugin>
 				\t\t\t\t<groupId>is.rebbi</groupId>
 				\t\t\t\t<artifactId>vermilingua-maven-plugin</artifactId>
-				\t\t\t\t<version>1.1.7</version>
+				\t\t\t\t<version>1.1.10</version>
 				\t\t\t\t<extensions>true</extensions>
 				\t\t\t</plugin>
 				\t\t</plugins>
