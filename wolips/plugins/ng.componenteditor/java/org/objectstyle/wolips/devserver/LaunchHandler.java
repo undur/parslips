@@ -286,6 +286,7 @@ class LaunchHandler implements DevServerHandler {
 	 * building again here would only re-run the pre-launch checks we've already made.
 	 */
 	private static ILaunch launchWithoutPrompts(ILaunchConfiguration config, String mode) throws CoreException {
+		ensureDebugUiStarted();
 		final IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(DEBUG_CORE_PREFS);
 		// Remember the raw prior value (null = "not set, platform default applies") so the
 		// restore leaves the node exactly as found. Deliberately not flushed to disk: the
@@ -302,6 +303,35 @@ class LaunchHandler implements DevServerHandler {
 			else {
 				prefs.put(ENABLE_STATUS_HANDLERS, previous);
 			}
+		}
+	}
+
+	private static volatile boolean _debugUiStarted;
+
+	/**
+	 * Makes sure the debug UI bundle is started before we launch, so the launch gets a console
+	 * in Eclipse's Console view (and shows up properly in the Debug view).
+	 *
+	 * <p>Process consoles are created by the debug UI's {@code ProcessConsoleManager}, which only
+	 * exists once {@code org.eclipse.debug.ui} has started - and that bundle activates lazily, the
+	 * first time one of its classes is loaded. A launch through {@code DebugUITools.launch} does
+	 * that as a side effect; our dialog-free launch uses the core API only, so in a fresh Eclipse
+	 * session where nobody has touched Run/Debug yet, the app ran with no console for the
+	 * developer to look at. Touching a public debug-UI class activates the bundle; its start-up
+	 * also adopts launches that are already running. Done on the UI thread (the bundle creates
+	 * UI-affine services) and once per session.
+	 */
+	private static void ensureDebugUiStarted() {
+		if (_debugUiStarted) {
+			return;
+		}
+		try {
+			org.eclipse.swt.widgets.Display.getDefault().syncExec(() -> org.eclipse.debug.ui.DebugUITools.getPreferenceStore());
+			_debugUiStarted = true;
+		}
+		catch (Throwable t) {
+			// No console is a cosmetic loss; never let it stop a launch.
+			org.objectstyle.wolips.componenteditor.ComponenteditorPlugin.getDefault().log(t);
 		}
 	}
 

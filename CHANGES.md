@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Fix: dev-server launches had no console in a fresh Eclipse session
+
+Process consoles are created by the debug UI's `ProcessConsoleManager`, which only exists
+once `org.eclipse.debug.ui` has started — a lazily activated bundle. The old launch path
+(`DebugUITools.launch`) activated it as a side effect; the dialog-free core launch does
+not, so after an Eclipse restart an API-launched app ran with nothing in the Console view
+until something else woke the debug UI. `LaunchHandler.ensureDebugUiStarted()` now touches
+a public debug-UI class on the UI thread before launching (once per session).
+
 ### Dev server: `/createProject` and `/importProject` — from nothing to a running app
 
 An agent could edit, build, launch and observe — but not *begin*: new projects were created
