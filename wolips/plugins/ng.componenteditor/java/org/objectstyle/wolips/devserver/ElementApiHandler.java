@@ -61,6 +61,7 @@ class ElementApiHandler implements DevServerHandler {
 
 		final String projectHint = params.get("project") != null ? params.get("project") : params.get("app");
 		final boolean raw = "true".equalsIgnoreCase(params.get("raw"));
+		final boolean debug = "true".equalsIgnoreCase(params.get("debug"));
 		// runtime=ng|wo: resolve as an ng or a WO template would (hybrid projects hold both);
 		// default: the project's own runtime.
 		final org.objectstyle.wolips.variables.TemplateRuntime runtime = "ng".equalsIgnoreCase(params.get("runtime")) ? org.objectstyle.wolips.variables.TemplateRuntime.NG
@@ -81,6 +82,9 @@ class ElementApiHandler implements DevServerHandler {
 			}
 			first = false;
 			appendElement(b, name, hinted, raw, runtime);
+			if (debug && hinted != null) {
+				appendLookupDiagnostics(b, hinted, runtime);
+			}
 		}
 		b.append("]}");
 		return b.toString();
@@ -185,6 +189,71 @@ class ElementApiHandler implements DevServerHandler {
 			b.append(",\"api\":").append(ApiextJsonRenderer.render(model.getClassName(), model));
 		}
 		b.append('}');
+	}
+
+	/**
+	 * With {@code debug=true}: how the element CLASS lookup went for the element just appended -
+	 * the runtime's root class, the raw exact-name search hits, and which of them the root filter
+	 * kept. For diagnosing "the class for X is missing" markers that the resolved API contradicts.
+	 * Rewrites the element object just appended (the last '}' in the buffer) to carry a "lookup".
+	 */
+	private static void appendLookupDiagnostics(StringBuilder b, IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
+		final int start = b.lastIndexOf("{\"requested\":");
+		final int resolvedAt = b.indexOf("\"resolved\":\"", start);
+		if (start < 0 || resolvedAt < 0 || b.charAt(b.length() - 1) != '}') {
+			return;
+		}
+		final int nameStart = resolvedAt + "\"resolved\":\"".length();
+		final String resolvedName = b.substring(nameStart, b.indexOf("\"", nameStart));
+		final StringBuilder d = new StringBuilder(",\"lookup\":{");
+		try {
+			final org.objectstyle.wolips.variables.ParsleyProject pp = (org.objectstyle.wolips.variables.ParsleyProject) project.getProject().getAdapter(org.objectstyle.wolips.variables.ParsleyProject.class);
+			final org.objectstyle.wolips.variables.TemplateRuntime effective = runtime != null ? runtime : (pp != null ? pp.getTemplateRuntime() : null);
+			final String root = effective != null ? effective.elementClass() : null;
+			d.append("\"runtime\":").append(DevServerJson.str(String.valueOf(effective)));
+			d.append(",\"root\":").append(DevServerJson.str(root));
+			final IType rootType = root != null ? project.findType(root) : null;
+			d.append(",\"rootFound\":").append(rootType != null);
+			// Raw hits: an unfiltered exact-name search (no superclass filter).
+			final org.objectstyle.wolips.core.resources.types.TypeNameCollector unfiltered = new org.objectstyle.wolips.core.resources.types.TypeNameCollector(null, project, false);
+			BindingReflectionUtils.findMatchingElementClassNames(resolvedName, org.eclipse.jdt.core.search.SearchPattern.R_EXACT_MATCH, unfiltered, new org.eclipse.core.runtime.NullProgressMonitor());
+			d.append(",\"rawHits\":").append(DevServerJson.stringArray(new java.util.ArrayList<>(unfiltered.getTypeNames())));
+			// Per hit: does its supertype hierarchy contain the root?
+			d.append(",\"hits\":[");
+			boolean first = true;
+			for (final String hit : unfiltered.getTypeNames()) {
+				final IType type = project.findType(hit);
+				String verdict;
+				if (type == null) {
+					verdict = "findType null";
+				}
+				else if (rootType == null) {
+					verdict = "no root";
+				}
+				else {
+					final org.eclipse.jdt.core.ITypeHierarchy h = org.objectstyle.wolips.core.resources.types.SuperTypeHierarchyCache.getTypeHierarchy(type);
+					final boolean contains = h.contains(rootType);
+					final java.util.List<String> supers = new java.util.ArrayList<>();
+					for (final IType st : h.getAllSupertypes(type)) {
+						supers.add(st.getFullyQualifiedName() + (st.getFullyQualifiedName().equals(root) ? (st.equals(rootType) ? " (=root)" : " (NOT equal to root: " + st.getPath() + " vs " + rootType.getPath() + ")") : ""));
+					}
+					verdict = "containsRoot=" + contains + " supers=" + supers;
+				}
+				if (!first) {
+					d.append(',');
+				}
+				first = false;
+				d.append(DevServerJson.str(hit + " -> " + verdict));
+			}
+			d.append(']');
+			final IType found = BindingReflectionUtils.findElementType(project, resolvedName, false, new TypeCache(), runtime);
+			d.append(",\"class\":").append(DevServerJson.str(found != null ? found.getFullyQualifiedName() : null));
+		}
+		catch (final Exception e) {
+			d.append(",\"error\":").append(DevServerJson.str(String.valueOf(e)));
+		}
+		d.append('}');
+		b.insert(b.length() - 1, d);
 	}
 
 	private static void appendMissing(StringBuilder b, String name) {

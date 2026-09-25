@@ -39,6 +39,10 @@ removed.)
   validation (the inline element carries its template's runtime), "did you mean" suggestions,
   completion (tag infos and element-type proposals cached per runtime), hover, and Show in
   Element Reference.
+- **`/elementApi?…&debug=true`** (with `project`) adds a `lookup` trace per element: the element
+  class found for the runtime, the runtime's root class, the raw exact-name search hits, and for
+  each whether its supertype hierarchy reaches the root — for diagnosing "the class for X is
+  missing" markers that the resolved API contradicts.
 - **`/elementApi?runtime=ng|wo`** resolves as an ng or WO template would; **`/validate`** finds
   a component of the other runtime (an `NGComponent` in a WO project) instead of `found:false`.
 
