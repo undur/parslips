@@ -39,6 +39,26 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- September 25, 2026 -->
+			<div class="card">
+				<h2 class="date-header">September 25, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Hybrid projects: every template knows its runtime</h3>
+					<p>A WebObjects application can serve ng-objects components alongside its own &mdash; a hybrid project, with WebObjects templates and ng templates side by side. The editor used to judge every template by the project's type, so in a WebObjects project an ng component's template was checked as WebObjects: ng-only tags like <code>&lt;wo:script&gt;</code> were unknown, and ng elements such as <code>AjaxUpdateLink</code> were reported missing.</p>
+					<p>Now each template has its own runtime, decided the way ng-objects finds its components: a template under <code>ng/&lt;namespace&gt;/components/</code> (or anywhere in an ng project) is an ng template, everything else is WebObjects. Validation, completion, hover and the Element Reference follow it &mdash; <code>&lt;wo:str&gt;</code> is <code>NGString</code> in the ng page and <code>WOString</code> in the WebObjects page next to it, each checked against the element it really is.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Smaller things</h3>
+					<ul>
+						<li>ng projects read their tag names from <code>ng-tag-aliases.properties</code>, ng-objects' renamed registry &mdash; the rename keeps a classpath with both frameworks from mixing the two vocabularies.</li>
+						<li>The dev server's <code>/elementApi</code> takes <code>runtime=ng|wo</code> for hybrid projects, and <code>debug=true</code> shows exactly how an element's class was looked up; <code>/validate</code> finds components of either runtime.</li>
+						<li>The new-project templates reference vermilingua 1.1.10.</li>
+					</ul>
+				</div>
+			</div>
+
 			<!-- September 19, 2026 -->
 			<div class="card">
 				<h2 class="date-header">September 19, 2026</h2>
