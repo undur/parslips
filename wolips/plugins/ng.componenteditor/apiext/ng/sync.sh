@@ -4,7 +4,7 @@
 set -e
 NG="${1:-$HOME/git/ng-objects}/ng-appserver/src/main/resources"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-rm -f "$HERE"/*.apiext "$HERE"/parsley-tag-aliases.properties
-cp "$NG"/parsley-tag-aliases.properties "$HERE"/
+rm -f "$HERE"/*.apiext "$HERE"/ng-tag-aliases.properties
+cp "$NG"/ng-tag-aliases.properties "$HERE"/
 cp "$NG"/ng/appserver/templating/elements/*.apiext "$NG"/ng/appserver/templating/elements/ajax/*.apiext "$HERE"/
 echo "synced $(ls "$HERE"/*.apiext | wc -l | tr -d ' ') .apiext files + tag registry from $NG"

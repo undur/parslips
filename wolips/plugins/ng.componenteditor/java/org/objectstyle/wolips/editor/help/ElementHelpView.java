@@ -289,7 +289,7 @@ public class ElementHelpView extends ViewPart {
 				}
 				final IResource res = d.getResource();
 				if (res != null
-						&& ParsleyTagAliasResolver.ALIASES_RESOURCE.equals(res.getName())) {
+						&& ParsleyTagAliasResolver.isAliasResource(res.getName())) {
 					hit[0] = true;
 					return false;
 				}

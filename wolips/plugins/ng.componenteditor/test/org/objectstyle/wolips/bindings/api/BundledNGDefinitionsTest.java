@@ -41,7 +41,7 @@ public class BundledNGDefinitionsTest {
 	@Test
 	public void everyAliasTargetHasADefinitionAndViceVersa() throws Exception {
 		final Properties aliases = new Properties();
-		try (InputStream in = new FileInputStream(new File(DIR, "parsley-tag-aliases.properties"))) {
+		try (InputStream in = new FileInputStream(new File(DIR, "ng-tag-aliases.properties"))) {
 			aliases.load(in);
 		}
 		assertTrue("the tag registry should not be empty", aliases.size() >= 26);

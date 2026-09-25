@@ -12,6 +12,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### ng projects read `ng-tag-aliases.properties`
+
+ng-objects renamed its tag registry from `parsley-tag-aliases.properties` to
+`ng-tag-aliases.properties`, so a project with both WO and ng frameworks on its classpath no
+longer merges the two registries (ng's `str -> NGString` against Parsley's `str -> WOString`,
+first declaration winning). `NGElementManager` reads only the ng file; Parsley's
+`ParsleyTagRegistry` still reads its own. The editor now mirrors that per project:
+`ParsleyTagAliasResolver` reads `ng-tag-aliases.properties` for ng projects and
+`parsley-tag-aliases.properties` for everything else (`aliasResourceFor`), and a change to
+either file invalidates the alias cache (`isAliasResource`). The bundled ng bridge copy is
+renamed to match (`apiext/ng/ng-tag-aliases.properties`, `sync.sh` updated).
+
 ### New-project templates: vermilingua 1.1.10
 
 Both generated poms (ng-objects-app and wonder-slim-app) now reference

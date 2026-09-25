@@ -65,7 +65,7 @@ public class TagShortcut {
    * that finds an NG element's binding definitions.
    *
    * <p>This whole bridge is a stopgap for ng projects that declare no
-   * {@code parsley-tag-aliases.properties}: when a project does, the alias resolver
+   * {@code ng-tag-aliases.properties}: when a project does, the alias resolver
    * mirrors the runtime registry exactly and this code isn't consulted.
    */
   static String woToNGClassName(String className) {
@@ -81,7 +81,7 @@ public class TagShortcut {
    * so it is filtered to the shortcuts whose bridged class actually exists on the project's
    * classpath: {@code str} stays (NGString exists), {@code VBScript} goes (there is no
    * NGVBScript). Without this, an ng project on an ng-appserver that predates the shipped
-   * {@code parsley-tag-aliases.properties} was offered the WebObjects vocabulary wholesale.
+   * {@code ng-tag-aliases.properties} was offered the WebObjects vocabulary wholesale.
    */
   public static List<TagShortcut> applicableTo(IJavaProject javaProject, ParsleyProject parsleyProject, TypeCache typeCache) {
     final List<TagShortcut> all = ApiCache.getTagShortcuts();

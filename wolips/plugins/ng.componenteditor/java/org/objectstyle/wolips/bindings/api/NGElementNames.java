@@ -11,7 +11,7 @@ import java.util.Map;
  * here.
  *
  * <p>This is a stopgap for ng projects whose classpath declares no
- * {@code parsley-tag-aliases.properties}: when one does (ng-appserver ships one), the alias
+ * {@code ng-tag-aliases.properties}: when one does (ng-appserver ships one), the alias
  * resolver mirrors the runtime registry exactly and this code isn't consulted. There is
  * deliberately no reverse (NG → WO) mapping any more: an ng element's bindings come from the
  * {@code .apiext} ng-objects ships for it, never from the WebObjects element of the same name,

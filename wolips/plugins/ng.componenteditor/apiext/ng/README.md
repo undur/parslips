@@ -1,7 +1,7 @@
 # Bundled copies of ng-objects' element definitions — a temporary bridge
 
 Everything in this folder is a **verbatim copy** of what ng-appserver ships in its own
-`src/main/resources`: the tag registry (`parsley-tag-aliases.properties`) and one `.apiext`
+`src/main/resources`: the tag registry (`ng-tag-aliases.properties`) and one `.apiext`
 per framework element (`ng/appserver/templating/elements/**`). ng-objects is the source of
 truth; edit there, then re-sync here with `./sync.sh`.
 
@@ -12,7 +12,7 @@ shipping them in 0.1.2, and projects on the 0.1.1 release will be common for a w
 them an ng project had two bad options: no binding definitions at all, or borrowing the
 WebObjects element of the same name (whose API is not necessarily ng's). So:
 
-- `ParsleyTagAliasResolver` uses `parsley-tag-aliases.properties` from here when an **ng
+- `ParsleyTagAliasResolver` uses `ng-tag-aliases.properties` from here when an **ng
   project's** classpath declares no aliases (`isNGProject()` gate — WO projects never see it).
 - `ApiUtils.readBundledApiext` falls back to `/apiext/ng/<Type>.apiext` when no bundled WO
   definition and no element-own definition was found.

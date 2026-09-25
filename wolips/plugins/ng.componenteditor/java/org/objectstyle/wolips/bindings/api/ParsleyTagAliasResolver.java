@@ -42,8 +42,27 @@ import org.eclipse.jdt.core.IJavaProject;
  */
 public final class ParsleyTagAliasResolver {
 
-	/** The resource name frameworks/apps drop on the classpath; matches Parsley's runtime. */
+	/** The alias resource Parsley's runtime ({@code ParsleyTagRegistry}) reads — WebObjects projects. */
 	public static final String ALIASES_RESOURCE = "parsley-tag-aliases.properties";
+
+	/**
+	 * The alias resource ng-objects' runtime ({@code NGElementManager}) reads — ng projects. A
+	 * separate name on purpose: a classpath carrying both WO and ng frameworks would otherwise
+	 * merge the two registries (ng's {@code str -> NGString} against Parsley's
+	 * {@code str -> WOString}), first declaration winning. Each runtime reads only its own file,
+	 * and so does the editor: see {@link #aliasResourceFor}.
+	 */
+	public static final String NG_ALIASES_RESOURCE = "ng-tag-aliases.properties";
+
+	/** Whether a file of this name is a tag-alias registry of either runtime (for cache invalidation). */
+	public static boolean isAliasResource(String fileName) {
+		return ALIASES_RESOURCE.equals(fileName) || NG_ALIASES_RESOURCE.equals(fileName);
+	}
+
+	/** The registry file the project's runtime reads: the ng file for ng projects, Parsley's otherwise. */
+	static String aliasResourceFor(boolean ngProject) {
+		return ngProject ? NG_ALIASES_RESOURCE : ALIASES_RESOURCE;
+	}
 
 	/** Per-project alias map cache (alias -> target), or an empty map when none are present. */
 	private static final Map<IJavaProject, Map<String, String>> _cache = new HashMap<>();
@@ -166,7 +185,7 @@ public final class ParsleyTagAliasResolver {
 	}
 
 	/**
-	 * Loads and merges every {@code parsley-tag-aliases.properties} reachable from the project's
+	 * Loads and merges every alias registry reachable from the project's
 	 * <b>resolved classpath</b> — mirroring what the runtime classloader sees. Walks each
 	 * classpath entry:
 	 * <ul>
@@ -178,19 +197,25 @@ public final class ParsleyTagAliasResolver {
 	 *       this project's package-fragment roots;</li>
 	 * </ul>
 	 * plus this project's own output folder. First declaration of an alias wins on conflict.
+	 *
+	 * <p>Which registry depends on the project, mirroring its runtime: ng projects read
+	 * {@code ng-tag-aliases.properties} (ng-objects' {@code NGElementManager}), everything else
+	 * {@code parsley-tag-aliases.properties} (Parsley's {@code ParsleyTagRegistry}).
 	 */
 	private static Map<String, String> load(IJavaProject project) {
 		final Map<String, String> merged = new LinkedHashMap<>();
+		final boolean ngProject = isNGProject( project );
+		final String resource = aliasResourceFor( ngProject );
 		try {
 			final IJavaModel javaModel = project.getJavaModel();
 
 			// This project's own output (its src/main/resources lands here).
-			readFromOutput( project, merged );
+			readFromOutput( project, resource, merged );
 
 			for (final IClasspathEntry entry : project.getResolvedClasspath( true )) {
 				switch (entry.getEntryKind()) {
 				case IClasspathEntry.CPE_LIBRARY:
-					mergeFirstWins( merged, readFromLibraryPath( entry.getPath() ) );
+					mergeFirstWins( merged, readFromLibraryPath( entry.getPath(), resource ) );
 					break;
 				case IClasspathEntry.CPE_PROJECT:
 					// A referenced workspace project — read its output folder.
@@ -198,7 +223,7 @@ public final class ParsleyTagAliasResolver {
 					if (refProject != null && refProject.exists()) {
 						final IJavaProject refJava = javaModel.getJavaProject( refProject.getName() );
 						if (refJava.exists()) {
-							readFromOutput( refJava, merged );
+							readFromOutput( refJava, resource, merged );
 						}
 					}
 					break;
@@ -211,13 +236,13 @@ public final class ParsleyTagAliasResolver {
 		}
 
 		// Temporary bridge: an ng project whose ng-appserver predates the shipped
-		// parsley-tag-aliases.properties (e.g. the 0.1.1 release) declares nothing — and the
+		// ng-tag-aliases.properties (e.g. the 0.1.1 release) declares nothing — and the
 		// alternative fallback, the legacy WebObjects shortcut table, is the wrong vocabulary
 		// for it. So use the bundled copy of ng-objects' own registry instead. A real file on
 		// the classpath always wins (we only get here when none was found); the copy is synced
 		// from ng-objects (see apiext/ng/README.md) and goes away once an ng-appserver that
 		// ships its own is the floor.
-		if (merged.isEmpty() && isNGProject( project )) {
+		if (merged.isEmpty() && ngProject) {
 			mergeFirstWins( merged, bundledNGAliases() );
 		}
 		return Collections.unmodifiableMap( merged );
@@ -232,11 +257,11 @@ public final class ParsleyTagAliasResolver {
 		}
 	}
 
-	/** The bundled copy of ng-appserver's tag registry ({@code /apiext/ng/parsley-tag-aliases.properties}), or empty. */
+	/** The bundled copy of ng-appserver's tag registry ({@code /apiext/ng/ng-tag-aliases.properties}), or empty. */
 	private static Properties bundledNGAliases() {
 		final Properties props = new Properties();
 		try {
-			final java.net.URL url = tk.eclipse.plugin.htmleditor.HTMLPlugin.getDefault().getBundle().getEntry( "/apiext/ng/" + ALIASES_RESOURCE );
+			final java.net.URL url = tk.eclipse.plugin.htmleditor.HTMLPlugin.getDefault().getBundle().getEntry( "/apiext/ng/" + NG_ALIASES_RESOURCE );
 			if (url != null) {
 				try (InputStream in = url.openStream()) {
 					props.load( in );
@@ -249,11 +274,11 @@ public final class ParsleyTagAliasResolver {
 	}
 
 	/** Reads the alias resource from a project's default output folder (e.g. target/classes). */
-	private static void readFromOutput(IJavaProject project, Map<String, String> merged) {
+	private static void readFromOutput(IJavaProject project, String resource, Map<String, String> merged) {
 		try {
 			final IPath output = project.getOutputLocation(); // workspace-relative
 			if (output != null) {
-				final IResource res = ResourcesPlugin.getWorkspace().getRoot().findMember( output.append( ALIASES_RESOURCE ) );
+				final IResource res = ResourcesPlugin.getWorkspace().getRoot().findMember( output.append( resource ) );
 				if (res instanceof IFile && res.exists()) {
 					try (InputStream in = ((IFile) res).getContents()) {
 						final Properties props = new Properties();
@@ -268,7 +293,7 @@ public final class ParsleyTagAliasResolver {
 	}
 
 	/** Reads the alias resource from a library classpath path (a jar file, or a folder on disk). */
-	private static Properties readFromLibraryPath(IPath path) {
+	private static Properties readFromLibraryPath(IPath path, String resource) {
 		if (path == null) {
 			return null;
 		}
@@ -276,7 +301,7 @@ public final class ParsleyTagAliasResolver {
 			// A workspace-relative folder library (e.g. another project's classes folder).
 			final IResource res = ResourcesPlugin.getWorkspace().getRoot().findMember( path );
 			if (res != null && res.getType() == IResource.FOLDER) {
-				final IFile file = ((org.eclipse.core.resources.IFolder) res).getFile( ALIASES_RESOURCE );
+				final IFile file = ((org.eclipse.core.resources.IFolder) res).getFile( resource );
 				if (file.exists()) {
 					try (InputStream in = file.getContents()) {
 						final Properties props = new Properties();
@@ -290,7 +315,7 @@ public final class ParsleyTagAliasResolver {
 			final File f = path.toFile();
 			if (f.isFile()) {
 				try (JarFile jar = new JarFile( f )) {
-					final JarEntry entry = jar.getJarEntry( ALIASES_RESOURCE );
+					final JarEntry entry = jar.getJarEntry( resource );
 					if (entry != null) {
 						try (InputStream in = jar.getInputStream( entry )) {
 							final Properties props = new Properties();
@@ -300,7 +325,7 @@ public final class ParsleyTagAliasResolver {
 					}
 				}
 			} else if (f.isDirectory()) {
-				final File propsFile = new File( f, ALIASES_RESOURCE );
+				final File propsFile = new File( f, resource );
 				if (propsFile.isFile()) {
 					try (InputStream in = new java.io.FileInputStream( propsFile )) {
 						final Properties props = new Properties();
