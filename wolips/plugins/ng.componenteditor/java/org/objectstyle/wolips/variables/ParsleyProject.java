@@ -59,9 +59,49 @@ public class ParsleyProject {
 	private final IProject _project;
 	private final BuildProperties _buildProperties;
 
+	/**
+	 * Non-null for a view scoped to one template (see {@link #forTemplate}): the runtime that
+	 * renders that template, which then answers {@link #getProjectType()} / {@link #isNGProject()}
+	 * for everything that asks. Null for the project itself.
+	 */
+	private final TemplateRuntime _templateRuntime;
+
 	public ParsleyProject(IProject project, BuildProperties buildProperties) {
+		this(project, buildProperties, null);
+	}
+
+	private ParsleyProject(IProject project, BuildProperties buildProperties, TemplateRuntime templateRuntime) {
 		_project = project;
 		_buildProperties = buildProperties;
+		_templateRuntime = templateRuntime;
+	}
+
+	/**
+	 * This project as seen from one of its templates: the same project, but answering the
+	 * template's runtime (see {@link TemplateRuntime}) wherever a caller asks "ng or WO?". In a
+	 * plain ng or WO project that is the project's own type; in a hybrid project it makes an
+	 * ng component's template validate and complete as ng, next to WO templates validating as WO.
+	 *
+	 * @param template the template: a standalone {@code .html} file or a {@code .wo} folder
+	 */
+	public ParsleyProject forTemplate(IResource template) {
+		return withRuntime(TemplateRuntime.of(this, template));
+	}
+
+	/** This project viewed with the given runtime (this instance when it already has it). */
+	public ParsleyProject withRuntime(TemplateRuntime runtime) {
+		if (runtime == null || runtime == getTemplateRuntime()) {
+			return this;
+		}
+		return new ParsleyProject(_project, _buildProperties, runtime);
+	}
+
+	/** The runtime templates are checked against: the scoped template's, or the project's own. */
+	public TemplateRuntime getTemplateRuntime() {
+		if (_templateRuntime != null) {
+			return _templateRuntime;
+		}
+		return ownProjectType() == ProjectType.NG ? TemplateRuntime.NG : TemplateRuntime.WO;
 	}
 
 	public IProject getProject() {
@@ -87,6 +127,14 @@ public class ParsleyProject {
 	 * </ol>
 	 */
 	public ProjectType getProjectType() {
+		if (_templateRuntime != null) {
+			return _templateRuntime == TemplateRuntime.NG ? ProjectType.NG : ProjectType.WO;
+		}
+		return ownProjectType();
+	}
+
+	/** The project's own framework type, regardless of any template scope. */
+	ProjectType ownProjectType() {
 		// 1. Explicit base in build.properties
 		String base = _buildProperties.get(BuildProperties.Key.BASE);
 		if ("ng".equals(base)) {

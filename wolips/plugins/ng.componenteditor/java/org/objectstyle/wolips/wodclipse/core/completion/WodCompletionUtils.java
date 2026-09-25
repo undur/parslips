@@ -35,18 +35,34 @@ public class WodCompletionUtils {
   // Cleared when Java files change (see clearElementTypeCacheForProject).
   private static Map<IProject, TypeNameCollector> _elementTypeCache = new HashMap<IProject, TypeNameCollector>();
 
+  /** Element classes per project AND runtime, for templates whose runtime differs from their project's (hybrid projects). */
+  private static Map<String, TypeNameCollector> _runtimeElementTypeCache = new HashMap<String, TypeNameCollector>();
+
   /**
    * Clears the cached element type list for the given project.
    * Should be called when Java files are added, removed, or changed.
    */
   public static synchronized void clearElementTypeCacheForProject(IProject project) {
     _elementTypeCache.remove(project);
+    _runtimeElementTypeCache.keySet().removeIf(key -> key.startsWith(project.getName() + ":"));
   }
 
   /**
    * Returns a TypeNameCollector containing ALL element types for the project.
    * The result is cached; subsequent calls return the cached collector.
    */
+  private static synchronized TypeNameCollector getElementTypeCollector(IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime, IProgressMonitor progressMonitor) throws JavaModelException {
+    final String key = project.getProject().getName() + ":" + runtime;
+    TypeNameCollector cached = _runtimeElementTypeCache.get(key);
+    if (cached != null) {
+      return cached;
+    }
+    TypeNameCollector collector = new TypeNameCollector(runtime.elementClass(), project, false);
+    BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, progressMonitor);
+    _runtimeElementTypeCache.put(key, collector);
+    return collector;
+  }
+
   private static synchronized TypeNameCollector getElementTypeCollector(IJavaProject project, IProgressMonitor progressMonitor) throws JavaModelException {
     IProject iProject = project.getProject();
     TypeNameCollector cached = _elementTypeCache.get(iProject);
@@ -185,10 +201,15 @@ public class WodCompletionUtils {
   }
 
   public static void fillInElementTypeCompletionProposals(IJavaProject project, String token, int tokenOffset, int offset, Set<WodCompletionProposal> completionProposalsSet, boolean guessed, IProgressMonitor progressMonitor) throws JavaModelException {
+    fillInElementTypeCompletionProposals(project, token, tokenOffset, offset, completionProposalsSet, guessed, progressMonitor, null);
+  }
+
+  /** As above, offering the element classes of the given template runtime (null: the project's own). */
+  public static void fillInElementTypeCompletionProposals(IJavaProject project, String token, int tokenOffset, int offset, Set<WodCompletionProposal> completionProposalsSet, boolean guessed, IProgressMonitor progressMonitor, org.objectstyle.wolips.variables.TemplateRuntime runtime) throws JavaModelException {
     String partialToken = partialToken(token, tokenOffset, offset);
     if (partialToken.length() > 0) {
       // Use the cached full element type list and filter by prefix
-      TypeNameCollector allTypes = getElementTypeCollector(project, progressMonitor);
+      TypeNameCollector allTypes = runtime != null ? getElementTypeCollector(project, runtime, progressMonitor) : getElementTypeCollector(project, progressMonitor);
       String lowercasePartialToken = partialToken.toLowerCase();
       boolean includePackageName = token.indexOf('.') != -1;
       Iterator<String> allTypeNamesIter = allTypes.typeNames();

@@ -35,7 +35,7 @@ public class TemplateValidator {
 
   public TemplateValidator(WodParserCache cache) {
     _cache = cache;
-    _parsleyProject = (ParsleyProject)cache.getProject().getAdapter(ParsleyProject.class);
+    _parsleyProject = cache.getParsleyProject();
   }
 
   /**

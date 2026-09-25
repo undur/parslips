@@ -61,6 +61,10 @@ class ElementApiHandler implements DevServerHandler {
 
 		final String projectHint = params.get("project") != null ? params.get("project") : params.get("app");
 		final boolean raw = "true".equalsIgnoreCase(params.get("raw"));
+		// runtime=ng|wo: resolve as an ng or a WO template would (hybrid projects hold both);
+		// default: the project's own runtime.
+		final org.objectstyle.wolips.variables.TemplateRuntime runtime = "ng".equalsIgnoreCase(params.get("runtime")) ? org.objectstyle.wolips.variables.TemplateRuntime.NG
+				: "wo".equalsIgnoreCase(params.get("runtime")) ? org.objectstyle.wolips.variables.TemplateRuntime.WO : null;
 
 		final IJavaProject hinted = resolveProject(projectHint);
 
@@ -76,7 +80,7 @@ class ElementApiHandler implements DevServerHandler {
 				b.append(',');
 			}
 			first = false;
-			appendElement(b, name, hinted, raw);
+			appendElement(b, name, hinted, raw, runtime);
 		}
 		b.append("]}");
 		return b.toString();
@@ -86,10 +90,10 @@ class ElementApiHandler implements DevServerHandler {
 	 * Resolves one element name in the given project (or, if that's null, across every open project
 	 * until one yields a definition) and appends its {@code {requested, resolved, kind, api}} object.
 	 */
-	private static void appendElement(StringBuilder b, String name, IJavaProject hinted, boolean raw) {
+	private static void appendElement(StringBuilder b, String name, IJavaProject hinted, boolean raw, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
 		try {
 			if (hinted != null) {
-				appendResolved(b, name, hinted, raw);
+				appendResolved(b, name, hinted, raw, runtime);
 				return;
 			}
 			for (final IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
@@ -98,7 +102,7 @@ class ElementApiHandler implements DevServerHandler {
 				}
 				final IJavaProject jp = JavaCore.create(project);
 				if (jp != null && jp.exists()) {
-					final ResolvedElementApi resolved = resolveApi(name, jp);
+					final ResolvedElementApi resolved = resolveApi(name, jp, runtime);
 					if (resolved.exists()) {
 						appendObject(b, name, resolved, raw);
 						return;
@@ -114,8 +118,8 @@ class ElementApiHandler implements DevServerHandler {
 		}
 	}
 
-	private static void appendResolved(StringBuilder b, String name, IJavaProject project, boolean raw) {
-		final ResolvedElementApi resolved = resolveApi(name, project);
+	private static void appendResolved(StringBuilder b, String name, IJavaProject project, boolean raw, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
+		final ResolvedElementApi resolved = resolveApi(name, project, runtime);
 		if (resolved.exists()) {
 			appendObject(b, name, resolved, raw);
 		}
@@ -137,12 +141,12 @@ class ElementApiHandler implements DevServerHandler {
 	 * {@code str}/{@code link}/{@code textfield} resolve even in an alias-using project. This is the
 	 * more forgiving behavior a lookup wants — you type the tag you see, and get its API.
 	 */
-	private static ResolvedElementApi resolveApi(String name, IJavaProject project) {
+	private static ResolvedElementApi resolveApi(String name, IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
 		String resolvedName = name;
 
 		// 1) Parsley tag aliases, when the project declares them.
-		if (ParsleyTagAliasResolver.isActiveFor(project)) {
-			resolvedName = ParsleyTagAliasResolver.resolveForBindings(project, name);
+		if (ParsleyTagAliasResolver.isActiveFor(project, runtime)) {
+			resolvedName = ParsleyTagAliasResolver.resolveForBindings(project, runtime, name);
 		}
 
 		// 2) Legacy tag shortcut — applied when aliases left the name unchanged (so the classic
@@ -158,7 +162,7 @@ class ElementApiHandler implements DevServerHandler {
 
 		IType type = null;
 		try {
-			type = BindingReflectionUtils.findElementType(project, resolvedName, false, new TypeCache());
+			type = BindingReflectionUtils.findElementType(project, resolvedName, false, new TypeCache(), runtime);
 		}
 		catch (final Exception e) {
 			// No type — resolution can still succeed via a bundled/global .apiext or .api by name.

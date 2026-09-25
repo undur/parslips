@@ -558,7 +558,7 @@ public class TemplateOutlinePage extends Page implements IContentOutlinePage, IH
       if (woTag) {
         className = className + " wo";
         try {
-          ParsleyProject parsleyProject = (ParsleyProject)_editor.getParserCache().getProject().getAdapter(ParsleyProject.class);
+          ParsleyProject parsleyProject = _editor.getParserCache().getParsleyProject();
           wodElement = WodHtmlUtils.getWodElement(element, parsleyProject, true, cache);
         }
         catch (Throwable t) {

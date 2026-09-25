@@ -34,12 +34,16 @@ public class FuzzyXMLWodElement extends SimpleWodElement {
     // attribute bindings, applied below).
     final org.eclipse.jdt.core.IJavaProject javaProject = parsleyProject != null
         ? org.eclipse.jdt.core.JavaCore.create(parsleyProject.getProject()) : null;
+    // The runtime that renders this template decides the tag vocabulary and element classes
+    // (parsleyProject is scoped to the template - see WodParserCache.getParsleyProject()).
+    final org.objectstyle.wolips.variables.TemplateRuntime runtime = parsleyProject != null ? parsleyProject.getTemplateRuntime() : null;
+    setTemplateRuntime(runtime);
     TagShortcut matchingTagShortcut = null;
-    if (javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject)) {
+    if (javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject, runtime)) {
       // Resolve to the binding-source element (the documented ancestor, e.g. WOString rather
       // than ERXWOString) — both more correct and far cheaper, since the replacement has no
       // .api and would force slow per-tag reflection during validation.
-      namespaceElementName = org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolveForBindings(javaProject, namespaceElementName);
+      namespaceElementName = org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolveForBindings(javaProject, runtime, namespaceElementName);
     }
     else {
       for (TagShortcut tagShortcut : ApiCache.getTagShortcuts()) {

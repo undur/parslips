@@ -12,6 +12,36 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### A template's runtime is its own, not its project's (hybrid WO + ng projects)
+
+The editor assumed one runtime per project: a WO project's templates were all checked as WO,
+an ng project's as ng. A hybrid project — a WebObjects app that also serves ng-objects
+components — broke that: an ng component's template (`src/main/resources/ng/app/components/…`)
+was validated as WO, so ng-only tags (`<wo:script>`) didn't resolve and ng elements
+(`AjaxUpdateLink`, an `NGElement`) were filtered out of the element lookup, which only
+accepted subclasses of the project's element root. (It used to half-work by accident: ng's
+registry merged into Parsley's, the very conflict the `ng-tag-aliases.properties` rename
+removed.)
+
+- **`TemplateRuntime`** (`NG`/`WO`) is decided per template, mirroring ng-objects' own resource
+  loader: a template is NG when its project is an ng project or it lives under
+  `ng/<namespace>/components/`; otherwise WO.
+- **`ParsleyProject.forTemplate(resource)`** returns the project scoped to a template's runtime
+  (`getProjectType()`/`isNGProject()` answer the template's), and
+  **`WodParserCache.getParsleyProject()`** hands that view out — the editor paths that used
+  `cache.getProject().getAdapter(ParsleyProject.class)` (validator, source editor, completion,
+  outline, breadcrumb, open-declaration, conversions, hyperlinks) now get the template's runtime.
+- **Tag vocabulary per runtime**: `ParsleyTagAliasResolver` gained runtime-aware overloads,
+  caching per project *and* runtime; ng templates read `ng-tag-aliases.properties`, WO templates
+  `parsley-tag-aliases.properties`.
+- **Element classes per runtime**: `BindingReflectionUtils.findElementType(…, runtime)` looks
+  among the runtime's element root (`NGElement` or `WOElement`), cached per runtime; used by
+  validation (the inline element carries its template's runtime), "did you mean" suggestions,
+  completion (tag infos and element-type proposals cached per runtime), hover, and Show in
+  Element Reference.
+- **`/elementApi?runtime=ng|wo`** resolves as an ng or WO template would; **`/validate`** finds
+  a component of the other runtime (an `NGComponent` in a WO project) instead of `found:false`.
+
 ### ng projects read `ng-tag-aliases.properties`
 
 ng-objects renamed its tag registry from `parsley-tag-aliases.properties` to

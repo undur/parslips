@@ -192,6 +192,9 @@ public class ConvertBundleToInlineAction implements IObjectActionDelegate {
 		String bindingSuffix = "";
 		ParsleyProject parsleyProject = (ParsleyProject) woFolder.getProject().getAdapter(ParsleyProject.class);
 		if (parsleyProject != null) {
+			parsleyProject = parsleyProject.forTemplate(woFolder);
+		}
+		if (parsleyProject != null) {
 			BuildProperties buildProperties = parsleyProject.getBuildProperties();
 			if (buildProperties != null) {
 				bindingPrefix = buildProperties.getInlineBindingPrefix();

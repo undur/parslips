@@ -91,7 +91,7 @@ public class TagShortcut {
     final List<TagShortcut> applicable = new ArrayList<TagShortcut>();
     for (TagShortcut shortcut : all) {
       try {
-        if (BindingReflectionUtils.findElementType(javaProject, shortcut.getActual(parsleyProject), false, typeCache) != null) {
+        if (BindingReflectionUtils.findElementType(javaProject, shortcut.getActual(parsleyProject), false, typeCache, parsleyProject.getTemplateRuntime()) != null) {
           applicable.add(shortcut);
         }
       }

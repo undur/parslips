@@ -155,8 +155,21 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 
 		// Simple name: search the project for an exact match. The collector
 		// resolves matches to ITypes for us.
-		final TypeNameCollector typeNameCollector = new TypeNameCollector(javaProject, false);
+		TypeNameCollector typeNameCollector = new TypeNameCollector(javaProject, false);
 		BindingReflectionUtils.findMatchingElementClassNames(typeName, SearchPattern.R_EXACT_MATCH, typeNameCollector, new NullProgressMonitor());
+
+		// Not among the project's own runtime's elements? A hybrid project (a WO app that also
+		// serves ng components) holds components of the other runtime too - an NGComponent in a
+		// WO project - so look among the other runtime's element classes before giving up.
+		for (final org.objectstyle.wolips.variables.TemplateRuntime runtime : org.objectstyle.wolips.variables.TemplateRuntime.values()) {
+			if (!typeNameCollector.isEmpty()) {
+				break;
+			}
+			typeNameCollector = new TypeNameCollector(runtime.elementClass(), javaProject, false);
+			if (typeNameCollector.getSuperclassType() != null) {
+				BindingReflectionUtils.findMatchingElementClassNames(typeName, SearchPattern.R_EXACT_MATCH, typeNameCollector, new NullProgressMonitor());
+			}
+		}
 
 		if (typeNameCollector.isEmpty()) {
 			return null;

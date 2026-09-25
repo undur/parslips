@@ -63,8 +63,10 @@ public class ShowInElementReferenceHandler extends AbstractHandler {
 			// aliases (the new mechanism), resolve recursively through them — matching the
 			// runtime — instead of the legacy WOLips tag-shortcut preference.
 			final org.eclipse.jdt.core.IJavaProject jp = aliasProject(sourceEditor);
-			if (jp != null && ParsleyTagAliasResolver.isActiveFor(jp)) {
-				final String resolved = ParsleyTagAliasResolver.resolve(jp, elementName);
+			final org.objectstyle.wolips.variables.TemplateRuntime runtime = sourceEditor.getParserCache() != null && sourceEditor.getParserCache().getParsleyProject() != null
+					? sourceEditor.getParserCache().getParsleyProject().getTemplateRuntime() : null;
+			if (jp != null && ParsleyTagAliasResolver.isActiveFor(jp, runtime)) {
+				final String resolved = ParsleyTagAliasResolver.resolve(jp, runtime, elementName);
 				final int dot = resolved.lastIndexOf('.');
 				elementName = dot >= 0 ? resolved.substring(dot + 1) : resolved;
 			}

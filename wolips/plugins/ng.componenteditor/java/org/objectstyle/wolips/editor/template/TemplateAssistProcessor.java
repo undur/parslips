@@ -75,12 +75,15 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
       projectCache = new HashMap<>();
       _tagInfoCache.put(project, projectCache);
     }
-    InlineWodTagInfo tagInfo = projectCache.get(elementTypeName);
+    // Keyed by runtime too: in a hybrid project the same tag name means different elements in an
+    // ng template and a WO template.
+    final String cacheKey = (parsleyProject != null ? parsleyProject.getTemplateRuntime() + ":" : "") + elementTypeName;
+    InlineWodTagInfo tagInfo = projectCache.get(cacheKey);
     if (tagInfo == null) {
       tagInfo = new InlineWodTagInfo(elementTypeName, WodParserCache.getTypeCache());
       tagInfo.setJavaProject(javaProject);
       tagInfo.setParsleyProject(parsleyProject);
-      projectCache.put(elementTypeName, tagInfo);
+      projectCache.put(cacheKey, tagInfo);
     }
     return tagInfo;
   }
@@ -169,13 +172,14 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
       IJavaProject javaProject = getJavaProject();
       try {
         Set<WodCompletionProposal> proposals = new HashSet<WodCompletionProposal>();
-        WodCompletionUtils.fillInElementTypeCompletionProposals(javaProject, partialElementType, 0, partialElementType.length(), proposals, false, null);
+        final org.objectstyle.wolips.variables.TemplateRuntime runtime = _parsleyProject != null ? _parsleyProject.getTemplateRuntime() : null;
+        WodCompletionUtils.fillInElementTypeCompletionProposals(javaProject, partialElementType, 0, partialElementType.length(), proposals, false, null, runtime);
         // Tag shortcuts: from the project's Parsley aliases when present (the real vocabulary
         // the app uses), otherwise from the legacy WOLips tag-shortcut preference — filtered,
         // for an ng project, to the shortcuts whose class actually exists (no VBScript in ng).
         final String partialLower = partialElementType.toLowerCase();
-        if (org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject)) {
-          for (String alias : org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.aliasMap(javaProject).keySet()) {
+        if (org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject, runtime)) {
+          for (String alias : org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.aliasMap(javaProject, runtime).keySet()) {
             if (alias.toLowerCase().startsWith(partialLower)) {
               proposals.add(new WodCompletionProposal(partialElementType, 0, partialElementType.length(), alias));
             }

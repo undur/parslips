@@ -79,6 +79,17 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 	 * @param parserCache the parser cache for resolving element types to API
 	 *        definitions, or null for annotation-only mode
 	 */
+	/** The runtime of the template being hovered (decides tag vocabulary and element classes). */
+	private org.objectstyle.wolips.variables.TemplateRuntime hoverRuntime() {
+		try {
+			final org.objectstyle.wolips.variables.ParsleyProject parsleyProject = _parserCache != null ? _parserCache.getParsleyProject() : null;
+			return parsleyProject != null ? parsleyProject.getTemplateRuntime() : null;
+		}
+		catch (Throwable t) {
+			return null;
+		}
+	}
+
 	public WodAnnotationHover(IAnnotationModel annotationModel, WodParserCache parserCache) {
 		_annotationModel = annotationModel;
 		_parserCache = parserCache;
@@ -377,9 +388,9 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 			String lookupName = elementTypeName;
 			// The header shows the FULL resolution chain, e.g. "str → WOString → ERXWOString".
 			String displayName = elementTypeName;
-			final boolean aliasesActive = ParsleyTagAliasResolver.isActiveFor(javaProject);
+			final boolean aliasesActive = ParsleyTagAliasResolver.isActiveFor(javaProject, hoverRuntime());
 			if (aliasesActive) {
-				final java.util.List<String> chain = ParsleyTagAliasResolver.resolveChain(javaProject, elementTypeName);
+				final java.util.List<String> chain = ParsleyTagAliasResolver.resolveChain(javaProject, hoverRuntime(), elementTypeName);
 				lookupName = chain.get(chain.size() - 1);
 				displayName = String.join(" → ", chain);
 			}
@@ -395,7 +406,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 			// chain backward and show the nearest documented ancestor's card; the header keeps
 			// the full chain and a greyed "docs from X" note marks where the docs came from.
 			if (aliasesActive) {
-				final java.util.List<String> chain = ParsleyTagAliasResolver.resolveChain(javaProject, elementTypeName);
+				final java.util.List<String> chain = ParsleyTagAliasResolver.resolveChain(javaProject, hoverRuntime(), elementTypeName);
 				for (int i = chain.size() - 2; i >= 0; i--) {
 					final String ancestor = chain.get(i);
 					final HoverContent inherited = findDocCard(javaProject, ancestor, elementTypeName, displayName, "docs from " + ancestor, typeCache);
@@ -406,7 +417,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 			}
 			else {
 				// Legacy projects: the old tag-shortcut fallback, when the name didn't resolve.
-				final IType direct = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache);
+				final IType direct = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache, hoverRuntime());
 				if (direct == null) {
 					final TagShortcut shortcut = ApiCache.getTagShortcutNamed(elementTypeName);
 					if (shortcut != null && shortcut.getActual() != null) {
@@ -421,7 +432,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 
 			// Nothing documented anywhere in the chain — a tidy "no API" card for the element
 			// that's actually used.
-			final IType resolvedType = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache);
+			final IType resolvedType = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache, hoverRuntime());
 			return new HoverContent(ApiextHtmlRenderer.renderNoApiBody(displayName, ApiUtils.resolveOrigin(resolvedType)), true);
 		}
 		catch (Exception e) {
@@ -438,7 +449,7 @@ public class WodAnnotationHover implements IAnnotationHover, ITextHover, ITextHo
 	 * @param displayName the header label to show (may include the resolution arrow / inherited note)
 	 */
 	private HoverContent findDocCard(IJavaProject javaProject, String lookupName, String elementTypeName, String displayName, String note, TypeCache typeCache) throws org.eclipse.jdt.core.JavaModelException {
-		final IType elementType = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache);
+		final IType elementType = BindingReflectionUtils.findElementType(javaProject, lookupName, false, typeCache, hoverRuntime());
 		final String origin = ApiUtils.resolveOrigin(elementType);
 
 		// The apiext-wins-per-element resolution now lives in ElementApiResolver (the single seam);

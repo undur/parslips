@@ -179,6 +179,21 @@ public class WodParserCache implements ITypeOwner {
     clearCache();
   }
 
+  /**
+   * The project as seen from this cache's template: a {@link ParsleyProject} scoped to the
+   * template's runtime (see {@link org.objectstyle.wolips.variables.TemplateRuntime}), so an ng
+   * component in a hybrid WO project validates and completes as ng. Null when the project isn't
+   * a Parsley project.
+   */
+  public org.objectstyle.wolips.variables.ParsleyProject getParsleyProject() {
+    final org.objectstyle.wolips.variables.ParsleyProject parsleyProject = (org.objectstyle.wolips.variables.ParsleyProject) getProject().getAdapter(org.objectstyle.wolips.variables.ParsleyProject.class);
+    if (parsleyProject == null) {
+      return null;
+    }
+    final org.eclipse.core.resources.IResource template = _standaloneFile != null ? _standaloneFile : _woFolder;
+    return parsleyProject.forTemplate(template);
+  }
+
   public IContainer getWoFolder() {
     return _woFolder;
   }

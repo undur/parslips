@@ -119,7 +119,7 @@ public class TemplateConfiguration extends HTMLConfiguration {
       // immediately after creation). Guard against NPE here.
       ParsleyProject parsleyProject = null;
       if (parserCache.getProject() != null) {
-        parsleyProject = (ParsleyProject) parserCache.getProject().getAdapter(ParsleyProject.class);
+        parsleyProject = parserCache.getParsleyProject();
       }
 
       return new TemplateAssistProcessor(getEditorPart(), parserCache, parsleyProject);

@@ -64,8 +64,11 @@ public final class ParsleyTagAliasResolver {
 		return ngProject ? NG_ALIASES_RESOURCE : ALIASES_RESOURCE;
 	}
 
-	/** Per-project alias map cache (alias -> target), or an empty map when none are present. */
-	private static final Map<IJavaProject, Map<String, String>> _cache = new HashMap<>();
+	/**
+	 * Alias map cache (alias -> target), per project AND runtime: in a hybrid project the ng
+	 * templates read ng's registry and the WO templates Parsley's. Empty map when none present.
+	 */
+	private static final Map<java.util.Map.Entry<IJavaProject, Boolean>, Map<String, String>> _cache = new HashMap<>();
 
 	private ParsleyTagAliasResolver() {
 	}
@@ -76,7 +79,12 @@ public final class ParsleyTagAliasResolver {
 	 *         mechanism should be used for it instead of the legacy tag-shortcut preference.
 	 */
 	public static boolean isActiveFor(IJavaProject project) {
-		return !aliasMap(project).isEmpty();
+		return isActiveFor(project, null);
+	}
+
+	/** {@link #isActiveFor(IJavaProject)} for a template of the given runtime (null: the project's own). */
+	public static boolean isActiveFor(IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
+		return !aliasMap(project, runtime).isEmpty();
 	}
 
 	/**
@@ -89,7 +97,12 @@ public final class ParsleyTagAliasResolver {
 	 * @return the fully-resolved element name (never null; returns {@code name} if unmapped)
 	 */
 	public static String resolve(IJavaProject project, String name) {
-		final java.util.List<String> chain = resolveChain( project, name );
+		return resolve( project, null, name );
+	}
+
+	/** {@link #resolve(IJavaProject, String)} for a template of the given runtime (null: the project's own). */
+	public static String resolve(IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime, String name) {
+		final java.util.List<String> chain = resolveChain( project, runtime, name );
 		return chain.get( chain.size() - 1 );
 	}
 
@@ -103,7 +116,12 @@ public final class ParsleyTagAliasResolver {
 	 * @return the resolution chain, oldest (the typed name) first, never empty
 	 */
 	public static java.util.List<String> resolveChain(IJavaProject project, String name) {
-		final Map<String, String> aliases = aliasMap( project );
+		return resolveChain( project, null, name );
+	}
+
+	/** {@link #resolveChain(IJavaProject, String)} for a template of the given runtime (null: the project's own). */
+	public static java.util.List<String> resolveChain(IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime, String name) {
+		final Map<String, String> aliases = aliasMap( project, runtime );
 		final java.util.List<String> chain = new java.util.ArrayList<>();
 		String current = name;
 		final Set<String> seen = new HashSet<>();
@@ -133,11 +151,16 @@ public final class ParsleyTagAliasResolver {
 	 * cheaply-cached ancestor instead of reflecting over the heavyweight replacement per tag.
 	 */
 	public static String resolveForBindings(IJavaProject project, String name) {
-		final String resolved = resolve( project, name );
-		if (!isActiveFor( project )) {
+		return resolveForBindings( project, null, name );
+	}
+
+	/** {@link #resolveForBindings(IJavaProject, String)} for a template of the given runtime (null: the project's own). */
+	public static String resolveForBindings(IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime, String name) {
+		final String resolved = resolve( project, runtime, name );
+		if (!isActiveFor( project, runtime )) {
 			return resolved;
 		}
-		final java.util.List<String> chain = resolveChain( project, name );
+		final java.util.List<String> chain = resolveChain( project, runtime, name );
 		for (int i = chain.size() - 1; i >= 0; i--) {
 			if (hasBindingDefinition( chain.get( i ) )) {
 				return chain.get( i );
@@ -164,14 +187,24 @@ public final class ParsleyTagAliasResolver {
 	 *         empty if the project declares no Parsley aliases. The returned map is unmodifiable.
 	 */
 	public static Map<String, String> aliasMap(IJavaProject project) {
+		return aliasMap( project, null );
+	}
+
+	/**
+	 * The alias map a template of the given runtime sees (null: the project's own runtime): ng's
+	 * registry for ng templates, Parsley's for WO templates.
+	 */
+	public static Map<String, String> aliasMap(IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
 		if (project == null) {
 			return Collections.emptyMap();
 		}
+		final boolean ng = runtime != null ? runtime == org.objectstyle.wolips.variables.TemplateRuntime.NG : isNGProject( project );
+		final java.util.Map.Entry<IJavaProject, Boolean> key = new java.util.AbstractMap.SimpleImmutableEntry<>( project, ng );
 		synchronized (_cache) {
-			Map<String, String> cached = _cache.get( project );
+			Map<String, String> cached = _cache.get( key );
 			if (cached == null) {
-				cached = load( project );
-				_cache.put( project, cached );
+				cached = load( project, ng );
+				_cache.put( key, cached );
 			}
 			return cached;
 		}
@@ -202,9 +235,8 @@ public final class ParsleyTagAliasResolver {
 	 * {@code ng-tag-aliases.properties} (ng-objects' {@code NGElementManager}), everything else
 	 * {@code parsley-tag-aliases.properties} (Parsley's {@code ParsleyTagRegistry}).
 	 */
-	private static Map<String, String> load(IJavaProject project) {
+	private static Map<String, String> load(IJavaProject project, boolean ngProject) {
 		final Map<String, String> merged = new LinkedHashMap<>();
-		final boolean ngProject = isNGProject( project );
 		final String resource = aliasResourceFor( ngProject );
 		try {
 			final IJavaModel javaModel = project.getJavaModel();

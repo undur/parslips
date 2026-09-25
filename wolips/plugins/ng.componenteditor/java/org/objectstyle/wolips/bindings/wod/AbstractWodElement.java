@@ -83,6 +83,22 @@ import org.objectstyle.wolips.core.resources.types.TypeNameCollector;
 public abstract class AbstractWodElement implements IWodElement, Comparable<IWodElement> {
   private List<IWodBinding> _bindings;
 
+  /**
+   * The runtime of the template this element came from, when known (inline elements parsed from
+   * a template - see FuzzyXMLWodElement). Decides which element classes its type can name:
+   * NGElement subclasses for an ng template, WOElement subclasses for a WO one, which differ in
+   * a hybrid project. Null means "the project's own runtime".
+   */
+  private org.objectstyle.wolips.variables.TemplateRuntime _templateRuntime;
+
+  public void setTemplateRuntime(org.objectstyle.wolips.variables.TemplateRuntime templateRuntime) {
+    _templateRuntime = templateRuntime;
+  }
+
+  public org.objectstyle.wolips.variables.TemplateRuntime getTemplateRuntime() {
+    return _templateRuntime;
+  }
+
   private boolean _inline;
 
   private String _tagName;
@@ -242,7 +258,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 
   public ApiSnapshot getApi(IJavaProject javaProject, TypeCache cache) throws JavaModelException, ApiModelException {
     String elementTypeName = getElementType();
-    IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, cache);
+    IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, cache, _templateRuntime);
     return ApiUtils.findApiSnapshot(elementType, cache.getApiCache(javaProject));
   }
 
@@ -326,7 +342,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     
     String deprecationSeverity = BindingValidationPreferences.severity(PreferenceConstants.DEPRECATED_BINDING_SEVERITY_KEY);
     if (!SeverityPolicy.isIgnored(deprecationSeverity)) {
-      IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
+      IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache, _templateRuntime);
       if (BindingReflectionUtils.memberIsDeprecated(elementType)) {
         problems.add(new WodElementDeprecationProblem(this, "The component named '" + elementTypeName + "' is deprecated.", getElementTypePosition(), lineNumber, SeverityPolicy.isWarning(deprecationSeverity)));
       }
@@ -334,7 +350,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
 
     ApiSnapshot wo = null;
     if (!SeverityPolicy.isIgnored(wodMissingComponentSeverity)) {
-    	IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache);
+    	IType elementType = BindingReflectionUtils.findElementType(javaProject, elementTypeName, false, typeCache, _templateRuntime);
 	    if (elementType == null || (!elementType.getElementName().equals(elementTypeName) && !elementType.getFullyQualifiedName().equals(elementTypeName))) {
 	      // Compute "did you mean?" suggestions for the mistyped element type name.
 	      List<String> suggestions = suggestElementTypeNames(javaProject, elementTypeName, typeCache);
@@ -488,7 +504,11 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
    */
   private List<String> suggestElementTypeNames(IJavaProject javaProject, String invalidName, TypeCache typeCache) {
     try {
-      TypeNameCollector collector = new TypeNameCollector(javaProject, false);
+      // Candidates come from this template's runtime: an ng template is never told it "meant"
+      // a WebObjects element, and vice versa.
+      TypeNameCollector collector = _templateRuntime != null
+          ? new TypeNameCollector(_templateRuntime.elementClass(), javaProject, false)
+          : new TypeNameCollector(javaProject, false);
       BindingReflectionUtils.findMatchingElementClassNames("", SearchPattern.R_PREFIX_MATCH, collector, new NullProgressMonitor());
 
       // Extract simple class names from the fully-qualified names
@@ -503,8 +523,8 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
       // "repetiti" is more likely trying to type the shortcut "repetition"
       // (distance 2) than the class name "WORepetition" (distance 4). Use the
       // project's Parsley aliases when present, otherwise the legacy shortcuts.
-      if (org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject)) {
-        for (String alias : org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.aliasMap(javaProject).keySet()) {
+      if (org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(javaProject, _templateRuntime)) {
+        for (String alias : org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.aliasMap(javaProject, _templateRuntime).keySet()) {
           if (!simpleNames.contains(alias)) {
             simpleNames.add(alias);
           }
@@ -513,8 +533,11 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
       else {
         // Legacy shortcuts — only the ones that apply to this project (an ng project is never
         // told it "meant" VBScript).
-        final org.objectstyle.wolips.variables.ParsleyProject parsleyProject = javaProject == null ? null
+        org.objectstyle.wolips.variables.ParsleyProject parsleyProject = javaProject == null ? null
             : (org.objectstyle.wolips.variables.ParsleyProject) javaProject.getProject().getAdapter(org.objectstyle.wolips.variables.ParsleyProject.class);
+        if (parsleyProject != null) {
+          parsleyProject = parsleyProject.withRuntime(_templateRuntime);
+        }
         for (TagShortcut tagShortcut : TagShortcut.applicableTo(javaProject, parsleyProject, typeCache)) {
           String shortcutName = tagShortcut.getShortcut();
           if (!simpleNames.contains(shortcutName)) {

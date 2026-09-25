@@ -210,6 +210,34 @@ public class BindingReflectionUtils {
    * @param cache the shared type cache
    * @return the resolved type, or null if not found
    */
+  /**
+   * Like {@link #findElementType(IJavaProject, String, boolean, TypeCache)}, but looks among the
+   * element classes of the given runtime ({@code NGElement} or {@code WOElement} subclasses)
+   * rather than the project's — what a template needs in a hybrid project, where an ng
+   * component's tags name ng elements. A null runtime means the project's own.
+   */
+  public static IType findElementType(IJavaProject javaProject, String elementTypeName, boolean requireTypeInProject, TypeCache cache, org.objectstyle.wolips.variables.TemplateRuntime runtime) throws JavaModelException {
+    if (runtime == null) {
+      return findElementType(javaProject, elementTypeName, requireTypeInProject, cache);
+    }
+    // Cached per runtime: the same name can mean different classes in the two worlds.
+    final String cacheKey = runtime.name() + ":" + elementTypeName;
+    final String typeName = cache.getApiCache(javaProject).getElementTypeNamed(cacheKey);
+    if (typeName != null) {
+      return javaProject.findType(typeName);
+    }
+    final TypeNameCollector typeNameCollector = new TypeNameCollector(runtime.elementClass(), javaProject, requireTypeInProject);
+    BindingReflectionUtils.findMatchingElementClassNames(elementTypeName, SearchPattern.R_EXACT_MATCH, typeNameCollector, new NullProgressMonitor());
+    IType type = null;
+    if (!typeNameCollector.isEmpty()) {
+      type = typeNameCollector.getTypeForClassName(typeNameCollector.firstTypeName());
+    }
+    if (type != null) {
+      cache.getApiCache(javaProject).setElementTypeForName(type, cacheKey);
+    }
+    return type;
+  }
+
   public static IType findElementType(IJavaProject javaProject, String elementTypeName, boolean requireTypeInProject, TypeCache cache) throws JavaModelException {
     String typeName = cache.getApiCache(javaProject).getElementTypeNamed(elementTypeName);
     IType type = null;

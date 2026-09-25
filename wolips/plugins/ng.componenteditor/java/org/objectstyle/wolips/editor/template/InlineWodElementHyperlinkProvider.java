@@ -24,6 +24,11 @@ public class InlineWodElementHyperlinkProvider implements IHyperlinkProvider {
     try {
       if (WodHtmlUtils.isWOTag(element.getName()) && WodHtmlUtils.isInline(element.getName())) {
         ParsleyProject parsleyProject = (ParsleyProject)file.getProject().getAdapter(ParsleyProject.class);
+        if (parsleyProject != null) {
+          // Scope to the template (the .wo folder for a bundle template) so a hybrid project's
+          // ng components resolve their tags as ng.
+          parsleyProject = parsleyProject.forTemplate("wo".equals(file.getParent().getFileExtension()) ? file.getParent() : file);
+        }
         if (attrName == null) {
           WodParserCache cache = WodParserCache.parser(file);
           SimpleWodElement wodElement = new FuzzyXMLWodElement(element, parsleyProject);

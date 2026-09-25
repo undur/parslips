@@ -51,6 +51,11 @@ public class InlineWodTagInfo extends TagInfo {
   public void setParsleyProject(ParsleyProject parsleyProject) {
     _parsleyProject = parsleyProject;
   }
+
+  /** The runtime of the template this tag is completed in (null: the project's own). */
+  private org.objectstyle.wolips.variables.TemplateRuntime runtime() {
+    return _parsleyProject != null ? _parsleyProject.getTemplateRuntime() : null;
+  }
   
   /**
    * Returns the resolved element type. If {@link #loadAttributeInfo()} has
@@ -65,7 +70,7 @@ public class InlineWodTagInfo extends TagInfo {
     // This path is rare — HTMLAssistProcessor normally calls hasBody() or
     // getRequiredAttributeInfo() before getElementType().
     try {
-      return BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache);
+      return BindingReflectionUtils.findElementType(_javaProject, getExpandedElementTypeName(), false, _cache, runtime());
     } catch (JavaModelException e) {
       return null;
     }
@@ -78,8 +83,8 @@ public class InlineWodTagInfo extends TagInfo {
   public String getExpandedElementTypeName() {
     // When the project declares Parsley tag aliases, resolve through them (matching the
     // runtime); otherwise expand via the legacy tag-shortcut.
-    if (_javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(_javaProject)) {
-      return org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolve(_javaProject, _elementTypeName);
+    if (_javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(_javaProject, runtime())) {
+      return org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolve(_javaProject, runtime(), _elementTypeName);
     }
     String elementTypeName = _elementTypeName;
     if (_tagShortcut != null) {
@@ -95,8 +100,8 @@ public class InlineWodTagInfo extends TagInfo {
    * {@link org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver#resolveForBindings}.
    */
   private String bindingSourceElementName() {
-    if (_javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(_javaProject)) {
-      return org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolveForBindings(_javaProject, _elementTypeName);
+    if (_javaProject != null && org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.isActiveFor(_javaProject, runtime())) {
+      return org.objectstyle.wolips.bindings.api.ParsleyTagAliasResolver.resolveForBindings(_javaProject, runtime(), _elementTypeName);
     }
     return getExpandedElementTypeName();
   }
@@ -123,7 +128,7 @@ public class InlineWodTagInfo extends TagInfo {
         // chain to an element that does (WOString) — the replacement shares its bindings — so
         // binding completion still works. (Mirrors the hover's doc-fallback.)
         String expandedName = bindingSourceElementName();
-        IType elementType = BindingReflectionUtils.findElementType(_javaProject, expandedName, false, _cache);
+        IType elementType = BindingReflectionUtils.findElementType(_javaProject, expandedName, false, _cache, runtime());
         _resolvedElementType = elementType;
 
         // The element's API, resolved through the same seam validation uses: its own .apiext

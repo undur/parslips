@@ -57,7 +57,7 @@ public class OpenDeclarationHandler extends AbstractHandler {
 			}
 
 			WodParserCache cache = sourceEditor.getParserCache();
-			ParsleyProject parsleyProject = (ParsleyProject) cache.getProject().getAdapter(ParsleyProject.class);
+			ParsleyProject parsleyProject = cache.getParsleyProject();
 			SimpleWodElement wodElement = new FuzzyXMLWodElement(element, parsleyProject);
 
 			final Region caret = new Region(offset, 0);
