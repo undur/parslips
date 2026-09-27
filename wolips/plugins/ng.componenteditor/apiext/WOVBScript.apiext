@@ -2,7 +2,7 @@
 <wodefinitions>
 	<wo class="WOVBScript" content="forbidden" unknownAttributes="passthrough">
 
-		<doc><![CDATA[Renders a `<script>` block (by default `language="VBScript" type="text/vbscript"`). The script body comes from **at most one** of `scriptString`, `scriptFile`, or `scriptSource`: `scriptString` supplies the script inline, `scriptFile` names a resource whose contents are inlined, and `scriptSource` emits a `src` reference instead of a body.
+		<doc><![CDATA[Renders a `<script>` block (by default `language="VBScript" type="text/vbscript"`). The script body comes from **exactly one** of `scriptString`, `scriptFile`, or `scriptSource`: `scriptString` supplies the script inline, `scriptFile` names a resource whose contents are inlined, and `scriptSource` emits a `src` reference instead of a body.
 
 VBScript ran only in legacy Internet Explorer and no current browser executes it — this element exists for backward compatibility only.]]></doc>
 
@@ -45,7 +45,7 @@ VBScript ran only in legacy Internet Explorer and no current browser executes it
 			<doc>If truthy, the inline script is wrapped in CDATA comment markers. **Pulled** by truthiness.</doc>
 		</binding>
 
-		<choose max="1">
+		<choose min="1" max="1">
 			<binding name="scriptFile"/>
 			<binding name="scriptSource"/>
 			<binding name="scriptString"/>

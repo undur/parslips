@@ -2,7 +2,7 @@
 <wodefinitions>
 	<wo class="WOJavaScript" content="forbidden" unknownAttributes="passthrough">
 
-		<doc><![CDATA[Emits a `<script>` element carrying client-side JavaScript. The script body comes from at most one of three sources: an inline string (`scriptString`), a resource file bundled with the application (`scriptFile`), or an external URL referenced via `src` (`scriptSource`).
+		<doc><![CDATA[Emits a `<script>` element carrying client-side JavaScript. The script body comes from exactly one of three sources: an inline string (`scriptString`), a resource file bundled with the application (`scriptFile`), or an external URL referenced via `src` (`scriptSource`).
 
 When `scriptSource` is used the element renders an empty `<script src="…">` tag; otherwise the script text is written as the element's content. Template content between the element's tags is discarded.]]></doc>
 
@@ -43,7 +43,7 @@ When `scriptSource` is used the element renders an empty `<script src="…">` ta
 			<doc>If truthy, the inline script is wrapped in CDATA comment markers. **Pulled** by truthiness.</doc>
 		</binding>
 
-		<choose max="1">
+		<choose min="1" max="1">
 			<binding name="scriptFile"/>
 			<binding name="scriptSource"/>
 			<binding name="scriptString"/>

@@ -12,6 +12,36 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Stock element `.apiext`: constraints that match WebObjects 5.4.3 (#10)
+
+The 39 stock-element definitions were converted from `WebObjectDefinitions.xml`, whose
+constraints don't always match what WebObjects itself checks when it creates an element, so
+valid templates were flagged and some real errors weren't. The definitions were audited
+against 5.4.3's own creation-time checks and the bindings each element actually reads:
+
+- **Too strict, now relaxed:** a submit button, JavaScript/VBScript tag's content, and the
+  URL-valued elements (`WOImage`, `WOFrame`, `WOEmbeddedObject`, `WOResourceURL`) accept every
+  source WebObjects accepts (`value`, `pageName`, direct actions, `href` on `WOActionURL`);
+  checkboxes and radio buttons may bind `value` alone; `elementName` is optional on the generic
+  elements; `WOSwitchComponent` accepts `_componentName`.
+- **Too lax, now checked:** `WOImageButton` needs an action; `WORepetition` refuses
+  `count` with `item`; `WOFileUpload` refuses `bufferSize` with a stream; the generic elements
+  need a `name` with `formValue(s)`.
+- **Bindings corrected:** `WOBody`'s image comes from `background` (and `backgroundValue`,
+  `pageName`, direct actions), not `src` — a `src` binding only renders a meaningless `src=`
+  attribute on `<body>`; bindings WebObjects reads but the files omitted are documented
+  (`index`, `prefix`/`suffix`, `width`/`height`, `selectedValue(s)`, `qtsrc`…), and bindings it
+  never reads are gone.
+- **Unknown attributes:** `WOActionURL`, `WOResourceURL`, the list elements and
+  `WOSwitchComponent` accept and ignore unknown bindings in WebObjects, so they are `allowed`.
+
+Reviewed by exercising every changed constraint against WebObjects' own element classes in a
+running application (constructing each element with the bindings in question and recording
+whether 5.4.3 accepts it, and rendering the disputed cases): 78 of 78 constraints agree after
+two follow-up corrections — `WOJavaScript`/`WOVBScript` require exactly one script source
+(the audit had made it optional; WebObjects refuses the element without one), and
+`WOSwitchComponent` may bind both `WOComponentName` and `_componentName`.
+
 ### A template's runtime is its own, not its project's (hybrid WO + ng projects)
 
 The editor assumed one runtime per project: a WO project's templates were all checked as WO,
