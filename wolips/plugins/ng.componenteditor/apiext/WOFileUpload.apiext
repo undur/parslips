@@ -6,7 +6,7 @@
 
 		<binding name="data">
 			<push><type>com.webobjects.foundation.NSData</type></push>
-			<doc><![CDATA[The in-memory sink: on submit the entire uploaded file is **pushed** here as an `NSData`. Cannot be a constant (it must be settable). Mutually exclusive with `inputStream`, `outputStream` and `streamToFilePath`. When bound, `filePath` must also be bound.]]></doc>
+			<doc><![CDATA[The in-memory sink: on submit the entire uploaded file is **pushed** here as an `NSData`. Cannot be a constant (it must be settable). Mutually exclusive with `inputStream`, `outputStream` and `streamToFilePath`.]]></doc>
 		</binding>
 
 		<binding name="inputStream">
@@ -16,7 +16,7 @@
 
 		<binding name="outputStream">
 			<pull><type>java.io.OutputStream</type></pull>
-			<doc><![CDATA[The stream sink WO writes into: WOFileUpload **pulls** this `OutputStream` and copies the uploaded bytes to it. Mutually exclusive with `data`, `inputStream` and `streamToFilePath`.]]></doc>
+			<doc><![CDATA[The stream sink WO writes into: WOFileUpload **pulls** this `OutputStream` and copies the uploaded bytes to it. Cannot be a constant. Mutually exclusive with `data`, `inputStream` and `streamToFilePath`.]]></doc>
 		</binding>
 
 		<binding name="streamToFilePath">
@@ -68,8 +68,11 @@
 			<binding name="outputStream"/>
 			<binding name="streamToFilePath"/>
 		</choose>
-		<requires binding="filePath" when="data"/>
-		<requires binding="data" when="copyData"/>
+		<choose max="1">
+			<binding name="bufferSize"/>
+			<any-of><binding name="data"/><binding name="inputStream"/></any-of>
+		</choose>
+		<requires binding="outputStream" must="settable"/>
 		<requires binding="streamToFilePath">
 			<any-of><binding name="overwrite"/><binding name="finalFilePath"/></any-of>
 		</requires>

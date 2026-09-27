@@ -18,7 +18,7 @@ WORepetition renders no tag of its own; it only loops over the content between i
 
 		<binding name="count">
 			<pull><type>java.lang.Number</type></pull>
-			<doc><![CDATA[A fixed repeat count. **Pulled** and read as an integer (a null count is treated as `0`). Use this for a plain N-times loop with no collection. Mutually exclusive with `list`.]]></doc>
+			<doc><![CDATA[A fixed repeat count. **Pulled** and read as an integer (a null count is treated as `0`). Use this for a plain N-times loop with no collection. Mutually exclusive with `list` and `item`.]]></doc>
 		</binding>
 
 		<binding name="index">
@@ -26,14 +26,13 @@ WORepetition renders no tag of its own; it only loops over the content between i
 			<doc>The current zero-based iteration index. **Pushed** here before each iteration so the child content can read the position. Optional; must be a settable keypath when bound.</doc>
 		</binding>
 
-		<binding name="identifier">
-			<pull><type>java.lang.String</type></pull>
-			<doc>An identifier used to build stable element IDs for the repeated content, so form values and actions survive changes to the list order. Rarely needed for display-only repetitions.</doc>
-		</binding>
-
 		<choose min="1" max="1">
 			<binding name="list"/>
 			<binding name="count"/>
+		</choose>
+		<choose max="1">
+			<binding name="count"/>
+			<binding name="item"/>
 		</choose>
 		<requires binding="item" when="list"/>
 		<requires binding="list" must="gettable"/>

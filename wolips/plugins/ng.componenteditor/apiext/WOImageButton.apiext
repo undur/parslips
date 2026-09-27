@@ -4,7 +4,7 @@
 
 		<doc><![CDATA[An image that acts as a submit button (`<input type="image">`). Clicking it submits the enclosing form and reports the click coordinates back to the server.
 
-The image source is chosen by binding **exactly one** of `value`, `data`, `filename`, or `src`. The click either triggers a component `action`, or a direct action addressed by `actionClass`/`directActionName`. When an `imageMapFile` is supplied, the hit coordinates are matched against its regions to pick the action; the `x`/`y` bindings receive the raw click coordinates.
+The image source is chosen by binding **exactly one** of `value`, `data`, `filename`, or `src`. The click triggers exactly one of a component `action` or a direct action addressed by `actionClass`/`directActionName`. When an `imageMapFile` is supplied, the hit coordinates are matched against its regions to pick the action; the `x`/`y` bindings receive the raw click coordinates.
 
 When rendered disabled the element degrades to a plain `<img>` and no longer submits.]]></doc>
 
@@ -73,6 +73,16 @@ When rendered disabled the element degrades to a plain `<img>` and no longer sub
 			<doc><![CDATA[Receives the vertical click coordinate on submit. **Pushed** as an `Integer`. Must be bound together with `x`, and neither may be a constant.]]></doc>
 		</binding>
 
+		<binding name="width">
+			<pull><type>java.lang.String</type></pull>
+			<doc>The image width, rendered onto the tag. **Pulled**.</doc>
+		</binding>
+
+		<binding name="height">
+			<pull><type>java.lang.String</type></pull>
+			<doc>The image height, rendered onto the tag. **Pulled**.</doc>
+		</binding>
+
 		<binding name="disabled" defaults="YES/NO">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<doc><![CDATA[If truthy, the element renders as a plain `<img>` rather than a submit button and no longer participates in form submission. **Pulled** by truthiness.]]></doc>
@@ -89,7 +99,7 @@ When rendered disabled the element degrades to a plain `<img>` and no longer sub
 			<binding name="filename"/>
 			<binding name="src"/>
 		</choose>
-		<choose max="1">
+		<choose min="1" max="1">
 			<binding name="action"/>
 			<any-of><binding name="actionClass"/><binding name="directActionName"/></any-of>
 		</choose>

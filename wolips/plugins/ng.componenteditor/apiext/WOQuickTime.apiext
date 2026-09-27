@@ -10,20 +10,25 @@ Obsolete: the QuickTime browser plugin no longer exists in any modern browser. U
 
 		<binding name="filename" defaults="Resources">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The name of a resource (looked up via the resource manager, optionally in `framework`) used as the movie source. **Pulled**. Mutually exclusive with `src` — the element throws at construction if more than one source is bound, and requires at least one.]]></doc>
+			<doc><![CDATA[The name of a resource (looked up via the resource manager, optionally in `framework`) used as the movie source. **Pulled**. Exactly one of `filename`, `src` and `qtsrc` must be bound.]]></doc>
 		</binding>
 
 		<binding name="src">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[A URL used directly as the movie source (resolved as a resource when relative). **Pulled**. Mutually exclusive with `filename`.]]></doc>
+			<doc><![CDATA[A URL used directly as the movie source (resolved as a resource when relative). **Pulled**. Mutually exclusive with `filename` and `qtsrc`.]]></doc>
 		</binding>
 
-		<binding name="width" required="true">
+		<binding name="qtsrc">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[A QuickTime movie source URL (`qtsrc`), an alternative to `src`. **Pulled**. Mutually exclusive with `filename` and `src`.]]></doc>
+		</binding>
+
+		<binding name="width">
 			<pull><type>java.lang.Object</type></pull>
 			<doc><![CDATA[The embed width. **Pulled** and rendered via `toString()` onto the `width` attribute.]]></doc>
 		</binding>
 
-		<binding name="height" required="true">
+		<binding name="height">
 			<pull><type>java.lang.Object</type></pull>
 			<doc><![CDATA[The embed height. **Pulled** and rendered via `toString()` onto the `height` attribute.]]></doc>
 		</binding>
@@ -60,7 +65,12 @@ Obsolete: the QuickTime browser plugin no longer exists in any modern browser. U
 
 		<binding name="pluginsPage">
 			<pull><type>java.lang.Object</type></pull>
-			<doc><![CDATA[The page the browser should visit to obtain the QuickTime plugin: a URL string, or a page/component. **Pulled** and rendered onto the `pluginspage` attribute.]]></doc>
+			<doc><![CDATA[The page the browser should visit to obtain the QuickTime plugin: a URL string, or a page/component. **Pulled** and rendered onto the `pluginspage` attribute. Mutually exclusive with `pluginsPageName`.]]></doc>
+		</binding>
+
+		<binding name="pluginsPageName" defaults="Page Names">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[The name of a page component to use as the plugin page, as an alternative to `pluginsPage`. **Pulled**. Mutually exclusive with `pluginsPage`.]]></doc>
 		</binding>
 
 		<binding name="qtnextList">
@@ -70,7 +80,8 @@ Obsolete: the QuickTime browser plugin no longer exists in any modern browser. U
 
 		<binding name="qtnextAction">
 			<pull><type>com.webobjects.appserver.WOActionResults</type></pull>
-			<doc>Action for dynamically serving the next movie in a QuickTime 4 playlist. **Not implemented** — the element throws at construction if this is bound.</doc>
+			<doc>Action for dynamically serving the next movie in a QuickTime 4 playlist. **Not implemented** — the element throws if this is bound.</doc>
+			<deprecated>WebObjects 5.4.3 throws a "not implemented" error when `qtnextAction` is bound. Use `qtnextList` instead.</deprecated>
 		</binding>
 
 		<binding name="volume">
@@ -138,10 +149,29 @@ Obsolete: the QuickTime browser plugin no longer exists in any modern browser. U
 			<doc><![CDATA[Whether the playback controller is shown. **Pulled** by truthiness — rendered as `TRUE` unless the value is null or `"0"`.]]></doc>
 		</binding>
 
-		<binding name="playEveryFrame" defaults="YES/NO">
+		<binding name="playeveryframe" defaults="YES/NO">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<doc><![CDATA[Whether every frame is played (no dropping). **Pulled** by truthiness — rendered onto the `playeveryframe` attribute as `TRUE` unless the value is null or `"0"`.]]></doc>
 		</binding>
+
+		<binding name="otherTagString">
+			<pull><type>java.lang.String</type></pull>
+			<doc><![CDATA[Raw text inserted inside the rendered `<embed>` tag. **Pulled** and written verbatim.]]></doc>
+		</binding>
+
+		<choose min="1" max="1">
+			<binding name="src"/>
+			<binding name="filename"/>
+			<binding name="qtsrc"/>
+		</choose>
+		<choose max="1">
+			<binding name="href"/>
+			<binding name="pageName"/>
+		</choose>
+		<choose max="1">
+			<binding name="pluginsPage"/>
+			<binding name="pluginsPageName"/>
+		</choose>
 
 	</wo>
 </wodefinitions>

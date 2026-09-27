@@ -18,7 +18,12 @@ Iterate `list` with `item` as the loop variable, rendering each option's label f
 
 		<binding name="displayString">
 			<pull><type>java.lang.Object</type></pull>
-			<doc><![CDATA[The label to show for the current `item`. **Pulled** for each option and rendered as text (via its `toString`); binding it also makes option labels HTML-escape by default. When unbound, the item's own `toString` is used.]]></doc>
+			<doc><![CDATA[The label to show for the current `item`. **Pulled** for each option and rendered as text (via its `toString`); binding it also makes option labels HTML-escape by default. When unbound, the `value` string is used, and failing that the item's own `toString`.]]></doc>
+		</binding>
+
+		<binding name="index">
+			<push><type>java.lang.Integer</type></push>
+			<doc><![CDATA[The current option's zero-based position. **Pushed** as an `Integer` alongside `item` on each iteration when bound.]]></doc>
 		</binding>
 
 		<binding name="selections">
@@ -29,7 +34,13 @@ Iterate `list` with `item` as the loop variable, rendering each option's label f
 
 		<binding name="selectedValues">
 			<pull><type>java.util.List</type></pull>
-			<doc><![CDATA[An alternative, display-only way to mark the initial selection: a `List` of values that are matched against the options. **Pulled** only — it is never written back. Mutually exclusive with `selections`.]]></doc>
+			<doc><![CDATA[Has no effect in WOBrowser: WebObjects 5.4.3 rejects it together with `selections`, and only reads it when `selections` is bound and evaluates to null — so it is never consulted. Kept for compatibility.]]></doc>
+		</binding>
+
+		<binding name="size">
+			<pull><type>java.lang.Integer</type></pull>
+			<default>5</default>
+			<doc><![CDATA[The number of visible rows, rendered as the `size` attribute. **Pulled**; defaults to 5.]]></doc>
 		</binding>
 
 		<binding name="multiple">
@@ -45,6 +56,21 @@ Iterate `list` with `item` as the loop variable, rendering each option's label f
 		<binding name="disabled">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<doc>If truthy, renders the control disabled and skips reading its submitted selection. **Pulled** by truthiness.</doc>
+		</binding>
+
+		<binding name="optionDisabled" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[Whether the current `item`'s `<option>` renders disabled. **Pulled** per item (with `item` pushed first), by truthiness.]]></doc>
+		</binding>
+
+		<binding name="prefix">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A raw string emitted **before** each option's label. **Pulled**.</doc>
+		</binding>
+
+		<binding name="suffix">
+			<pull><type>java.lang.String</type></pull>
+			<doc>A raw string emitted **after** each option's label. **Pulled**.</doc>
 		</binding>
 
 		<binding name="escapeHTML">

@@ -15,6 +15,11 @@
 			<doc>The HTML form-field name. Pulled; auto-assigned from the element ID when unbound.</doc>
 		</binding>
 
+		<binding name="escapeHTML" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[Whether the `name` and `value` attributes are HTML-escaped. **Pulled** by truthiness. WebObjects also renders it onto the tag as an `escapeHTML` attribute.]]></doc>
+		</binding>
+
 		<binding name="disabled" defaults="YES/NO">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
 			<doc><![CDATA[If truthy, renders the field disabled and skips reading its submitted value (so nothing is pushed back to `value`).]]></doc>

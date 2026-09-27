@@ -2,7 +2,7 @@
 <wodefinitions>
 	<wo class="WOCheckBox" content="forbidden" unknownAttributes="passthrough">
 
-		<doc><![CDATA[A checkbox (`<input type="checkbox">`). Use **either** `checked` (a truthy in, a Boolean out) **or** `value`+`selection` (membership-style) — not both.]]></doc>
+		<doc><![CDATA[A checkbox (`<input type="checkbox">`). Use **either** `checked` (a truthy in, a Boolean out) **or** `value` (usually with `selection`, membership-style) — not both. A `value` without `selection` just renders the value and pushes nothing back.]]></doc>
 
 		<binding name="checked">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
@@ -12,13 +12,13 @@
 
 		<binding name="value">
 			<pull><type>java.lang.Object</type></pull>
-			<doc><![CDATA[This checkbox's value (the `value` attribute). Together with `selection`, the box renders checked when `selection` equals `value`. **Pulled** only — its string form is compared against the submitted form value. Mutually exclusive with `checked`.]]></doc>
+			<doc><![CDATA[This checkbox's value (the `value` attribute). Together with `selection`, the box renders checked when `selection` equals `value`. **Pulled** only — its string form is compared against the submitted form value. Without `selection` the value is rendered and nothing is pushed on submit. Mutually exclusive with `checked`.]]></doc>
 		</binding>
 
 		<binding name="selection">
 			<pull><type>java.lang.Object</type></pull>
 			<push><type>java.lang.Object</type></push>
-			<doc><![CDATA[The selected value, used with `value`. On submit it is **pushed** to `value` when the box is checked, or nulled when the box is unchecked.]]></doc>
+			<doc><![CDATA[The selected value, used with `value`. On submit it is **pushed** to `value` when the box is checked, or nulled when the box is unchecked. Accepted but ignored when `checked` is bound instead of `value`.]]></doc>
 		</binding>
 
 		<binding name="name">
@@ -31,12 +31,15 @@
 			<doc><![CDATA[If truthy, renders the checkbox disabled and skips reading its submitted value (so neither `checked` nor `selection` is pushed).]]></doc>
 		</binding>
 
+		<binding name="escapeHTML" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[Whether the `name` and `value` attributes are HTML-escaped. **Pulled** by truthiness. WebObjects also renders it onto the tag as an `escapeHTML` attribute.]]></doc>
+		</binding>
+
 		<choose min="1" max="1">
 			<binding name="checked"/>
 			<binding name="value"/>
 		</choose>
-		<requires binding="selection" when="value"/>
-		<requires binding="value" when="selection"/>
 
 	</wo>
 </wodefinitions>

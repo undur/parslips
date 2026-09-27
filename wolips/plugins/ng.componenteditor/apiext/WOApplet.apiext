@@ -15,7 +15,7 @@ Client-side attributes that aren't recognized as applet tag attributes are emitt
 
 		<binding name="codebase">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[Base URL for locating the applet's class files. **Pulled** and, when non-null, emitted as the tag's `codebase` attribute. May be rewritten for DirectConnect so `.class` files are served as resources.]]></doc>
+			<doc><![CDATA[Base URL for locating the applet's class files. **Pulled** and, when non-null, emitted as the tag's `codebase` attribute.]]></doc>
 		</binding>
 
 		<binding name="archive">
@@ -25,7 +25,7 @@ Client-side attributes that aren't recognized as applet tag attributes are emitt
 
 		<binding name="archiveNames">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[A space-separated list of archive names, each resolved to a `WebServerResources/Java/<name>.jar` resource URL at render time. **Pulled**, framework-consumed (not forwarded verbatim), and merged with `archive` into the tag's `archive` attribute.]]></doc>
+			<doc><![CDATA[A comma-separated list of archive names, each resolved to a `WebServerResources/Java/<name>.jar` resource URL at render time. **Pulled**, framework-consumed (not forwarded verbatim), and merged with `archive` into the tag's `archive` attribute.]]></doc>
 		</binding>
 
 		<binding name="width">
@@ -45,7 +45,7 @@ Client-side attributes that aren't recognized as applet tag attributes are emitt
 
 		<binding name="associationClass">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The client-side association class. Framework-consumed: when bound, the element emits it as a `<param>` child and enables generation of the standard client-side params (element id, action URL, context id).]]></doc>
+			<doc><![CDATA[The client-side association class. Framework-consumed: when bound, the element emits it as a `<param>` child and enables generation of the standard client-side params (element id, action URL, context id). Bindings other than the applet's own attributes are then sent to the applet as `WOKey` parameters.]]></doc>
 		</binding>
 
 	</wo>

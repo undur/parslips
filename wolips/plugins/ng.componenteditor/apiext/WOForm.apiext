@@ -36,6 +36,21 @@ Point the form at exactly one destination: a component `action`, a plain `href`,
 			<doc>When truthy, the form may contain more than one submit button and the button that was actually pressed drives the action. **Pulled** by truthiness.</doc>
 		</binding>
 
+		<binding name="addDefaultSubmitButton" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[With `multipleSubmit`, adds an off-screen default submit button to the form. **Pulled** by truthiness.]]></doc>
+		</binding>
+
+		<binding name="secure" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[If truthy, the form's action URL is generated as `https`. **Pulled** by truthiness.]]></doc>
+		</binding>
+
+		<binding name="rendered" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[If falsy, the `<form>` tags are omitted but the content still renders. **Pulled** by truthiness.]]></doc>
+		</binding>
+
 		<binding name="enctype">
 			<pull><type>java.lang.String</type></pull>
 			<doc><![CDATA[The form's `enctype` attribute (for example `multipart/form-data` for file uploads). **Pulled** and rendered as a string when non-empty.]]></doc>

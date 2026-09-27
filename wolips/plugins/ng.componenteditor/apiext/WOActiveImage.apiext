@@ -76,6 +76,22 @@ Give the image a source with exactly one of `src`, `filename`, `data`, or `value
 			<doc><![CDATA[Receives the clicked y-coordinate, in pixels. **Pushed** back on click, so it must be a settable keypath. Must be bound together with `x`.]]></doc>
 		</binding>
 
+		<binding name="width">
+			<pull><type>java.lang.String</type></pull>
+			<doc>The image width, rendered onto the image tag. **Pulled**.</doc>
+		</binding>
+
+		<binding name="height">
+			<pull><type>java.lang.String</type></pull>
+			<doc>The image height, rendered onto the image tag. **Pulled**.</doc>
+		</binding>
+
+		<binding name="border">
+			<pull><type>java.lang.String</type></pull>
+			<default>0</default>
+			<doc><![CDATA[The image's `border` attribute. **Pulled**; always rendered, defaulting to `0` when unbound.]]></doc>
+		</binding>
+
 		<binding name="target">
 			<pull><type>java.lang.String</type></pull>
 			<doc><![CDATA[The anchor `target` attribute, used only in the hyperlink (non-form) rendering.]]></doc>
@@ -113,14 +129,6 @@ Give the image a source with exactly one of `src`, `filename`, `data`, or `value
 		<requires binding="filename" when="framework"/>
 		<requires binding="x" when="y"/>
 		<requires binding="y" when="x"/>
-		<choose max="1">
-			<binding name="href"/>
-			<binding name="secure"/>
-		</choose>
-		<choose max="1">
-			<binding name="imageMapFile"/>
-			<binding name="secure"/>
-		</choose>
 
 	</wo>
 </wodefinitions>

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-	<wo class="WORadioButtonList" content="forbidden" unknownAttributes="forbidden">
+	<wo class="WORadioButtonList" content="forbidden" unknownAttributes="allowed">
 
 		<doc><![CDATA[Renders a group of radio buttons (`<input type="radio">`), one per element of `list`. Iterating over `list`, it **pushes** each element to `item` (and its position to `index`), renders a radio button for it, and on submit **pushes** the chosen element back to `selection`. `displayString` supplies each button's label; `prefix`/`suffix` wrap it.
 
-Bind either `selection` or a `selectedValue` (never both — the framework rejects that combination), and note that binding `value` selects a slower option-matching path the runtime warns against.]]></doc>
+Bind either `selection` or a `selectedValue` (never both — the framework rejects that combination), and note that binding `value` selects a slower option-matching path the runtime warns against.
+
+Extra attributes with a constant value are copied onto every radio input; extra attributes with a dynamic value are ignored.]]></doc>
 
 		<deprecated>WORadioButtonList is a deprecated dynamic element. Build a radio-button group with a repetition over `WORadioButton` instead.</deprecated>
 
@@ -15,7 +17,7 @@ Bind either `selection` or a `selectedValue` (never both — the framework rejec
 
 		<binding name="item">
 			<push><type>java.lang.Object</type></push>
-			<doc><![CDATA[The iteration variable. For each option the current element is **pushed** here so `displayString`/`value` can read it, exactly like a repetition's `item`. Must be a settable keypath whenever `value` (or `displayString`) is bound.]]></doc>
+			<doc><![CDATA[The iteration variable. For each option the current element is **pushed** here so `displayString`/`value` can read it, exactly like a repetition's `item`. Must be bound, and settable, whenever `value` or `displayString` is bound.]]></doc>
 		</binding>
 
 		<binding name="index">
@@ -29,9 +31,14 @@ Bind either `selection` or a `selectedValue` (never both — the framework rejec
 			<doc><![CDATA[The selected option. **Pulled** to decide which button renders checked (the option `equals` to the selection wins); on submit the matching option is **pushed** back, or `null` when nothing was chosen. Cannot be combined with a `selectedValue`.]]></doc>
 		</binding>
 
+		<binding name="selectedValue">
+			<pull><type>java.lang.Object</type></pull>
+			<doc><![CDATA[A read-only alternative to `selection`: **pulled** to decide which button renders checked, but never pushed back. Cannot be combined with `selection`.]]></doc>
+		</binding>
+
 		<binding name="displayString">
 			<pull><type>java.lang.Object</type></pull>
-			<doc><![CDATA[The label shown next to each button. **Pulled** for the current `item` and rendered via `toString()`; when unbound the option's own `toString()` is used. Binding it requires `item` to be settable.]]></doc>
+			<doc><![CDATA[The label shown next to each button. **Pulled** for the current `item` and rendered via `toString()`; when unbound the option's value string is used, and failing that the item's own `toString()`. Binding it requires `item` to be settable.]]></doc>
 		</binding>
 
 		<binding name="value">
@@ -59,34 +66,45 @@ Bind either `selection` or a `selectedValue` (never both — the framework rejec
 			<doc><![CDATA[Whether to HTML-escape each label. **Pulled** by truthiness; defaults to escaping when `displayString` is bound. Set it falsy only when the label is already safe markup.]]></doc>
 		</binding>
 
+		<binding name="optionDisabled" defaults="YES/NO">
+			<pull><type interpretation="truthy">java.lang.Object</type></pull>
+			<doc><![CDATA[Whether the current option's radio button renders disabled. **Pulled** per item (with `item` pushed first), by truthiness.]]></doc>
+		</binding>
+
 		<binding name="disabled">
 			<pull><type interpretation="truthy">java.lang.Object</type></pull>
-			<doc><![CDATA[If truthy, the whole group renders disabled and its submitted value is not read (so nothing is **pushed** to `selection`). **Pulled** by truthiness.]]></doc>
+			<doc><![CDATA[If truthy, the submitted value is not taken (nothing is **pushed** to `selection`). It does not render anything disabled — use `optionDisabled` to disable individual buttons. **Pulled** by truthiness.]]></doc>
 		</binding>
 
 		<binding name="class">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `class` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
+			<doc><![CDATA[The `class` attribute copied onto each rendered `<input type="radio">`. Only a constant value is copied; a dynamic one is ignored.]]></doc>
 		</binding>
 
 		<binding name="id">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `id` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
+			<doc><![CDATA[The `id` attribute copied onto each rendered `<input type="radio">`. Only a constant value is copied; a dynamic one is ignored.]]></doc>
 		</binding>
 
 		<binding name="style">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `style` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
+			<doc><![CDATA[The `style` attribute copied onto each rendered `<input type="radio">`. Only a constant value is copied; a dynamic one is ignored.]]></doc>
 		</binding>
 
 		<binding name="title">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The `title` attribute forwarded onto each rendered `<input type="radio">`. **Pulled**.]]></doc>
+			<doc><![CDATA[The `title` attribute copied onto each rendered `<input type="radio">`. Only a constant value is copied; a dynamic one is ignored.]]></doc>
 		</binding>
 
 		<requires binding="list" must="gettable"/>
-		<requires binding="item" when="value"/>
+		<requires binding="item">
+			<any-of><binding name="displayString"/><binding name="value"/></any-of>
+		</requires>
 		<requires binding="item" must="settable" when="value"/>
+		<choose max="1">
+			<binding name="selection"/>
+			<binding name="selectedValue"/>
+		</choose>
 
 	</wo>
 </wodefinitions>

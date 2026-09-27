@@ -6,9 +6,14 @@
 
 The tag name comes from `elementName`, any undeclared attributes are forwarded onto the rendered tag, and the element's content is the wrapped template. Use it when the tag itself must be dynamic (`div` vs. `section`, chosen in code) rather than fixed in the template.]]></doc>
 
-		<binding name="elementName" required="true">
+		<binding name="elementName">
 			<pull><type>java.lang.String</type></pull>
-			<doc><![CDATA[The HTML tag name to render (e.g. `div`, `span`, `section`). **Required**, and **pulled** each time — its `toString()` becomes the open and close tag name. When it evaluates to null the element renders nothing at all (no tag, though the children are still appended).]]></doc>
+			<doc><![CDATA[The HTML tag name to render (e.g. `div`, `span`, `section`). **Pulled** each time — its `toString()` becomes the open and close tag name. When it evaluates to null the element renders nothing at all (no tag, though the children are still appended).]]></doc>
+		</binding>
+
+		<binding name="otherTagString">
+			<pull><type>java.lang.String</type></pull>
+			<doc>Raw text inserted inside the opening tag. **Pulled** and written verbatim.</doc>
 		</binding>
 
 		<binding name="omitTags" defaults="YES/NO">
@@ -23,12 +28,12 @@ The tag name comes from `elementName`, any undeclared attributes are forwarded o
 
 		<binding name="formValue">
 			<push><type>java.lang.String</type></push>
-			<doc><![CDATA[On form submission the request's string value for `name` is **pushed** here (null when absent). Requires `name` to be bound. Mutually exclusive with `formValues`.]]></doc>
+			<doc><![CDATA[On form submission the request's string value for `name` is **pushed** here (null when absent). Requires `name` to be bound. May be bound together with `formValues`.]]></doc>
 		</binding>
 
 		<binding name="formValues">
 			<push><type>java.util.List</type></push>
-			<doc><![CDATA[On form submission all of the request's values for `name` are **pushed** here as a list (null when absent). Requires `name` to be bound. Mutually exclusive with `formValue`.]]></doc>
+			<doc><![CDATA[On form submission all of the request's values for `name` are **pushed** here as a list (null when absent). Requires `name` to be bound. May be bound together with `formValue`.]]></doc>
 		</binding>
 
 		<binding name="invokeAction" defaults="Actions">
@@ -41,10 +46,6 @@ The tag name comes from `elementName`, any undeclared attributes are forwarded o
 			<doc>The framework **pushes** this element's context element ID here on every phase, so the component can correlate a request back to this element.</doc>
 		</binding>
 
-		<choose max="1">
-			<binding name="formValue"/>
-			<binding name="formValues"/>
-		</choose>
 		<requires binding="name">
 			<any-of><binding name="formValue"/><binding name="formValues"/></any-of>
 		</requires>
