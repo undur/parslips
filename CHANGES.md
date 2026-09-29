@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: current dependencies
+
+The New Project wizard's templates reference the current releases: wonder-slim 8.0.12
+(ERExtensions, Ajax) for WebObjects projects, ng-objects 0.1.3 and slf4j-simple 2.0.20 for
+ng-objects projects, and JUnit 6.1.3 for plain Maven projects; vermilingua stays at 1.1.10.
+WebObjects projects no longer depend on ERLoggingReload4j and carry no log4j configuration:
+ERExtensions logs to the console itself, and a logger's level is set with
+`er.logging.level.<logger>`. The ng-objects template imports `NGRequest` from its current package,
+`ng.appserver.http`.
+
 ### Stock element `.apiext`: constraints that match WebObjects 5.4.3 (#10)
 
 The 39 stock-element definitions were converted from `WebObjectDefinitions.xml`, whose

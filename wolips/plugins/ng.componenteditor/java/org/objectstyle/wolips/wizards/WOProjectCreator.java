@@ -241,7 +241,7 @@ public class WOProjectCreator {
 				\t\t<dependency>
 				\t\t\t<groupId>org.junit.jupiter</groupId>
 				\t\t\t<artifactId>junit-jupiter</artifactId>
-				\t\t\t<version>5.11.4</version>
+				\t\t\t<version>6.1.3</version>
 				\t\t\t<scope>test</scope>
 				\t\t</dependency>
 				\t</dependencies>
@@ -283,17 +283,17 @@ public class WOProjectCreator {
 					\t\t<dependency>
 					\t\t\t<groupId>is.rebbi.ng</groupId>
 					\t\t\t<artifactId>ng-appserver</artifactId>
-					\t\t\t<version>0.1.1</version>
+					\t\t\t<version>0.1.3</version>
 					\t\t</dependency>
 					\t\t<dependency>
 					\t\t\t<groupId>is.rebbi.ng</groupId>
 					\t\t\t<artifactId>ng-adaptor-jetty</artifactId>
-					\t\t\t<version>0.1.1</version>
+					\t\t\t<version>0.1.3</version>
 					\t\t</dependency>
 					\t\t<dependency>
 					\t\t\t<groupId>org.slf4j</groupId>
 					\t\t\t<artifactId>slf4j-simple</artifactId>
-					\t\t\t<version>2.0.16</version>
+					\t\t\t<version>2.0.20</version>
 					\t\t</dependency>
 					\t</dependencies>
 
@@ -334,17 +334,12 @@ public class WOProjectCreator {
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>ERExtensions</artifactId>
-				\t\t\t<version>8.0.4</version>
-				\t\t</dependency>
-				\t\t<dependency>
-				\t\t\t<groupId>is.rebbi.slim</groupId>
-				\t\t\t<artifactId>ERLoggingReload4j</artifactId>
-				\t\t\t<version>8.0.4</version>
+				\t\t\t<version>8.0.12</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>Ajax</artifactId>
-				\t\t\t<version>8.0.4</version>
+				\t\t\t<version>8.0.12</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>com.webobjects</groupId>
@@ -462,7 +457,7 @@ public class WOProjectCreator {
 
 					import ng.appserver.NGActionResults;
 					import ng.appserver.directactions.NGDirectAction;
-					import ng.appserver.NGRequest;
+					import ng.appserver.http.NGRequest;
 
 					public class DirectAction extends NGDirectAction {
 
@@ -555,16 +550,13 @@ public class WOProjectCreator {
 	}
 
 	/**
-	 * Generates the Properties file for WebObjects projects (log4j configuration).
-	 * Note: {@code %%} in the format string produces a literal {@code %} for log4j patterns.
+	 * Generates the Properties file for WebObjects projects. It carries no logging configuration: ERExtensions logs to the
+	 * console without a logging module, at INFO in its default layout, and a logger's level is set with
+	 * {@code er.logging.level.<logger>}.
 	 */
 	private String generateWOProperties() {
 		return String.format("""
-				log4j.rootCategory=INFO, stdout
-
-				log4j.appender.stdout=org.apache.log4j.ConsoleAppender
-				log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
-				log4j.appender.stdout.layout.ConversionPattern=%%d{ISO8601} [%%t] %%p %%c - %%m%%n
+				# Logging goes to the console, at INFO. A logger's level: er.logging.level.<logger>=DEBUG
 
 				%s.Application.er.migration.migrateAtStartup=false
 				""", _projectName);
