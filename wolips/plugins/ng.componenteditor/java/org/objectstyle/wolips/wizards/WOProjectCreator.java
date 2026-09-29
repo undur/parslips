@@ -550,15 +550,9 @@ public class WOProjectCreator {
 	}
 
 	/**
-	 * Generates the Properties file for WebObjects projects. It carries no logging configuration: ERExtensions logs to the
-	 * console without a logging module, at INFO in its default layout, and a logger's level is set with
-	 * {@code er.logging.level.<logger>}.
+	 * Generates the Properties file for WebObjects projects: empty, since wonder-slim's defaults need no configuration
 	 */
 	private String generateWOProperties() {
-		return String.format("""
-				# Logging goes to the console, at INFO. A logger's level: er.logging.level.<logger>=DEBUG
-
-				%s.Application.er.migration.migrateAtStartup=false
-				""", _projectName);
+		return "";
 	}
 }
