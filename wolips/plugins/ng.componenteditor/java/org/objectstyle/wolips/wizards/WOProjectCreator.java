@@ -302,7 +302,7 @@ public class WOProjectCreator {
 					\t\t\t<plugin>
 					\t\t\t\t<groupId>is.rebbi</groupId>
 					\t\t\t\t<artifactId>vermilingua-maven-plugin</artifactId>
-					\t\t\t\t<version>1.1.10</version>
+					\t\t\t\t<version>1.1.11</version>
 					\t\t\t\t<extensions>true</extensions>
 					\t\t\t</plugin>
 					\t\t</plugins>
@@ -334,12 +334,12 @@ public class WOProjectCreator {
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>ERExtensions</artifactId>
-				\t\t\t<version>8.0.12</version>
+				\t\t\t<version>8.0.13</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>Ajax</artifactId>
-				\t\t\t<version>8.0.12</version>
+				\t\t\t<version>8.0.13</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>com.webobjects</groupId>
@@ -359,7 +359,7 @@ public class WOProjectCreator {
 				\t\t\t<plugin>
 				\t\t\t\t<groupId>is.rebbi</groupId>
 				\t\t\t\t<artifactId>vermilingua-maven-plugin</artifactId>
-				\t\t\t\t<version>1.1.10</version>
+				\t\t\t\t<version>1.1.11</version>
 				\t\t\t\t<extensions>true</extensions>
 				\t\t\t</plugin>
 				\t\t</plugins>

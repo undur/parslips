@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: wonder-slim 8.0.13, vermilingua 1.1.11
+
+The generated poms reference wonder-slim 8.0.13 (ERExtensions, Ajax) and
+vermilingua-maven-plugin 1.1.11 (both the ng-objects and the wonder-slim template).
+
 ### New-project templates: current dependencies
 
 The New Project wizard's templates reference the current releases: wonder-slim 8.0.12
