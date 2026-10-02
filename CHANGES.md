@@ -12,6 +12,33 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: one way to say no (#6 conventions)
+
+The conventions half of #6, settled and applied. They're written down in `DevServerHandler`'s
+javadoc, which is where a new endpoint's author looks:
+
+- **`error`**: the call is wrong (a missing or invalid parameter, named). Fix the call.
+- **`reason`**: the call was fine, but nothing happened. The response keeps its shape with the
+  outcome empty (`launched:false`, `opened:[]`) and adds the sentence to act on.
+- **`hint`**: when a refusal has an obvious remedy, the call that applies it.
+- Both answer 200. A 500 is reserved for a handler that threw, and is now JSON as well
+  (`{"error":"internal error: …","internal":true}`) instead of plain text.
+
+Endpoints brought in line:
+- `/stop` and `/importProject` used `reason` for a missing parameter. It's now `error`.
+- `/createProject` used `reason` for a bad name, template or package. It's now `error`; an
+  existing project or a non-empty directory stays a `reason`.
+- `/console` with an unknown app is now `captured:false` + `reason`.
+- `/openProject` with an unknown project is now `opened:[]` + `reason`.
+- `/revalidate` and `/purgeMarkers` used `error` for an unknown or closed project. They now
+  give a `reason`, and for a closed project a `hint` to open it.
+- A failed `/launch` (Eclipse's message) and a failed `/stop` kill are now `reason`, since the
+  call was valid.
+
+The `/watch` page narrates both kinds ("Bad call to …" / "Nothing done by …"). It also no longer
+prints "undefined build errors" for a dirty `/refreshProject`: `buildErrors` is a count, and the
+page was reading `.length` on it.
+
 ### Dev server: no more blind "ok" (#6 groundwork)
 
 An audit of the dev-server surface (the conventions half of #6) probed every endpoint with

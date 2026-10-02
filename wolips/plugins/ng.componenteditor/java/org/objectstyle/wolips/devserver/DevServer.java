@@ -167,7 +167,10 @@ public class DevServer {
 			}
 			catch (Exception e) {
 				ComponenteditorPlugin.getDefault().log(e);
-				final String sent = "error: " + e.getMessage();
+				// JSON like every other failure, so a client never parses two shapes. The 500
+				// (and "internal") is what tells it apart from an "error" about the call itself:
+				// this is a dev-server bug, and retrying or rephrasing won't help.
+				final String sent = "{\"error\":" + DevServerJson.str("internal error: " + e) + ",\"internal\":true}";
 				ActivityLog.record(path, rawQuery, 500, elapsedMillis(startNanos), sent);
 				try {
 					respond(exchange, 500, sent);

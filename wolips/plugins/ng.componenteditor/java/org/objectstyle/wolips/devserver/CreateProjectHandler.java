@@ -45,12 +45,12 @@ class CreateProjectHandler implements DevServerHandler {
 		final String name = params.get("name");
 		final String nameProblem = WOProjectCreator.validateProjectName(name);
 		if (nameProblem != null) {
-			return refusal(nameProblem);
+			return invalid(nameProblem);
 		}
 
 		final WOProjectCreator.Kind kind = kindOf(params.get("template"));
 		if (kind == null) {
-			return refusal("missing or unknown template - use ng-objects-app, wonder-slim-app or maven");
+			return invalid("missing or unknown template - use ng-objects-app, wonder-slim-app or maven");
 		}
 
 		final String packageName = params.get("package") != null && !params.get("package").isBlank()
@@ -58,7 +58,7 @@ class CreateProjectHandler implements DevServerHandler {
 				: WOProjectCreator.derivePackageName(name);
 		final String packageProblem = WOProjectCreator.validatePackageName(packageName);
 		if (packageProblem != null) {
-			return refusal(packageProblem);
+			return invalid(packageProblem);
 		}
 
 		final IProject existing = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
@@ -169,6 +169,12 @@ class CreateProjectHandler implements DevServerHandler {
 		}
 	}
 
+	/** The call itself is wrong (a parameter is missing or invalid): fix the call, don't retry it. */
+	private static String invalid(String error) {
+		return "{\"error\":\"" + DevServerJson.escape(error) + "\"}";
+	}
+
+	/** The call was fine but the workspace says no (the name is taken, the directory is not empty). */
 	private static String refusal(String reason) {
 		return "{\"created\":false,\"reason\":\"" + DevServerJson.escape(reason) + "\"}";
 	}

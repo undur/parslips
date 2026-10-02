@@ -30,8 +30,12 @@ class PurgeMarkersHandler implements DevServerHandler {
 		final StaleMarkerPurge.Summary summary;
 		if (projectName != null && !projectName.isEmpty()) {
 			final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-			if (project == null || !project.isOpen()) {
-				return "{\"error\":\"no open project named '" + DevServerJson.escape(projectName) + "'\"}";
+			if (!project.exists()) {
+				return "{\"deleted\":0,\"files\":0,\"reason\":\"no project named '" + DevServerJson.escape(projectName) + "' in the workspace\"}";
+			}
+			if (!project.isOpen()) {
+				return "{\"deleted\":0,\"files\":0,\"reason\":\"project '" + DevServerJson.escape(projectName)
+						+ "' is closed\",\"hint\":\"/openProject?project=" + DevServerJson.escape(projectName) + "\"}";
 			}
 			summary = StaleMarkerPurge.purge(project);
 		}

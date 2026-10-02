@@ -38,7 +38,7 @@ class OpenProjectHandler implements DevServerHandler {
 
 		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
 		if (project == null || !project.exists()) {
-			return "{\"error\":\"no project named \\\"" + DevServerJson.escape(name) + "\\\" in the workspace\"}";
+			return "{\"opened\":[],\"reason\":\"no project named \\\"" + DevServerJson.escape(name) + "\\\" in the workspace\"}";
 		}
 
 		if ("false".equalsIgnoreCase(params.get("related"))) {

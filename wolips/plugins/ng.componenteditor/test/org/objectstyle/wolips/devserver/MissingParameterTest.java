@@ -7,10 +7,11 @@ import java.util.Map;
 import org.junit.Test;
 
 /**
- * The endpoints that used to answer a bare "ok" to a request they couldn't act on now name the
- * problem. These cover the missing-parameter case, which is answered before any workspace access,
- * so the handlers can run without Eclipse. (Not-found refusals need a workspace and were verified
- * against a running dev server.)
+ * A call that is itself wrong (a missing or invalid parameter) answers {@code {"error": ...}}
+ * naming the parameter — never a blind "ok", and never a {@code reason}, which is reserved for
+ * a valid call the workspace refused (see {@link DevServerHandler}'s conventions). These cases
+ * are answered before any workspace access, so the handlers run without Eclipse; the
+ * workspace refusals were verified against a running dev server.
  */
 public class MissingParameterTest {
 
@@ -38,5 +39,26 @@ public class MissingParameterTest {
 	@Test
 	public void emptyValueCountsAsMissing() throws Exception {
 		assertNamesMissing(new RefreshHandler().handle(Map.of("path", "")), "path");
+	}
+
+	@Test
+	public void stopWithoutApp() throws Exception {
+		assertNamesMissing(new StopHandler().handle(Map.of()), "app");
+	}
+
+	@Test
+	public void importProjectWithoutPath() throws Exception {
+		assertNamesMissing(new ImportProjectHandler().handle(Map.of()), "path");
+	}
+
+	@Test
+	public void createProjectWithBadInputIsAnError() throws Exception {
+		final String noName = new CreateProjectHandler().handle(Map.of("template", "maven"));
+		IndexHandlerTest.assertWellFormed(noName);
+		assertTrue(noName, noName.startsWith("{\"error\":"));
+
+		final String noTemplate = new CreateProjectHandler().handle(Map.of("name", "Valid"));
+		IndexHandlerTest.assertWellFormed(noTemplate);
+		assertTrue(noTemplate, noTemplate.startsWith("{\"error\":") && noTemplate.contains("template"));
 	}
 }

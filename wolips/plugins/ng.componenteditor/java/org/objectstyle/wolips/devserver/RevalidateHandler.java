@@ -44,8 +44,12 @@ class RevalidateHandler implements DevServerHandler {
 		final List<IProject> projects;
 		if (projectName != null && !projectName.isEmpty()) {
 			final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-			if (project == null || !project.isOpen()) {
-				return "{\"error\":\"no open project named '" + DevServerJson.escape(projectName) + "'\"}";
+			if (!project.exists()) {
+				return "{\"projects\":0,\"components\":0,\"reason\":\"no project named '" + DevServerJson.escape(projectName) + "' in the workspace\"}";
+			}
+			if (!project.isOpen()) {
+				return "{\"projects\":0,\"components\":0,\"reason\":\"project '" + DevServerJson.escape(projectName)
+						+ "' is closed\",\"hint\":\"/openProject?project=" + DevServerJson.escape(projectName) + "\"}";
 			}
 			projects = List.of(project);
 		}

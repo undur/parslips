@@ -29,7 +29,7 @@ class ConsoleHandler implements DevServerHandler {
 
 		final ConsoleBuffer.Buffer buffer = ConsoleBuffer.find(name);
 		if (buffer == null) {
-			return "{\"error\":\"no console captured for \\\"" + DevServerJson.escape(name)
+			return "{\"captured\":false,\"reason\":\"no console captured for \\\"" + DevServerJson.escape(name)
 					+ "\\\" — nothing launched under that name since Eclipse started\"}";
 		}
 

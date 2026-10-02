@@ -165,6 +165,10 @@ function seconds(ms) {
 	return (ms / 1000).toFixed(1) + "s";
 }
 
+/* Endpoints whose narrators below phrase their own refusals (or, for /problems, where a reason
+   just explains an empty answer). */
+const OWN_REFUSAL_STORY = ["/launch", "/createProject", "/importProject", "/validate", "/problems", "/restart"];
+
 /* Turns one feed entry into a human sentence. Returns HTML (values escaped via esc). */
 function narrate(entry) {
 	const p = params(entry);
@@ -172,18 +176,22 @@ function narrate(entry) {
 	const b = (s) => "<b>" + esc(s) + "</b>";
 
 	if (entry.status !== 200) {
-		return "Failed: " + esc(entry.response.slice(0, 200));
+		return "Failed: " + esc(r && r.error ? r.error : entry.response.slice(0, 200));
 	}
-	/* Some handlers answer refusals as {"error": ...} with a 200 — narrate those as
-	   refusals rather than feeding an error object to the per-endpoint narrators. */
+	/* The dev server's two kinds of no (see DevServerHandler): "error" when the call itself
+	   was wrong, "reason" when it was fine but didn't happen. Endpoints whose narrators tell
+	   their own refusal story are left to them. */
 	if (r && r.error) {
-		return "Refused " + esc(entry.path) + " — " + esc(r.error);
+		return "Bad call to " + esc(entry.path) + " — " + esc(r.error);
+	}
+	if (r && r.reason && !OWN_REFUSAL_STORY.includes(entry.path)) {
+		return "Nothing done by " + esc(entry.path) + " — " + esc(r.reason);
 	}
 	switch (entry.path) {
 		case "/refreshProject": {
 			const target = p.project ? b(p.project) : "all projects";
 			if (entry.response === "ok") return "Refreshed " + target + " — build clean";
-			const n = r && r.buildErrors ? r.buildErrors.length : null;
+			const n = r && typeof r.buildErrors === "number" ? r.buildErrors : null;
 			return "Refreshed " + target + (n !== null ? " — <b>" + n + " build error" + (n === 1 ? "" : "s") + "</b>" : "");
 		}
 		case "/validate": {

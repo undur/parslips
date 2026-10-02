@@ -24,7 +24,7 @@ class ImportProjectHandler implements DevServerHandler {
 	public String handle(Map<String, String> params) throws Exception {
 		final String pathParam = params.get("path");
 		if (pathParam == null || pathParam.isBlank()) {
-			return "{\"imported\":false,\"reason\":\"missing required parameter 'path' (the project directory, containing pom.xml)\"}";
+			return "{\"error\":\"missing required parameter 'path' (the project directory, containing pom.xml)\"}";
 		}
 		final File dir = new File(CreateProjectHandler.expandHome(pathParam.trim())).getCanonicalFile();
 		if (!new File(dir, "pom.xml").isFile()) {

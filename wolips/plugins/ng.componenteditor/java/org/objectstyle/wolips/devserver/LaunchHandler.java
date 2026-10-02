@@ -257,7 +257,7 @@ class LaunchHandler implements DevServerHandler {
 		catch (CoreException e) {
 			// The failure Eclipse would have shown in an error dialog, as data.
 			return "{\"launched\":false,\"config\":\"" + DevServerJson.escape(config.getName())
-					+ "\",\"error\":\"" + DevServerJson.escape(e.getStatus().getMessage()) + "\"}";
+					+ "\",\"reason\":\"" + DevServerJson.escape(e.getStatus().getMessage()) + "\"}";
 		}
 		if (launch == null) {
 			return "{\"launched\":false,\"config\":\"" + DevServerJson.escape(config.getName())
