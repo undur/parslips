@@ -510,13 +510,17 @@ public class WOProjectCreator {
 					""", _packageName);
 		}
 
+		// ERXComponent, the house base class: what new components copy, and the one with the
+		// typed pageWithName(Main.class) - starting from plain WOComponent sent the first
+		// page-to-page action an agent wrote into a compile error.
 		return String.format("""
 				package %s.components;
 
-				import com.webobjects.appserver.WOComponent;
 				import com.webobjects.appserver.WOContext;
 
-				public class Main extends WOComponent {
+				import er.extensions.components.ERXComponent;
+
+				public class Main extends ERXComponent {
 
 				\tpublic Main(WOContext context) {
 				\t\tsuper(context);

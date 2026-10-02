@@ -30,6 +30,16 @@ public class LaunchHandlerTest {
 	}
 
 	@Test
+	public void ownErrorsLeadWithFixingThem() {
+		// When only the launched project is broken, the errors are usually real (just-edited
+		// code): telling an agent "stale build, clean-rebuild" sent it the wrong way.
+		final String hint = LaunchHandler.ownErrorsHint("app");
+		assertTrue(hint, hint.startsWith("fix the listed compile errors"));
+		assertTrue(hint.contains("/refreshProject?project=app&clean=true"));
+		assertTrue(hint.contains("ignoreErrors=true"));
+	}
+
+	@Test
 	public void statusHandlerSwitchIsTheDebugFrameworksKey() {
 		// The key is the debug framework's own (org.eclipse.debug.core's
 		// PREF_ENABLE_STATUS_HANDLERS); a typo here would silently re-enable the dialogs.

@@ -295,7 +295,10 @@ public class BindingValueKeyPath {
     return gettable;
   }
   
-  /** Currently unused — retained for potential future use (richer binding validation). */
+  /**
+   * Whether a value can be pushed back through this keypath (its last key has a field or a
+   * mutator). Used by /keypath and by the push-back check on synchronizing components.
+   */
   public boolean isSettable() throws JavaModelException {
     boolean settable = false;
     if (_settable != null) {

@@ -12,6 +12,72 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### What building a test app found: hangs, model keys, non-synchronizing components, validator gaps
+
+A wonder-slim application (LeagueDesk) was built end to end through the dev server and the
+skill. These are the Parslips fixes it led to. Framework findings went to their repositories:
+undur/Parsley#30–32, ngobjects/ng-objects#74–75, undur/wonder-slim#169–170.
+
+**Hangs.** Apps run under Eclipse's debugger. A refresh that compiles with errors hot-swaps the
+broken classes in anyway, and by default the debugger suspends the first thread to reach a
+compile error or an uncaught exception. To a caller, that's a request that never answers. Fixing
+the code then swaps new classes under the suspended frame, and Eclipse raises a modal "Obsolete
+Methods on the Stack" dialog.
+- **New `/threads`:** lists suspended threads per app with a `reason` (`breakpoint at line N`,
+  `exception TYPE`, `compile error`, `uncaught exception`) and `at` (class, method, line).
+  `resume=all` (or an app name) resumes them.
+- **`/status`:** carries `suspendedThreads` per app.
+- **`AutoResume`:** in launches the dev server started, it resumes at once the suspensions from
+  JDT's hidden preference breakpoints (compile errors, uncaught exceptions; the ones not
+  registered with the breakpoint manager). The request fails fast instead of hanging, and
+  `/threads` lists them under `autoResumed`. Breakpoints the developer set, and apps launched
+  from Eclipse, keep Eclipse's behaviour.
+- **`/restart`:** refreshes and builds before stopping, and with compile errors refuses
+  (`restarted:false`) and leaves the app up. Before, it stopped the app, then refused to
+  launch, and left nothing running.
+- **Messages:** `/refreshProject`'s and `/restart`'s messages no longer claim the app is "still
+  on the previous classes". A launch refused for the project's own errors leads with "fix the
+  listed errors", not "stale build state" (`LaunchHandler.ownErrorsHint`).
+
+**Model keys.**
+- `/find?class=pkg.Team&key=name` finds a key of any class as templates reach it: every
+  template keypath segment, in any component of the class's project and its dependents, that
+  resolves to one of the members implementing the key. It matches by resolution, not text, so
+  `$team.captain.name` (a Player's) doesn't count.
+- `/rename?kind=key&class=…` renames such a key: the members through JDT, plus those template
+  segments (`KeypathScan`).
+- `DevServerJava.findSourceType` resolves a class by qualified or unique simple name.
+
+**Non-synchronizing components** (`ERXNonSynchronizingComponent`, or
+`synchronizesVariablesWithBindings()` returning false) read their bindings by name with
+`valueForBinding("team")` and kin, and have no settable keys. That made them look like they take
+nothing. `BindingNameLiterals` reads those names:
+- `/componentApi` and `/context` list them (`via: valueForBinding`).
+- The editor's attribute completion offers them.
+- `/rename kind=key` renames the literals first. Before, it renamed the accessor and every
+  call site but not `valueForBinding("team")`: `renamed:true`, everything validating clean,
+  and the page failing at render. A binding that exists only as a literal can be renamed too.
+
+**Validator.**
+- **Push-back warning:** a component that certainly synchronizes (its nearest
+  `synchronizesVariablesWithBindings()`, read from source or known by name), whose key is
+  settable, bound to a parent keypath that can't be set. It always fails at render with
+  `takeValueForKey`, and the message names both fixes.
+- **Operators on Java collections:** in a WebObjects component, a KVC operator (`@count`,
+  `@sum`…) on a `java.util` collection that isn't an `NSArray` gets a warning. WO's operators
+  only work on `NSArray`, so it fails at render.
+
+**Alias resolution for documentation.** `ParsleyTagAliasResolver.resolveForBindings` stopped
+at the first element in the alias chain with a global or bundled definition. That meant `str`
+documented as WO's `WOString` even though wonder-slim's `ERXWOString` (what runs) ships its own
+`.apiext`. Elements' own `.apiext` files count now.
+
+**New-project template.** The WebObjects `Main` extends `ERXComponent`, not `WOComponent`.
+New components copy it, and only `ERXComponent` has the typed `pageWithName(Main.class)`.
+
+Tests: `BindingNameLiteralsTest`, `LaunchHandlerTest.ownErrorsLeadWithFixingThem`,
+`WOProjectCreatorKindsTest.woAppMainIsAnErxComponent`.
+
 ### /quickfix: createKey with a type no longer generates `String<String>`
 
 `type=` was passed to `AddKeyInfo`'s parameter type as well as its type. The parameter type is

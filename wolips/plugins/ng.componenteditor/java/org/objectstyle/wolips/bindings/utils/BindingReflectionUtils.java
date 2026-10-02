@@ -283,6 +283,68 @@ public class BindingReflectionUtils {
   }
 
   /**
+   * Framework base classes known not to synchronize — their override lives in a jar, so its
+   * body can't be read. A subclass that doesn't override again inherits the answer.
+   */
+  private static final Set<String> NON_SYNCHRONIZING_BASES = Set.of(
+      "er.extensions.components.ERXNonSynchronizingComponent",
+      "er.extensions.components.ERXStatelessComponent" );
+
+  /**
+   * Whether a WebObjects component synchronizes its variables with its bindings — i.e. pulls
+   * each bound value into its own key before rendering and PUSHES it back to the parent's
+   * keypath afterwards. The nearest {@code synchronizesVariablesWithBindings()} up the
+   * superclass chain decides: read from source ({@code return false;}/{@code return true;}),
+   * or by name for the known framework bases. WOComponent's own answer is true.
+   *
+   * @return TRUE or FALSE, or null when it can't be told (an override with logic in it, or a
+   *         binary override we don't know) — callers must not guess from null
+   */
+  public static Boolean synchronizesVariablesWithBindings(IType component) {
+    try {
+      final org.eclipse.jdt.core.ITypeHierarchy hierarchy = org.objectstyle.wolips.core.resources.types.SuperTypeHierarchyCache.getTypeHierarchy(component);
+      for (IType type = component; type != null; type = hierarchy.getSuperclass(type)) {
+        final String name = type.getFullyQualifiedName('.');
+        if (NON_SYNCHRONIZING_BASES.contains(name)) {
+          return Boolean.FALSE;
+        }
+        if ("com.webobjects.appserver.WOComponent".equals(name)) {
+          return Boolean.TRUE;
+        }
+        final IMethod method = type.getMethod("synchronizesVariablesWithBindings", new String[0]);
+        if (method.exists()) {
+          final String source = method.isBinary() ? null : method.getSource();
+          if (source == null) {
+            return null;
+          }
+          final String body = source.substring(source.indexOf('{') + 1).replaceAll("\\s+", " ").trim();
+          if (body.startsWith("return false;")) {
+            return Boolean.FALSE;
+          }
+          if (body.startsWith("return true;")) {
+            return Boolean.TRUE;
+          }
+          return null;
+        }
+      }
+    }
+    catch (JavaModelException e) {
+      // Unknown.
+    }
+    return null;
+  }
+
+  /** Whether the type is (or extends) WebObjects' NSArray — the only collection WO's KVC operators (@count, @sum…) work on. */
+  public static boolean isNSArray(IType type, TypeCache cache) throws JavaModelException {
+    return type != null && BindingReflectionUtils.isType(type, new String[] { "com.webobjects.foundation.NSArray" }, cache);
+  }
+
+  /** Whether the type is (or extends) WebObjects' WOComponent — a WO component, as opposed to an ng one. */
+  public static boolean isWebObjectsComponent(IType type, TypeCache cache) throws JavaModelException {
+    return type != null && BindingReflectionUtils.isType(type, new String[] { "com.webobjects.appserver.WOComponent" }, cache);
+  }
+
+  /**
    * Searches for element class names matching the given name and match type.
    *
    * <p>For exact-match lookups ({@code matchType == R_EXACT_MATCH}), uses a

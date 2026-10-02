@@ -113,12 +113,16 @@ public class DevServer {
 		_httpServer.createContext("/rename", new RequestHandler(new RenameHandler()));
 		_httpServer.createContext("/quickfix", new RequestHandler(new QuickfixHandler()));
 		_httpServer.createContext("/context", new RequestHandler(new ContextHandler()));
+		_httpServer.createContext("/threads", new RequestHandler(new ThreadsHandler()));
 		// "/" catches every otherwise-unmatched path, so the index doubles as the 404:
 		// a typo'd endpoint answers with the list of real ones.
 		_httpServer.createContext("/", new RequestHandler(new IndexHandler()));
 
 		// Start following launch consoles so /console can serve them (incl. post-mortem).
 		ConsoleBuffer.install();
+
+		// Resume the debugger's unasked-for suspensions in dev-server launches (a hang, otherwise).
+		AutoResume.install();
 
 		// Use a small daemon thread pool. Requests are short-lived (open an
 		// editor, refresh a resource) and arrive one at a time in practice.

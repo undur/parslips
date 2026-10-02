@@ -1,8 +1,11 @@
 package org.objectstyle.wolips.devserver;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.debug.core.ILaunch;
 
 /**
@@ -13,14 +16,16 @@ import org.eclipse.debug.core.ILaunch;
  * <p>Request parameters:
  * <ul>
  *   <li>{@code app} (or {@code config}) — the app/config/project to restart (required).</li>
- *   <li>{@code refresh} — comma-separated project names to refresh+rebuild between stop
- *       and launch (e.g. the framework project just edited). Optional.</li>
+ *   <li>{@code refresh} — comma-separated project names to refresh+rebuild before anything
+ *       stops (e.g. the framework project just edited). Optional.</li>
  *   <li>{@code waitForPort}/{@code timeout}/{@code mode}/{@code open}/{@code ignoreErrors}
  *       — passed through to {@code /launch}.</li>
  * </ul>
  *
  * <p>Delegates to the stop / refreshProject / launch handlers rather than reimplementing
- * them, and reports each stage's result so a failure names the stage it happened in.
+ * them, and reports each stage's result so a failure names the stage it happened in. The
+ * build comes first: a restart whose build is broken refuses ({@code restarted:false}) and
+ * leaves the running app up, rather than stopping it and then failing to launch.
  * Between stop and launch it waits for the old launch to actually terminate — the race
  * that makes hand-rolled restart scripts flaky.
  */
@@ -33,14 +38,10 @@ class RestartHandler implements DevServerHandler {
 			return "{\"error\":\"missing required parameter 'app' (or 'config')\"}";
 		}
 
-		// ---- Stage 1: stop (skipped when nothing is running — that's not an error). ----
-		String stopResult = "{\"stopped\":false,\"reason\":\"nothing was running\"}";
-		if (LaunchHandler.findRunningLaunch(resolveConfigName(name)) != null || AppRegistry.get(name) != null) {
-			stopResult = new StopHandler().handle(params);
-			waitForTermination(resolveConfigName(name), 15_000);
-		}
-
-		// ---- Stage 2: refresh+rebuild the named projects (optional). ----
+		// ---- Stage 1: refresh+rebuild the named projects (optional) — BEFORE stopping. ----
+		// Building first means a broken build is found while the old app is still up: the
+		// restart refuses (stage 2) and leaves it running, instead of stopping it and then
+		// failing to launch — which left nothing running.
 		String refreshResult = null;
 		final String refresh = params.get("refresh");
 		if (refresh != null && !refresh.isEmpty()) {
@@ -65,7 +66,30 @@ class RestartHandler implements DevServerHandler {
 			refreshResult = combined.append(']').toString();
 		}
 
-		// ---- Stage 3: launch (with whatever launch options the caller passed along). ----
+		// ---- Stage 2: would the launch be refused for compile errors? Then don't stop. ----
+		final boolean running = LaunchHandler.findRunningLaunch(resolveConfigName(name)) != null || AppRegistry.get(name) != null;
+		if (running && !"true".equalsIgnoreCase(params.get("ignoreErrors"))) {
+			final List<IProject> broken = brokenClosure(name);
+			if (!broken.isEmpty()) {
+				final StringBuilder b = new StringBuilder("{\"restarted\":false");
+				b.append(",\"reason\":\"").append(DevServerJson.escape("compile errors in " + String.join(", ", broken.stream().map(IProject::getName).toList())
+						+ " - the running app was not stopped. The build hot-swapped the classes that did compile; a request reaching code that didn't is suspended by the debugger (see /threads)")).append('"');
+				if (refreshResult != null) {
+					b.append(",\"refresh\":").append(refreshResult);
+				}
+				b.append(",\"hint\":\"fix the errors (see refresh, or /problems), then /restart again; or pass ignoreErrors=true\"}");
+				return b.toString();
+			}
+		}
+
+		// ---- Stage 3: stop (skipped when nothing is running — that's not an error). ----
+		String stopResult = "{\"stopped\":false,\"reason\":\"nothing was running\"}";
+		if (running) {
+			stopResult = new StopHandler().handle(params);
+			waitForTermination(resolveConfigName(name), 15_000);
+		}
+
+		// ---- Stage 4: launch (with whatever launch options the caller passed along). ----
 		final String launchResult = new LaunchHandler().handle(params);
 
 		final StringBuilder b = new StringBuilder();
@@ -75,6 +99,26 @@ class RestartHandler implements DevServerHandler {
 		}
 		b.append(",\"launch\":").append(launchResult).append('}');
 		return b.toString();
+	}
+
+	/**
+	 * The projects in the app's launch closure (itself and what it depends on) with Java
+	 * errors — what /launch would refuse for. Empty when the config can't be resolved; the
+	 * launch stage reports that.
+	 */
+	private static List<IProject> brokenClosure(String name) throws Exception {
+		final LaunchConfigs.Resolution resolution = LaunchConfigs.resolve(name);
+		if (resolution.chosen == null) {
+			return List.of();
+		}
+		final String projectName = LaunchConfigs.projectNameOf(resolution.chosen);
+		final IProject project = projectName == null ? null : ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+		if (project == null || !project.isOpen()) {
+			return List.of();
+		}
+		final List<IProject> closure = LaunchClosure.of(project);
+		LaunchClosure.build(closure);
+		return LaunchClosure.withErrors(closure);
 	}
 
 	private static String resolveConfigName(String query) {

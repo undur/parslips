@@ -1,5 +1,8 @@
 package org.objectstyle.wolips.devserver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IMember;
@@ -114,6 +117,56 @@ final class DevServerJava {
 			}
 		}
 		return line;
+	}
+
+	/** A class found by name, or why not (unknown, or a simple name several classes share). */
+	record TypeLookup(IType type, String problem) {
+	}
+
+	/**
+	 * Finds a workspace-source class by fully qualified or simple name, preferring the hinted
+	 * project. A simple name shared by several source classes is reported, not guessed.
+	 */
+	static TypeLookup findSourceType(String name, String projectHint) throws Exception {
+		final List<IType> found = new ArrayList<>();
+		final org.eclipse.jdt.core.IJavaProject hinted = DevServerComponents.javaProject(projectHint);
+		final List<org.eclipse.jdt.core.IJavaProject> projects = new ArrayList<>();
+		if (hinted != null) {
+			projects.add(hinted);
+		}
+		for (final org.eclipse.core.resources.IProject project : org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
+			final org.eclipse.jdt.core.IJavaProject javaProject = DevServerComponents.javaProject(project.getName());
+			if (javaProject != null && !javaProject.equals(hinted)) {
+				projects.add(javaProject);
+			}
+		}
+		if (name.contains(".")) {
+			for (final org.eclipse.jdt.core.IJavaProject javaProject : projects) {
+				final IType type = javaProject.findType(name);
+				if (type != null && !type.isBinary()) {
+					return new TypeLookup(type, null);
+				}
+			}
+			return new TypeLookup(null, "no class named '" + name + "' in the workspace sources");
+		}
+		final org.eclipse.jdt.core.search.SearchEngine engine = new org.eclipse.jdt.core.search.SearchEngine();
+		engine.searchAllTypeNames(null, org.eclipse.jdt.core.search.SearchPattern.R_EXACT_MATCH, name.toCharArray(), org.eclipse.jdt.core.search.SearchPattern.R_EXACT_MATCH | org.eclipse.jdt.core.search.SearchPattern.R_CASE_SENSITIVE,
+				org.eclipse.jdt.core.search.IJavaSearchConstants.CLASS_AND_INTERFACE, org.eclipse.jdt.core.search.SearchEngine.createJavaSearchScope(projects.toArray(new org.eclipse.jdt.core.IJavaElement[0]), org.eclipse.jdt.core.search.IJavaSearchScope.SOURCES),
+				new org.eclipse.jdt.core.search.TypeNameMatchRequestor() {
+					@Override
+					public void acceptTypeNameMatch(org.eclipse.jdt.core.search.TypeNameMatch match) {
+						if (!found.contains(match.getType())) {
+							found.add(match.getType());
+						}
+					}
+				}, org.eclipse.jdt.core.search.IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
+		if (found.size() == 1) {
+			return new TypeLookup(found.get(0), null);
+		}
+		if (found.isEmpty()) {
+			return new TypeLookup(null, "no class named '" + name + "' in the workspace sources");
+		}
+		return new TypeLookup(null, "several classes are named '" + name + "': " + found.stream().map(t -> t.getFullyQualifiedName('.')).toList() + " - pass the qualified name");
 	}
 
 	/** "method" or "field" — whether the key is read through an accessor or straight off a field. */

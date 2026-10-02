@@ -30,7 +30,10 @@ import org.objectstyle.wolips.wodclipse.core.refactoring.RenameComponentProcesso
  *
  * <p>Request parameters:
  * <ul>
- *   <li>{@code component} — required.</li>
+ *   <li>{@code component} — the component whose key it is; or {@code class} — any class (a
+ *       model class, typically), whose key templates reach through keypaths
+ *       ({@code $team.playerCount}): then the answer has every template segment, in any
+ *       component, that resolves to it.</li>
  *   <li>{@code key} — required; one key of the component (the first segment of a keypath).
  *       For what a longer keypath resolves to, hop by hop, use {@code /keypath}.</li>
  *   <li>{@code project} — optional hint.</li>
@@ -44,8 +47,9 @@ class FindHandler implements DevServerHandler {
 	@Override
 	public String handle(Map<String, String> params) throws Exception {
 		final String componentName = params.get("component");
-		if (componentName == null || componentName.isEmpty()) {
-			return JsonObject.missing("component");
+		final String className = params.get("class");
+		if ((componentName == null || componentName.isEmpty()) && (className == null || className.isEmpty())) {
+			return JsonObject.error("missing required parameter 'component' (a component's key) or 'class' (a key of any class, e.g. a model class, as templates reach it through keypaths)");
 		}
 		String key = params.get("key");
 		if (key == null || key.isEmpty()) {
@@ -57,6 +61,9 @@ class FindHandler implements DevServerHandler {
 		if (key.contains(".")) {
 			return JsonObject.error("key must be a single key, not a keypath ('" + key + "'); /keypath resolves a keypath hop by hop, and /find?key="
 					+ key.substring(0, key.indexOf('.')) + " finds its first key");
+		}
+		if (className != null && !className.isEmpty()) {
+			return findClassKey(className, key, DevServerComponents.projectParam(params));
 		}
 
 		final String projectHint = DevServerComponents.projectParam(params);
@@ -95,6 +102,36 @@ class FindHandler implements DevServerHandler {
 			json.put("java", javaReferences(member));
 		}
 		return json.toString();
+	}
+
+	/**
+	 * A key of any class, as templates reach it: the declaration(s), every template keypath
+	 * segment (from any component, in the class's project and the projects depending on it)
+	 * that resolves to it, and its Java references.
+	 */
+	private static String findClassKey(String className, String key, String projectHint) throws Exception {
+		final DevServerJava.TypeLookup lookup = DevServerJava.findSourceType(className, projectHint);
+		final JsonObject json = new JsonObject().put("class", className).put("key", key);
+		if (lookup.type() == null) {
+			return json.put("found", false).put("reason", lookup.problem()).toString();
+		}
+		final IType type = lookup.type();
+		json.put("class", type.getFullyQualifiedName('.'));
+		final java.util.Set<IMember> members = KeypathScan.members(type, key);
+		if (members.isEmpty()) {
+			return json.put("found", false).put("reason", "'" + key + "' is not a key of " + type.getFullyQualifiedName('.')).toString();
+		}
+		final List<JsonObject> declarations = new ArrayList<>();
+		final List<JsonObject> java = new ArrayList<>();
+		for (final IMember member : members) {
+			declarations.add(DevServerJava.location(member).put("member", member.getElementName()).put("via", DevServerJava.memberKind(member)));
+			java.addAll(javaReferences(member));
+		}
+		final List<JsonObject> templates = new ArrayList<>();
+		for (final KeypathScan.Use use : KeypathScan.uses(TemplateScan.withDependents(type.getJavaProject().getProject()), members)) {
+			templates.add(TemplateScan.location(use.file(), use.content(), use.offset()).put("component", use.component()));
+		}
+		return json.put("found", true).put("declarations", declarations).put("templates", templates).put("java", java).toString();
 	}
 
 	/** Uses of the key in the component's own HTML and WOD, as the editor's Find References reports them. */

@@ -69,6 +69,10 @@ class RenameHandler implements DevServerHandler {
 		if (!List.of("component", "key", "element").contains(kind)) {
 			return JsonObject.error("kind must be component, key or element");
 		}
+		final String className = params.get("class");
+		if ("key".equals(kind) && className != null && !className.isEmpty()) {
+			return renameClassKey(className, params);
+		}
 		final String componentName = params.get("component");
 		if (componentName == null || componentName.isEmpty()) {
 			return JsonObject.missing("component");
@@ -172,10 +176,16 @@ class RenameHandler implements DevServerHandler {
 					+ " (WOLips is installed and build.properties sets no project.base), so templates would not follow the key").toString();
 		}
 		final Set<IMember> members = keyMembers(found, type, from);
-		if (members.isEmpty()) {
-			return result.put("renamed", false).put("reason", "'" + from + "' is not a key declared in the workspace sources of " + type.getFullyQualifiedName('.')).toString();
+		final Change literals = bindingNameLiterals(type, from, to);
+		if (members.isEmpty() && literals == null) {
+			return result.put("renamed", false).put("reason", "'" + from + "' is neither a key declared in the workspace sources of " + type.getFullyQualifiedName('.')
+					+ " nor a binding it reads by name (valueForBinding(\"" + from + "\") and kin)").toString();
 		}
 		final List<Step> steps = new ArrayList<>();
+		// First, so the JDT steps after it are re-checked against the edited file (see run()).
+		if (literals != null) {
+			steps.add(Step.change(literals));
+		}
 		for (final IMember member : members) {
 			final String newName = renamedMemberName(member.getElementName(), from, to);
 			if (newName == null) {
@@ -189,6 +199,32 @@ class RenameHandler implements DevServerHandler {
 			steps.add(Step.change(callSites));
 		}
 		return run(steps, preview, result);
+	}
+
+	/**
+	 * The binding names the component reads or writes BY NAME — {@code valueForBinding("team")}
+	 * and kin — as a text change, or null when it has none. A non-synchronizing component reads
+	 * its bindings this way; renaming the accessor and the call sites but not the literal left
+	 * every call site passing a binding the component no longer reads (renamed:true, everything
+	 * validating clean, and the page failing at render).
+	 */
+	private static Change bindingNameLiterals(IType type, String from, String to) {
+		final String source = org.objectstyle.wolips.bindings.utils.BindingNameLiterals.sourceOf(type);
+		if (source == null || !(type.getResource() instanceof org.eclipse.core.resources.IFile file)) {
+			return null;
+		}
+		final org.eclipse.text.edits.MultiTextEdit edits = new org.eclipse.text.edits.MultiTextEdit();
+		for (final org.objectstyle.wolips.bindings.utils.BindingNameLiterals.Occurrence occurrence : org.objectstyle.wolips.bindings.utils.BindingNameLiterals.find(source)) {
+			if (occurrence.name().equals(from)) {
+				edits.addChild(new org.eclipse.text.edits.ReplaceEdit(occurrence.offset(), from.length(), to));
+			}
+		}
+		if (!edits.hasChildren()) {
+			return null;
+		}
+		final TextFileChange change = new TextFileChange("Rename binding '" + from + "' read by name in " + type.getElementName(), file);
+		change.setEdit(edits);
+		return change;
 	}
 
 	/**
@@ -227,6 +263,78 @@ class RenameHandler implements DevServerHandler {
 			return memberName.substring(0, upper) + Character.toUpperCase(to.charAt(0)) + to.substring(1);
 		}
 		return null;
+	}
+
+	// ---- kind=key&class=… — a key of a model (or any non-component) class ----
+
+	/**
+	 * Renames a key of any class, as templates reach it through keypaths: its members (JDT,
+	 * so Java follows) and every template keypath segment, in any component of the class's
+	 * project and its dependents, that resolves to them ({@code $team.playerCount} →
+	 * {@code $team.squadSize}). Components go through {@code component=}, where the editor's
+	 * rename participants own their templates.
+	 */
+	private static String renameClassKey(String className, Map<String, String> params) throws Exception {
+		final String from = params.get("from");
+		final String to = params.get("to");
+		if (from == null || from.isEmpty()) {
+			return JsonObject.missing("from");
+		}
+		if (to == null || to.isEmpty()) {
+			return JsonObject.missing("to");
+		}
+		if (!isIdentifier(to)) {
+			return JsonObject.error("'" + to + "' is not a valid Java identifier");
+		}
+		final boolean preview = "true".equalsIgnoreCase(params.get("preview"));
+		final JsonObject result = new JsonObject().put("kind", "key").put("class", className).put("from", from).put("to", to);
+		final DevServerJava.TypeLookup lookup = DevServerJava.findSourceType(className, DevServerComponents.projectParam(params));
+		if (lookup.type() == null) {
+			return result.put("renamed", false).put("reason", lookup.problem()).toString();
+		}
+		final IType type = lookup.type();
+		if (org.objectstyle.wolips.bindings.utils.BindingReflectionUtils.isWOComponent(type, WodParserCache.getTypeCache())) {
+			return JsonObject.error(type.getElementName() + " is a component; rename its keys with component=" + type.getElementName() + " (its own templates and call sites follow)");
+		}
+
+		final String[] answer = new String[1];
+		final Exception[] failure = new Exception[1];
+		Display.getDefault().syncExec(() -> {
+			try {
+				final java.util.Set<IMember> members = KeypathScan.members(type, from);
+				members.removeIf(IMember::isBinary);
+				if (members.isEmpty()) {
+					answer[0] = result.put("renamed", false).put("reason", "'" + from + "' is not a key declared in the workspace sources of " + type.getFullyQualifiedName('.')).toString();
+					return;
+				}
+				final List<Step> steps = new ArrayList<>();
+				for (final IMember member : members) {
+					final String newName = renamedMemberName(member.getElementName(), from, to);
+					if (newName != null) {
+						steps.add(Step.jdt(renameDescriptor(member instanceof IField ? IJavaRefactorings.RENAME_FIELD : IJavaRefactorings.RENAME_METHOD, member, newName)));
+					}
+				}
+				// The template segments, one change per file.
+				final Map<org.eclipse.core.resources.IFile, org.eclipse.text.edits.MultiTextEdit> edits = new java.util.LinkedHashMap<>();
+				for (final KeypathScan.Use use : KeypathScan.uses(TemplateScan.withDependents(type.getJavaProject().getProject()), members)) {
+					edits.computeIfAbsent(use.file(), f -> new org.eclipse.text.edits.MultiTextEdit())
+							.addChild(new org.eclipse.text.edits.ReplaceEdit(use.offset(), from.length(), to));
+				}
+				for (final Map.Entry<org.eclipse.core.resources.IFile, org.eclipse.text.edits.MultiTextEdit> entry : edits.entrySet()) {
+					final TextFileChange change = new TextFileChange("Rename '" + from + "' in keypaths", entry.getKey());
+					change.setEdit(entry.getValue());
+					steps.add(Step.change(change));
+				}
+				answer[0] = run(steps, preview, result);
+			}
+			catch (final Exception e) {
+				failure[0] = e;
+			}
+		});
+		if (failure[0] != null) {
+			throw failure[0];
+		}
+		return answer[0];
 	}
 
 	// ---- kind=element ----

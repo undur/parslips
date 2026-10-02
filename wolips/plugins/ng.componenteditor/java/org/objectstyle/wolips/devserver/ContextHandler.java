@@ -76,12 +76,17 @@ class ContextHandler implements DevServerHandler {
 				// what it takes, as /componentApi reports (and attribute completion offers).
 				final DevServerComponents.Found component = DevServerComponents.find(name, found.projectName());
 				if (component != null && component.descriptor().getJavaType() != null) {
-					final List<String> keys = new ArrayList<>();
-					for (final org.objectstyle.wolips.bindings.wod.BindingValueKey key : ComponentApiHandler.settableKeys(component.javaProject(), component.descriptor().getJavaType())) {
-						keys.add(key.getBindingName());
+					final org.eclipse.jdt.core.IType type = component.descriptor().getJavaType();
+					final java.util.Set<String> keys = new java.util.LinkedHashSet<>();
+					if (org.objectstyle.wolips.bindings.utils.BindingReflectionUtils.synchronizesVariablesWithBindings(type) != Boolean.FALSE) {
+						for (final org.objectstyle.wolips.bindings.wod.BindingValueKey key : ComponentApiHandler.settableKeys(component.javaProject(), type)) {
+							keys.add(key.getBindingName());
+						}
 					}
-					elements.add(element.put("resolved", component.descriptor().getJavaType().getFullyQualifiedName('.'))
-							.put("definition", "keys").put("bindings", keys));
+					// What it reads by name: a non-synchronizing component's whole API.
+					keys.addAll(org.objectstyle.wolips.bindings.utils.BindingNameLiterals.names(type));
+					elements.add(element.put("resolved", type.getFullyQualifiedName('.'))
+							.put("definition", "keys").put("bindings", new ArrayList<>(keys)));
 					continue;
 				}
 				elements.add(element.put("definition", "none"));

@@ -294,7 +294,10 @@ class LaunchHandler implements DevServerHandler {
 		final String previous = prefs.get(ENABLE_STATUS_HANDLERS, null);
 		prefs.putBoolean(ENABLE_STATUS_HANDLERS, false);
 		try {
-			return config.launch(mode, new NullProgressMonitor(), false, true);
+			final ILaunch launch = config.launch(mode, new NullProgressMonitor(), false, true);
+			// A compile error or uncaught exception in this app fails fast instead of suspending it.
+			AutoResume.register(launch);
+			return launch;
 		}
 		finally {
 			if (previous == null) {
@@ -356,7 +359,7 @@ class LaunchHandler implements DevServerHandler {
 				: "compile errors in required project(s): " + String.join(", ", names);
 		return "{\"launched\":false,\"reason\":\"" + DevServerJson.escape(reason)
 				+ "\",\"errorProjects\":" + projects + openedNote
-				+ ",\"hint\":\"" + DevServerJson.escape(brokenProjectsHint(names)) + "\"}";
+				+ ",\"hint\":\"" + DevServerJson.escape(onlyItself ? ownErrorsHint(launchedProject) : brokenProjectsHint(names)) + "\"}";
 	}
 
 	/**
@@ -372,6 +375,16 @@ class LaunchHandler implements DevServerHandler {
 		}
 		return "usually stale build state — clean-rebuild the broken project(s): " + String.join(" ; ", calls)
 				+ " — then retry; or pass ignoreErrors=true to launch anyway";
+	}
+
+	/**
+	 * The hint when the only broken project is the one being launched. There the errors are
+	 * almost always real — in code just edited — so the first advice is to fix them; a stale
+	 * build (errors that don't match the source) is the second possibility, not the first.
+	 */
+	static String ownErrorsHint(String project) {
+		return "fix the listed compile errors in " + project + "'s code, refresh, then retry; if they don't match the source (a stale build), /refreshProject?project="
+				+ project + "&clean=true; or pass ignoreErrors=true to launch anyway";
 	}
 
 	private static Integer parsePort(String value) {

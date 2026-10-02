@@ -96,6 +96,12 @@ class StatusHandler implements DevServerHandler {
 			b.append(",\"reachable\":").append(AppRegistry.isReachable(registered)).append('}');
 		}
 
+		// Threads the debugger suspended (a compile error hot-swapped in, a breakpoint, an
+		// uncaught exception): the app is "reachable" but a request reaching them never answers.
+		final java.util.List<JsonObject> suspended = ThreadsHandler.suspendedIn(config.getName());
+		if (!suspended.isEmpty()) {
+			b.append(",\"suspendedThreads\":").append(JsonObject.array(suspended));
+		}
 		b.append('}');
 		return b.toString();
 	}

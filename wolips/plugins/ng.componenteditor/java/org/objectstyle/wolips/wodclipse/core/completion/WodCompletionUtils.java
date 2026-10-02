@@ -286,6 +286,20 @@ public class WodCompletionUtils {
     if (showReflectionBindings) {
       List<BindingValueKey> bindingKeys = BindingReflectionUtils.getBindingKeys(project, elementType, partialToken, false, BindingReflectionUtils.MUTATORS_ONLY, false, cache);
       WodCompletionUtils._fillInCompletionProposals(bindingKeys, token, tokenOffset, offset, completionProposalsSet, false);
+
+      // A non-synchronizing component has no settable keys: the bindings it reads by name —
+      // valueForBinding("team") and kin — are its API, so offer those too.
+      String lowercasePartialToken = partialToken.toLowerCase();
+      for (String bindingName : org.objectstyle.wolips.bindings.utils.BindingNameLiterals.names(elementType)) {
+        if (bindingName.toLowerCase().startsWith(lowercasePartialToken)) {
+          if (WodCompletionUtils.shouldSmartInsert() && guessed) {
+            completionProposalsSet.add(new WodCompletionProposal(token, tokenOffset, offset, bindingName + " = ", bindingName, bindingName.length() + 3));
+          }
+          else {
+            completionProposalsSet.add(new WodCompletionProposal(token, tokenOffset, offset, bindingName));
+          }
+        }
+      }
     }
   }
 

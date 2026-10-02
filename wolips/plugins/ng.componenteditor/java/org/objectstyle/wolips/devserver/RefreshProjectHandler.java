@@ -148,7 +148,7 @@ class RefreshProjectHandler implements DevServerHandler {
 			return null;
 		}
 		return "{\"refreshed\":true,\"buildErrors\":" + totalErrors + ",\"projects\":[" + report
-				+ "],\"hint\":\"the build settled but did NOT compile cleanly — the running app is still on the previous classes\"}";
+				+ "],\"hint\":\"the build settled but did NOT compile cleanly. A running debug app gets the classes with errors hot-swapped in anyway, and a request that reaches an error is SUSPENDED by the debugger and never answers (see /threads). Fix the errors before exercising the app.\"}";
 	}
 
 	/**

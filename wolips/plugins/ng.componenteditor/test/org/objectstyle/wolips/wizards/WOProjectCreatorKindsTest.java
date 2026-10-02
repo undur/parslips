@@ -72,4 +72,16 @@ public class WOProjectCreatorKindsTest {
 		assertFalse(Files.readString(dir.resolve("pom.xml")).contains("wo-adaptor-jetty"));
 		assertFalse(Files.readString(dir.resolve("src/main/woresources/Properties")).contains("WOAdaptor"));
 	}
+
+	@Test
+	public void woAppMainIsAnErxComponent() throws Exception {
+		// New components copy Main; plain WOComponent lacks the typed pageWithName(Class).
+		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
+		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, dir).createProject();
+
+		final String main = Files.readString(dir.resolve("src/main/java/my/wo/app/components/Main.java"));
+		assertTrue(main, main.contains("public class Main extends ERXComponent"));
+		assertTrue(main, main.contains("import er.extensions.components.ERXComponent;"));
+		assertFalse(main, main.contains("WOComponent;"));
+	}
 }

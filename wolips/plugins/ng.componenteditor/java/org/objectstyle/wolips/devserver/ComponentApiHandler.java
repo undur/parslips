@@ -73,7 +73,45 @@ class ComponentApiHandler implements DevServerHandler {
 			return json.put("source", "none").put("bindings", List.of())
 					.put("note", "a template-only component (no Java class) takes no bindings of its own");
 		}
-		return json.put("source", "keys").put("bindings", settableKeysJson(javaProject, type));
+		// A non-synchronizing component's setters aren't bindings: nothing is pushed into them.
+		final List<BindingValueKey> keys = BindingReflectionUtils.synchronizesVariablesWithBindings(type) == Boolean.FALSE ? List.of() : settableKeys(javaProject, type);
+		final List<JsonObject> bindings = keysJson(keys);
+		final java.util.Set<String> listed = new java.util.HashSet<>();
+		for (final BindingValueKey key : keys) {
+			listed.add(key.getBindingName());
+		}
+		bindings.addAll(namedBindingsJson(type, listed));
+		return json.put("source", "keys").put("bindings", bindings);
+	}
+
+	/**
+	 * The bindings the component reads by name ({@code valueForBinding("team")} and kin) and
+	 * that aren't already listed as keys — the whole API of a non-synchronizing component.
+	 */
+	private static List<JsonObject> namedBindingsJson(IType type, java.util.Set<String> listed) {
+		final String source = org.objectstyle.wolips.bindings.utils.BindingNameLiterals.sourceOf(type);
+		final List<JsonObject> named = new ArrayList<>();
+		for (final org.objectstyle.wolips.bindings.utils.BindingNameLiterals.Occurrence occurrence : org.objectstyle.wolips.bindings.utils.BindingNameLiterals.find(source)) {
+			if (!listed.add(occurrence.name())) {
+				continue;
+			}
+			named.add(new JsonObject()
+					.put("name", occurrence.name())
+					.put("declaredIn", type.getFullyQualifiedName('.'))
+					.put("via", "valueForBinding")
+					.put("at", new JsonObject().put("file", type.getResource() == null ? null : type.getResource().getFullPath().toString()).put("line", lineAt(source, occurrence.offset()))));
+		}
+		return named;
+	}
+
+	private static int lineAt(String source, int offset) {
+		int line = 1;
+		for (int i = 0; i < offset; i++) {
+			if (source.charAt(i) == '\n') {
+				line++;
+			}
+		}
+		return line;
 	}
 
 	/**
@@ -101,9 +139,9 @@ class ComponentApiHandler implements DevServerHandler {
 		return settable;
 	}
 
-	private static List<JsonObject> settableKeysJson(IJavaProject javaProject, IType type) throws Exception {
+	private static List<JsonObject> keysJson(List<BindingValueKey> keys) {
 		final List<JsonObject> bindings = new ArrayList<>();
-		for (final BindingValueKey key : settableKeys(javaProject, type)) {
+		for (final BindingValueKey key : keys) {
 			bindings.add(new JsonObject()
 					.put("name", key.getBindingName())
 					.put("type", DevServerJava.typeName(key))

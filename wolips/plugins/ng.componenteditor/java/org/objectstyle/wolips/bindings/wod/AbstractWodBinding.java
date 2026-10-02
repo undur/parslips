@@ -369,6 +369,21 @@ public abstract class AbstractWodBinding implements IWodBinding {
             if (!SeverityPolicy.isIgnored(atOperatorSeverity) && operator != null && !BindingReflectionUtils.getArrayOperators().contains(operator)) {
               problems.add(new WodBindingValueProblem(element, bindingName, "Unable to verify operator '" + operator + "'", getValuePosition(), lineNumber, SeverityPolicy.isWarning(atOperatorSeverity)));
             }
+            // WebObjects' KVC applies @count, @sum… only to NSArray. Modern code returns
+            // java.util.List, where the operator is valid syntax but fails at render with an
+            // UnknownKeyException — so say so here, for WO components (ng's KVC is its own).
+            else if (!SeverityPolicy.isIgnored(atOperatorSeverity) && operator != null && bindingValueKeyPath.isValid() && !bindingValueKeyPath.isAmbiguous()
+                && BindingReflectionUtils.isWebObjectsComponent(javaFileType, cache)) {
+              IType collectionType = bindingValueKeyPath.getLastType();
+              if (collectionType != null && !BindingReflectionUtils.isNSArray(collectionType, cache)
+                  && BindingReflectionUtils.isType(collectionType, new String[] { "java.util.Collection" }, cache)) {
+                // The collection's keypath: the text before the operator ("team.players" of "team.players.@count").
+                String original = bindingValueKeyPath.getOriginalKeyPath();
+                String path = original.indexOf('@') > 0 ? original.substring(0, original.indexOf('@')).replaceAll("\\.$", "") : original;
+                problems.add(new WodBindingValueProblem(element, bindingName, "'@" + operator + "' only works on an NSArray in WebObjects, but '" + path + "' is a " + collectionType.getFullyQualifiedName('.')
+                    + "; it fails at render. Use a method (e.g. a count or sum accessor) instead", getValuePosition(), lineNumber, SeverityPolicy.isWarning(atOperatorSeverity)));
+              }
+            }
   
             String helperFunction = bindingValueKeyPath.getHelperFunction();
             if (!SeverityPolicy.isIgnored(helperFunctionSeverity) && helperFunction != null) {

@@ -162,11 +162,30 @@ public final class ParsleyTagAliasResolver {
 		}
 		final java.util.List<String> chain = resolveChain( project, runtime, name );
 		for (int i = chain.size() - 1; i >= 0; i--) {
-			if (hasBindingDefinition( chain.get( i ) )) {
+			if (hasOwnApiext( project, runtime, chain.get( i ) ) || hasBindingDefinition( chain.get( i ) )) {
 				return chain.get( i );
 			}
 		}
 		return resolved;
+	}
+
+	/**
+	 * Whether the element ships its own {@code .apiext} (next to its class, in its jar or its
+	 * source project) — frameworks now document their replacements this way (wonder-slim's
+	 * {@code ERXWOString.apiext}). Without this check the walk above stopped at the replaced
+	 * element (WOString), whose stock definition describes WO's behaviour, not the
+	 * replacement's that actually runs. Both lookups are cached (element type per runtime,
+	 * the model per file stamp), so the per-tag cost the method above guards stays small.
+	 */
+	private static boolean hasOwnApiext(IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime, String name) {
+		try {
+			final org.eclipse.jdt.core.IType type = org.objectstyle.wolips.bindings.utils.BindingReflectionUtils.findElementType( project, name, false,
+					org.objectstyle.wolips.wodclipse.core.completion.WodParserCache.getTypeCache(), runtime );
+			return type != null && ApiUtils.findElementApiextModel( type ) != null;
+		}
+		catch (Throwable t) {
+			return false;
+		}
 	}
 
 	/** @return true if the named element has a global API, a bundled {@code .apiext}, or a global {@code .apiext}. */

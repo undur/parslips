@@ -448,8 +448,55 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
       }
     }
 
+    if (checkBindingValues && javaFileType != null) {
+      try {
+        fillInPushBackProblems(javaProject, javaFileType, problems, typeCache);
+      }
+      catch (Throwable t) {
+        Activator.getDefault().log("Failed to check push-back bindings.", t);
+      }
+    }
+
     if (javaModelException != null) {
       throw javaModelException;
+    }
+  }
+
+  /**
+   * A WebObjects component that synchronizes its variables with its bindings pushes every
+   * bound key BACK to the parent's keypath after it runs. Bound to a keypath that can't be set
+   * (a computed accessor with no setter), that push fails at render with an
+   * UnknownKeyException from takeValueForKey — though every key on both sides exists, so the
+   * keypath checks above pass it. Reported only when everything is known: the component
+   * certainly synchronizes, its own key is settable (so it is pushed), and the parent keypath
+   * resolves to something that certainly isn't settable.
+   */
+  private void fillInPushBackProblems(IJavaProject javaProject, IType javaFileType, List<WodProblem> problems, TypeCache typeCache) throws JavaModelException {
+    final String severity = BindingValidationPreferences.severity(PreferenceConstants.WOD_API_PROBLEMS_SEVERITY_KEY);
+    if (SeverityPolicy.isIgnored(severity)) {
+      return;
+    }
+    final IType elementType = BindingReflectionUtils.findElementType(javaProject, getElementType(), false, typeCache, _templateRuntime);
+    if (!BindingReflectionUtils.isWebObjectsComponent(elementType, typeCache) || !Boolean.TRUE.equals(BindingReflectionUtils.synchronizesVariablesWithBindings(elementType))) {
+      return;
+    }
+    for (final IWodBinding binding : getBindings()) {
+      if (!binding.isKeyPath() || binding.getValueNamespace() != null || binding.getValue() == null) {
+        continue;
+      }
+      final BindingValueKeyPath childKey = new BindingValueKeyPath(binding.getName(), elementType, javaProject, typeCache);
+      if (!childKey.isValid() || childKey.isAmbiguous() || !childKey.exists() || !childKey.isSettable()) {
+        continue; // not a key the component pushes back
+      }
+      final BindingValueKeyPath parentPath = new BindingValueKeyPath(binding.getValue(), javaFileType, javaProject, typeCache);
+      if (!parentPath.isValid() || parentPath.isAmbiguous() || !parentPath.exists() || parentPath.getOperator() != null || parentPath.getHelperFunction() != null) {
+        continue; // reported elsewhere, or can't be known
+      }
+      if (!parentPath.isSettable()) {
+        problems.add(new WodBindingValueProblem(this, binding.getName(), elementType.getElementName() + " synchronizes its bindings, so it pushes '" + binding.getName() + "' back to '" + binding.getValue()
+            + "', which can't be set (no setter or field). Bind a settable key, or make " + elementType.getElementName() + " non-synchronizing (extend ERXNonSynchronizingComponent, or return false from synchronizesVariablesWithBindings())",
+            binding.getValuePosition(), binding.getLineNumber(), SeverityPolicy.isWarning(severity)));
+      }
     }
   }
 
