@@ -334,12 +334,12 @@ public class WOProjectCreator {
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>ERExtensions</artifactId>
-				\t\t\t<version>8.0.13</version>
+				\t\t\t<version>8.0.16</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>Ajax</artifactId>
-				\t\t\t<version>8.0.13</version>
+				\t\t\t<version>8.0.16</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>com.webobjects</groupId>

@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: wonder-slim 8.0.16
+
+The wonder-slim template references wonder-slim 8.0.16 (ERExtensions, Ajax), which brings
+Parsley 1.6.2: inline error recovery that no longer cascades, positioned and plain-text runtime
+problems, and template locations in stack traces.
+
 ### `waitForPort` no longer reports a dying app as ready
 
 `WOApplication`'s constructor binds the HTTP port before the subclass's constructor body runs.

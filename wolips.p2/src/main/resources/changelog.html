@@ -39,6 +39,53 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- October 2, 2026 -->
+			<div class="card">
+				<h2 class="date-header">October 2, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Ask the editor, don't reconstruct</h3>
+					<p>The editor knows what a component takes, what a keypath resolves to at every hop, where a key is declared and everywhere it's used. Until now an agent rebuilt all of that from Java files and grep. The dev server now answers it directly.</p>
+					<ul>
+						<li><strong><code>/context</code></strong> loads everything about a component before an edit: its files, what it takes, its current problems, the elements its template uses (with their bindings) and who uses it.</li>
+						<li><strong><code>/keypath</code></strong> resolves <code>game.homeTeam.rating</code> segment by segment, with types and declarations, and for a broken one the failing key and the validator's suggestions.</li>
+						<li><strong><code>/find</code></strong> and <strong><code>/callers</code></strong> locate a key's declaration and every use, including a model class's key reached through template keypaths. They match by resolution, not text: <code>$team.name</code> counts as <code>Team.name</code>, and <code>$team.captain.name</code> doesn't.</li>
+						<li><strong><code>/componentApi</code></strong> and <strong><code>/elementRegistry</code></strong> describe a project's own components and every element available to it.</li>
+					</ul>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Refactoring and fixes, as calls</h3>
+					<p><strong><code>/rename</code></strong> renames a component, a key (a component's, or a model class's) or a WOD element through the editor's refactorings: Java, HTML, WOD and every call site in one step, with a preview, and undoable from Eclipse's Edit menu. <strong><code>/quickfix</code></strong> applies the fixes Cmd+1 offers on a template problem: replace a misspelled key, or create the missing key or action.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>No more silent hangs</h3>
+					<p>Apps run under Eclipse's debugger, and by default it stops a thread that reaches code that didn't compile, or an uncaught exception, without a word. To an agent that's a request that never answers. Apps launched through the dev server now fail fast instead, and <strong><code>/threads</code></strong> shows anything that is stopped, where and why. <code>/restart</code> builds before it stops anything, so a broken build leaves the running app up rather than taking it down. A launch is only reported ready once the app has survived its startup: an app that fails in its constructor used to look ready for a moment.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Validation that catches what used to fail at render</h3>
+					<ul>
+						<li>Binding a component that synchronizes its bindings to a keypath with no setter is flagged. The value gets pushed back after rendering, and that fails.</li>
+						<li>KVC operators such as <code>@count</code> on a <code>java.util</code> collection are an error: in WebObjects they only work on an <code>NSArray</code>.</li>
+						<li>Components that read their bindings with <code>valueForBinding("…")</code> have those bindings offered in completion, and renamed along with the key.</li>
+						<li>An element's documentation comes from the element that actually runs. For example, <code>&lt;wo:str&gt;</code> is described by wonder-slim's <code>ERXWOString</code>, which formats <code>java.time</code> values.</li>
+						<li>A component class that moved to another package is no longer reported missing.</li>
+						<li>The definitions of WebObjects' own elements were checked against WebObjects 5.4.3 itself.</li>
+					</ul>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Smaller things</h3>
+					<ul>
+						<li>Every dev-server endpoint says no the same way: <code>error</code> when the call is wrong, <code>reason</code> (often with a <code>hint</code>, the call that fixes it) when it was fine but nothing happened. No more <code>ok</code> for requests nothing was done for.</li>
+						<li><code>/where</code> tells an agent whether its directory is one Eclipse sees. Edits in a git worktree are invisible to Eclipse, and the developer can't follow them.</li>
+						<li>New WebObjects projects start with <code>Main</code> extending <code>ERXComponent</code>, and the templates reference wonder-slim 8.0.16 and vermilingua 1.1.11.</li>
+					</ul>
+				</div>
+			</div>
+
 			<!-- September 25, 2026 -->
 			<div class="card">
 				<h2 class="date-header">September 25, 2026</h2>

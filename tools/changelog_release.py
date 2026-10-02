@@ -45,13 +45,22 @@ def cards(source=None):
 def inline(fragment):
 	"""Inline HTML → Markdown: code, strong, em, links, entities."""
 	s = fragment
-	s = re.sub(r'<code>(.*?)</code>', lambda m: '`' + html.unescape(m.group(1)) + '`', s, flags=re.S)
+	# Code spans are set aside until the tags are stripped: their content is escaped HTML
+	# (&lt;wo:str&gt;), and unescaped in place it would read as a tag and be stripped below.
+	codes = []
+
+	def keep(m):
+		codes.append('`' + html.unescape(m.group(1)) + '`')
+		return '\x00%d\x00' % (len(codes) - 1)
+
+	s = re.sub(r'<code>(.*?)</code>', keep, s, flags=re.S)
 	s = re.sub(r'<strong>(.*?)</strong>', r'**\1**', s, flags=re.S)
 	s = re.sub(r'<em>(.*?)</em>', r'*\1*', s, flags=re.S)
 	s = re.sub(r'<a href="([^"]+)"[^>]*>(.*?)</a>', r'[\2](\1)', s, flags=re.S)
 	s = re.sub(r'<br\s*/?>', '\n', s)
 	s = re.sub(r'<[^>]+>', '', s)
 	s = html.unescape(s)
+	s = re.sub(r'\x00(\d+)\x00', lambda m: codes[int(m.group(1))], s)
 	return re.sub(r'[ \t]*\n[ \t]*', ' ', s).strip()
 
 
