@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### /quickfix: createKey with a type no longer generates `String<String>`
+
+`type=` was passed to `AddKeyInfo`'s parameter type as well as its type. The parameter type is
+a generic element type (`List<X>`'s `X`), so the generated key came out as
+`private String<String> name`. Worse, the answer still said `fixed:true` with no problems: the
+template was satisfied while the class no longer compiled. Now only the type is set, and after
+a `createKey`/`createAction` the answer carries the class's `javaErrors` (with a `hint`) when it
+doesn't compile. This was found while building a test application through the dev server.
+
 ### Dev server: the rest of #6's editor endpoints
 
 Eight endpoints that surface what the editor already knows about a project's code, so an agent

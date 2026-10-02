@@ -209,9 +209,25 @@ class QuickfixHandler implements DevServerHandler {
 		result.put("fixed", true);
 		result.putIfPresent("note", note[0]);
 
-		// What's left, so the caller sees the effect without a second call. (A created key
-		// resolves only after its class compiles: the incremental build runs first.)
+		// A created key or action is Java: say if the class doesn't compile after it (a type
+		// that doesn't resolve, say). The template is satisfied either way, so the problems
+		// list below would look clean while the app can't take the change.
 		ResourcesPlugin.getWorkspace().build(org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
+		if (!"replace".equals(fix.kind)) {
+			final String javaPath = found.descriptor().getJavaFile() == null ? null : found.descriptor().getJavaFile().getProjectRelativePath().toString();
+			final List<JsonObject> javaErrors = new ArrayList<>();
+			for (final WorkspaceProblems.Problem error : WorkspaceProblems.javaErrors(found.javaProject().getProject(), 50)) {
+				if (error.resource.equals(javaPath)) {
+					javaErrors.add(new JsonObject().put("line", error.line).put("message", error.message));
+				}
+			}
+			if (!javaErrors.isEmpty()) {
+				result.put("javaErrors", javaErrors).put("hint", "the class no longer compiles; fix it before exercising the page");
+			}
+		}
+
+		// What's left, so the caller sees the effect without a second call. (A created key
+		// resolves only after its class compiles: the incremental build ran above.)
 		final List<JsonObject> remaining = new ArrayList<>();
 		for (final Problem left : problems(found)) {
 			remaining.add(problemJson(left));
@@ -275,8 +291,9 @@ class QuickfixHandler implements DevServerHandler {
 			final AddKeyInfo info = new AddKeyInfo(type);
 			info.setName(fix.value);
 			if (typeName != null && !typeName.isEmpty()) {
+				// Only the key's type. (AddKeyInfo's parameter type is a generic ELEMENT type,
+				// List<X>'s X; setting it to the type itself generated String<String>.)
 				info.setTypeName(typeName);
-				info.setParameterTypeName(typeName);
 			}
 			new AddKeyOperation(info).run(null);
 		}
