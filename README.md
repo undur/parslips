@@ -11,4 +11,4 @@ More information on the project is on its [website](https://undur.github.io/pars
 * [Features](https://undur.github.io/parslips/repository/features.html)
 * [Non-Features](https://undur.github.io/parslips/repository/non-features.html)
 
-See [AGENTS.md](AGENTS.md) for driving the editor's dev server from an external tool or AI agent (refresh/rebuild, headless template validation, reading the running app's console).
+AI agents drive the editor's dev server (refresh/rebuild, headless template validation, launching apps, reading the running app's console) through [parslips-skill](https://github.com/undur/parslips-skill); [AGENTS.md](AGENTS.md) has the pointers and the setup.

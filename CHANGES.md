@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### AGENTS.md points to the skill instead of copying it
+
+`AGENTS.md` carried its own 240-line copy of the dev-server guide, and it had drifted from
+parslips-skill and the server: no `port`/`stopOthers`/`args` on `/launch`, and none of the
+newer endpoints. It's now a short page that sends an agent working on this repository to
+`CLAUDE.md`, and an agent working on a WO/ng project to the skill. It keeps the two facts
+worth knowing before the skill loads (refresh after every edit; `error`/`reason`/`hint`)
+and the developer setup, which the changelog's older card links to. The README line follows.
+
 ### Dev server: one way to say no (#6 conventions)
 
 The conventions half of #6, settled and applied. They're written down in `DevServerHandler`'s
