@@ -63,7 +63,7 @@ class FindHandler implements DevServerHandler {
 					+ key.substring(0, key.indexOf('.')) + " finds its first key");
 		}
 		if (className != null && !className.isEmpty()) {
-			return findClassKey(className, key, DevServerComponents.projectParam(params));
+			return findClassKey(className, key, DevServerComponents.projectParam(params), "true".equalsIgnoreCase(params.get("debug")));
 		}
 
 		final String projectHint = DevServerComponents.projectParam(params);
@@ -109,7 +109,7 @@ class FindHandler implements DevServerHandler {
 	 * segment (from any component, in the class's project and the projects depending on it)
 	 * that resolves to it, and its Java references.
 	 */
-	private static String findClassKey(String className, String key, String projectHint) throws Exception {
+	private static String findClassKey(String className, String key, String projectHint, boolean debug) throws Exception {
 		final DevServerJava.TypeLookup lookup = DevServerJava.findSourceType(className, projectHint);
 		final JsonObject json = new JsonObject().put("class", className).put("key", key);
 		if (lookup.type() == null) {
@@ -128,10 +128,15 @@ class FindHandler implements DevServerHandler {
 			java.addAll(javaReferences(member));
 		}
 		final List<JsonObject> templates = new ArrayList<>();
-		for (final KeypathScan.Use use : KeypathScan.uses(TemplateScan.withDependents(type.getJavaProject().getProject()), members)) {
+		final List<JsonObject> trace = debug ? new ArrayList<>() : null;
+		for (final KeypathScan.Use use : KeypathScan.uses(TemplateScan.withDependents(type.getJavaProject().getProject()), members, trace)) {
 			templates.add(TemplateScan.location(use.file(), use.content(), use.offset()).put("component", use.component()));
 		}
-		return json.put("found", true).put("declarations", declarations).put("templates", templates).put("java", java).toString();
+		json.put("found", true).put("declarations", declarations).put("templates", templates).put("java", java);
+		if (trace != null) {
+			json.put("scanned", trace);
+		}
+		return json.toString();
 	}
 
 	/** Uses of the key in the component's own HTML and WOD, as the editor's Find References reports them. */

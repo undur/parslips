@@ -12,6 +12,30 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### A last round through the test app: four fixes
+
+A final round through LeagueDesk on the released stack (wonder-slim 8.0.16, Parsley 1.6.2) found
+four things:
+- **Add Action produced code that didn't compile.** `/quickfix`'s `createAction` generated
+  `import WOActionResults;` because `AddActionInfo`'s default type was an unqualified name. The
+  defaults are fully qualified now (`com.webobjects.appserver.WOActionResults`,
+  `ng.appserver.NGActionResults`). `AddActionOperation` also treats ng's generic types as
+  generic; it would have generated `pageWithName(NGActionResults.class)`. The `javaErrors`
+  report added earlier caught it at once.
+- **Component names were taken from the first project.** Without `project=`, a component name
+  was taken from the first open project that had it. Every app has a `Main`, so `/keypath`
+  answered about another app's `Main` with full confidence. An ambiguous name is now refused,
+  listing the projects that have it.
+- **Boolean and null literals had null keys.** `BindingValueKeyPath.getBindingKeys()` returned
+  null for `true`, `false`, `null` and `nil`. `/keypath?keypath=false` crashed, and the
+  `class=` template scan dropped every template containing `$false` or `$true`, so a model-key
+  rename silently missed their uses. It now returns an empty array, one bad keypath no longer
+  drops its file, and a skipped template is logged. `/find?class=` takes `debug=true`, a
+  per-template trace of the class used and the keypaths found.
+- **Method renames under a running app.** `/rename` notes that a running app keeps calling a
+  renamed method by its old name from lambdas and method references it already ran (a
+  `NoSuchMethodError`, cured by `/restart`).
+
 ### New-project templates: wonder-slim 8.0.16
 
 The wonder-slim template references wonder-slim 8.0.16 (ERExtensions, Ajax), which brings

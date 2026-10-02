@@ -72,9 +72,13 @@ final class DevServerComponents {
 	}
 
 	/**
-	 * Finds a component by name: in the hinted project first, then in every open project.
+	 * Finds a component by name: in the hinted project when it has it; otherwise across every
+	 * open project — but only when exactly one has it. Every app has a {@code Main}, so the
+	 * first match was often another app's component, and the answer looked authoritative while
+	 * being about the wrong project. An ambiguous name answers null, and
+	 * {@link #notFoundReason} names the candidates.
 	 *
-	 * @return the component, or null when no open project has it
+	 * @return the component, or null when no open project has it or several do
 	 */
 	static Found find(String componentName, String projectHint) throws Exception {
 		final IJavaProject hinted = javaProject(projectHint);
@@ -84,17 +88,24 @@ final class DevServerComponents {
 				return new Found(descriptor, hinted);
 			}
 		}
+		final java.util.List<Found> candidates = candidates(componentName, hinted);
+		return candidates.size() == 1 ? candidates.get(0) : null;
+	}
+
+	/** Every open project (except the one already searched) that has the component. */
+	private static java.util.List<Found> candidates(String componentName, IJavaProject except) throws Exception {
+		final java.util.List<Found> found = new java.util.ArrayList<>();
 		for (final IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
 			final IJavaProject javaProject = javaProject(project.getName());
-			if (javaProject == null || javaProject.equals(hinted)) {
+			if (javaProject == null || javaProject.equals(except)) {
 				continue;
 			}
 			final ElementDescriptor descriptor = findIn(javaProject, componentName);
 			if (descriptor != null) {
-				return new Found(descriptor, javaProject);
+				found.add(new Found(descriptor, javaProject));
 			}
 		}
-		return null;
+		return found;
 	}
 
 	/**
@@ -120,6 +131,16 @@ final class DevServerComponents {
 	 * project, fix the project name, fix the component name), so they are told apart.
 	 */
 	static String notFoundReason(String componentName, String projectHint) {
+		try {
+			final java.util.List<Found> candidates = candidates(componentName, javaProject(projectHint));
+			if (candidates.size() > 1) {
+				return "several projects have a component named '" + componentName + "' (" + String.join(", ", candidates.stream().map(Found::projectName).toList())
+						+ ")" + (projectHint == null || projectHint.isEmpty() ? "" : ", and '" + projectHint + "' isn't one of them") + "; pass project=NAME";
+			}
+		}
+		catch (final Exception e) {
+			// Fall through to the plain reasons.
+		}
 		if (projectHint != null && !projectHint.isEmpty()) {
 			final IProject hinted = ResourcesPlugin.getWorkspace().getRoot().getProject(projectHint);
 			if (!hinted.exists()) {

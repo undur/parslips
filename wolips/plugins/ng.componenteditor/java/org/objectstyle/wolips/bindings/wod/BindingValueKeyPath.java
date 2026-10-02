@@ -345,8 +345,13 @@ public class BindingValueKeyPath {
     return nextToLastBindingKeyName;
   }
 
+  /**
+   * The resolved keys, one per segment that resolved; empty — never null — for a literal
+   * (true/false/null/nil, a quoted string, a number), which has no keys. Null here made every
+   * caller that iterated it fail on {@code $false}.
+   */
   public BindingValueKey[] getBindingKeys() {
-    return _bindingKeys;
+    return _bindingKeys == null ? new BindingValueKey[0] : _bindingKeys;
   }
   
   public boolean exists() {

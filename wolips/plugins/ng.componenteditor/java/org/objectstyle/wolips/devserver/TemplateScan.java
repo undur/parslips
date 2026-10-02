@@ -70,7 +70,9 @@ final class TemplateScan {
 					}
 				}
 				catch (final Exception e) {
-					// An unreadable file is skipped, as the Usages tab skips it.
+					// An unreadable file is skipped, as the Usages tab skips it — but logged: a
+					// silently skipped template is a use a refactoring silently misses.
+					org.objectstyle.wolips.componenteditor.ComponenteditorPlugin.getDefault().log(e);
 				}
 				return false;
 			});

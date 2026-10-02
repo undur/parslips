@@ -44,7 +44,9 @@ public class AddActionOperation extends JavaModelOperation {
     boolean useGenerics = is50OrHigher(componentType.getJavaProject());
     String simpleTypeName = Signature.getSimpleName(keyType);
     
-    boolean loadPage = !"WOComponent".equals(simpleTypeName) && !"WOActionResults".equals(simpleTypeName);
+    // The generic result types (WO's and ng's) answer null; a specific page type loads that page.
+    boolean loadPage = !"WOComponent".equals(simpleTypeName) && !"WOActionResults".equals(simpleTypeName)
+        && !"NGComponent".equals(simpleTypeName) && !"NGActionResults".equals(simpleTypeName);
     
     StringBuffer sourceBuffer = new StringBuffer();
     sourceBuffer.append("public " + simpleTypeName + " " + actionMethodName + "() {\n");

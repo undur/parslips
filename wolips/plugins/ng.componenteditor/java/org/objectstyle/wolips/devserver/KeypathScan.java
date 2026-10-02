@@ -69,17 +69,40 @@ final class KeypathScan {
 
 	/** Every template segment, in the projects, that resolves to one of the members. */
 	static List<Use> uses(Set<IProject> projects, Set<IMember> members) throws Exception {
+		return uses(projects, members, null);
+	}
+
+	/**
+	 * As {@link #uses(Set, Set)}; with a {@code trace}, one entry per template scanned: the
+	 * class its keypaths were resolved against and how many keypaths it held — for diagnosing
+	 * a use the scan missed.
+	 */
+	static List<Use> uses(Set<IProject> projects, Set<IMember> members, List<JsonObject> trace) throws Exception {
 		final List<Use> uses = new ArrayList<>();
 		final Map<IFile, IType> componentTypes = new HashMap<>();
 		TemplateScan.templates(projects, (file, content, isWod) -> {
 			final IType component = componentTypes.computeIfAbsent(file, KeypathScan::componentTypeOf);
-			if (component == null) {
-				return; // a template with no class: its keypaths resolve against nothing
-			}
 			final Pattern pattern = isWod ? WOD_KEYPATH : inlineKeypath(inlinePrefix(file.getProject()));
 			final Matcher matcher = pattern.matcher(content);
+			int keypaths = 0;
+			final int before = uses.size();
 			while (matcher.find()) {
-				addMatches(uses, file, content, matcher.group(1), matcher.start(1), component, members);
+				keypaths++;
+				if (component != null) {
+					try {
+						addMatches(uses, file, content, matcher.group(1), matcher.start(1), component, members);
+					}
+					catch (final Exception e) {
+						// One keypath that can't be resolved mustn't drop the file's others (it did:
+						// $false failed, and TemplateScan skipped the whole template silently).
+						org.objectstyle.wolips.componenteditor.ComponenteditorPlugin.getDefault().log(e);
+					}
+				}
+			}
+			if (trace != null && keypaths > 0) {
+				trace.add(new JsonObject().put("file", file.getFullPath().toString())
+						.put("class", component == null ? null : component.getFullyQualifiedName('.'))
+						.put("keypaths", keypaths).put("matches", uses.size() - before));
 			}
 		});
 		return uses;

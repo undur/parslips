@@ -193,6 +193,12 @@ class RenameHandler implements DevServerHandler {
 			}
 			steps.add(Step.jdt(renameDescriptor(member instanceof IField ? IJavaRefactorings.RENAME_FIELD : IJavaRefactorings.RENAME_METHOD, member, newName)));
 		}
+		if (members.stream().anyMatch(m -> m instanceof org.eclipse.jdt.core.IMethod)) {
+			// Seen live: a running app hot-swaps the renamed method, but a method reference or
+			// lambda it already ran stays linked to the old name (NoSuchMethodError on the next
+			// request). Say so in the answer, so it isn't diagnosed from a 500.
+			result.put("note", "a running app keeps calling renamed methods by their old names from lambdas and method references it already ran; on a NoSuchMethodError, /restart");
+		}
 		// Call sites pass the key in as a binding: <wo:Component from="…"> becomes to="…".
 		final CompositeChange callSites = RenameBindingProcessor.computeBindingReferenceChanges(project, found.descriptor().getName(), Map.of(from, to));
 		if (callSites != null) {
@@ -313,6 +319,12 @@ class RenameHandler implements DevServerHandler {
 					if (newName != null) {
 						steps.add(Step.jdt(renameDescriptor(member instanceof IField ? IJavaRefactorings.RENAME_FIELD : IJavaRefactorings.RENAME_METHOD, member, newName)));
 					}
+				}
+				if (members.stream().anyMatch(m -> m instanceof org.eclipse.jdt.core.IMethod)) {
+					// Seen live: a running app hot-swaps the renamed method, but a method reference or
+					// lambda it already ran stays linked to the old name (NoSuchMethodError on the next
+					// request). Say so in the answer, so it isn't diagnosed from a 500.
+					result.put("note", "a running app keeps calling renamed methods by their old names from lambdas and method references it already ran; on a NoSuchMethodError, /restart");
 				}
 				// The template segments, one change per file.
 				final Map<org.eclipse.core.resources.IFile, org.eclipse.text.edits.MultiTextEdit> edits = new java.util.LinkedHashMap<>();

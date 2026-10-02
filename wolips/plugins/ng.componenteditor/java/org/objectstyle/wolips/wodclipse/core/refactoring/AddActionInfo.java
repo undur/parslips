@@ -25,20 +25,22 @@ public class AddActionInfo {
   }
 
   /**
-   * Returns "NGActionResults" for ng-objects projects, "WOActionResults" otherwise.
-   * Falls back to "WOActionResults" if the project type cannot be determined.
+   * Returns ng's action-results type for ng-objects projects, WebObjects' otherwise (also when
+   * the project type cannot be determined) — fully qualified: the type is imported as given,
+   * and the simple name produced {@code import WOActionResults;}, which doesn't compile. (The
+   * Add Action dialog let the user pick a type, which hid it; /quickfix uses the default.)
    */
   private static String resolveDefaultActionResultsType(IType componentType) {
     try {
       ParsleyProject pp = (ParsleyProject) componentType.getJavaProject().getProject().getAdapter(ParsleyProject.class);
       if (pp != null && pp.isNGProject()) {
-        return "NGActionResults";
+        return "ng.appserver.NGActionResults";
       }
     }
     catch (Exception e) {
       // Fall through to WO default
     }
-    return "WOActionResults";
+    return "com.webobjects.appserver.WOActionResults";
   }
 
   public String getJavaTypeName() throws JavaModelException {
