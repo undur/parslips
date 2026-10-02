@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### /where: is this directory something Eclipse sees?
+
+Agents sometimes work in a git worktree (or another clone). The dev server knows only workspace
+projects, so from there every call answers `ok` while nothing takes effect: refresh, validation
+and the running app all use the workspace's checkout. The developer can't follow the work in
+Eclipse either. `/where?path=DIR` answers `inWorkspace:true` with the project and the relative
+path, or `inWorkspace:false` with a `reason`. For a git worktree of a checkout Eclipse has (its
+`.git` file points into `<main>/.git/worktrees/`), the reason names the checkout, and `workIn`
+gives the directory to edit instead. The skill makes this a rule: check with `/where` before the
+first edit, and ask the human rather than quietly working elsewhere. Tests: `WhereHandlerTest`.
+
 ### KVC operators on a Java collection are an error, and /keypath says so
 
 WebObjects' KVC operators (`@count`, `@sum`, …) only work on `NSArray`, and that's staying
