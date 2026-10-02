@@ -432,8 +432,18 @@ class LaunchHandler implements DevServerHandler {
 
 		while (System.currentTimeMillis() < deadline) {
 			if (portAnswers(port)) {
+				final long answeredAfter = System.currentTimeMillis() - start;
+				// The port answering is not the app being up: WOApplication's constructor binds
+				// the HTTP port BEFORE the subclass's constructor body runs, so an app that
+				// fails in its Application constructor answers for a moment, then exits.
+				// Reporting that as ready sent callers off to exercise an app that was gone.
+				// Watch the process through a short grace period first.
+				if (diesWithin(launch, READY_GRACE_MILLIS)) {
+					return "{" + base + ",\"ready\":false,\"reason\":\"process terminated right after opening port " + port + " - it failed during startup\""
+							+ ",\"hint\":\"see /console?app=" + DevServerJson.escape(config.getName()) + " for the exception\"}";
+				}
 				return "{" + base + ",\"ready\":true,\"readyPort\":" + port
-						+ ",\"startupMillis\":" + (System.currentTimeMillis() - start) + "}";
+						+ ",\"startupMillis\":" + answeredAfter + "}";
 			}
 			if (launch.isTerminated()) {
 				return "{" + base + ",\"ready\":false,\"reason\":\"process terminated during startup\""
@@ -452,6 +462,26 @@ class LaunchHandler implements DevServerHandler {
 		}
 		return "{" + base + ",\"ready\":false,\"reason\":\"port " + port + " not answering after "
 				+ timeoutSeconds + "s\",\"hint\":\"see /console?app=" + DevServerJson.escape(config.getName()) + "\"}";
+	}
+
+	/**
+	 * How long a launch must stay alive after its port first answers to count as ready. Long
+	 * enough to see an app that bound its port in WOApplication's constructor and then failed
+	 * in its own (it exits within a few hundred milliseconds); short enough not to slow every
+	 * launch noticeably.
+	 */
+	private static final long READY_GRACE_MILLIS = 1500;
+
+	/** Whether the launch terminates within the given time (polled). */
+	private static boolean diesWithin(ILaunch launch, long millis) throws InterruptedException {
+		final long until = System.currentTimeMillis() + millis;
+		while (System.currentTimeMillis() < until) {
+			if (launch.isTerminated()) {
+				return true;
+			}
+			Thread.sleep(100);
+		}
+		return launch.isTerminated();
 	}
 
 	private static boolean portAnswers(int port) {

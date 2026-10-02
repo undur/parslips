@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### `waitForPort` no longer reports a dying app as ready
+
+`WOApplication`'s constructor binds the HTTP port before the subclass's constructor body runs.
+So an app failing in its `Application` constructor answered on its port for a moment, then
+exited, and `/launch` and `/restart` with `waitForPort` reported `ready:true` for an app that was
+already gone (reproduced 3/3). Readiness now requires the process to still be alive 1.5 seconds
+after the port first answers. Otherwise it's `ready:false`, "process terminated right after
+opening port N", with the `/console` hint.
+
 ### /where: is this directory something Eclipse sees?
 
 Agents sometimes work in a git worktree (or another clone). The dev server knows only workspace
