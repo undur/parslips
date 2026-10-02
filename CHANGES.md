@@ -12,6 +12,18 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### A moved component class is no longer reported missing (#11)
+
+`BindingReflectionUtils.findElementType()` caches the fully qualified class an element name
+resolved to, and on a cache hit returned `findType(cachedName)` as is. Nothing invalidates that
+entry when the class moves to another package (the resource listener only clears type-keyed
+caches, and the old type is gone by then), so the lookup answered null, which validation
+reported as "The class for 'X' is either missing or does not extend a known element root type".
+The marker survived clean builds and `/revalidate` and only went away when Eclipse restarted.
+Both overloads now share a `cachedElementType()` helper that drops an entry that no longer
+resolves (new `ApiCache.removeElementTypeNamed()`) and falls through to a fresh search. That
+covers the runtime-keyed (`NG:`/`WO:`) entries too. Tests: `CachedElementTypeTest`.
+
 ### New-project templates: wonder-slim 8.0.13, vermilingua 1.1.11
 
 The generated poms reference wonder-slim 8.0.13 (ERExtensions, Ajax) and

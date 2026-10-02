@@ -143,6 +143,14 @@ public class ApiCache {
 		_elementNameToTypeCache.put(elementName, elementType.getFullyQualifiedName());
 	}
 
+	/**
+	 * Forgets the class an element name resolved to — for an entry that no longer resolves
+	 * (the class moved or was deleted), so the next lookup searches afresh.
+	 */
+	public void removeElementTypeNamed(String elementName) {
+		_elementNameToTypeCache.remove(elementName);
+	}
+
 	public static TagShortcut getTagShortcutNamed(String shortcut) {
 		TagShortcut matchingTagShortcut = null;
 		for (TagShortcut tagShortcut : getTagShortcuts()) {

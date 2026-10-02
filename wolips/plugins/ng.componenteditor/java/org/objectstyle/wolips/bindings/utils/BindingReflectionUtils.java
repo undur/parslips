@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.ui.search.JavaSearchScopeFactory;
 import org.objectstyle.wolips.bindings.Activator;
+import org.objectstyle.wolips.bindings.api.ApiCache;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
 import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.TypeCache;
@@ -197,20 +198,6 @@ public class BindingReflectionUtils {
   }
 
   /**
-   * Resolves an element tag name (e.g. "WOString", "ERXConditional") to
-   * its Java {@link IType}. First checks the API cache for a previously
-   * resolved mapping; if not cached, performs a project-scoped type search.
-   * When multiple types match, uses the first one found (not ideal, but
-   * matches legacy behavior). Caches the result for subsequent lookups.
-   *
-   * @param javaProject the project whose classpath to search
-   * @param elementTypeName the element tag name to resolve
-   * @param requireTypeInProject if true, only matches types defined in the
-   *        project itself (not just on its classpath)
-   * @param cache the shared type cache
-   * @return the resolved type, or null if not found
-   */
-  /**
    * Like {@link #findElementType(IJavaProject, String, boolean, TypeCache)}, but looks among the
    * element classes of the given runtime ({@code NGElement} or {@code WOElement} subclasses)
    * rather than the project's — what a template needs in a hybrid project, where an ng
@@ -222,9 +209,9 @@ public class BindingReflectionUtils {
     }
     // Cached per runtime: the same name can mean different classes in the two worlds.
     final String cacheKey = runtime.name() + ":" + elementTypeName;
-    final String typeName = cache.getApiCache(javaProject).getElementTypeNamed(cacheKey);
-    if (typeName != null) {
-      return javaProject.findType(typeName);
+    final IType cachedType = cachedElementType(javaProject, cache.getApiCache(javaProject), cacheKey);
+    if (cachedType != null) {
+      return cachedType;
     }
     final TypeNameCollector typeNameCollector = new TypeNameCollector(runtime.elementClass(), javaProject, requireTypeInProject);
     BindingReflectionUtils.findMatchingElementClassNames(elementTypeName, SearchPattern.R_EXACT_MATCH, typeNameCollector, new NullProgressMonitor());
@@ -238,13 +225,23 @@ public class BindingReflectionUtils {
     return type;
   }
 
+  /**
+   * Resolves an element tag name (e.g. "WOString", "ERXConditional") to
+   * its Java {@link IType}. First checks the API cache for a previously
+   * resolved mapping; if not cached, performs a project-scoped type search.
+   * When multiple types match, uses the first one found (not ideal, but
+   * matches legacy behavior). Caches the result for subsequent lookups.
+   *
+   * @param javaProject the project whose classpath to search
+   * @param elementTypeName the element tag name to resolve
+   * @param requireTypeInProject if true, only matches types defined in the
+   *        project itself (not just on its classpath)
+   * @param cache the shared type cache
+   * @return the resolved type, or null if not found
+   */
   public static IType findElementType(IJavaProject javaProject, String elementTypeName, boolean requireTypeInProject, TypeCache cache) throws JavaModelException {
-    String typeName = cache.getApiCache(javaProject).getElementTypeNamed(elementTypeName);
-    IType type = null;
-    if (typeName != null) {
-      type = javaProject.findType(typeName);
-    }
-    else {
+    IType type = cachedElementType(javaProject, cache.getApiCache(javaProject), elementTypeName);
+    if (type == null) {
     	NullProgressMonitor progressMonitor = new NullProgressMonitor();
       TypeNameCollector typeNameCollector = new TypeNameCollector(javaProject, requireTypeInProject);
       BindingReflectionUtils.findMatchingElementClassNames(elementTypeName, SearchPattern.R_EXACT_MATCH, typeNameCollector, progressMonitor);
@@ -261,6 +258,26 @@ public class BindingReflectionUtils {
       if (type != null) {
         cache.getApiCache(javaProject).setElementTypeForName(type, elementTypeName);
       }
+    }
+    return type;
+  }
+
+  /**
+   * The type a cached element-name entry points to, or null when there is no entry or the entry
+   * has gone stale. The cache holds a fully qualified class name, and nothing invalidates it when
+   * the class moves to another package (a move is a delete plus an add, and the resource listener
+   * only clears type-keyed caches), so {@code findType} on the old name answers null. Reporting
+   * that as "class missing" would be wrong — the class exists, just elsewhere — so the stale
+   * entry is dropped and the caller falls through to a fresh search.
+   */
+  static IType cachedElementType(IJavaProject javaProject, ApiCache apiCache, String cacheKey) throws JavaModelException {
+    final String typeName = apiCache.getElementTypeNamed(cacheKey);
+    if (typeName == null) {
+      return null;
+    }
+    final IType type = javaProject.findType(typeName);
+    if (type == null) {
+      apiCache.removeElementTypeNamed(cacheKey);
     }
     return type;
   }
