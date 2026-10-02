@@ -12,6 +12,33 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: no more blind "ok" (#6 groundwork)
+
+An audit of the dev-server surface (the conventions half of #6) probed every endpoint with
+missing and wrong input. Several answered a plain `ok` to requests they couldn't act on, which
+reads as success:
+
+- `/refreshProject?project=X` for an unknown project refreshed nothing and said `ok`. It now
+  answers `{"refreshed":false,"reason":…}`, and for a closed project adds a `hint` naming
+  `/openProject`.
+- `/refresh` with no `path`, or a path in no open project, said `ok`. Now it's `error` (missing)
+  or `refreshed:false` + `reason`. A file newly created on disk inside an open project now counts
+  (it isn't in the workspace yet, which is exactly why it needs the refresh).
+- `/openComponent` and `/openJavaFile` with a missing parameter, or a component or class no
+  open project has, said `ok`. Now it's `error` or `opened:false` + `reason`.
+  `OpenComponentAction.openComponentWithTypeNamed` returns whether it found the component, so
+  the workspace-wide search stops at the first hit instead of opening one editor per project
+  that shares the name. `/openJavaFile`'s `lineNumber` is optional, as the index always claimed.
+- `/breakpoints?skipAll=` with anything but true or false silently re-armed every breakpoint.
+  Now it's an `error`.
+- `/status?app=X` for an unknown name gives the same `reason` `/launch` does, instead of an
+  empty list that reads like "known, not running".
+- `/stop`, `/restart` and `/console` name `config` as the alternative in their
+  missing-parameter message.
+
+Success responses are unchanged (the plain `ok` exception-page links and scripts expect).
+Tests: `MissingParameterTest`.
+
 ### A moved component class is no longer reported missing (#11)
 
 `BindingReflectionUtils.findElementType()` caches the fully qualified class an element name

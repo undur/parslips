@@ -39,7 +39,7 @@ class OpenComponentHandler implements DevServerHandler {
 	public String handle(Map<String, String> params) {
 		final String componentName = params.get("component");
 		if (componentName == null || componentName.isEmpty()) {
-			return null;
+			return "{\"error\":\"missing required parameter 'component'\"}";
 		}
 		final String appName = params.get("app");
 		final int lineNumber = parseInt(params.get("lineNumber"), -1);
@@ -49,29 +49,38 @@ class OpenComponentHandler implements DevServerHandler {
 		final int offset = parseInt(params.get("offset"), -1);
 		final int length = parseInt(params.get("length"), 0);
 
-		Display.getDefault().asyncExec(() -> {
+		// syncExec, not asyncExec: the caller deserves to hear whether the component was
+		// found, and only the open itself can tell. Opening an editor is quick, and the UI
+		// thread keeps dispatching runnables even while a modal dialog's event loop runs,
+		// so this doesn't hang behind a dialog. (The exception page's links ignore the
+		// body; an agent reads it.)
+		final boolean[] opened = { false };
+		Display.getDefault().syncExec(() -> {
 			IJavaProject javaProject = resolveProject(appName);
-			if (javaProject != null) {
-				OpenComponentAction.openComponentWithTypeNamed(javaProject, componentName, lineNumber, offset, length);
+			if (javaProject != null && OpenComponentAction.openComponentWithTypeNamed(javaProject, componentName, lineNumber, offset, length)) {
+				opened[0] = true;
+				return;
 			}
-			else {
-				// No specific project — try each open one until the action
-				// succeeds in opening something. openComponentWithTypeNamed
-				// is a no-op when the component isn't found in the project,
-				// so calling it across projects is safe.
-				for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
-					if (!project.isOpen()) {
-						continue;
-					}
-					IJavaProject jp = JavaCore.create(project);
-					if (jp != null && jp.exists()) {
-						OpenComponentAction.openComponentWithTypeNamed(jp, componentName, lineNumber, offset, length);
-					}
+			// No such project, or the component isn't in it (app is only a hint): search
+			// every open project, stopping at the first that has it - one editor, not one
+			// per project that happens to share the name.
+			for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
+				if (!project.isOpen()) {
+					continue;
+				}
+				IJavaProject jp = JavaCore.create(project);
+				if (jp != null && jp.exists() && OpenComponentAction.openComponentWithTypeNamed(jp, componentName, lineNumber, offset, length)) {
+					opened[0] = true;
+					return;
 				}
 			}
 		});
 
-		// Fire-and-forget: the editor opens asynchronously; success is the plain "ok".
+		if (!opened[0]) {
+			return "{\"opened\":false,\"reason\":\"no component named '" + DevServerJson.escape(componentName)
+					+ "' in any open project; its project may be closed (see /status) or the name misspelled\"}";
+		}
+		// Success stays the plain "ok" existing callers expect.
 		return null;
 	}
 

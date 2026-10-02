@@ -34,7 +34,7 @@ class StopHandler implements DevServerHandler {
 	public String handle(Map<String, String> params) {
 		final String name = params.get("app") != null ? params.get("app") : params.get("config");
 		if (name == null || name.isEmpty()) {
-			return "{\"stopped\":false,\"reason\":\"missing required parameter 'app'\"}";
+			return "{\"stopped\":false,\"reason\":\"missing required parameter 'app' (or 'config')\"}";
 		}
 		final boolean force = "true".equalsIgnoreCase(params.get("force"));
 

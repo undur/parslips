@@ -24,7 +24,7 @@ import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
  * <p>Request parameters (from Wonder's {@code ERXExceptionPage}):
  * <ul>
  *   <li>{@code className} — fully-qualified class name (required)</li>
- *   <li>{@code lineNumber} — 1-based line number (required)</li>
+ *   <li>{@code lineNumber} — 1-based line number (optional; without it the file just opens)</li>
  *   <li>{@code app} — application/project name (optional; see below)</li>
  * </ul>
  *
@@ -39,38 +39,43 @@ import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 class OpenJavaFileHandler implements DevServerHandler {
 
 	@Override
-	public String handle(Map<String, String> params) {
+	public String handle(Map<String, String> params) throws Exception {
 		final String className = params.get("className");
-		final String lineNumberStr = params.get("lineNumber");
 		final String appName = params.get("app");
-
-		if (className == null || lineNumberStr == null) {
-			return null; // Required parameters missing — nothing to open.
+		if (className == null || className.isEmpty()) {
+			return "{\"error\":\"missing required parameter 'className'\"}";
 		}
 
-		final int lineNumber;
+		// Optional: a missing or non-numeric line just opens the file at the top.
+		int lineNumber = -1;
 		try {
-			lineNumber = Integer.parseInt(lineNumberStr);
+			if (params.get("lineNumber") != null) {
+				lineNumber = Integer.parseInt(params.get("lineNumber"));
+			}
 		}
 		catch (NumberFormatException e) {
-			return null;
+			// Fall through with no line.
 		}
 
-		Display.getDefault().asyncExec(() -> openType(className, lineNumber, appName));
+		// Resolve the type here, on the request thread (the Java model is thread-safe), so
+		// "no such class" can be reported to the caller; only the editor work needs the
+		// UI thread, and that stays asynchronous.
+		final IType type = findType(className, appName);
+		if (type == null) {
+			return "{\"opened\":false,\"reason\":\"no class named '" + DevServerJson.escape(className)
+					+ "' in any open project; className must be fully qualified\"}";
+		}
+		final int line = lineNumber;
+		Display.getDefault().asyncExec(() -> openType(type, line));
 
-		// Fire-and-forget: the editor opens asynchronously; success is the plain "ok".
+		// Success stays the plain "ok" existing callers expect.
 		return null;
 	}
 
-	private static void openType(String className, int lineNumber, String appName) {
+	private static void openType(IType type, int lineNumber) {
 		try {
-			IType type = findType(className, appName);
-			if (type == null) {
-				return;
-			}
-
 			IEditorPart editorPart = JavaUI.openInEditor(type, true, true);
-			if (!(editorPart instanceof ITextEditor)) {
+			if (lineNumber < 1 || !(editorPart instanceof ITextEditor)) {
 				return;
 			}
 

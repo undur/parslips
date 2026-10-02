@@ -237,44 +237,50 @@ public class OpenComponentAction extends Action implements IWorkbenchWindowActio
 	 *
 	 * @param offset 0-based character offset into the HTML template, or {@code < 0} for none
 	 * @param length number of characters to select from {@code offset} (0 = caret only)
+	 * @return true when the component was found in the project (and opened), false when the
+	 *         project has no such component — so a caller searching several projects can stop
+	 *         at the first hit, and the dev server can say "not found" instead of a blind "ok"
 	 */
-	public static void openComponentWithTypeNamed(IJavaProject javaProject, String typeName, int lineNumber, int offset, int length) {
+	public static boolean openComponentWithTypeNamed(IJavaProject javaProject, String typeName, int lineNumber, int offset, int length) {
 		try {
 			IType type = resolveType(javaProject, typeName);
-			if (type != null) {
-				JavaUI.openInEditor(type, true, true);
-				IResource underlyingResource = type.getUnderlyingResource();
-				if (underlyingResource instanceof IFile) {
-					ElementDescriptor descriptor = ElementDescriptor.forFile((IFile) underlyingResource);
-					if (descriptor != null) {
-						final IFile wodFile = descriptor.getWodFile();
-						final IFile htmlFile = descriptor.getHtmlFile();
-						// An offset or a line is a request to reveal a position in the HTML.
-						final boolean reveal = (offset >= 0 || lineNumber > 0) && htmlFile != null;
+			if (type == null) {
+				return false;
+			}
+			JavaUI.openInEditor(type, true, true);
+			IResource underlyingResource = type.getUnderlyingResource();
+			if (underlyingResource instanceof IFile) {
+				ElementDescriptor descriptor = ElementDescriptor.forFile((IFile) underlyingResource);
+				if (descriptor != null) {
+					final IFile wodFile = descriptor.getWodFile();
+					final IFile htmlFile = descriptor.getHtmlFile();
+					// An offset or a line is a request to reveal a position in the HTML.
+					final boolean reveal = (offset >= 0 || lineNumber > 0) && htmlFile != null;
 
-						// With a position to reveal, open the HTML (the source the
-						// offset/line refers to). Otherwise keep "Open Component"
-						// behaviour: WOD for a bundle, HTML for a standalone.
-						final IFile templateFile;
-						if (reveal) {
-							templateFile = htmlFile;
-						}
-						else {
-							templateFile = wodFile != null ? wodFile : htmlFile;
-						}
+					// With a position to reveal, open the HTML (the source the
+					// offset/line refers to). Otherwise keep "Open Component"
+					// behaviour: WOD for a bundle, HTML for a standalone.
+					final IFile templateFile;
+					if (reveal) {
+						templateFile = htmlFile;
+					}
+					else {
+						templateFile = wodFile != null ? wodFile : htmlFile;
+					}
 
-						if (templateFile != null) {
-							IEditorPart editorPart = WorkbenchUtilities.open(templateFile, EditorsPlugin.ComponentEditorID);
+					if (templateFile != null) {
+						IEditorPart editorPart = WorkbenchUtilities.open(templateFile, EditorsPlugin.ComponentEditorID);
 
-							if (reveal && editorPart instanceof ComponentEditor) {
-								revealHtmlPosition((ComponentEditor) editorPart, lineNumber, offset, length);
-							}
+						if (reveal && editorPart instanceof ComponentEditor) {
+							revealHtmlPosition((ComponentEditor) editorPart, lineNumber, offset, length);
 						}
 					}
 				}
 			}
+			return true;
 		} catch (Throwable e1) {
 			ComponenteditorPlugin.getDefault().log(e1);
+			return false;
 		}
 	}
 

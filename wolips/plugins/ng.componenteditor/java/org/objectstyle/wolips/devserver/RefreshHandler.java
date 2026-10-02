@@ -28,10 +28,11 @@ class RefreshHandler implements DevServerHandler {
 	public String handle(Map<String, String> params) throws Exception {
 		final String pathStr = params.get("path");
 		if (pathStr == null || pathStr.isEmpty()) {
-			return null;
+			return "{\"error\":\"missing required parameter 'path'\"}";
 		}
 
 		Path path = new Path(pathStr);
+		int refreshed = 0;
 		if (path.isAbsolute()) {
 			// Absolute file-system path — map to workspace resource(s).
 			IResource[] resources = ResourcesPlugin.getWorkspace().getRoot().findContainersForLocation(path);
@@ -39,8 +40,12 @@ class RefreshHandler implements DevServerHandler {
 				resources = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocation(path);
 			}
 			for (IResource resource : resources) {
-				if (resource.exists()) {
+				// A file created on disk isn't in the workspace yet, so exists() is false
+				// for it - but a refresh of it is exactly what's being asked for. Require
+				// only that its project is open.
+				if (resource.getProject() != null && resource.getProject().isOpen()) {
 					resource.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+					refreshed++;
 				}
 			}
 		}
@@ -49,10 +54,17 @@ class RefreshHandler implements DevServerHandler {
 			IResource resource = ResourcesPlugin.getWorkspace().getRoot().findMember(path);
 			if (resource != null && resource.exists()) {
 				resource.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+				refreshed++;
 			}
 		}
 
-		// Fire-and-forget: success conveyed by the framework's plain "ok".
+		if (refreshed == 0) {
+			// Nothing to refresh is not success: the caller expected Eclipse to pick a file
+			// up, and it won't.
+			return "{\"refreshed\":false,\"reason\":\"" + DevServerJson.escape(pathStr)
+					+ " is not inside any open workspace project (an absolute path is matched against project locations, a relative one is a workspace path)\"}";
+		}
+		// Success stays the plain "ok" existing callers expect.
 		return null;
 	}
 }

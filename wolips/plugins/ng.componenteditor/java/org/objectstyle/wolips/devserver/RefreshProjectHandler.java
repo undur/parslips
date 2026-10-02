@@ -83,9 +83,16 @@ class RefreshProjectHandler implements DevServerHandler {
 		}
 		else {
 			final IProject project = workspace.getRoot().getProject(projectName);
-			if (project != null && project.exists()) {
-				refreshAndBuild(project, build, clean);
+			// Name the refusal rather than answer "ok": a misspelled project would otherwise
+			// look refreshed, and the caller would go looking for why the app ignored it.
+			if (!project.exists()) {
+				return "{\"refreshed\":false,\"reason\":\"no project named '" + DevServerJson.escape(projectName) + "' in the workspace\"}";
 			}
+			if (!project.isOpen()) {
+				return "{\"refreshed\":false,\"reason\":\"project '" + DevServerJson.escape(projectName)
+						+ "' is closed\",\"hint\":\"/openProject?project=" + DevServerJson.escape(projectName) + "\"}";
+			}
+			refreshAndBuild(project, build, clean);
 		}
 
 		// Crucial for the edit→refresh→observe loop: don't return "ok" until Eclipse

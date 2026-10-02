@@ -43,6 +43,10 @@ class StatusHandler implements DevServerHandler {
 			b.append(statusJson(config, projectName));
 		}
 		b.append(']');
+		if (first && name != null && !name.isEmpty()) {
+			// An empty list for a named app reads like "known, not running"; say it's unknown.
+			b.append(",\"reason\":\"no launch config or project matches \\\"").append(DevServerJson.escape(name)).append("\\\"\"");
+		}
 		// Open modal dialogs are part of "what is this workspace doing right now" — they
 		// block everything, and a caller who can't see the screen has no other way to
 		// learn one is up.

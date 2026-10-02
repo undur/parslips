@@ -30,7 +30,7 @@ class RestartHandler implements DevServerHandler {
 	public String handle(Map<String, String> params) throws Exception {
 		final String name = params.get("app") != null ? params.get("app") : params.get("config");
 		if (name == null || name.isEmpty()) {
-			return "{\"error\":\"missing required parameter 'app'\"}";
+			return "{\"error\":\"missing required parameter 'app' (or 'config')\"}";
 		}
 
 		// ---- Stage 1: stop (skipped when nothing is running — that's not an error). ----

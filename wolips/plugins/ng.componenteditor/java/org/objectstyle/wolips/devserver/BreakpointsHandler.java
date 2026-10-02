@@ -30,6 +30,11 @@ class BreakpointsHandler implements DevServerHandler {
 
 		final String skipAll = params.get("skipAll");
 		if (skipAll != null && !skipAll.isEmpty()) {
+			// Only an explicit true/false flips the master switch: anything else used to read
+			// as "false" and silently re-arm every breakpoint.
+			if (!"true".equalsIgnoreCase(skipAll) && !"false".equalsIgnoreCase(skipAll)) {
+				return "{\"error\":\"skipAll must be true or false\"}";
+			}
 			// The manager's enablement is the inverse of "skip all".
 			manager.setEnabled(!"true".equalsIgnoreCase(skipAll));
 		}

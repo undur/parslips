@@ -24,7 +24,7 @@ class ConsoleHandler implements DevServerHandler {
 	public String handle(Map<String, String> params) {
 		final String name = params.get("app") != null ? params.get("app") : params.get("config");
 		if (name == null || name.isEmpty()) {
-			return "{\"error\":\"missing required parameter 'app'\"}";
+			return "{\"error\":\"missing required parameter 'app' (or 'config')\"}";
 		}
 
 		final ConsoleBuffer.Buffer buffer = ConsoleBuffer.find(name);
