@@ -61,4 +61,36 @@ public class MissingParameterTest {
 		IndexHandlerTest.assertWellFormed(noTemplate);
 		assertTrue(noTemplate, noTemplate.startsWith("{\"error\":") && noTemplate.contains("template"));
 	}
+
+	// ---- the #6 endpoints: every malformed call is an error naming what's wrong ----
+
+	private static void assertError(String response, String mentions) {
+		IndexHandlerTest.assertWellFormed(response);
+		assertTrue(response, response.startsWith("{\"error\":"));
+		assertTrue(response, response.contains(mentions));
+	}
+
+	@Test
+	public void newEndpointsNameTheirMissingParameter() throws Exception {
+		assertNamesMissing(new ElementRegistryHandler().handle(Map.of()), "project");
+		assertNamesMissing(new ComponentApiHandler().handle(Map.of()), "component");
+		assertNamesMissing(new KeypathHandler().handle(Map.of()), "component");
+		assertNamesMissing(new KeypathHandler().handle(Map.of("component", "Main")), "keypath");
+		assertNamesMissing(new FindHandler().handle(Map.of("component", "Main")), "key");
+		assertNamesMissing(new CallersHandler().handle(Map.of()), "component");
+		assertNamesMissing(new ContextHandler().handle(Map.of()), "component");
+		assertNamesMissing(new QuickfixHandler().handle(Map.of()), "component");
+		assertNamesMissing(new RenameHandler().handle(Map.of("kind", "key", "component", "Main", "to", "title")), "from");
+		assertNamesMissing(new RenameHandler().handle(Map.of("kind", "component", "component", "Main")), "to");
+	}
+
+	@Test
+	public void malformedValuesAreErrors() throws Exception {
+		assertError(new KeypathHandler().handle(Map.of("component", "Main", "keypath", "^parentValue")), "not a keypath");
+		assertError(new FindHandler().handle(Map.of("component", "Main", "key", "game.homeTeam")), "/keypath");
+		assertError(new RenameHandler().handle(Map.of()), "kind");
+		assertError(new RenameHandler().handle(Map.of("kind", "method", "component", "Main", "to", "X")), "kind must be");
+		assertError(new RenameHandler().handle(Map.of("kind", "component", "component", "Main", "to", "Not Valid")), "identifier");
+		assertError(new QuickfixHandler().handle(Map.of("component", "Main", "problem", "html:1")), "'fix'");
+	}
 }

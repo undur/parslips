@@ -12,6 +12,58 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Dev server: the rest of #6's editor endpoints
+
+Eight endpoints that surface what the editor already knows about a project's code, so an agent
+asks instead of reconstructing it from Java and grep. Each is built on the editor's existing
+machinery, all tested live against a running workspace:
+
+- **`/elementRegistry?project=`**: the Element Reference as data. Every element with its tags,
+  origin, definition kind, deprecation, and `overriddenBy` under the project's aliases
+  (`ElementCatalog`).
+- **`/componentApi?component=`**: what one of the project's own components accepts. Its
+  `.apiext`/`.api` when it has one, otherwise its settable keys declared in the project, with
+  types and declarations (the same source attribute completion uses).
+- **`/keypath?component=&keypath=`**: the validator's resolution, hop by hop. Each segment's
+  type and declaration; for a broken keypath, the failing key, the type it was looked up on, and
+  the validator's suggestions (`AbstractWodBinding.suggestKeysForInvalidKey` is now public for
+  this).
+- **`/find?component=&key=`**: a key's declaration, its uses in the component's templates, and
+  its Java references through JDT search.
+- **`/callers?component=`**: every `<wo:Name>` / `X : Name {}` in the component's project and
+  the projects that depend on it (the Usages tab's matching).
+- **`/rename?kind=component|key|element`**: renames across Java, HTML and WOD through JDT and
+  the editor's refactorings. Every condition is checked before anything changes, and
+  `preview=true` lists the changes without making them. Each step goes on the undo stack. Each
+  step's change is computed right before it runs, because two steps can edit the same template.
+  - `kind=key` renames every member implementing the key, each in its own pattern, plus the
+    binding at every call site.
+  - `kind=component` also updates callers in dependent projects, which the participant alone
+    doesn't.
+  - It refuses when the rename participants are off (WOLips installed, no `project.base`),
+    rather than leaving the templates behind.
+- **`/quickfix?component=`**: the editor's Cmd+1 fixes as data. It lists problems with
+  `replace`, `createKey` and `createAction` fixes; `problem=&fix=` applies one and answers with
+  what's left. Problem ids are positions (`html:LINE:OFFSET`) because validation recreates
+  markers on every run, so a marker id is gone by the next call. A created key won't save a
+  class the developer has unsaved edits in.
+- **`/context?component=`**: the bundle an agent loads before editing a component, in one call:
+  `/componentApi`, its validation, the elements its template uses (resolved per template
+  runtime, with binding names and the required ones; the project's own components with their
+  keys), and `/callers`.
+
+Shared pieces: `JsonObject` (an escaping, ordered JSON builder the new endpoints answer
+through), `DevServerComponents` (project and component lookup with one set of refusal reasons),
+`DevServerJava` (key types, qualified, and declarations as file:line) and `TemplateScan`
+(template walking, matches as locations with the source line).
+`OpenComponentAction.openComponentWithTypeNamed` and the bundle's dependency on
+`org.eclipse.jdt.core.manipulation` (for JDT's rename descriptors) also changed. The render
+profiler from #6's list moved to its own issue (undur/Parsley#29): it needs Parsley, runtime and
+editor work.
+
+Tests: `JsonObjectTest`, `RenameHandlerTest`, `ContextHandlerTest`, and `MissingParameterTest`
+cases for every new endpoint.
+
 ### AGENTS.md points to the skill instead of copying it
 
 `AGENTS.md` carried its own 240-line copy of the dev-server guide, and it had drifted from

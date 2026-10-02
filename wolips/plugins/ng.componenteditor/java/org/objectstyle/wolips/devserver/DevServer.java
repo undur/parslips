@@ -105,6 +105,14 @@ public class DevServer {
 		_httpServer.createContext("/dialogs", new RequestHandler(new DialogsHandler()));
 		_httpServer.createContext("/createProject", new RequestHandler(new CreateProjectHandler()));
 		_httpServer.createContext("/importProject", new RequestHandler(new ImportProjectHandler()));
+		_httpServer.createContext("/elementRegistry", new RequestHandler(new ElementRegistryHandler()));
+		_httpServer.createContext("/componentApi", new RequestHandler(new ComponentApiHandler()));
+		_httpServer.createContext("/keypath", new RequestHandler(new KeypathHandler()));
+		_httpServer.createContext("/find", new RequestHandler(new FindHandler()));
+		_httpServer.createContext("/callers", new RequestHandler(new CallersHandler()));
+		_httpServer.createContext("/rename", new RequestHandler(new RenameHandler()));
+		_httpServer.createContext("/quickfix", new RequestHandler(new QuickfixHandler()));
+		_httpServer.createContext("/context", new RequestHandler(new ContextHandler()));
 		// "/" catches every otherwise-unmatched path, so the index doubles as the 404:
 		// a typo'd endpoint answers with the list of real ones.
 		_httpServer.createContext("/", new RequestHandler(new IndexHandler()));

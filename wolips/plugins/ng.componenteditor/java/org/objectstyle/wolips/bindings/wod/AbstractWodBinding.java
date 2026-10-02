@@ -471,7 +471,7 @@ public abstract class AbstractWodBinding implements IWodBinding {
    * @return up to 3 suggestions sorted by relevance (case-only first, then
    *         by edit distance), or an empty list
    */
-  private static List<String> suggestKeysForInvalidKey(BindingValueKeyPath keyPath, TypeCache cache) {
+  public static List<String> suggestKeysForInvalidKey(BindingValueKeyPath keyPath, TypeCache cache) {
     IType invalidKeyType = keyPath.getInvalidKeyType();
     String invalidKey = keyPath.getInvalidKey();
     if (invalidKeyType == null || invalidKey == null || invalidKey.isEmpty()) {

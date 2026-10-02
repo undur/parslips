@@ -145,7 +145,7 @@ class ElementApiHandler implements DevServerHandler {
 	 * {@code str}/{@code link}/{@code textfield} resolve even in an alias-using project. This is the
 	 * more forgiving behavior a lookup wants — you type the tag you see, and get its API.
 	 */
-	private static ResolvedElementApi resolveApi(String name, IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
+	static ResolvedElementApi resolveApi(String name, IJavaProject project, org.objectstyle.wolips.variables.TemplateRuntime runtime) {
 		String resolvedName = name;
 
 		// 1) Parsley tag aliases, when the project declares them.
@@ -262,7 +262,7 @@ class ElementApiHandler implements DevServerHandler {
 				.append(",\"kind\":\"none\",\"api\":null}");
 	}
 
-	private static String kind(ResolvedElementApi resolved) {
+	static String kind(ResolvedElementApi resolved) {
 		switch (resolved.getKind()) {
 		case APIEXT:
 			return "apiext";
