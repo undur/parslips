@@ -78,11 +78,16 @@ class KeypathHandler implements DevServerHandler {
 					.put("at", DevServerJava.location(key.getBindingMember())));
 		}
 
+		// The validator's rule: in a WebObjects component, a KVC operator on a java.util
+		// collection is valid syntax that fails at render (WO's operators need an NSArray).
+		final String operatorProblem = operatorProblem(type, path);
+
 		final JsonObject json = new JsonObject()
 				.put("component", type.getElementName())
 				.put("class", type.getFullyQualifiedName('.'))
 				.put("keypath", keypath)
-				.put("valid", path.isValid());
+				.put("valid", path.isValid() && operatorProblem == null);
+		json.putIfPresent("problem", operatorProblem);
 		json.put("segments", segments);
 		json.putIfPresent("operator", path.getOperator());
 		json.putIfPresent("helper", path.getHelperFunction());
@@ -101,10 +106,23 @@ class KeypathHandler implements DevServerHandler {
 							: path.isWOComponent() ? "passes through a component; later keys can't be checked statically"
 							: "reaches a java.lang.Object; later keys can't be checked statically");
 		}
-		else if (path.exists()) {
+		else if (path.exists() && operatorProblem == null) {
 			// Whether a value binding can push back (a form field's value=) — a common question.
 			json.put("settable", path.isSettable());
 		}
 		return json;
+	}
+
+	private static String operatorProblem(IType type, BindingValueKeyPath path) throws Exception {
+		final org.objectstyle.wolips.bindings.wod.TypeCache cache = WodParserCache.getTypeCache();
+		if (path.getOperator() == null || !path.isValid() || path.isAmbiguous() || !org.objectstyle.wolips.bindings.utils.BindingReflectionUtils.isWebObjectsComponent(type, cache)) {
+			return null;
+		}
+		final IType collection = path.getLastType();
+		if (collection == null || org.objectstyle.wolips.bindings.utils.BindingReflectionUtils.isNSArray(collection, cache)
+				|| !org.objectstyle.wolips.bindings.utils.BindingReflectionUtils.isType(collection, new String[] { "java.util.Collection" }, cache)) {
+			return null;
+		}
+		return "'@" + path.getOperator() + "' only works on an NSArray in WebObjects, and this is a " + collection.getFullyQualifiedName('.') + "; it fails at render";
 	}
 }

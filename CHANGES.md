@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### KVC operators on a Java collection are an error, and /keypath says so
+
+WebObjects' KVC operators (`@count`, `@sum`, …) only work on `NSArray`, and that's staying
+(undur/wonder-slim#170 was closed as not planned). So the mistake is caught early instead.
+- **The validator:** an operator on a `java.util` collection in a WebObjects component is
+  reported as an **error**, not at the "@Operator KVC Paths" preference's warning level. That
+  preference is for operators the editor can't verify, while this one always fails at render.
+  Setting it to Ignore still silences the check.
+- **`/keypath`:** answers `valid:false` with the same `problem`.
+- **At render:** Parsley's error box will name the cause, along with undur/Parsley#31.
+
 ### What building a test app found: hangs, model keys, non-synchronizing components, validator gaps
 
 A wonder-slim application (LeagueDesk) was built end to end through the dev server and the

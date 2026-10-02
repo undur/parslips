@@ -380,8 +380,11 @@ public abstract class AbstractWodBinding implements IWodBinding {
                 // The collection's keypath: the text before the operator ("team.players" of "team.players.@count").
                 String original = bindingValueKeyPath.getOriginalKeyPath();
                 String path = original.indexOf('@') > 0 ? original.substring(0, original.indexOf('@')).replaceAll("\\.$", "") : original;
+                // An error, not the operator preference's warning level: that preference is for
+                // operators the editor can't verify, and this one is certain to fail. (Setting
+                // the preference to Ignore still silences it, above.)
                 problems.add(new WodBindingValueProblem(element, bindingName, "'@" + operator + "' only works on an NSArray in WebObjects, but '" + path + "' is a " + collectionType.getFullyQualifiedName('.')
-                    + "; it fails at render. Use a method (e.g. a count or sum accessor) instead", getValuePosition(), lineNumber, SeverityPolicy.isWarning(atOperatorSeverity)));
+                    + "; it fails at render. Use a method (e.g. a count or sum accessor) instead", getValuePosition(), lineNumber, false));
               }
             }
   
