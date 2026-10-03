@@ -208,6 +208,10 @@ class RefreshProjectHandler implements DevServerHandler {
 		// nothing to do and produces no class delta for the hot-swapper to pick up.
 		project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
+		// ...and the edits that refresh can't see: two same-length edits within a second look
+		// like none to it, so the build would keep the first. Touched here, before the build.
+		PreciseRefresh.touchMissed(project);
+
 		if (!build) {
 			return;
 		}

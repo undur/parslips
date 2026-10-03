@@ -12,6 +12,23 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### `/refreshProject` no longer misses a quick second edit
+
+Reported by an agent: two quick edits to the same file, a refresh after each, and the class file
+kept the first edit while `/refreshProject` answered `ok`. Measured on purpose by setting the
+second edit's timestamp exactly. Eclipse's `refreshLocal` compares a file's timestamp at
+one-second granularity, plus its length:
+- A same-length edit stamped +1 ms or +500 ms within the same second was missed every time,
+  and a second refresh didn't help.
+- A change in length, or a timestamp in the next second, was seen.
+
+`PreciseRefresh` keeps the dev server's own record: each project file's timestamp at full
+precision (nanoseconds, through NIO) as of the last refresh. After Eclipse's refresh it touches
+every file whose precise timestamp changed, so the build compiles it, and it re-reads the record
+after touching so nothing is selected twice. `/refreshProject` (and with it `/restart`'s
+refresh) and `/refresh?path=` both use it. The same experiment now compiles every edit, and
+idle refreshes recompile nothing.
+
 ### Route parameters (`:id`) are no longer misread as plain attributes
 
 Routing experiments use `:`-prefixed attributes for route parameters (`<wo:route :id="42"

@@ -45,6 +45,11 @@ class RefreshHandler implements DevServerHandler {
 				// only that its project is open.
 				if (resource.getProject() != null && resource.getProject().isOpen()) {
 					resource.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+					// The refresh misses a same-length edit within a second of the last one;
+					// for a named file a touch makes sure (see PreciseRefresh).
+					if (resource instanceof org.eclipse.core.resources.IFile file) {
+						PreciseRefresh.touch(file);
+					}
 					refreshed++;
 				}
 			}
@@ -54,6 +59,9 @@ class RefreshHandler implements DevServerHandler {
 			IResource resource = ResourcesPlugin.getWorkspace().getRoot().findMember(path);
 			if (resource != null && resource.exists()) {
 				resource.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+				if (resource instanceof org.eclipse.core.resources.IFile file) {
+					PreciseRefresh.touch(file);
+				}
 				refreshed++;
 			}
 		}
