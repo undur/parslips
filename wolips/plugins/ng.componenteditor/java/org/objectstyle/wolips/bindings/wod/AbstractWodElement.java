@@ -417,11 +417,13 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     while (checkForDuplicateBindingsIter.hasNext()) {
       IWodBinding binding = checkForDuplicateBindingsIter.next();
       String bindingName = binding.getName();
-      if (bindingNames.contains(bindingName)) {
+      // Keyed on the namespace too: a:x and b:x are different bindings.
+      String bindingKey = binding.getNamespace() == null ? bindingName : binding.getNamespace() + ":" + bindingName;
+      if (bindingNames.contains(bindingKey)) {
         problems.add(new WodBindingNameProblem(this, bindingName, "Duplicate binding named '" + bindingName + "'", binding.getNamePosition(), binding.getLineNumber(), false));
       }
       else {
-        bindingNames.add(bindingName);
+        bindingNames.add(bindingKey);
       }
     }
 

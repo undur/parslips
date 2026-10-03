@@ -12,6 +12,26 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Route parameters (`:id`) are no longer misread as plain attributes
+
+Routing experiments use `:`-prefixed attributes for route parameters (`<wo:route :id="42"
+id="itemLink">`). The template parser split an attribute name at its first colon, so `:id`
+became the attribute `id` in an empty namespace. That had two effects:
+- **A false duplicate.** It was reported as a duplicate of the tag's own `id` ("Duplicate
+  binding named 'id'").
+- **Data loss on format.** The formatter writes a namespace only when it's non-empty, so it
+  turned `:id="42"` into `id="42"`, silently dropping the route parameter.
+
+Now only a colon after something separates a namespace (`xml:lang`). A leading colon is part of
+the name, so `:id` is the binding `:id`, which is the name `ERXRouteHyperlink` receives too.
+`?`-prefixed query parameters were already read whole. Separately, the duplicate-binding check
+now compares the namespace as well, so `a:x` and `b:x` are no longer duplicates.
+
+Tests: `FuzzyXMLParserAttributeNamespaceTest`,
+`FuzzyXMLFormatterTest.routeParameterAttributeKeepsItsColon` and
+`RenameBindingProcessorTest.html_doesNotMatchARouteParameterOfTheSameName` (renaming a
+component's `id` binding leaves `:id` alone).
+
 ### A last round through the test app: four fixes
 
 A final round through LeagueDesk on the released stack (wonder-slim 8.0.16, Parsley 1.6.2) found

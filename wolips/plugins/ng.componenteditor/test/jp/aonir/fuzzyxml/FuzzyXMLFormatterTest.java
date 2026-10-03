@@ -442,4 +442,15 @@ public class FuzzyXMLFormatterTest {
 		assertFalse("Text with trailing newline should not get a trailing space",
 			result.contains("text </wo:if>") || result.contains("text \n"));
 	}
+
+	// --- Route parameters: attribute names with a leading ':' (and '?') ---
+
+	@Test
+	public void routeParameterAttributeKeepsItsColon() {
+		// ':id' is a route parameter, 'id' an HTML attribute: formatting must not merge them.
+		String result = format("<wo:route route=\"$routes.item\" :id=\"42\" ?highlight=\"yes\" id=\"itemLink\">Item</wo:route>");
+		assertTrue(result, result.contains(" :id=\"42\""));
+		assertTrue(result, result.contains(" ?highlight=\"yes\""));
+		assertTrue(result, result.contains(" id=\"itemLink\""));
+	}
 }

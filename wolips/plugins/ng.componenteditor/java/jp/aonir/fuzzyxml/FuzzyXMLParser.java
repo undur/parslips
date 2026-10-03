@@ -841,7 +841,11 @@ public class FuzzyXMLParser {
 		String name = attrInfo.name;
 		if (name != null) {
 			int colonIndex = name.indexOf(':');
-			if (colonIndex != -1) {
+			// A namespace is what comes BEFORE the colon: xml:lang. A name that starts with one
+			// (:id, a route parameter) has no namespace — XML has no empty prefix. Splitting it
+			// made ':id' read as 'id': a false duplicate of the tag's own id attribute, and the
+			// formatter wrote it back as id="…", dropping the colon.
+			if (colonIndex > 0) {
 				namespace = name.substring(0, colonIndex);
 				name = name.substring(colonIndex + 1);
 			}

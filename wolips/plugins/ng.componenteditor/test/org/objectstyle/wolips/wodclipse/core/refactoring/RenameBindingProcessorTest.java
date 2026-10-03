@@ -39,6 +39,15 @@ public class RenameBindingProcessorTest {
 	}
 
 	@Test
+	public void html_doesNotMatchARouteParameterOfTheSameName() {
+		// ':id' is a route parameter, not the 'id' binding: renaming 'id' leaves it alone.
+		String html = "<wo:MyComponent :id=\"42\" id=\"$value\" />";
+		List<int[]> edits = findHtmlBindingEdits(html, "MyComponent", "id");
+		assertEquals(1, edits.size());
+		assertEquals(" id", html.substring(edits.get(0)[0] - 1, edits.get(0)[0] + edits.get(0)[1]));
+	}
+
+	@Test
 	public void html_doesNotMatchDifferentComponent() {
 		String html = "<wo:OtherComponent item=\"$value\" />";
 		List<int[]> edits = findHtmlBindingEdits(html, "MyComponent", "item");
