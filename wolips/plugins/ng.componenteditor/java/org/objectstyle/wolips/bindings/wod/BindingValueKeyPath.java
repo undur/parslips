@@ -36,6 +36,9 @@ public class BindingValueKeyPath {
   /** When the invalid key was looked up among a RouteKeys' constants: that class (for suggestions). */
   private IType _invalidConstantsClass;
 
+  /** When the LAST key was looked up among a RouteKeys' constants: that class (for completion). */
+  private IType _lastKeyConstantsClass;
+
   private boolean _valid;
 
   private boolean _nsCollection;
@@ -150,6 +153,9 @@ public class BindingValueKeyPath {
           // we can't verify helper functions or @arrayOps
 
           if (constantsClass != null) {
+            if (keyNum == _bindingKeyNames.length - 1) {
+              _lastKeyConstantsClass = constantsClass;
+            }
             org.eclipse.jdt.core.IField constant = org.objectstyle.wolips.bindings.utils.RouteKeysSupport.constant(constantsClass, _bindingKeyNames[keyNum], cache);
             if (constant == null) {
               _valid = false;
@@ -444,6 +450,16 @@ public class BindingValueKeyPath {
     }
     else if (_operator != null) {
       bindingKeysList = BindingReflectionUtils.getBindingKeys(_javaProject, getLastType(), "@" + _operator, false, BindingReflectionUtils.ACCESSORS_ONLY, allowInheritanceDuplicates, _cache);
+    }
+    else if (_lastKeyConstantsClass != null) {
+      // The last key is looked up among a RouteKeys' constants ($routes.bo…): offer them.
+      bindingKeysList = new LinkedList<BindingValueKey>();
+      String partial = getLastBindingKeyName().toLowerCase();
+      for (org.eclipse.jdt.core.IField constant : org.objectstyle.wolips.bindings.utils.RouteKeysSupport.constants(_lastKeyConstantsClass, _cache)) {
+        if (constant.getElementName().toLowerCase().startsWith(partial)) {
+          bindingKeysList.add(new BindingValueKey(constant.getElementName(), constant.getDeclaringType(), constant, _javaProject, _cache));
+        }
+      }
     }
     else if (_bindingKeys == null) {
       bindingKeysList = BindingReflectionUtils.getBindingKeys(_javaProject, getLastType(), _originalKeyPath, false, BindingReflectionUtils.ACCESSORS_ONLY, allowInheritanceDuplicates, _cache);

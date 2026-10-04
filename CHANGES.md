@@ -28,6 +28,8 @@ false errors on every link. Three fixes, and a reworded message:
   as `RouteKeys.valueForKey` does: public static fields, inherited ones included, any number of
   hops (`$routes.web.news`). Link templates validate clean, and `/keypath` shows the hops. A
   misspelled route name is an error with the route names as suggestions, offered by `/quickfix`.
+  Completion offers the route names: `$routes.` lists the constants, and so does
+  `$routes.web.` one hop deeper.
 - **The push-back check follows WebObjects' KVC.** It treated a key as unsettable unless the
   binding machinery knew a setter, which reported a working production page whose value lands in
   a private `_post` field. It now applies `NSKeyValueCoding`'s own set rules: `set<Key>` or
