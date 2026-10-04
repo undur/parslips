@@ -12,6 +12,26 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Route links complete their parameters
+
+In a route link, `:` offers the route's parameters (`<wo:route to="$routes.book" :|` → `:club`,
+`:book`), read statically from the source — no running application needed. Completion only:
+nothing is reported from it, since a declaration it can't follow would make an error wrong.
+
+- **Typed routes** (`Route<Books> books = Route.of( Books.class )`): the record's components.
+- **Plain routes**: the placeholders (`{name}`, `{name*}`) of each `map( "pattern", Routes.x, … )`
+  the constant is passed to, found with a JDT reference search, plus the prefixes of the groups
+  its receiver came from — through locals, fields, chains (`.parameter(…).named(…)`) and
+  `group( prefix, g -> … )` lambdas. A group handed in as a method parameter or `join`ed by name
+  has its prefix elsewhere, and only the route's own pattern counts. A `redirect` isn't a
+  declaration of the constant (its pattern is the old URL's).
+- Parameters the tag already binds aren't offered again. Any `<wo:…>` tag whose `to` resolves to
+  a route constant qualifies, so it works for `<wo:routeForm>` and future route elements too.
+
+`RouteParameters` does the reading; `OpenTagAttributes` reads the tag being typed (unclosed, so
+the template parser has no element for it); `HTMLAssistProcessor.addDynamicAttributeProposals` is
+the hook for attribute names that depend on the tag's other attributes.
+
 ### Route links validate: RouteKeys, interface default methods, and a push-back false positive
 
 Templates linking with wonder-slim's routing (`<wo:route to="$routes.web.news" :slug="…">`) had

@@ -14,11 +14,14 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -26,6 +29,9 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPathEditorInput;
 import org.objectstyle.wolips.bindings.api.ApiUtils;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
+import org.objectstyle.wolips.bindings.utils.RouteParameters;
+import org.objectstyle.wolips.bindings.wod.BindingValueKey;
+import org.objectstyle.wolips.bindings.wod.BindingValueKeyPath;
 import org.objectstyle.wolips.bindings.wod.IWodElement;
 import org.objectstyle.wolips.bindings.wod.IWodModel;
 import org.objectstyle.wolips.bindings.wod.TagShortcut;
@@ -344,6 +350,71 @@ public class TemplateAssistProcessor extends HTMLAssistProcessor {
       attributeValues = super.getAttributeValues(tagName, value, tagInfo, attrInfo);
     }
     return attributeValues;
+  }
+
+  /**
+   * A route link's parameters, as {@code :name} attributes: on any {@code <wo:…>} tag whose
+   * {@code to} binds a wonder-slim route constant ({@code <wo:route to="$routes.book" :|}). The
+   * parameters come from the route's declaration ({@link RouteParameters}); ones the tag already
+   * binds aren't offered again.
+   */
+  @Override
+  protected void addDynamicAttributeProposals(List<ICompletionProposal> list, String tagName, String word, IDocument document, int documentOffset, String equals) {
+    if (!tagName.startsWith("wo:") || !(word.isEmpty() || word.startsWith(":"))) {
+      return;
+    }
+    try {
+      Map<String, String> attributes = OpenTagAttributes.at(document.get(), documentOffset);
+      IField route = routeConstant(attributes.get("to"));
+      if (route == null) {
+        return;
+      }
+      for (String parameter : RouteParameters.of(route)) {
+        String attributeName = ":" + parameter;
+        if (attributes.containsKey(attributeName) || !attributeName.toLowerCase().startsWith(word.toLowerCase())) {
+          continue;
+        }
+        list.add(new CompletionProposal(attributeName + equals + "\"\"", documentOffset - word.length(), word.length(), attributeName.length() + equals.length() + 1, HTMLPlugin.getDefault().getImageRegistry().get(HTMLPlugin.ICON_ATTR), attributeName, null, "Parameter of the route " + route.getElementName()));
+      }
+    }
+    catch (Exception e) {
+      HTMLPlugin.logException(e);
+    }
+  }
+
+  /**
+   * The route constant a {@code to} value binds: the field at the end of its keypath
+   * ({@code $routes.web.news} → the {@code news} field), or null when the value isn't a keypath
+   * through the component, or doesn't end at a field.
+   */
+  private IField routeConstant(String to) throws JavaModelException {
+    if (to == null) {
+      return null;
+    }
+    BuildProperties buildProperties = _parsleyProject != null ? _parsleyProject.getBuildProperties() : null;
+    String prefix = buildProperties != null ? buildProperties.getInlineBindingPrefix() : "$";
+    String suffix = buildProperties != null ? buildProperties.getInlineBindingSuffix() : "";
+    if (!to.startsWith(prefix)) {
+      return null;
+    }
+    String keyPath = to.substring(prefix.length());
+    if (suffix.length() > 0 && keyPath.endsWith(suffix)) {
+      keyPath = keyPath.substring(0, keyPath.length() - suffix.length());
+    }
+    IJavaProject javaProject = getJavaProject();
+    IFile file = getFile();
+    if (javaProject == null || file == null || file.getLocation() == null) {
+      return null;
+    }
+    // The component's class, as value completion finds it: named after the template.
+    String componentTypeName = file.getLocation().removeFileExtension().lastSegment();
+    IType componentType = BindingReflectionUtils.findElementType(javaProject, componentTypeName, true, WodParserCache.getTypeCache());
+    if (componentType == null) {
+      return null;
+    }
+    BindingValueKeyPath path = new BindingValueKeyPath(keyPath.trim(), componentType, javaProject, WodParserCache.getTypeCache());
+    BindingValueKey last = path.isValid() ? path.getLastBindingKey() : null;
+    return last != null && last.getBindingMember() instanceof IField field ? field : null;
   }
 
   @Override

@@ -439,6 +439,8 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
           }
         }
       }
+      // attributes that depend on the tag's other attributes (a route link's parameters)
+      addDynamicAttributeProposals(list, tagName, dim[0], document, documentOffset, equals);
       // close tag
     }
     else if (!last.equals("")) {
@@ -468,6 +470,19 @@ public class HTMLAssistProcessor extends HTMLTemplateAssistProcessor { /*impleme
 
   protected List<TagInfo> getDynamicTagInfo(String tagName) {
     return null;
+  }
+
+  /**
+   * Adds attribute-name proposals that a tag's {@link TagInfo} can't hold because they depend on
+   * this occurrence of the tag — its other attributes' values — rather than on the tag's type.
+   * Nothing by default.
+   *
+   * @param tagName the tag's name, lowercased
+   * @param word the partial attribute name before the caret, as typed (not lowercased)
+   * @param equals the {@code =} to write, with the user's spacing preference
+   */
+  protected void addDynamicAttributeProposals(List<ICompletionProposal> list, String tagName, String word, IDocument document, int documentOffset, String equals) {
+    // Nothing by default.
   }
 
   /**
