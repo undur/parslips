@@ -12,6 +12,36 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Route links validate: RouteKeys, interface default methods, and a push-back false positive
+
+Templates linking with wonder-slim's routing (`<wo:route to="$routes.web.news" :slug="…">`) had
+false errors on every link. Three fixes, and a reworded message:
+
+- **Interface default methods are keys.** `getBindingKeyIfMatches` treated an interface's members
+  as public only when the lookup *started* on the interface. A page inheriting
+  `default Object routes()` from an interface in another package saw it as package-private and
+  hidden: "There is no key 'routes'" on every route link. It now asks the member's own declaring
+  type, since interface members are public whether or not they say so.
+- **RouteKeys is understood.** `RouteKeysSupport` reads `RouteKeys.of( X.class )` in an
+  accessor's body or a field's initializer, where the member's type is `RouteKeys` or `Object`
+  and `RouteKeys` resolves to wonder-slim's. The next key is then looked up among X's constants,
+  as `RouteKeys.valueForKey` does: public static fields, inherited ones included, any number of
+  hops (`$routes.web.news`). Link templates validate clean, and `/keypath` shows the hops. A
+  misspelled route name is an error with the route names as suggestions, offered by `/quickfix`.
+- **The push-back check follows WebObjects' KVC.** It treated a key as unsettable unless the
+  binding machinery knew a setter, which reported a working production page whose value lands in
+  a private `_post` field. It now applies `NSKeyValueCoding`'s own set rules: `set<Key>` or
+  `_set<Key>`, then the fields `_key`, `key`, `_isKey` or `isKey` of any visibility, up the
+  hierarchy (`BindingReflectionUtils.isKeyValueCodingSettable`).
+- **A key reached through `java.lang.Object`** now reads "Unable to verify the key 'x': 'y' is a
+  java.lang.Object" instead of "There is no key 'x'". The same preference still decides whether
+  it's reported.
+
+Also: the new-project template references wonder-slim 8.0.17, where a component created while
+the app runs is found without a restart.
+
+Tests: `RouteKeysSupportTest`.
+
 ### `/refreshProject` no longer misses a quick second edit
 
 Reported by an agent: two quick edits to the same file, a refresh after each, and the class file

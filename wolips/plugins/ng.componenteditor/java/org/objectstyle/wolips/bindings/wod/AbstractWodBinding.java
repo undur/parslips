@@ -304,7 +304,13 @@ public abstract class AbstractWodBinding implements IWodBinding {
                 }
 
                 WodBindingValueProblem problem;
-                if (validKeyPath.length() == 0) {
+                if (bindingValueKeyPath.isNSKeyValueCoding() && !bindingValueKeyPath.isNSCollection()) {
+                  // A key reached through a java.lang.Object can't be checked: say so, rather than
+                  // claiming it doesn't exist.
+                  String through = validKeyPath.length() == 0 ? javaFileType.getElementName() : "'" + validKeyPath + "'";
+                  problem = new WodBindingValueProblem(element, bindingName, "Unable to verify the key '" + invalidKey + "': " + through + " is a java.lang.Object", getValuePosition(), lineNumber, warning);
+                }
+                else if (validKeyPath.length() == 0) {
                   problem = new WodBindingValueProblem(element, bindingName, "There is no key '" + invalidKey + "' in " + javaFileType.getElementName() + suggestionSuffix, getValuePosition(), lineNumber, warning);
                 }
                 else {
@@ -496,12 +502,20 @@ public abstract class AbstractWodBinding implements IWodBinding {
       return java.util.Collections.emptyList();
     }
     try {
-      List<BindingValueKey> validKeys = BindingReflectionUtils.getBindingKeys(
-        invalidKeyType.getJavaProject(), invalidKeyType, "",
-        false, BindingReflectionUtils.ACCESSORS_ONLY, false, cache);
-      List<String> candidateNames = new java.util.ArrayList<String>(validKeys.size());
-      for (BindingValueKey key : validKeys) {
-        candidateNames.add(key.getBindingName());
+      List<String> candidateNames = new java.util.ArrayList<String>();
+      if (keyPath.getInvalidConstantsClass() != null) {
+        // A RouteKeys' keys are its class's constants (route names), not accessors.
+        for (org.eclipse.jdt.core.IField constant : org.objectstyle.wolips.bindings.utils.RouteKeysSupport.constants(keyPath.getInvalidConstantsClass(), cache)) {
+          candidateNames.add(constant.getElementName());
+        }
+      }
+      else {
+        List<BindingValueKey> validKeys = BindingReflectionUtils.getBindingKeys(
+          invalidKeyType.getJavaProject(), invalidKeyType, "",
+          false, BindingReflectionUtils.ACCESSORS_ONLY, false, cache);
+        for (BindingValueKey key : validKeys) {
+          candidateNames.add(key.getBindingName());
+        }
       }
 
       List<String> suggestions = new java.util.ArrayList<String>();

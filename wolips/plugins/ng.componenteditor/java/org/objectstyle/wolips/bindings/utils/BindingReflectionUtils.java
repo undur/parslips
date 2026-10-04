@@ -334,6 +334,37 @@ public class BindingReflectionUtils {
     return null;
   }
 
+  /**
+   * Whether WebObjects' key-value coding can SET the key on the type: what
+   * NSKeyValueCoding.DefaultImplementation tries, in its order — a method set&lt;Key&gt; or
+   * _set&lt;Key&gt; taking one argument, then a field _key, key, _isKey or isKey. Fields of any
+   * visibility count: components allow direct field access, so a private {@code _post} takes
+   * a pushed value. Searched up the class hierarchy. Wider than {@link BindingValueKeyPath#isSettable()},
+   * which knows only the binding machinery's own mutators and fields; the push-back check
+   * needs the runtime's rule, or it reports working pages.
+   */
+  public static boolean isKeyValueCodingSettable(IType type, String key, TypeCache cache) throws JavaModelException {
+    if (type == null || key == null || key.isEmpty()) {
+      return false;
+    }
+    final String capitalized = Character.toUpperCase(key.charAt(0)) + key.substring(1);
+    final Set<String> setters = Set.of("set" + capitalized, "_set" + capitalized);
+    final Set<String> fields = Set.of("_" + key, key, "_is" + capitalized, "is" + capitalized);
+    for (final IType t : cache.getSupertypesOf(type)) {
+      for (final IMethod method : t.getMethods()) {
+        if (method.getNumberOfParameters() == 1 && setters.contains(method.getElementName())) {
+          return true;
+        }
+      }
+      for (final IField field : t.getFields()) {
+        if (fields.contains(field.getElementName()) && !Flags.isStatic(field.getFlags()) && !Flags.isFinal(field.getFlags())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   /** Whether the type is (or extends) WebObjects' NSArray — the only collection WO's KVC operators (@count, @sum…) work on. */
   public static boolean isNSArray(IType type, TypeCache cache) throws JavaModelException {
     return type != null && BindingReflectionUtils.isType(type, new String[] { "com.webobjects.foundation.NSArray" }, cache);
@@ -688,7 +719,11 @@ public class BindingReflectionUtils {
     else if (Flags.isStatic(flags)) {
       visible = Visibility.Hidden;
     }
-    else if (Flags.isPublic(flags) || type.isInterface()) {
+    // An interface's members are public whether or not they say so — a default method
+    // ("default Object routes()") carries no public flag. Asked of the member's OWN declaring
+    // type: `type` is the one the lookup started from (the page), so asking it hid every
+    // default method a page inherits from an interface in another package.
+    else if (Flags.isPublic(flags) || type.isInterface() || (member.getDeclaringType() != null && member.getDeclaringType().isInterface())) {
       visible = Visibility.Visible;
     }
     else if (Flags.isProtected(flags) || Flags.isPackageDefault(flags)) {

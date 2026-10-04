@@ -33,6 +33,9 @@ public class BindingValueKeyPath {
   /** The type on which the invalid key was looked up — used by "did you mean?" to enumerate valid keys. */
   private IType _invalidKeyType;
 
+  /** When the invalid key was looked up among a RouteKeys' constants: that class (for suggestions). */
+  private IType _invalidConstantsClass;
+
   private boolean _valid;
 
   private boolean _nsCollection;
@@ -140,9 +143,32 @@ public class BindingValueKeyPath {
         IType currentType = _contextType;
         BindingValueKey currentBinding = null;
         List<BindingValueKey> bindingKeysList = new LinkedList<BindingValueKey>();
+        // Set while the current value is a wonder-slim RouteKeys: its keys are this class's
+        // constants, not accessors (see RouteKeysSupport).
+        IType constantsClass = null;
         for (int keyNum = 0; currentType != null && keyNum < _bindingKeyNames.length; keyNum++) {
           // we can't verify helper functions or @arrayOps
-          
+
+          if (constantsClass != null) {
+            org.eclipse.jdt.core.IField constant = org.objectstyle.wolips.bindings.utils.RouteKeysSupport.constant(constantsClass, _bindingKeyNames[keyNum], cache);
+            if (constant == null) {
+              _valid = false;
+              invalidKeyNum = keyNum;
+              _invalidKeyType = constantsClass;
+              _invalidConstantsClass = constantsClass;
+              currentType = null;
+              continue;
+            }
+            _gettable = Boolean.TRUE;
+            BindingValueKey bindingKey = new BindingValueKey(_bindingKeyNames[keyNum], constant.getDeclaringType(), constant, javaProject, cache);
+            bindingKeysList.add(bindingKey);
+            currentBinding = bindingKey;
+            // A constant can itself be a RouteKeys (RouteKeys web = RouteKeys.of( Web.class )).
+            constantsClass = org.objectstyle.wolips.bindings.utils.RouteKeysSupport.constantsClass(constant);
+            currentType = constantsClass != null ? constantsClass : bindingKey.getNextType(currentBinding);
+            continue;
+          }
+
           boolean keyAccessible = false;
           List<BindingValueKey> bindingAccessorKeys = cache.getBindingValueAccessorKeys(javaProject, currentType, _bindingKeyNames[keyNum]);
           if (bindingAccessorKeys.isEmpty() && keyNum == _bindingKeyNames.length - 1) {
@@ -165,6 +191,12 @@ public class BindingValueKeyPath {
             bindingKeysList.add(bindingKey);
             currentType = bindingKey.getNextType(currentBinding);
             currentBinding = bindingKey;
+            // An accessor answering a RouteKeys: the next key is one of its class's constants.
+            IType routeKeysClass = org.objectstyle.wolips.bindings.utils.RouteKeysSupport.constantsClass(bindingKey.getBindingMember());
+            if (routeKeysClass != null) {
+              constantsClass = routeKeysClass;
+              currentType = routeKeysClass;
+            }
           }
           
           if (!keyAccessible) {
@@ -267,6 +299,11 @@ public class BindingValueKeyPath {
    * keypath resolved successfully.  Used by "did you mean?" suggestions to
    * enumerate the valid keys on the failing type.
    */
+  /** The RouteKeys constants class the invalid key was looked up in, or null when it was an ordinary lookup. */
+  public IType getInvalidConstantsClass() {
+    return _invalidConstantsClass;
+  }
+
   public IType getInvalidKeyType() {
     return _invalidKeyType;
   }

@@ -464,6 +464,15 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
     }
   }
 
+  /** The type the keypath's last key is looked up on: the component's for a single key, else the previous hop's. */
+  private static IType typeBeforeLastKey(BindingValueKeyPath path, IType javaFileType) throws JavaModelException {
+    final BindingValueKey[] keys = path.getBindingKeys();
+    if (keys.length < 2) {
+      return javaFileType;
+    }
+    return keys[keys.length - 2].getNextType();
+  }
+
   /**
    * A WebObjects component that synchronizes its variables with its bindings pushes every
    * bound key BACK to the parent's keypath after it runs. Bound to a keypath that can't be set
@@ -494,7 +503,7 @@ public abstract class AbstractWodElement implements IWodElement, Comparable<IWod
       if (!parentPath.isValid() || parentPath.isAmbiguous() || !parentPath.exists() || parentPath.getOperator() != null || parentPath.getHelperFunction() != null) {
         continue; // reported elsewhere, or can't be known
       }
-      if (!parentPath.isSettable()) {
+      if (!parentPath.isSettable() && !BindingReflectionUtils.isKeyValueCodingSettable(typeBeforeLastKey(parentPath, javaFileType), parentPath.getLastBindingKeyName(), typeCache)) {
         problems.add(new WodBindingValueProblem(this, binding.getName(), elementType.getElementName() + " synchronizes its bindings, so it pushes '" + binding.getName() + "' back to '" + binding.getValue()
             + "', which can't be set (no setter or field). Bind a settable key, or make " + elementType.getElementName() + " non-synchronizing (extend ERXNonSynchronizingComponent, or return false from synchronizesVariablesWithBindings())",
             binding.getValuePosition(), binding.getLineNumber(), SeverityPolicy.isWarning(severity)));
