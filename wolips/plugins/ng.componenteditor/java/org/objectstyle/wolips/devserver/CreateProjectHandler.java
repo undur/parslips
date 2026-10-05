@@ -113,7 +113,7 @@ class CreateProjectHandler implements DevServerHandler {
 				b.append(",\"launch\":").append(new LaunchHandler().handle(launchParams));
 			}
 			else {
-				b.append(",\"hint\":\"start it with /launch?config=").append(DevServerJson.escape(launchConfig)).append("&waitForPort=1200 (add stopOthers=true if another app holds the port)\"");
+				b.append(",\"hint\":\"start it with /launch?config=").append(DevServerJson.escape(launchConfig)).append("&waitForPort=1200 (if another app holds the port, it runs on a free one)\"");
 			}
 		}
 		return b.append('}').toString();

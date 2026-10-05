@@ -37,24 +37,29 @@ import org.eclipse.debug.core.ILaunchManager;
  *       usually just loses a port-bind fight).</li>
  *   <li>{@code waitForPort} — a TCP port; when given, the response is delayed until
  *       something listens on that port (success), the launched process terminates
- *       (failure, with a pointer at {@code /console}), a modal dialog appears (failure,
- *       with the dialog and a pointer at {@code /dialogs}), or {@code timeout} elapses.</li>
+ *       (failure, with its last output and a pointer at {@code /console}), a modal dialog
+ *       appears (failure, with the dialog and a pointer at {@code /dialogs}), the app stalls
+ *       — no port and no output for {@link LaunchLiveness#STALL_MILLIS} (failure, with its
+ *       last output and thread state) — or {@code timeout} elapses.</li>
  *   <li>{@code timeout} — seconds to wait for {@code waitForPort} (default 60).</li>
  *   <li>{@code port} — launch on this port instead of the configuration's own (a
  *       {@code -WOPort} argument injected into an unsaved working copy; see
  *       {@link LaunchPorts}). Also the default for {@code waitForPort}.</li>
  *   <li>{@code args} — extra program arguments appended the same way.</li>
- *   <li>{@code stopOthers} — {@code true} to stop whatever holds the target port before
- *       launching (the development-shop default: one dev port, the app being worked on
- *       gets it).</li>
+ *   <li>{@code stopOthers} — {@code true} to stop the apps holding the target port and take
+ *       it (see Ports). Not the default: ask the developer first.</li>
  * </ul>
  *
  * <h2>Ports</h2>
  * Development apps share a port by convention (1200 unless the config says otherwise),
  * so launching one while another runs is a clash the frameworks resolve silently — the
  * earlier instance is stopped or evicted, and an external caller only sees an app die.
- * Preflight makes it explicit: if the target port is held, the launch is refused naming
- * the holder, with the two ways out — {@code stopOthers=true} or {@code port=N}.
+ * Preflight decides it without waiting. An app on the port is never stopped unasked: it may
+ * be in use by another agent or the developer. The launch runs on the next free port and
+ * says so ({@code movedFrom}, {@code port}), listing the holders with how long ago each was
+ * last worked on through the dev server. {@code stopOthers=true} takes the port — stopping
+ * the holders, hard-killing one that won't stop — for when the developer has said to;
+ * {@code port=N} runs on a port of the caller's choosing.
  *
  * <h2>Truthfulness</h2>
  * The contract an external caller actually needs is not "Eclipse was asked to launch"
@@ -183,14 +188,16 @@ class LaunchHandler implements DevServerHandler {
 		// ---- Ports: decide the clash explicitly instead of letting the runtimes fight. ----
 
 		final Integer requestedPort = parsePort(params.get("port"));
-		final int targetPort = requestedPort != null ? requestedPort.intValue() : LaunchPorts.portOf(config);
+		int targetPort = requestedPort != null ? requestedPort.intValue() : LaunchPorts.portOf(config);
+		// Another app on the port is never stopped unasked: it may be in use (another agent's, or the developer's). The
+		// launch moves to a free port instead; stopOthers=true takes the port, for when the developer said so.
 		final boolean stopOthers = "true".equalsIgnoreCase(params.get("stopOthers"));
 
 		// A second instance of the same config is only refused when it would land on the
 		// same port; with port=N the caller explicitly wants one alongside.
 		if (requestedPort == null && !"true".equalsIgnoreCase(params.get("allowMultiple")) && findRunningLaunch(config.getName()) != null) {
 			return "{\"launched\":false,\"reason\":\"a launch of \\\"" + DevServerJson.escape(config.getName())
-					+ "\\\" is already running\",\"hint\":\"use /stop or /restart, pass port=N to run a second instance alongside, or allowMultiple=true\"}";
+					+ "\\\" is already running\",\"hint\":\"/restart?app=" + DevServerJson.escape(config.getName()) + " to relaunch it, or pass port=N to run a second instance alongside\"}";
 		}
 
 		// Port decisions apply to launches of THE application (explicit -WOPort, or the
@@ -199,43 +206,34 @@ class LaunchHandler implements DevServerHandler {
 		final boolean applicationLaunch = requestedPort != null || LaunchPorts.isApplicationLaunch(config);
 
 		String stoppedNote = "";
+		// The port the app moves to when its own can't be had; set, the launch gets -WOPort.
+		Integer movedToPort = null;
 		if (applicationLaunch && LaunchPorts.isHeld(targetPort)) {
 			final List<String> holders = LaunchPorts.holdersOf(targetPort);
-			if (!stopOthers) {
-				final String holder = holders.isEmpty()
-						? "a process the dev server doesn't know (not a registered app or an Eclipse launch - see lsof -nP -iTCP:" + targetPort + " -sTCP:LISTEN)"
-						: "\"" + String.join("\", \"", holders) + "\"";
-				return "{\"launched\":false,\"reason\":\"port " + targetPort + " is in use by " + DevServerJson.escape(holder)
-						+ "\",\"port\":" + targetPort + ",\"holders\":" + DevServerJson.stringArray(holders)
-						+ ",\"hint\":\"pass stopOthers=true to stop it and take the port (the usual choice in development), or port=" + (targetPort + 1) + " to run alongside it\"}";
-			}
-			if (holders.isEmpty()) {
-				return "{\"launched\":false,\"reason\":\"port " + targetPort + " is in use by a process the dev server can't stop (not a registered app or an Eclipse launch)\",\"port\":" + targetPort
-						+ ",\"hint\":\"lsof -nP -iTCP:" + targetPort + " -sTCP:LISTEN to find it, or pass port=" + (targetPort + 1) + "\"}";
-			}
-			final StopHandler stopper = new StopHandler();
-			for (final String holder : holders) {
-				final Map<String, String> stopParams = new java.util.HashMap<>();
-				stopParams.put("app", holder);
-				stopper.handle(stopParams);
-			}
-			// Give the stopped instance a moment to actually release the port.
-			final long releaseDeadline = System.currentTimeMillis() + 20_000;
-			while (LaunchPorts.isHeld(targetPort) && System.currentTimeMillis() < releaseDeadline) {
-				Thread.sleep(250);
+			stoppedNote = ",\"holders\":" + holdersJson(holders);
+			if (stopOthers && !holders.isEmpty()) {
+				stopHolders(holders, targetPort);
+				stoppedNote += ",\"stopped\":" + DevServerJson.stringArray(holders);
 			}
 			if (LaunchPorts.isHeld(targetPort)) {
-				return "{\"launched\":false,\"reason\":\"port " + targetPort + " is still in use after stopping " + DevServerJson.escape(String.join(", ", holders))
-						+ "\",\"stopped\":" + DevServerJson.stringArray(holders) + ",\"hint\":\"try /stop?app=NAME&force=true, or port=" + (targetPort + 1) + "\"}";
+				// Held by an app we don't stop unasked, or by one that couldn't be stopped: don't wait
+				// on it and don't refuse - run on the next free port, and say so.
+				final int free = LaunchLiveness.nextFreePort(targetPort, LaunchPorts::isHeld);
+				if (free < 0) {
+					return "{\"launched\":false,\"reason\":\"port " + targetPort + " is held and no free port follows it\",\"hint\":\"lsof -nP -iTCP:" + targetPort + " -sTCP:LISTEN\"}";
+				}
+				stoppedNote += ",\"movedFrom\":" + targetPort + ",\"portNote\":\"" + DevServerJson.escape(movedNote(targetPort, free, holders, stopOthers)) + "\"";
+				targetPort = free;
+				movedToPort = Integer.valueOf(free);
 			}
-			stoppedNote = ",\"stopped\":" + DevServerJson.stringArray(holders);
 		}
 
 		// Extra program arguments go into an unsaved working copy; the saved config is untouched.
 		ILaunchConfiguration toLaunch = config;
 		final StringBuilder extraArguments = new StringBuilder();
-		if (requestedPort != null) {
-			extraArguments.append("-WOPort ").append(requestedPort);
+		final Integer launchPort = movedToPort != null ? movedToPort : requestedPort;
+		if (launchPort != null) {
+			extraArguments.append("-WOPort ").append(launchPort);
 		}
 		if (params.get("args") != null && !params.get("args").isBlank()) {
 			extraArguments.append(extraArguments.length() > 0 ? " " : "").append(params.get("args").trim());
@@ -269,15 +267,94 @@ class LaunchHandler implements DevServerHandler {
 		final String portNote = (applicationLaunch ? ",\"port\":" + targetPort : "") + stoppedNote + openedNote;
 		final String waitForPort = params.get("waitForPort");
 		if (waitForPort != null && !waitForPort.isEmpty()) {
-			return waitJson(config, mode, portNote, launch, dialogsBefore, Integer.parseInt(waitForPort), timeoutSeconds(params));
+			// A moved launch is waited for where it went: the asked-for port answers, but for its holder.
+			final int waitPort = movedToPort != null ? movedToPort.intValue() : Integer.parseInt(waitForPort);
+			return waitJson(config, mode, portNote, launch, dialogsBefore, waitPort, timeoutSeconds(params));
 		}
-		if (requestedPort != null) {
-			// The caller chose the port, so readiness on it is knowable - wait by default.
-			return waitJson(config, mode, portNote, launch, dialogsBefore, requestedPort.intValue(), timeoutSeconds(params));
+		if (launchPort != null) {
+			// The port is chosen (by the caller, or moved), so readiness on it is knowable - wait by default.
+			return waitJson(config, mode, portNote, launch, dialogsBefore, launchPort.intValue(), timeoutSeconds(params));
 		}
 
 		return "{\"launched\":true,\"config\":\"" + DevServerJson.escape(config.getName())
 				+ "\",\"mode\":\"" + mode + "\"" + portNote + "}";
+	}
+
+	/**
+	 * Why the launch moved to another port, for the response: who holds the port, and how to take it.
+	 */
+	static String movedNote(int port, int free, List<String> holders, boolean stopOthers) {
+		final String heldBy = holders.isEmpty() ? "a process the dev server doesn't know"
+				: stopOthers ? "\"" + String.join("\", \"", holders) + "\", which wouldn't stop"
+				: "\"" + String.join("\", \"", holders) + "\"";
+		final String take = holders.isEmpty() || stopOthers ? ""
+				: ". It may be in use (see holders: lastTouchedSeconds); to take the port, ask the developer, then relaunch with stopOthers=true";
+		return "port " + port + " is held by " + heldBy + ", so the app runs on " + free + " - use that port in log/eval/problems URLs" + take;
+	}
+
+	/**
+	 * The apps holding a port, each with how long ago it was last worked on through the dev server (null: not recently).
+	 */
+	static String holdersJson(List<String> holders) {
+		final StringBuilder b = new StringBuilder("[");
+		for (final String holder : holders) {
+			if (b.length() > 1) {
+				b.append(',');
+			}
+			final Long touched = ActivityLog.lastTouchedMillis(namesOf(holder));
+			b.append("{\"name\":\"").append(DevServerJson.escape(holder)).append("\",\"lastTouchedSeconds\":")
+					.append(touched == null ? "null" : String.valueOf((System.currentTimeMillis() - touched) / 1000)).append('}');
+		}
+		return b.append(']').toString();
+	}
+
+	/** A holder's names as requests name it: itself, and its launch config's project. */
+	static List<String> namesOf(String holder) {
+		final List<String> names = new ArrayList<>();
+		names.add(holder);
+		final LaunchConfigs.Resolution resolution = LaunchConfigs.resolve(holder);
+		if (resolution.chosen != null) {
+			names.add(resolution.chosen.getName());
+			names.add(LaunchConfigs.projectNameOf(resolution.chosen));
+		}
+		return names;
+	}
+
+	/**
+	 * Stops the apps holding the port, escalating rather than waiting: a clean stop, a few
+	 * seconds for the port to come free, then a hard kill of any holder that registered a pid
+	 * (a wedged JVM ignores the clean stop), and a few more seconds. Whatever still holds the
+	 * port after that is left alone — the caller moves to another port instead of waiting.
+	 */
+	private static void stopHolders(List<String> holders, int port) throws InterruptedException {
+		final StopHandler stopper = new StopHandler();
+		for (final String holder : holders) {
+			final Map<String, String> stopParams = new java.util.HashMap<>();
+			stopParams.put("app", holder);
+			stopper.handle(stopParams);
+		}
+		if (portReleasedWithin(port, 5_000)) {
+			return;
+		}
+		for (final String holder : holders) {
+			final Map<String, String> stopParams = new java.util.HashMap<>();
+			stopParams.put("app", holder);
+			stopParams.put("force", "true");
+			stopper.handle(stopParams);
+		}
+		portReleasedWithin(port, 3_000);
+	}
+
+	/** Polls until nothing listens on the port, up to the given time; whether it came free. */
+	private static boolean portReleasedWithin(int port, long millis) throws InterruptedException {
+		final long deadline = System.currentTimeMillis() + millis;
+		while (LaunchPorts.isHeld(port)) {
+			if (System.currentTimeMillis() >= deadline) {
+				return false;
+			}
+			Thread.sleep(250);
+		}
+		return true;
 	}
 
 	/**
@@ -445,9 +522,23 @@ class LaunchHandler implements DevServerHandler {
 				return "{" + base + ",\"ready\":true,\"readyPort\":" + port
 						+ ",\"startupMillis\":" + answeredAfter + "}";
 			}
-			if (launch.isTerminated()) {
-				return "{" + base + ",\"ready\":false,\"reason\":\"process terminated during startup\""
+			if (LaunchLiveness.isOver(launch)) {
+				// Over when the process is, even with its debug target lingering: settle the
+				// launch so /status and the Debug view agree, and answer now.
+				LaunchLiveness.settle(launch);
+				return "{" + base + ",\"ready\":false,\"reason\":\"process terminated during startup\"" + consoleTail(launch)
 						+ ",\"hint\":\"see /console?app=" + DevServerJson.escape(config.getName()) + " for the output\"}";
+			}
+			// Neither answering nor saying anything: not starting. Report it with what the app
+			// last said and its threads, instead of waiting out the timeout.
+			final ConsoleBuffer.Buffer console = ConsoleBuffer.forLaunch(launch);
+			final long lastOutput = console != null ? console.lastOutputEpochMillis : 0;
+			if (LaunchLiveness.isStalled(start, lastOutput, System.currentTimeMillis())) {
+				final int[] threads = LaunchLiveness.threadCounts(launch);
+				return "{" + base + ",\"ready\":false,\"reason\":\"stalled: port " + port + " not answering and no output for "
+						+ (LaunchLiveness.STALL_MILLIS / 1000) + "s\",\"suspendedThreads\":" + threads[0] + ",\"threads\":" + threads[1] + consoleTail(launch)
+						+ ",\"hint\":\"" + (threads[0] > 0 ? "threads are suspended - see /threads; " : "")
+						+ "/stop?app=" + DevServerJson.escape(config.getName()) + "&force=true, then launch once more; if it stalls again, report it with /console\"}";
 			}
 			// A dialog that appeared since we launched is, in all likelihood, about this
 			// launch — and nothing will progress until it's answered. Say so, with the
@@ -476,12 +567,34 @@ class LaunchHandler implements DevServerHandler {
 	private static boolean diesWithin(ILaunch launch, long millis) throws InterruptedException {
 		final long until = System.currentTimeMillis() + millis;
 		while (System.currentTimeMillis() < until) {
-			if (launch.isTerminated()) {
+			if (LaunchLiveness.isOver(launch)) {
 				return true;
 			}
 			Thread.sleep(100);
 		}
-		return launch.isTerminated();
+		return LaunchLiveness.isOver(launch);
+	}
+
+	/** The last few lines the launch wrote, as a {@code ,"lastOutput":[…]} member; empty when it wrote nothing. */
+	private static String consoleTail(ILaunch launch) {
+		final ConsoleBuffer.Buffer console = ConsoleBuffer.forLaunch(launch);
+		if (console == null) {
+			return "";
+		}
+		final List<String> lines = lastLines(console.text(), 5);
+		return lines.isEmpty() ? "" : ",\"lastOutput\":" + DevServerJson.stringArray(lines);
+	}
+
+	/** The last {@code count} non-blank lines of the text, oldest first. */
+	static List<String> lastLines(String text, int count) {
+		final List<String> lines = new ArrayList<>();
+		final String[] all = text.split("\\R");
+		for (int i = all.length - 1; i >= 0 && lines.size() < count; i--) {
+			if (!all[i].isBlank()) {
+				lines.add(0, all[i].length() > 300 ? all[i].substring(0, 300) + "…" : all[i]);
+			}
+		}
+		return lines;
 	}
 
 	private static boolean portAnswers(int port) {
@@ -509,7 +622,14 @@ class LaunchHandler implements DevServerHandler {
 	/** A non-terminated launch of the given config, or null. */
 	static ILaunch findRunningLaunch(String configName) {
 		final ILaunch launch = findLaunch(configName);
-		return launch != null && !launch.isTerminated() ? launch : null;
+		if (launch == null) {
+			return null;
+		}
+		if (LaunchLiveness.isOver(launch)) {
+			LaunchLiveness.settle(launch); // a dead JVM's lingering debug target isn't "running"
+			return null;
+		}
+		return launch;
 	}
 
 	private static String listJson(List<ILaunchConfiguration> configs) {

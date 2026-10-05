@@ -46,4 +46,18 @@ public class LaunchHandlerTest {
 		assertEquals("org.eclipse.debug.core", LaunchHandler.DEBUG_CORE_PREFS);
 		assertEquals(LaunchHandler.DEBUG_CORE_PREFS + ".PREF_ENABLE_STATUS_HANDLERS", LaunchHandler.ENABLE_STATUS_HANDLERS);
 	}
+
+	@Test
+	public void aHeldPortIsLeftToItsHolder() {
+		final String note = LaunchHandler.movedNote(1200, 1201, java.util.List.of("OtherApp"), false);
+		assertTrue(note.startsWith("port 1200 is held by \"OtherApp\", so the app runs on 1201"));
+		assertTrue("says how to take it, and to ask first", note.contains("ask the developer, then relaunch with stopOthers=true"));
+	}
+
+	@Test
+	public void anUnknownHolderOrOneThatWouldntStop() {
+		assertEquals("port 1200 is held by a process the dev server doesn't know, so the app runs on 1201 - use that port in log/eval/problems URLs",
+				LaunchHandler.movedNote(1200, 1201, java.util.List.of(), false));
+		assertTrue(LaunchHandler.movedNote(1200, 1201, java.util.List.of("App"), true).contains("\"App\", which wouldn't stop"));
+	}
 }

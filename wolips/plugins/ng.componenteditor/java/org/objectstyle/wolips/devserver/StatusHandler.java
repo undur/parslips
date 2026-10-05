@@ -75,6 +75,10 @@ class StatusHandler implements DevServerHandler {
 
 		final ILaunch launch = LaunchHandler.findRunningLaunch(config.getName());
 		b.append(",\"running\":").append(launch != null);
+		// When someone last worked on the app through the dev server: an app touched a minute ago is in use, and isn't
+		// stopped without asking its owner (null: not recently, as far as the dev server remembers)
+		final Long touched = ActivityLog.lastTouchedMillis(java.util.List.of(config.getName(), projectName));
+		b.append(",\"lastTouchedSeconds\":").append(touched == null ? "null" : String.valueOf((System.currentTimeMillis() - touched) / 1000));
 		if (launch != null) {
 			b.append(",\"mode\":\"").append(DevServerJson.escape(launch.getLaunchMode())).append('"');
 			final ConsoleBuffer.Buffer console = ConsoleBuffer.find(config.getName());

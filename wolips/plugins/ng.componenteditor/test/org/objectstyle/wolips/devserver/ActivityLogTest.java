@@ -1,5 +1,9 @@
 package org.objectstyle.wolips.devserver;
 
+import static org.junit.Assert.assertNotNull;
+
+import static org.junit.Assert.assertNull;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -150,5 +154,33 @@ public class ActivityLogTest {
 		final String page = new WatchHandler().handle(new HashMap<>());
 		assertTrue("watch.html must ship in the bundle", page.startsWith("<!DOCTYPE html>"));
 		assertTrue("the page must poll /activity", page.contains("/activity?since="));
+	}
+
+	@Test
+	public void workOnAProjectTouchesIt() {
+		final java.util.List<String> names = java.util.List.of("OtherApp", "OtherApp - local");
+		assertTrue(ActivityLog.touches("/refreshProject", "project=OtherApp", names));
+		assertTrue(ActivityLog.touches("/validate", "component=Main&project=otherapp", names));
+		assertTrue(ActivityLog.touches("/launch", "config=OtherApp - local&waitForPort=1200", names));
+	}
+
+	@Test
+	public void lookingAroundDoesNotTouch() {
+		final java.util.List<String> names = java.util.List.of("OtherApp");
+		assertFalse("a status check must not make the app look busy", ActivityLog.touches("/status", "app=OtherApp", names));
+		assertFalse(ActivityLog.touches("/console", "app=OtherApp", names));
+		assertFalse("another project's work", ActivityLog.touches("/refreshProject", "project=ng-website", names));
+		assertFalse("a component isn't a project", ActivityLog.touches("/validate", "component=OtherApp", names));
+		assertFalse(ActivityLog.touches("/refreshProject", "", names));
+	}
+
+	@Test
+	public void lastTouchedIsTheNewestWork() {
+		ActivityLog.clear();
+		assertNull(ActivityLog.lastTouchedMillis(java.util.List.of("App")));
+		ActivityLog.record("/refreshProject", "project=App", 200, 1, "ok");
+		ActivityLog.record("/status", "app=Other", 200, 1, "{}");
+		assertNotNull(ActivityLog.lastTouchedMillis(java.util.List.of("App")));
+		assertNull(ActivityLog.lastTouchedMillis(java.util.List.of("Other")));
 	}
 }

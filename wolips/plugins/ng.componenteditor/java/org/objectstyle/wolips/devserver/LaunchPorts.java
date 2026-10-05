@@ -22,7 +22,8 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
  * configs collide: development ports are shared by convention. The frameworks resolve the
  * collision on their own (the earlier instance is stopped, or evicted) — silently, which
  * is exactly what an external caller can't see. So {@code /launch} decides it explicitly:
- * refuse and name the holder, stop the holder first ({@code stopOthers=true}), or run
+ * take the port by stopping its holder (the default), refuse and name the holder
+ * ({@code stopOthers=false}), move to the next free port when it can't be had, or run
  * alongside on another port ({@code port=N}).
  *
  * <p>Running on another port injects the argument into an <b>unsaved working copy</b> of the

@@ -12,6 +12,32 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### `/launch` never waits on a port or a dead app, and never stops an app unasked
+
+Agents waited minutes on launches that were never going to come up. Three causes, three fixes:
+
+- **A dead JVM counted as running.** Eclipse calls a launch terminated only once its process
+  *and* its debug target have ended; a JVM that died while its debug target lingered
+  (`/console`: `state: running  exit: 1`) kept `/launch` waiting its whole timeout and
+  `/status` reporting it up. `LaunchLiveness.isOver` treats a launch as over when its process
+  is: `/launch`'s wait, its ready grace, `/status`, `/console` and `/restart` all use it, and
+  the lingering target is terminated (`settle`).
+- **A stalled start is reported, not waited out.** No port and no output for 15 s means the app
+  isn't starting (apps come up in a second or two, and slow startup work logs). The answer is
+  `ready:false`, `reason: stalled…`, with the last lines the app wrote and its suspended/total
+  thread counts. A dying launch's answer carries its last output too.
+- **A held port is left to its holder.** Another app on the port may be in use (another agent's, or
+  the developer's), so it's never stopped unasked. The launch runs on the next free port instead,
+  reported as `port`, `movedFrom` and a `portNote`. `holders` lists each app on the port with
+  `lastTouchedSeconds`: how long ago it was last worked on through the dev server (refresh,
+  validate, launch, rename… naming the project; reads like `/status` don't count). `/status`
+  reports the same per app. `stopOthers=true` takes the port, for when the developer says so:
+  a holder that ignores the clean stop for 5 s is hard-killed through its registered pid.
+  `waitForPort` follows a moved launch to its port.
+
+A side-port launch (`port=1201`) was checked along the way. It came up in about a second with
+nothing suspended, so the report that side-port launches hang was the dead-JVM case above.
+
 ### Route links complete their parameters
 
 In a route link, `:` offers the route's parameters (`<wo:route to="$routes.book" :|` → `:club`,

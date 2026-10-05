@@ -65,7 +65,11 @@ final class ConsoleBuffer {
 			this.startedEpochMillis = startedEpochMillis;
 		}
 
+		/** When the app last wrote anything (epoch millis), 0 before its first output; for stall detection. */
+		volatile long lastOutputEpochMillis;
+
 		synchronized void append(String s) {
+			lastOutputEpochMillis = System.currentTimeMillis();
 			_text.append(s);
 			if (_text.length() > MAX_CHARS) {
 				_text.delete(0, _text.length() - MAX_CHARS / 2);
@@ -76,8 +80,9 @@ final class ConsoleBuffer {
 			return _text.toString();
 		}
 
+		/** Over when its process is, even while a debug target lingers (see {@link LaunchLiveness}). */
 		boolean isTerminated() {
-			return _launch.isTerminated();
+			return LaunchLiveness.isOver(_launch);
 		}
 
 		/**
@@ -162,6 +167,16 @@ final class ConsoleBuffer {
 		for (final ILaunch launch : DebugPlugin.getDefault().getLaunchManager().getLaunches()) {
 			attach(launch);
 		}
+	}
+
+	/** The buffer capturing this launch, or null when it isn't attached (yet). */
+	static Buffer forLaunch(ILaunch launch) {
+		for (final Buffer buffer : _byConfigName.values()) {
+			if (buffer._launch == launch) {
+				return buffer;
+			}
+		}
+		return null;
 	}
 
 	/**

@@ -1,6 +1,9 @@
 package org.objectstyle.wolips.devserver;
 
 import java.util.ArrayDeque;
+import java.util.Set;
+import java.util.Iterator;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,6 +106,52 @@ final class ActivityLog {
 	/** The seq of the newest entry, 0 when empty — lets a client start tailing "from now". */
 	static synchronized long lastSeq() {
 		return _entries.isEmpty() ? 0 : _entries.getLast().seq;
+	}
+
+	/**
+	 * The requests that mean someone is working on a project: changing it, checking it, running it. Reads that only look
+	 * around ({@code /status}, {@code /apps}, {@code /console} …) don't count — an agent checking who holds a port must
+	 * not make that app look busy.
+	 */
+	private static final Set<String> WORK_PATHS = Set.of("/refreshProject", "/refresh", "/validate", "/revalidate", "/problems", "/launch", "/restart",
+			"/rename", "/quickfix", "/context", "/componentApi", "/keypath", "/find", "/callers", "/openProject", "/createProject");
+
+	/** The parameters that name what a request works on. */
+	private static final List<String> NAME_PARAMS = List.of("project", "app", "config", "name");
+
+	/**
+	 * When any of the names (projects, launch configs, apps — case-insensitive) was last worked on through the dev server,
+	 * in epoch millis; null when it hasn't been, as far as the buffer remembers.
+	 */
+	static synchronized Long lastTouchedMillis(Collection<String> names) {
+		final Iterator<Entry> newestFirst = _entries.descendingIterator();
+		while (newestFirst.hasNext()) {
+			final Entry entry = newestFirst.next();
+			if (touches(entry.path, entry.query, names)) {
+				return entry.time;
+			}
+		}
+		return null;
+	}
+
+	/** Whether a request to the path with the (decoded) query works on any of the names. */
+	static boolean touches(String path, String query, Collection<String> names) {
+		if (!WORK_PATHS.contains(path) || query == null || query.isEmpty()) {
+			return false;
+		}
+		for (final String pair : query.split("&")) {
+			final int equals = pair.indexOf('=');
+			if (equals <= 0 || !NAME_PARAMS.contains(pair.substring(0, equals))) {
+				continue;
+			}
+			final String value = pair.substring(equals + 1);
+			for (final String name : names) {
+				if (name != null && name.equalsIgnoreCase(value)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/** Empties the buffer (seq numbering continues — cursors held by pollers stay valid). */

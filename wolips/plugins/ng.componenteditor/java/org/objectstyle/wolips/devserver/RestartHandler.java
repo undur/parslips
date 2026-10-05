@@ -131,7 +131,7 @@ class RestartHandler implements DevServerHandler {
 		final long deadline = System.currentTimeMillis() + timeoutMillis;
 		while (System.currentTimeMillis() < deadline) {
 			final ILaunch launch = LaunchHandler.findLaunch(configName);
-			if (launch == null || launch.isTerminated()) {
+			if (launch == null || LaunchLiveness.isOver(launch)) {
 				return;
 			}
 			Thread.sleep(250);
