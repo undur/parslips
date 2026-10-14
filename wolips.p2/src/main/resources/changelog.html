@@ -39,6 +39,37 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- October 14, 2026 -->
+			<div class="card">
+				<h2 class="date-header">October 14, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>Route links, understood</h3>
+					<p>wonder-slim 8.1.0 brings routing, and templates link to routes by name: <code>&lt;wo:route to="$routes.book" :book="$book"&gt;</code>. The editor now knows these links as well as it knows any other binding.</p>
+					<ul>
+						<li><strong>Route names complete</strong> after <code>$routes.</code>, and a misspelled one is an error with a <em>did you mean</em> and a quick fix. The constants a template reaches through <code>RouteKeys.of( Routes.class )</code> are resolved like any other key, hop by hop, and <code>/keypath</code> shows them.</li>
+						<li><strong>Typing <code>:</code> offers the route's parameters</strong>, read from your source, with no running app needed: a typed route's record components, or the <code>{placeholders}</code> of the pattern a plain route is mapped under, including those of the groups it's mapped in. Parameters the link already binds aren't offered again.</li>
+						<li><strong>Route links validate clean.</strong> A <code>routes()</code> method inherited from an interface is a key like any other, <code>:id</code> is a route parameter rather than an attribute in an unknown namespace (the formatter keeps its colon), and binding a component to a private field no longer gets a false "can't be set" warning: values are pushed back the way key-value coding does it.</li>
+					</ul>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Launching without stepping on anyone</h3>
+					<p>Development apps share a port, and the app on it is often one somebody else is working on: the developer, or another agent. <strong><code>/launch</code> no longer stops it.</strong> Your app runs on the next free port instead, and the answer says which, listing the app that holds the dev port with how long ago it was last worked on (<code>lastTouchedSeconds</code>, also in <code>/status</code>). Taking the port is the developer's call: <code>stopOthers=true</code>, which stops the holder and kills it if it won't stop.</p>
+					<p>A launch also stops waiting on apps that will never come up. An app whose JVM has died is reported dead at once, even when Eclipse's debugger hasn't noticed yet. An app that neither opens its port nor prints anything for 15 seconds is reported as stalled, with the last lines it printed and its thread state, instead of being waited out.</p>
+					<p>When an app is started outside the dev server, say from Eclipse's Run button, and finds its port taken, ng-objects and wonder-slim now handle it the same way, through one shared stopper: whatever ng or WebObjects app holds the port is asked to stop, and killed if it hangs. A process that isn't an ng or WebObjects app is never touched.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Smaller things</h3>
+					<ul>
+						<li><code>/refreshProject</code> catches a second edit to the same file within a second of the first. Eclipse saw no change and compiled nothing, while the call answered <code>ok</code>.</li>
+						<li>New WebObjects projects reference wonder-slim 8.0.17, where a component created while the app runs is found without a restart.</li>
+						<li><code>/quickfix</code>'s <em>create action</em> generates code that compiles, a component name that several open projects have is refused instead of resolved against the first one, and keypaths of <code>$true</code>, <code>$false</code> and <code>$null</code> no longer make a project-wide rename skip a template.</li>
+					</ul>
+				</div>
+			</div>
+
 			<!-- October 2, 2026 -->
 			<div class="card">
 				<h2 class="date-header">October 2, 2026</h2>
