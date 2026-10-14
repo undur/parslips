@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Bundled copies of ng-objects' element definitions removed
+
+The editor carried copies of ng-appserver's 26 element `.apiext` files and its
+`ng-tag-aliases.properties` (`apiext/ng/`), for projects on ng releases that didn't ship them.
+Every ng-appserver since 0.1.2 ships its `.apiext` files, and since 0.1.3 its tag aliases, and
+the editor finds both on the classpath, so the copies and their two fallbacks
+(`ApiUtils.readBundledApiext`, `ParsleyTagAliasResolver`) are gone. A project on ng 0.1.0 or
+0.1.1 has no ng binding definitions in the editor; one on 0.1.2 has no ng tag aliases. The
+bundled WebObjects definitions (`apiext/*.apiext`) stay.
+
 ### Element `.apiext` files found in ng's namespace components folders
 
 ng-objects keeps an element's `.apiext` with the components, in `ng/<namespace>/components/`

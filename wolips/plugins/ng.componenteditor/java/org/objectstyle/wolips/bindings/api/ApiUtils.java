@@ -190,7 +190,9 @@ public class ApiUtils {
 	 *
 	 * <p>Name resolution mirrors the global XML lookup: the given name is tried first, then
 	 * the simple (unqualified) name (the files are named by short class name, e.g.
-	 * {@code WOString.apiext}), then the NG&rarr;WO bridge ({@code NGFoo} &rarr; {@code WOFoo}).
+	 * {@code WOString.apiext}). These are WebObjects definitions only: an ng element's
+	 * {@code .apiext} ships with ng-objects and is found on the classpath
+	 * ({@link #locateElementApiext}).
 	 *
 	 * @param className the class name to look up (fully-qualified or simple)
 	 * @return the raw {@code .apiext} bytes, or null if there's no bundled file for it
@@ -256,20 +258,8 @@ public class ApiUtils {
 	 * Reads {@code apiext/<name>.apiext} from the plugin bundle, or returns null if the
 	 * entry doesn't exist or can't be read.
 	 */
-	/**
-	 * Reads a bundled {@code .apiext}: the editor's own WebObjects definitions under
-	 * {@code /apiext/}, then the <b>bundled copies of ng-objects' definitions</b> under
-	 * {@code /apiext/ng/}. The latter is a temporary bridge: ng-appserver ships these same files
-	 * in its components folder (found first, via {@link #locateElementApiext}), but projects on an
-	 * ng-appserver release that predates them would otherwise have no binding definitions at all.
-	 * The copies are synced from ng-objects (see {@code apiext/ng/README.md}) and go away once
-	 * an ng-appserver that ships its own is the floor.
-	 */
 	private static byte[] readBundledApiext(Bundle bundle, String name) {
-		URL url = bundle.getEntry("/apiext/" + name + ".apiext");
-		if (url == null) {
-			url = bundle.getEntry("/apiext/ng/" + name + ".apiext");
-		}
+		final URL url = bundle.getEntry("/apiext/" + name + ".apiext");
 		if (url == null) {
 			return null;
 		}
