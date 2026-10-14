@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: ng-objects 0.1.5, wonder-slim 8.1.2
+
+`/createProject` and the New Project wizard generate ng-objects apps on ng 0.1.5 (the template
+was still on 0.1.3) and WebObjects apps on wonder-slim 8.1.2, the releases where an app that
+finds its development port held stops whatever ng or WO app holds it, killing one that hangs.
+
 ### `/launch` never waits on a port or a dead app, and never stops an app unasked
 
 Agents waited minutes on launches that were never going to come up. Three causes, three fixes:
