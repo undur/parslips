@@ -260,7 +260,7 @@ public class ApiUtils {
 	 * Reads a bundled {@code .apiext}: the editor's own WebObjects definitions under
 	 * {@code /apiext/}, then the <b>bundled copies of ng-objects' definitions</b> under
 	 * {@code /apiext/ng/}. The latter is a temporary bridge: ng-appserver ships these same files
-	 * as package resources (found first, via {@link #locateElementApiext}), but projects on an
+	 * in its components folder (found first, via {@link #locateElementApiext}), but projects on an
 	 * ng-appserver release that predates them would otherwise have no binding definitions at all.
 	 * The copies are synced from ng-objects (see {@code apiext/ng/README.md}) and go away once
 	 * an ng-appserver that ships its own is the floor.
@@ -573,17 +573,19 @@ public class ApiUtils {
 
 	/**
 	 * Locates the {@code .apiext} that documents THIS element type — the file the element's own
-	 * framework or project ships, as opposed to the editor's bundled/global definitions. Three
+	 * framework or project ships, as opposed to the editor's bundled/global definitions. Four
 	 * conventions, in order:
 	 * <ol>
-	 *   <li><b>Classpath resource in the element's package</b> — {@code <package path>/<Type>.apiext},
-	 *       the ng-objects convention (ng-appserver ships e.g.
-	 *       {@code ng/appserver/templating/elements/NGString.apiext} in {@code src/main/resources}).
-	 *       Found inside a dependency jar, in a class-folder library, or — for a workspace project —
-	 *       in any of its source folders or its output folder.</li>
+	 *   <li><b>A namespace components folder</b> — {@code ng/<namespace>/components/<Type>.apiext}
+	 *       in the classpath root holding the element's class, the ng-objects convention (ng-appserver
+	 *       ships e.g. {@code ng/ng/components/NGString.apiext}): the files sit with the components,
+	 *       as WebObjects keeps them in {@code Resources/}. See {@link NGComponentsFolders}.</li>
+	 *   <li><b>Classpath resource in the element's package</b> — {@code <package path>/<Type>.apiext}.</li>
 	 *   <li><b>WebObjects framework jar</b> — {@code Resources/<Type>.apiext} inside the jar.</li>
 	 *   <li><b>WebObjects source project</b> — {@code <Type>.apiext} next to the located {@code .api}.</li>
 	 * </ol>
+	 * Each is looked for inside a dependency jar, in a class-folder library, or — for a workspace
+	 * project — in any of its source folders ({@code src/main/resources} included) or its output folder.
 	 */
 	private static ApiextSource locateElementApiext(IType elementType) {
 		if (elementType == null) {
@@ -604,7 +606,11 @@ public class ApiUtils {
 						final IPath rootPath = root.getPath();
 						final File rootFile = rootPath.toFile();
 						if ("jar".equalsIgnoreCase(rootPath.getFileExtension()) && rootFile.isFile()) {
-							// 1) package resource inside the jar, then 2) the WO Resources/ convention
+							// 1) a namespace components folder, 2) the package, 3) the WO Resources/ convention
+							final ApiextSource inNamespace = jarComponentsSource(rootFile, fileName);
+							if (inNamespace != null) {
+								return inNamespace;
+							}
 							final ApiextSource inPackage = jarEntrySource(rootFile, packageEntry);
 							if (inPackage != null) {
 								return inPackage;
@@ -614,12 +620,20 @@ public class ApiUtils {
 						// A class-folder library (a target/classes-style directory on the classpath).
 						final IResource folder = ResourcesPlugin.getWorkspace().getRoot().findMember(rootPath);
 						if (folder != null && folder.getType() == IResource.FOLDER) {
+							final ApiextSource inNamespace = folder.getLocation() == null ? null : diskFileSource(NGComponentsFolders.findInDirectory(folder.getLocation().toFile(), fileName));
+							if (inNamespace != null) {
+								return inNamespace;
+							}
 							final ApiextSource inFolder = workspaceFileSource(((org.eclipse.core.resources.IFolder) folder).getFile(new org.eclipse.core.runtime.Path(packageEntry)));
 							if (inFolder != null) {
 								return inFolder;
 							}
 						}
 						else if (rootFile.isDirectory()) {
+							final ApiextSource inNamespace = diskFileSource(NGComponentsFolders.findInDirectory(rootFile, fileName));
+							if (inNamespace != null) {
+								return inNamespace;
+							}
 							final ApiextSource onDisk = diskFileSource(new File(rootFile, packageEntry));
 							if (onDisk != null) {
 								return onDisk;
@@ -636,11 +650,31 @@ public class ApiUtils {
 				}
 			}
 			else if (typeContainer instanceof ICompilationUnit) {
-				// 1) A package resource in one of the project's source folders (src/main/resources
-				//    included — that's where ng frameworks keep theirs) or in its output folder.
+				// 1) A namespace components folder, then 2) a package resource, in one of the project's
+				//    source folders (src/main/resources included — that's where ng frameworks keep
+				//    theirs) or in its output folder.
 				final IJavaProject javaProject = elementType.getJavaProject();
 				final IPackageFragment pkg = elementType.getPackageFragment();
 				final IPath relative = new org.eclipse.core.runtime.Path(pkg.getElementName().replace('.', '/')).append(fileName);
+				final java.util.List<IPath> roots = new java.util.ArrayList<>();
+				for (final IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
+					if (root.getKind() == IPackageFragmentRoot.K_SOURCE) {
+						roots.add(root.getPath());
+					}
+				}
+				final IPath output = javaProject.getOutputLocation();
+				if (output != null) {
+					roots.add(output);
+				}
+				for (final IPath root : roots) {
+					final IResource folder = ResourcesPlugin.getWorkspace().getRoot().findMember(root);
+					if (folder != null && folder.getLocation() != null) {
+						final ApiextSource inNamespace = diskFileSource(NGComponentsFolders.findInDirectory(folder.getLocation().toFile(), fileName));
+						if (inNamespace != null) {
+							return inNamespace;
+						}
+					}
+				}
 				for (final IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
 					if (root.getKind() != IPackageFragmentRoot.K_SOURCE) {
 						continue;
@@ -650,7 +684,6 @@ public class ApiUtils {
 						return inSource;
 					}
 				}
-				final IPath output = javaProject.getOutputLocation();
 				if (output != null) {
 					final ApiextSource inOutput = workspaceFileSource(ResourcesPlugin.getWorkspace().getRoot().getFile(output.append(relative)));
 					if (inOutput != null) {
@@ -658,7 +691,7 @@ public class ApiUtils {
 					}
 				}
 
-				// 3) WebObjects source project: the .apiext sits next to the located .api.
+				// 4) WebObjects source project: the .apiext sits next to the located .api.
 				final LocalizedComponentsLocateResult locate = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(javaProject.getProject(), elementType.getElementName());
 				final IFile apiFile = locate.getDotApi();
 				if (apiFile != null) {
@@ -670,6 +703,34 @@ public class ApiUtils {
 			// Locating failed — treat as "no .apiext", caller falls back to .api.
 		}
 		return null;
+	}
+
+	/**
+	 * The namespace components folder entries of a jar ({@link NGComponentsFolders#indexEntries}),
+	 * keyed by the jar's path; each value is {@code {jar stamp, index}}, rebuilt when the jar changes.
+	 * Cached because the lookup lists every entry of the jar, and it runs for every element lookup.
+	 */
+	private static final Map<String, Object[]> _jarComponentsIndexes = new java.util.concurrent.ConcurrentHashMap<>();
+
+	/** The {@code .apiext} named {@code fileName} in one of the jar's namespace components folders, or null. */
+	private static ApiextSource jarComponentsSource(File jarOSFile, String fileName) {
+		final String jarPath = jarOSFile.getAbsolutePath();
+		final long stamp = jarOSFile.lastModified();
+		Object[] cached = _jarComponentsIndexes.get(jarPath);
+		if (cached == null || ((Long) cached[0]).longValue() != stamp) {
+			final java.util.List<String> entryNames = new java.util.ArrayList<>();
+			try (JarFile jarFile = new JarFile(jarOSFile)) {
+				jarFile.stream().forEach(entry -> entryNames.add(entry.getName()));
+			}
+			catch (IOException e) {
+				return null;
+			}
+			cached = new Object[] { Long.valueOf(stamp), NGComponentsFolders.indexEntries(entryNames) };
+			_jarComponentsIndexes.put(jarPath, cached);
+		}
+		@SuppressWarnings("unchecked")
+		final String entryName = ((Map<String, String>) cached[1]).get(fileName);
+		return entryName == null ? null : jarEntrySource(jarOSFile, entryName);
 	}
 
 	private static ApiextSource jarEntrySource(File jarOSFile, String entryName) {

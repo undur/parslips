@@ -2,7 +2,7 @@
 
 Everything in this folder is a **verbatim copy** of what ng-appserver ships in its own
 `src/main/resources`: the tag registry (`ng-tag-aliases.properties`) and one `.apiext`
-per framework element (`ng/appserver/templating/elements/**`). ng-objects is the source of
+per framework element (`ng/ng/components/`). ng-objects is the source of
 truth; edit there, then re-sync here with `./sync.sh`.
 
 ## Why the copies exist

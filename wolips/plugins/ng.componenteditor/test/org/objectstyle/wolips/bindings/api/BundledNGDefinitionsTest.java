@@ -33,8 +33,9 @@ public class BundledNGDefinitionsTest {
 		for (final File file : files) {
 			final ApiextModel model = ApiextModel.parse(Files.readAllBytes(file.toPath()));
 			assertNotNull("failed to parse " + file.getName(), model);
-			assertEquals("class attribute must match the file name in " + file.getName(),
-					file.getName().replace(".apiext", ""), model.getClassName());
+			final String className = model.getClassName();
+			assertEquals("the class's simple name must match the file name in " + file.getName(),
+					file.getName().replace(".apiext", ""), className.substring(className.lastIndexOf('.') + 1));
 		}
 	}
 

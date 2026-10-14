@@ -12,6 +12,21 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Element `.apiext` files found in ng's namespace components folders
+
+ng-objects keeps an element's `.apiext` with the components, in `ng/<namespace>/components/`
+(ng-appserver ships `ng/ng/components/NGString.apiext`), just as a WebObjects framework keeps
+its `.api` files in `Resources/`. The editor looked for them only beside the element's class,
+so for ng 0.1.6 it found none there and fell back to its bundled copies. The namespace
+components folder is now the first place looked, in the classpath root holding the element's
+class: a jar (its entries indexed once per jar version), a class folder, or a workspace
+project's source and output folders. Every namespace is searched, since a class doesn't name
+its own; should two hold the same file, the first in name order wins. The package folder,
+`Resources/` and the file beside a source project's `.api` follow, unchanged.
+
+The bundled ng copies (`apiext/ng/`) now sync from `ng/ng/components/` and carry ng's fully
+qualified class names.
+
 ### New-project templates: ng-objects 0.1.5, wonder-slim 8.1.2
 
 `/createProject` and the New Project wizard generate ng-objects apps on ng 0.1.5 (the template
