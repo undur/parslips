@@ -12,6 +12,17 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Templates re-validated when a project's classpath changes
+
+The editor caches what it derives from a project's classpath (tag aliases, element types, tag
+infos) and cleared those caches only when files changed. Right after Eclipse starts, m2e is
+still resolving classpaths while the first builds validate templates, so an ng project could
+cache an empty alias map (`<wo:script>`: "the class for 'script' is either missing…") and keep
+it, and the markers validated from it, until some unrelated file changed. The bundled copy of
+ng's aliases used to paper over this. `ClasspathCacheInvalidator` now listens for JDT classpath
+changes: it clears those caches and re-validates the changed projects' templates in one
+background job, two seconds after the last change of a burst and once the build has finished.
+
 ### A dev server that fails to start releases its port and says why
 
 The dev server binds its port before registering its endpoints and starting. When anything in
