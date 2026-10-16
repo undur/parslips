@@ -72,8 +72,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.variables.ParsleyProject;
@@ -147,14 +145,14 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 			} else if ("groovy".equals(extension)) {
 				if (dotGroovy != null) {
 					String message = "Duplicate located: " + dotGroovy + " " + file;
-					alert(message);
+					report(message);
 					throw new LocateException(message);
 				}
 				dotGroovy = file;
 			} else if ("api".equals(extension)) {
 				if (dotApi != null) {
 					String message = "Duplicate located: " + dotApi + " " + file;
-					alert(message);
+					report(message);
 				} else {
 					dotApi = file;
 				}
@@ -163,12 +161,12 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 				htmlFile = file;
 			} else {
 				String message = "unknown extension on " + file;
-				alert(message);
+				report(message);
 				throw new LocateException(message);
 			}
 		} else {
 			String message = "unsupported type " + resource;
-			alert(message);
+			report(message);
 			throw new LocateException(message);
 		}
 	}
@@ -228,7 +226,7 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 		}
 		if (file != null && dotJava != null) {
 			String message = "Duplicate located: " + dotJava + " " + file;
-			alert(message);
+			report(message);
 			throw new LocateException(message);
 		}
 		if (file != null) {
@@ -236,8 +234,14 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 		}
 	}
 
-	private void alert(final String message) {
-		Display.getDefault().asyncExec(() -> MessageDialog.openError(null, "", message));
+	/**
+	 * Records a locate problem in the error log. Never a dialog: locating runs behind validation,
+	 * completion and the dev server, often off the UI thread, and a modal would block the workbench
+	 * and everything waiting on it, once per lookup. Callers learn of the problem from the
+	 * {@link LocateException} thrown alongside.
+	 */
+	private void report(final String message) {
+		LocatePlugin.getDefault().log(message);
 	}
 
 	// ---- Accessors ----
