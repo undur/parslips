@@ -100,11 +100,16 @@ public final class DevServerManager {
 							+ "server will not run in this instance."));
 			_server = null;
 		}
-		catch (Exception e) {
+		catch (Throwable t) {
 			// Anything other than a port conflict is genuinely unexpected —
-			// log it as an error. We deliberately don't pop a dialog; startup
-			// shouldn't be interrupted by a modal.
-			ComponenteditorPlugin.getDefault().log(e);
+			// log it as an error, Errors included (a LinkageError from a handler
+			// class is as fatal here as any exception). We deliberately don't pop
+			// a dialog; startup shouldn't be interrupted by a modal.
+			ComponenteditorPlugin.getDefault().log(new Status(
+					IStatus.ERROR,
+					ComponenteditorPlugin.PLUGIN_ID,
+					"Parsley dev server failed to start on port " + port,
+					t));
 			_server = null;
 		}
 	}

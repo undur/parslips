@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### A dev server that fails to start releases its port and says why
+
+The dev server binds its port before registering its endpoints and starting. When anything in
+between failed, the port stayed bound with nothing accepting on it: every request hung instead
+of being refused, and restarting from the preference page reported the port as taken by
+"another Eclipse". The failure itself went unlogged when it was an `Error` rather than an
+`Exception`. Now a failed start stops the half-made server, freeing the port, and any
+`Throwable` is logged with its stack trace.
+
 ### Bundled copies of ng-objects' element definitions removed
 
 The editor carried copies of ng-appserver's 26 element `.apiext` files and its

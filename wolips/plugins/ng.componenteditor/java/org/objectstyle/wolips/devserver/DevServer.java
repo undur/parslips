@@ -81,59 +81,68 @@ public class DevServer {
 	public synchronized void start() throws IOException {
 		InetAddress loopback = InetAddress.getLoopbackAddress();
 		_httpServer = HttpServer.create(new InetSocketAddress(loopback, _port), 0);
+		// The port is bound from here on. Should anything below fail, release it: a bound port
+		// that nothing accepts on makes every client hang instead of being refused, and blocks
+		// a restart from the preference page with "port already in use".
+		try {
+			_httpServer.createContext("/openJavaFile", new RequestHandler(new OpenJavaFileHandler()));
+			_httpServer.createContext("/openComponent", new RequestHandler(new OpenComponentHandler()));
+			_httpServer.createContext("/refresh", new RequestHandler(new RefreshHandler()));
+			_httpServer.createContext("/refreshProject", new RequestHandler(new RefreshProjectHandler()));
+			_httpServer.createContext("/validate", new RequestHandler(new ValidateComponentHandler()));
+			_httpServer.createContext("/revalidate", new RequestHandler(new RevalidateHandler()));
+			_httpServer.createContext("/purgeMarkers", new RequestHandler(new PurgeMarkersHandler()));
+			_httpServer.createContext("/elementApi", new RequestHandler(new ElementApiHandler()));
+			_httpServer.createContext("/registerApp", new RequestHandler(new RegisterAppHandler()));
+			_httpServer.createContext("/apps", new RequestHandler(new AppsHandler()));
+			_httpServer.createContext("/launch", new RequestHandler(new LaunchHandler()));
+			_httpServer.createContext("/stop", new RequestHandler(new StopHandler()));
+			_httpServer.createContext("/restart", new RequestHandler(new RestartHandler()));
+			_httpServer.createContext("/status", new RequestHandler(new StatusHandler()));
+			_httpServer.createContext("/problems", new RequestHandler(new ProblemsHandler()));
+			_httpServer.createContext("/console", new RequestHandler(new ConsoleHandler()));
+			_httpServer.createContext("/breakpoints", new RequestHandler(new BreakpointsHandler()));
+			_httpServer.createContext("/openProject", new RequestHandler(new OpenProjectHandler()));
+			_httpServer.createContext("/activity", new RequestHandler(new ActivityHandler()));
+			_httpServer.createContext("/watch", new RequestHandler(new WatchHandler()));
+			_httpServer.createContext("/dialogs", new RequestHandler(new DialogsHandler()));
+			_httpServer.createContext("/createProject", new RequestHandler(new CreateProjectHandler()));
+			_httpServer.createContext("/importProject", new RequestHandler(new ImportProjectHandler()));
+			_httpServer.createContext("/elementRegistry", new RequestHandler(new ElementRegistryHandler()));
+			_httpServer.createContext("/componentApi", new RequestHandler(new ComponentApiHandler()));
+			_httpServer.createContext("/keypath", new RequestHandler(new KeypathHandler()));
+			_httpServer.createContext("/find", new RequestHandler(new FindHandler()));
+			_httpServer.createContext("/callers", new RequestHandler(new CallersHandler()));
+			_httpServer.createContext("/rename", new RequestHandler(new RenameHandler()));
+			_httpServer.createContext("/quickfix", new RequestHandler(new QuickfixHandler()));
+			_httpServer.createContext("/context", new RequestHandler(new ContextHandler()));
+			_httpServer.createContext("/threads", new RequestHandler(new ThreadsHandler()));
+			_httpServer.createContext("/where", new RequestHandler(new WhereHandler()));
+			// "/" catches every otherwise-unmatched path, so the index doubles as the 404:
+			// a typo'd endpoint answers with the list of real ones.
+			_httpServer.createContext("/", new RequestHandler(new IndexHandler()));
 
-		_httpServer.createContext("/openJavaFile", new RequestHandler(new OpenJavaFileHandler()));
-		_httpServer.createContext("/openComponent", new RequestHandler(new OpenComponentHandler()));
-		_httpServer.createContext("/refresh", new RequestHandler(new RefreshHandler()));
-		_httpServer.createContext("/refreshProject", new RequestHandler(new RefreshProjectHandler()));
-		_httpServer.createContext("/validate", new RequestHandler(new ValidateComponentHandler()));
-		_httpServer.createContext("/revalidate", new RequestHandler(new RevalidateHandler()));
-		_httpServer.createContext("/purgeMarkers", new RequestHandler(new PurgeMarkersHandler()));
-		_httpServer.createContext("/elementApi", new RequestHandler(new ElementApiHandler()));
-		_httpServer.createContext("/registerApp", new RequestHandler(new RegisterAppHandler()));
-		_httpServer.createContext("/apps", new RequestHandler(new AppsHandler()));
-		_httpServer.createContext("/launch", new RequestHandler(new LaunchHandler()));
-		_httpServer.createContext("/stop", new RequestHandler(new StopHandler()));
-		_httpServer.createContext("/restart", new RequestHandler(new RestartHandler()));
-		_httpServer.createContext("/status", new RequestHandler(new StatusHandler()));
-		_httpServer.createContext("/problems", new RequestHandler(new ProblemsHandler()));
-		_httpServer.createContext("/console", new RequestHandler(new ConsoleHandler()));
-		_httpServer.createContext("/breakpoints", new RequestHandler(new BreakpointsHandler()));
-		_httpServer.createContext("/openProject", new RequestHandler(new OpenProjectHandler()));
-		_httpServer.createContext("/activity", new RequestHandler(new ActivityHandler()));
-		_httpServer.createContext("/watch", new RequestHandler(new WatchHandler()));
-		_httpServer.createContext("/dialogs", new RequestHandler(new DialogsHandler()));
-		_httpServer.createContext("/createProject", new RequestHandler(new CreateProjectHandler()));
-		_httpServer.createContext("/importProject", new RequestHandler(new ImportProjectHandler()));
-		_httpServer.createContext("/elementRegistry", new RequestHandler(new ElementRegistryHandler()));
-		_httpServer.createContext("/componentApi", new RequestHandler(new ComponentApiHandler()));
-		_httpServer.createContext("/keypath", new RequestHandler(new KeypathHandler()));
-		_httpServer.createContext("/find", new RequestHandler(new FindHandler()));
-		_httpServer.createContext("/callers", new RequestHandler(new CallersHandler()));
-		_httpServer.createContext("/rename", new RequestHandler(new RenameHandler()));
-		_httpServer.createContext("/quickfix", new RequestHandler(new QuickfixHandler()));
-		_httpServer.createContext("/context", new RequestHandler(new ContextHandler()));
-		_httpServer.createContext("/threads", new RequestHandler(new ThreadsHandler()));
-		_httpServer.createContext("/where", new RequestHandler(new WhereHandler()));
-		// "/" catches every otherwise-unmatched path, so the index doubles as the 404:
-		// a typo'd endpoint answers with the list of real ones.
-		_httpServer.createContext("/", new RequestHandler(new IndexHandler()));
+			// Start following launch consoles so /console can serve them (incl. post-mortem).
+			ConsoleBuffer.install();
 
-		// Start following launch consoles so /console can serve them (incl. post-mortem).
-		ConsoleBuffer.install();
+			// Resume the debugger's unasked-for suspensions in dev-server launches (a hang, otherwise).
+			AutoResume.install();
 
-		// Resume the debugger's unasked-for suspensions in dev-server launches (a hang, otherwise).
-		AutoResume.install();
+			// Use a small daemon thread pool. Requests are short-lived (open an
+			// editor, refresh a resource) and arrive one at a time in practice.
+			_httpServer.setExecutor(java.util.concurrent.Executors.newCachedThreadPool(runnable -> {
+				Thread t = new Thread(runnable, "Parsley Dev Server Request");
+				t.setDaemon(true);
+				return t;
+			}));
 
-		// Use a small daemon thread pool. Requests are short-lived (open an
-		// editor, refresh a resource) and arrive one at a time in practice.
-		_httpServer.setExecutor(java.util.concurrent.Executors.newCachedThreadPool(runnable -> {
-			Thread t = new Thread(runnable, "Parsley Dev Server Request");
-			t.setDaemon(true);
-			return t;
-		}));
-
-		_httpServer.start();
+			_httpServer.start();
+		}
+		catch (Throwable t) {
+			_httpServer.stop(0);
+			_httpServer = null;
+			throw t;
+		}
 	}
 
 	public synchronized void stop() {
