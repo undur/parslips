@@ -17,8 +17,10 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 When locating a component's files ran into two Java classes with the same simple name in a
 project (legal Java, e.g. test fixtures in two packages), it opened a modal, untitled "Duplicate
 located" error dialog — from background lookups, once per lookup, stacking them up and blocking
-the workbench and every dev-server call waiting on it. The problem now goes to the error log;
-callers still get the `LocateException` they always handled.
+the workbench and every dev-server call waiting on it. The problem now goes to the error log,
+once per session; callers still get the `LocateException` they always handled. The dev server's
+component endpoints answer such a name with a `reason` naming the clashing files, where they
+returned an internal error.
 
 ### Templates re-validated when a project's classpath changes
 

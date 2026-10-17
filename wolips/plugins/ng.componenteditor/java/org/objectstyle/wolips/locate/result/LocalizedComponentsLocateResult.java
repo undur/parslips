@@ -234,14 +234,19 @@ public class LocalizedComponentsLocateResult extends AbstractLocateResult {
 		}
 	}
 
+	/** Locate problems already recorded this session; the same clash is met on every lookup of its name. */
+	private static final java.util.Set<String> REPORTED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
 	/**
-	 * Records a locate problem in the error log. Never a dialog: locating runs behind validation,
-	 * completion and the dev server, often off the UI thread, and a modal would block the workbench
-	 * and everything waiting on it, once per lookup. Callers learn of the problem from the
-	 * {@link LocateException} thrown alongside.
+	 * Records a locate problem in the error log, once per session. Never a dialog: locating runs
+	 * behind validation, completion and the dev server, often off the UI thread, and a modal would
+	 * block the workbench and everything waiting on it, once per lookup. Callers learn of the
+	 * problem from the {@link LocateException} thrown alongside.
 	 */
 	private void report(final String message) {
-		LocatePlugin.getDefault().log(message);
+		if (REPORTED.add(message)) {
+			LocatePlugin.getDefault().log(message);
+		}
 	}
 
 	// ---- Accessors ----

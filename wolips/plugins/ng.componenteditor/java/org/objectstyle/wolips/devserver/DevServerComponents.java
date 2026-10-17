@@ -5,6 +5,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.objectstyle.wolips.editor.actions.OpenComponentAction;
+import org.objectstyle.wolips.locate.LocateException;
 import org.objectstyle.wolips.locate.LocatePlugin;
 import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.locate.result.LocalizedComponentsLocateResult;
@@ -30,6 +31,22 @@ final class DevServerComponents {
 
 		String projectName() {
 			return javaProject.getProject().getName();
+		}
+	}
+
+	/**
+	 * A project's files for the name can't be told apart: locating them failed, typically because
+	 * two classes in the project share the simple name (legal Java, in different packages).
+	 */
+	static final class LocateFailure extends Exception {
+
+		private static final long serialVersionUID = 1L;
+
+		final String projectName;
+
+		LocateFailure(String projectName, LocateException cause) {
+			super(cause.getMessage(), cause);
+			this.projectName = projectName;
 		}
 	}
 
@@ -83,9 +100,15 @@ final class DevServerComponents {
 	static Found find(String componentName, String projectHint) throws Exception {
 		final IJavaProject hinted = javaProject(projectHint);
 		if (hinted != null) {
-			final ElementDescriptor descriptor = findIn(hinted, componentName);
-			if (descriptor != null) {
-				return new Found(descriptor, hinted);
+			try {
+				final ElementDescriptor descriptor = findIn(hinted, componentName);
+				if (descriptor != null) {
+					return new Found(descriptor, hinted);
+				}
+			}
+			catch (final LocateFailure e) {
+				// notFoundReason says why.
+				return null;
 			}
 		}
 		final java.util.List<Found> candidates = candidates(componentName, hinted);
@@ -100,9 +123,14 @@ final class DevServerComponents {
 			if (javaProject == null || javaProject.equals(except)) {
 				continue;
 			}
-			final ElementDescriptor descriptor = findIn(javaProject, componentName);
-			if (descriptor != null) {
-				found.add(new Found(descriptor, javaProject));
+			try {
+				final ElementDescriptor descriptor = findIn(javaProject, componentName);
+				if (descriptor != null) {
+					found.add(new Found(descriptor, javaProject));
+				}
+			}
+			catch (final LocateFailure e) {
+				// A project whose files for the name can't be told apart isn't a candidate.
 			}
 		}
 		return found;
@@ -114,16 +142,21 @@ final class DevServerComponents {
 	 * also finds a template-only component — one with no class of its own.
 	 */
 	private static ElementDescriptor findIn(IJavaProject javaProject, String componentName) throws Exception {
-		final ElementDescriptor viaType = OpenComponentAction.descriptorForComponent(javaProject, componentName);
-		if (viaType != null && viaType.hasTemplate()) {
+		try {
+			final ElementDescriptor viaType = OpenComponentAction.descriptorForComponent(javaProject, componentName);
+			if (viaType != null && viaType.hasTemplate()) {
+				return viaType;
+			}
+			final String simpleName = componentName.substring(componentName.lastIndexOf('.') + 1);
+			final LocalizedComponentsLocateResult located = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(javaProject.getProject(), simpleName);
+			if (located != null && located.getFirstHtmlFile() != null) {
+				return ElementDescriptor.fromLocateResult(located, javaProject.getProject());
+			}
 			return viaType;
 		}
-		final String simpleName = componentName.substring(componentName.lastIndexOf('.') + 1);
-		final LocalizedComponentsLocateResult located = LocatePlugin.getDefault().getLocalizedComponentsLocateResult(javaProject.getProject(), simpleName);
-		if (located != null && located.getFirstHtmlFile() != null) {
-			return ElementDescriptor.fromLocateResult(located, javaProject.getProject());
+		catch (final LocateException e) {
+			throw new LocateFailure(javaProject.getProject().getName(), e);
 		}
-		return viaType;
 	}
 
 	/**
@@ -131,6 +164,10 @@ final class DevServerComponents {
 	 * project, fix the project name, fix the component name), so they are told apart.
 	 */
 	static String notFoundReason(String componentName, String projectHint) {
+		final LocateFailure failure = locateFailure(componentName, projectHint);
+		if (failure != null) {
+			return locateFailureReason(componentName, failure.projectName, failure.getMessage());
+		}
 		try {
 			final java.util.List<Found> candidates = candidates(componentName, javaProject(projectHint));
 			if (candidates.size() > 1) {
@@ -152,6 +189,41 @@ final class DevServerComponents {
 			return "no component named '" + componentName + "' in project '" + projectHint + "' or any other open project";
 		}
 		return "no component named '" + componentName + "' in any open project; its project may be closed (see /status) or the name misspelled";
+	}
+
+	/** The refusal for a name whose files can't be told apart in a project. */
+	static String locateFailureReason(String componentName, String projectName, String detail) {
+		return "the files for '" + componentName + "' in project '" + projectName + "' can't be told apart (" + detail
+				+ "); components are located by simple name, so two classes sharing it in one project make it ambiguous";
+	}
+
+	/** Why locating the name failed in the hinted project, or else in any open project; null when it didn't. */
+	private static LocateFailure locateFailure(String componentName, String projectHint) {
+		final java.util.List<IJavaProject> projects = new java.util.ArrayList<>();
+		final IJavaProject hinted = javaProject(projectHint);
+		if (hinted != null) {
+			projects.add(hinted);
+		}
+		else {
+			for (final IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
+				final IJavaProject javaProject = javaProject(project.getName());
+				if (javaProject != null) {
+					projects.add(javaProject);
+				}
+			}
+		}
+		for (final IJavaProject javaProject : projects) {
+			try {
+				findIn(javaProject, componentName);
+			}
+			catch (final LocateFailure e) {
+				return e;
+			}
+			catch (final Exception e) {
+				// Not a locate failure; the plain reasons cover it.
+			}
+		}
+		return null;
 	}
 
 	/** A component's files as JSON: workspace paths, absent ones omitted. */
