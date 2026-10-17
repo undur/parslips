@@ -468,6 +468,9 @@ public class ApiUtils {
 			}
 
 			return snapshot;
+		} catch (org.objectstyle.wolips.locate.LocateException e) {
+			// The component's files couldn't be told apart; already in the error log, once per session.
+			return null;
 		} catch (Throwable t) {
 			Activator.getDefault().log("Failed to parse API for " + elementType.getElementName() + ".", t);
 			return null;

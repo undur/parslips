@@ -165,7 +165,11 @@ public class ElementDescriptor {
 			}
 			return fromLocateResult(result, file.getProject());
 		}
-		catch (CoreException | LocateException e) {
+		catch (LocateException e) {
+			// Already in the error log, once per session (LocalizedComponentsLocateResult.report).
+			return null;
+		}
+		catch (CoreException e) {
 			LocatePlugin.getDefault().log(e);
 			return null;
 		}
