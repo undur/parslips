@@ -12,6 +12,16 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### The dev server survives an Eclipse restart on macOS
+
+After restarting Eclipse on macOS (File → Restart, or a restart after installing updates), the
+dev server could be dead for the whole session: requests to port 9485 hung, and its own start
+reported the port "already in use". The macOS launcher restarts Eclipse by fork + exec from
+the same process, so the new Eclipse inherited the old dev server's listening socket, which
+nothing accepted on. The dev server is now stopped when the plug-in stops, before the launcher
+restarts. And a port that's held at startup (an Eclipse quit just before this one, still
+shutting down) is tried again every two seconds for a minute, instead of given up on at once.
+
 ### Locating a component never opens a dialog
 
 When locating a component's files ran into two Java classes with the same simple name in a

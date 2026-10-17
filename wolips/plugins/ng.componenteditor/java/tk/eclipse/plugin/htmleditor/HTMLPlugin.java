@@ -278,6 +278,9 @@ public class HTMLPlugin extends AbstractUIPlugin {
 	 */
 	@Override
   public void stop(BundleContext context) throws Exception {
+		// Close the dev server's socket before Eclipse exits: on macOS the launcher restarts Eclipse
+		// by fork + exec, and the new Eclipse would inherit a port nothing accepts on.
+		org.objectstyle.wolips.devserver.DevServerManager.getDefault().stop();
 		EmptyWoFolderCleaner.uninstall();
 		org.objectstyle.wolips.wodclipse.core.completion.ClasspathCacheInvalidator.uninstall();
 		org.objectstyle.wolips.editor.component.JavaChangeRevalidator.uninstall();

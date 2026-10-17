@@ -2,8 +2,10 @@ package org.objectstyle.wolips.devserver;
 
 import java.net.BindException;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 
@@ -27,7 +29,27 @@ public final class DevServerManager {
 		return INSTANCE;
 	}
 
+	/** How often, and for how long, a port held by someone else is tried again. */
+	static final long PORT_RETRY_INTERVAL_MILLIS = 2000;
+	static final long PORT_RETRY_WINDOW_MILLIS = 60_000;
+
 	private DevServer _server;
+
+	/** When the current run of port retries gives up; 0 when not retrying. */
+	private long _retryDeadline;
+
+	/**
+	 * Tries the port again while it's held. An Eclipse that was quit just before this one started
+	 * may still be shutting down, and releases the port within seconds; giving up at the first
+	 * refusal left the new Eclipse without a dev server for its whole session.
+	 */
+	private final Job _retryJob = new Job("Parsley dev server: waiting for its port") {
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			startIfEnabled();
+			return Status.OK_STATUS;
+		}
+	};
 
 	private DevServerManager() {
 	}
@@ -43,6 +65,7 @@ public final class DevServerManager {
 	 */
 	public synchronized void startIfEnabled() {
 		if (!prefs().getBoolean(DevServerPreferences.SERVER_ENABLED)) {
+			_retryDeadline = 0;
 			return;
 		}
 		if (_server != null && _server.isRunning()) {
@@ -61,7 +84,15 @@ public final class DevServerManager {
 		startIfEnabled();
 	}
 
+	/**
+	 * Stops the server and any pending retries. Called when the plug-in stops, which on shutdown
+	 * comes before the launcher exits or restarts: on macOS the launcher restarts Eclipse by
+	 * fork + exec from the same process, so a listening socket still open at that point is
+	 * inherited by the new Eclipse, which then holds the port with nothing accepting on it.
+	 */
 	public synchronized void stop() {
+		_retryDeadline = 0;
+		_retryJob.cancel();
 		if (_server != null) {
 			_server.stop();
 			_server = null;
@@ -82,23 +113,29 @@ public final class DevServerManager {
 		try {
 			server.start();
 			_server = server;
+			_retryDeadline = 0;
 		}
 		catch (BindException e) {
-			// The port is already in use — almost always a second Eclipse
-			// with Parsley already running (the dev server is on by default,
-			// so this is a routine, expected situation for anyone who keeps
-			// more than one window open). The first instance owns the port
-			// and is the one the runtime talks to anyway, so there's nothing
-			// to fix here. Log a calm INFO note rather than an alarming error
-			// with a stack trace, and carry on — the feature is simply
-			// unavailable in this instance.
+			_server = null;
+			final long now = System.currentTimeMillis();
+			if (_retryDeadline == 0) {
+				_retryDeadline = now + PORT_RETRY_WINDOW_MILLIS;
+			}
+			if (now < _retryDeadline) {
+				_retryJob.setSystem(true);
+				_retryJob.schedule(PORT_RETRY_INTERVAL_MILLIS);
+				return;
+			}
+			_retryDeadline = 0;
+			// Still held after the retries: usually a second Eclipse with Parslips running, which
+			// owns the port and is the one apps talk to. A routine situation, so a calm INFO note
+			// rather than an error with a stack trace; the feature is simply unavailable here.
 			ComponenteditorPlugin.getDefault().log(new Status(
 					IStatus.INFO,
 					ComponenteditorPlugin.PLUGIN_ID,
-					"Parsley dev server: port " + port + " is already in use "
-							+ "(another Eclipse instance likely owns it). The dev "
-							+ "server will not run in this instance."));
-			_server = null;
+					"Parsley dev server: port " + port + " is held by another process (usually another Eclipse "
+							+ "running Parslips), so the dev server won't run in this instance. Once the port is free, "
+							+ "apply the Dev Server preferences to start it."));
 		}
 		catch (Throwable t) {
 			// Anything other than a port conflict is genuinely unexpected —
