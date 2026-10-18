@@ -71,6 +71,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.objectstyle.wolips.bindings.api.ApiCompanion;
 import org.objectstyle.wolips.bindings.api.ApiextGenerator;
 import org.objectstyle.wolips.bindings.api.ApiextGenerator.FoundBinding;
+import org.objectstyle.wolips.bindings.api.ApiParser;
+import org.objectstyle.wolips.bindings.api.ApiToApiext;
 import org.objectstyle.wolips.bindings.api.MutableApiextModel;
 import org.objectstyle.wolips.bindings.utils.BindingReflectionUtils;
 import org.objectstyle.wolips.bindings.wod.BindingValueKey;
@@ -82,7 +84,9 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
  * "Generate API": writes a component's {@code .apiext} from its class — a binding for every key
  * the parent can set into it, typed, and pushed back as well when the component synchronizes its
  * variables with its bindings. An existing {@code .apiext} keeps everything it has; only bindings
- * it lacks are added. Saving it writes the WebObjects {@code .api} too, for a WebObjects component
+ * it lacks are added. A first {@code .apiext} starts from the component's hand-written {@code .api}
+ * when it has one ({@link ApiToApiext}), unless a rule there has no {@code .apiext} form: then
+ * nothing is written, rather than lose the rule. Saving it writes the WebObjects {@code .api} too, for a WebObjects component
  * ({@link ApiCompanion}).
  *
  * <p>Offered on a bundle template's {@code .wo} folder and on a standalone template's {@code .html};
@@ -128,10 +132,22 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 			final IFile apiextFile = apiFolder(template).getFile(new org.eclipse.core.runtime.Path(componentName + ".apiext"));
 			final boolean existed = apiextFile.exists();
 			final MutableApiextModel model = new MutableApiextModel(apiextFile);
+			final List<FoundBinding> found = foundBindings(cache.getJavaProject(), componentType);
+			String from = "";
 			if (!existed) {
 				model.className = componentType.getFullyQualifiedName();
+				// A first .apiext starts from the component's hand-written .api, if it has one.
+				final IFile apiFile = ApiCompanion.apiFileFor(apiextFile);
+				if (apiFile.exists() && apiFile.getLocation() != null) {
+					final List<String> untranslatable = ApiToApiext.seed(model, ApiParser.parseFile(apiFile.getLocation().toFile()), found);
+					if (!untranslatable.isEmpty()) {
+						return componentName + ": not generated. " + apiFile.getName() + " has rules with no .apiext form, which would be lost: \"" + String.join("\", \"", untranslatable)
+								+ "\". Write " + apiextFile.getName() + " by hand, carrying them over as you see fit.";
+					}
+					from = " from " + apiFile.getName();
+				}
 			}
-			final List<String> added = ApiextGenerator.addMissing(model, foundBindings(cache.getJavaProject(), componentType));
+			final List<String> added = ApiextGenerator.addMissing(model, found);
 			if (!existed || !added.isEmpty()) {
 				model.saveChanges();
 			}
@@ -139,8 +155,11 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 				return componentName + ": " + apiextFile.getName() + " already has every binding.";
 			}
 			final String files = ApiCompanion.isWebObjects(apiextFile, model.className) ? apiextFile.getName() + " and " + ApiCompanion.apiFileFor(apiextFile).getName() : apiextFile.getName();
-			final String bindings = added.isEmpty() ? "no bindings (the class has no keys a parent can set)" : String.join(", ", added);
-			return componentName + ": " + (existed ? "added to " : "wrote ") + files + ": " + bindings + ".";
+			final List<String> names = model.bindings.stream().map(b -> b.name).toList();
+			if (existed) {
+				return componentName + ": added to " + files + ": " + String.join(", ", added) + ".";
+			}
+			return componentName + ": wrote " + files + from + ": " + (names.isEmpty() ? "no bindings (the class has no keys a parent can set)" : String.join(", ", names)) + ".";
 		}
 		catch (Exception e) {
 			WodclipsePlugin.getDefault().log(e);

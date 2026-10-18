@@ -30,6 +30,16 @@ the component, with its type, and the push direction as well when the component 
 variables with its bindings. An existing `.apiext` keeps everything it has; only missing
 bindings are added. It reports what it did, where it used to fail silently into the log.
 
+A component's first `.apiext` starts from its hand-written `.api` when it has one
+(`ApiToApiext`), so what was written there carries over rather than being overwritten by the
+generated `.api`: bindings with their `defaults` presets, required and must-be-settable
+bindings, content, and the validation rules that have a typed form (at least / at most /
+exactly N of, any-of alternatives, "requires … when …", "must not be a constant"). A rule with
+no `.apiext` form stops the conversion and is named, rather than being dropped. Across
+wonder-slim's 107 `.api` files, 106 convert; AjaxTree's "(a and b) or c" rule doesn't, since an
+`.apiext` alternative is a binding or an any-of group, never an all-of group. The generated
+`.api` writes "must be settable" as a single `<unsettable>`, the form WebObjects tools read.
+
 ### The dev server survives an Eclipse restart on macOS
 
 After restarting Eclipse on macOS (File → Restart, or a restart after installing updates), the

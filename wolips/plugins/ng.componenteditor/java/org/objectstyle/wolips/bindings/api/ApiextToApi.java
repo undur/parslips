@@ -19,7 +19,8 @@ import org.objectstyle.wolips.bindings.api.ApiextModel.Requires;
  *   <li>{@code wocomponentcontent}: true unless content is forbidden or undeclared;</li>
  *   <li>validation rules, each describing a <em>violation</em> (an {@code .api} rule fires when all
  *       its conditions hold): a required binding that's unbound; a binding the element pushes to
- *       that's bound to something unsettable; a {@code <requires>} whose antecedent holds while its
+ *       that's bound to something unsettable (a single {@code <unsettable>}, the form WebObjects
+ *       tools read as "will set"; it's false for an unbound binding); a {@code <requires>} whose antecedent holds while its
  *       consequent doesn't meet the obligation; a {@code <choose>} whose count of satisfied
  *       alternatives is outside its bounds.</li>
  * </ul>
@@ -48,7 +49,7 @@ public final class ApiextToApi {
 				validations.add(rule("'" + binding.getName() + "' is a required binding.", unbound(binding.getName())));
 			}
 			if (!binding.getPushTypes().isEmpty() && !hasUnconditionalSettable(apiext, binding.getName())) {
-				validations.add(rule("'" + binding.getName() + "' must be bound to a settable value.", bound(binding.getName()), leaf(ApiValidation.Kind.UNSETTABLE, binding.getName())));
+				validations.add(rule("'" + binding.getName() + "' must be bound to a settable value.", leaf(ApiValidation.Kind.UNSETTABLE, binding.getName())));
 			}
 		}
 
@@ -112,14 +113,8 @@ public final class ApiextToApi {
 		final String binding = requires.getBinding();
 		switch (requires.getMust()) {
 			case BOUND -> conditions.add(unbound(binding));
-			case SETTABLE -> {
-				conditions.add(bound(binding));
-				conditions.add(leaf(ApiValidation.Kind.UNSETTABLE, binding));
-			}
-			case GETTABLE -> {
-				conditions.add(bound(binding));
-				conditions.add(leaf(ApiValidation.Kind.UNGETTABLE, binding));
-			}
+			case SETTABLE -> conditions.add(leaf(ApiValidation.Kind.UNSETTABLE, binding));
+			case GETTABLE -> conditions.add(leaf(ApiValidation.Kind.UNGETTABLE, binding));
 		}
 		return conditions.size() == 1 ? conditions.get(0) : composite(ApiValidation.Kind.AND, conditions);
 	}
