@@ -283,12 +283,12 @@ public class WOProjectCreator {
 					\t\t<dependency>
 					\t\t\t<groupId>is.rebbi.ng</groupId>
 					\t\t\t<artifactId>ng-appserver</artifactId>
-					\t\t\t<version>0.1.5</version>
+					\t\t\t<version>0.1.6</version>
 					\t\t</dependency>
 					\t\t<dependency>
 					\t\t\t<groupId>is.rebbi.ng</groupId>
 					\t\t\t<artifactId>ng-adaptor-jetty</artifactId>
-					\t\t\t<version>0.1.5</version>
+					\t\t\t<version>0.1.6</version>
 					\t\t</dependency>
 					\t\t<dependency>
 					\t\t\t<groupId>org.slf4j</groupId>

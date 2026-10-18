@@ -119,12 +119,12 @@ its own; should two hold the same file, the first in name order wins. The packag
 The bundled ng copies (`apiext/ng/`) now sync from `ng/ng/components/` and carry ng's fully
 qualified class names.
 
-### New-project templates: ng-objects 0.1.5, wonder-slim 8.1.2
+### New-project templates: ng-objects 0.1.6, wonder-slim 8.1.2
 
-`/createProject` and the New Project wizard generate ng-objects apps on ng 0.1.5 (the template
-was still on 0.1.3) and WebObjects apps on wonder-slim 8.1.2, the releases where an app that
-finds its development port held stops whatever ng or WO app holds it, killing one that hangs.
-
+`/createProject` and the New Project wizard generate ng-objects apps on ng 0.1.6 (the template
+was still on 0.1.3) and WebObjects apps on wonder-slim 8.1.2. Both stop whatever ng or WO app
+holds their development port, killing one that hangs (since ng 0.1.5); ng 0.1.6 also ships its
+elements' `.apiext` files in `ng/ng/components/`, where the editor reads them.
 ### `/launch` never waits on a port or a dead app, and never stops an app unasked
 
 Agents waited minutes on launches that were never going to come up. Three causes, three fixes:

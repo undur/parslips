@@ -39,6 +39,41 @@
 				<p class="tagline">What's new in Parsley Template Editor</p>
 			</div>
 
+			<!-- October 18, 2026 -->
+			<div class="card">
+				<h2 class="date-header">October 18, 2026</h2>
+
+				<div class="changelog-entry">
+					<h3>One API format: <code>.apiext</code></h3>
+					<p>An element's API (its bindings, their types and directions, what's required, which combinations are allowed) now lives in one place: its <code>.apiext</code>. Everything else is written from that file or falls back to something older.</p>
+					<ul>
+						<li><strong>The component editor's API tab edits the <code>.apiext</code>.</strong> A component that doesn't have one yet gets a <em>Generate API</em> button, not an empty editor.</li>
+						<li><strong><em>Generate API</em> writes the <code>.apiext</code></strong> from the component's class: a binding for every key a parent can set, with its type, and the push direction too when the component synchronizes its bindings. It works on standalone templates as well as <code>.wo</code> folders, reports what it did, and never touches a binding the file already has.</li>
+						<li><strong>A hand-written <code>.api</code> carries over.</strong> A component's first <code>.apiext</code> starts from its <code>.api</code>: bindings, <code>defaults</code> presets, required and must-be-settable bindings, and the validation rules, as typed constraints. Of wonder-slim's 107 <code>.api</code> files, 106 convert completely. A rule with no <code>.apiext</code> form stops the conversion and is named, rather than being dropped.</li>
+						<li><strong>WebObjects tools keep their <code>.api</code>.</strong> Saving the <code>.apiext</code> of a WebObjects element writes the <code>.api</code> beside it: bindings, presets, and validation rules for required bindings, settable ones and the constraints, with the messages the editor shows. ng elements get none, since ng-objects doesn't read <code>.api</code>.</li>
+						<li><strong>ng's own element definitions come from ng.</strong> ng 0.1.6 ships its elements' <code>.apiext</code> files alongside its components, the way WebObjects keeps <code>.api</code> files in <code>Resources/</code>, and the editor reads them there. The copies the editor used to bundle are gone, so docs and bindings always match the ng version a project uses.</li>
+					</ul>
+					<p>The old <code>.api</code> form editor is gone. An element with only an <code>.api</code> still validates and completes from it, so nothing has to be converted before it works.</p>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>A dev server that's there after every start</h3>
+					<ul>
+						<li><strong>Restarting Eclipse on macOS no longer leaves the dev server dead.</strong> After a restart (File → Restart, or the restart Eclipse offers after installing updates), requests to the dev server hung for the whole session. The macOS launcher starts the new Eclipse from the old one's process, and the new one inherited a port nothing listened on. The dev server now shuts down with Eclipse.</li>
+						<li><strong>A port that's still taken at startup is tried again</strong> for a minute, so an Eclipse that was quit just before doesn't leave the new one without a dev server. A server that can't start frees its port and logs why.</li>
+						<li><strong>Template problems are right from the first build.</strong> While Maven was still resolving classpaths at startup, ng projects could be validated without their tag aliases, and errors like "the class for 'script' is either missing" stayed until a file changed. Templates are now re-validated when a project's classpath changes.</li>
+						<li><strong>No more "Duplicate located" dialogs.</strong> Two classes with the same name in one project (legal Java, in different packages) opened an error dialog on every lookup, which also blocked agents. That now goes to the log, once, and the dev server explains the ambiguity instead of failing.</li>
+					</ul>
+				</div>
+
+				<div class="changelog-entry">
+					<h3>Smaller things</h3>
+					<ul>
+						<li>New ng-objects projects use ng 0.1.6; WebObjects projects keep wonder-slim 8.1.2.</li>
+					</ul>
+				</div>
+			</div>
+
 			<!-- October 14, 2026 -->
 			<div class="card">
 				<h2 class="date-header">October 14, 2026</h2>
