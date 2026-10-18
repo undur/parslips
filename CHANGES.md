@@ -12,6 +12,24 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### WebObjects `.api` files follow their `.apiext`; "Generate API" writes `.apiext`
+
+Saving an `.apiext` for a WebObjects element or component now also writes the `.api` beside it:
+the part of the `.apiext` the `.api` format can carry, for the tools that read only `.api`
+(`ApiextToApi`, `ApiCompanion`). That's the bindings with their `defaults` preset,
+`wocomponentcontent`, and validation rules: required bindings, bindings the element pushes to
+(which must be settable), and `<choose>`/`<requires>` constraints, with the messages the editor
+shows. Types, docs, deprecation, literal defaults and the unknown-attributes policy stay in the
+`.apiext`. The `.api` says in a header comment that it's generated, and it's rewritten on every
+save. ng-objects never reads `.api`, so an ng element's `.apiext` gets none: the class the
+`.apiext` names decides (`WOElement` or `NGElement`), else where the file lives.
+
+"Generate API" (on a `.wo` folder, and now on a standalone `.html` template too) writes the
+component's `.apiext` instead of an untyped `.api`: a binding for every key a parent can set into
+the component, with its type, and the push direction as well when the component synchronizes its
+variables with its bindings. An existing `.apiext` keeps everything it has; only missing
+bindings are added. It reports what it did, where it used to fail silently into the log.
+
 ### The dev server survives an Eclipse restart on macOS
 
 After restarting Eclipse on macOS (File → Restart, or a restart after installing updates), the

@@ -551,7 +551,18 @@
                enablesFor="*"
                icon="icons/parsley16.png"
                id="ng.componenteditor.generateAPIActionForWO"
-               label="Generate API File"
+               label="Generate API"
+               menubarPath="additions"/>
+      </objectContribution>
+      <objectContribution adaptable="false"
+            id="ng.componenteditor.generateAPI.htmlContribution"
+            nameFilter="*.html"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action class="org.objectstyle.wolips.wodclipse.action.GenerateAPIAction"
+               enablesFor="*"
+               icon="icons/parsley16.png"
+               id="ng.componenteditor.generateAPIActionForHTML"
+               label="Generate API"
                menubarPath="additions"/>
       </objectContribution>
       <objectContribution adaptable="false"

@@ -42,7 +42,22 @@ public final class ApiSerializer {
 	 * @throws IOException if writing fails
 	 */
 	public static void serialize(ApiSnapshot snapshot, Writer writer) throws IOException {
+		serialize(snapshot, null, writer);
+	}
+
+	/**
+	 * Serializes an {@link ApiSnapshot} with an XML comment after the declaration — e.g. the note
+	 * that a file is generated, and from what.
+	 *
+	 * @param comment the comment's text, or null for none; must not contain {@code --}
+	 */
+	public static void serialize(ApiSnapshot snapshot, String comment, Writer writer) throws IOException {
 		writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n");
+		if (comment != null && !comment.isEmpty()) {
+			writer.write("<!-- ");
+			writer.write(comment.replace("--", "- -"));
+			writer.write(" -->\n");
+		}
 		writer.write("<wodefinitions>\n");
 		serializeWo(snapshot, writer);
 		writer.write("</wodefinitions>\n");

@@ -257,6 +257,14 @@ public class MutableApiextModel {
 				catch (CoreException e) {
 					// non-fatal — the file was already written
 				}
+				// A WebObjects element's .api follows its .apiext. Failing to write it doesn't undo the
+				// .apiext save, so it's logged rather than thrown.
+				try {
+					ApiCompanion.writeIfWebObjects(_eclipseFile, toImmutable());
+				}
+				catch (IOException | RuntimeException e) {
+					org.objectstyle.wolips.bindings.Activator.getDefault().log("Failed to write the .api file for " + _eclipseFile.getName() + ".", e);
+				}
 			}
 			_dirty = false;
 		}
