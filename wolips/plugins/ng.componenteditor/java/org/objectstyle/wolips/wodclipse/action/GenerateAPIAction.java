@@ -52,6 +52,7 @@ package org.objectstyle.wolips.wodclipse.action;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IField;
@@ -85,7 +86,8 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
  * ({@link ApiCompanion}).
  *
  * <p>Offered on a bundle template's {@code .wo} folder and on a standalone template's {@code .html};
- * the {@code .apiext} goes beside it, named after the component, where the editor looks for it.
+ * the {@code .apiext} goes beside it (beside its {@code .lproj} folder, for a localized template),
+ * named after the component, where the editor looks for it.
  */
 public class GenerateAPIAction implements IObjectActionDelegate {
 	private ISelection _selection;
@@ -123,7 +125,7 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 			if (componentType == null) {
 				return componentName + ": no Java class found, so there is nothing to generate the API from.";
 			}
-			final IFile apiextFile = template.getParent().getFile(new org.eclipse.core.runtime.Path(componentName + ".apiext"));
+			final IFile apiextFile = apiFolder(template).getFile(new org.eclipse.core.runtime.Path(componentName + ".apiext"));
 			final boolean existed = apiextFile.exists();
 			final MutableApiextModel model = new MutableApiextModel(apiextFile);
 			if (!existed) {
@@ -146,6 +148,16 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 		}
 	}
 
+	/**
+	 * Where a component's API files go: beside its template, or beside the {@code .lproj} folder
+	 * when the template is localized. API files describe the component, not one localization of it,
+	 * so WebObjects projects keep them in the components folder itself.
+	 */
+	private static IContainer apiFolder(IResource template) {
+		final IContainer parent = template.getParent();
+		return "lproj".equals(parent.getFileExtension()) ? parent.getParent() : parent;
+	}
+
 	/** The component's name: the {@code .wo} folder's or the {@code .html} file's, without extension. */
 	private static String componentName(IResource template) {
 		final String name = template.getName();
@@ -159,7 +171,8 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 		final boolean pushesBack = BindingReflectionUtils.isWebObjectsComponent(componentType, typeCache) && Boolean.TRUE.equals(BindingReflectionUtils.synchronizesVariablesWithBindings(componentType));
 		final List<FoundBinding> found = new ArrayList<>();
 		for (final BindingValueKey key : BindingReflectionUtils.getBindingKeys(javaProject, componentType, "", false, BindingReflectionUtils.MUTATORS_ONLY, false, typeCache)) {
-			if (BindingReflectionUtils.isSystemBindingValueKey(key, true)) {
+			// false: the framework's own keys (context, session, …) are no binding of this component.
+			if (BindingReflectionUtils.isSystemBindingValueKey(key, false)) {
 				continue;
 			}
 			found.add(new FoundBinding(key.getBindingName(), typeName(key.getBindingMember()), pushesBack));
