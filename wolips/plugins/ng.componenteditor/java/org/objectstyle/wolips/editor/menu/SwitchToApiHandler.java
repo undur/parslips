@@ -1,7 +1,6 @@
 package org.objectstyle.wolips.editor.menu;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -9,14 +8,17 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
-import org.objectstyle.wolips.bindings.api.MutableApiModel;
+import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.ApiParser;
+import org.objectstyle.wolips.bindings.api.ApiToApiext;
+import org.objectstyle.wolips.bindings.api.MutableApiextModel;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.editors.EditorsPlugin;
@@ -25,16 +27,11 @@ import org.objectstyle.wolips.locate.result.ElementDescriptor;
 import org.objectstyle.wolips.variables.ParsleyProject;
 
 /**
- * Command handler for switching to the API editor from any editor context.
- * If the active editor is the ComponentEditor, switches to the API tab.
- * Otherwise, locates the API file and opens it — in the ComponentEditor if
- * a template exists (so the user gets the full multi-tab component editor
- * with the API tab active), or in the standalone ApiEditor if only a .api
- * file exists (common for non-component WOElements that have no template).
- *
- * <p>If no .api file exists at all, one is created automatically: in the
- * project's {@code components} folder if one exists under {@code src/main/},
- * otherwise next to the Java file.
+ * Command handler for switching to the API editor from any editor context. The API is the
+ * {@code .apiext}: in the ComponentEditor this switches to the API tab; elsewhere it opens the
+ * component's ComponentEditor on that tab, or, for an element without a template (a dynamic element
+ * class), its {@code .apiext} in the {@link org.objectstyle.wolips.editor.apiext.ApiextEditor},
+ * written first when there's none yet: from the element's {@code .api}, when it has one.
  *
  * <p>For non-Parsley projects (when WOLips is installed), delegates to
  * WOLips' equivalent command so WOLips behavior is preserved.
@@ -79,48 +76,56 @@ public class SwitchToApiHandler extends AbstractHandler {
 			return null;
 		}
 
-		try {
-			// If a template exists, open the ComponentEditor with the API tab revealed.
-			// Opening via the .api file path triggers ComponentEditorInput.createWithDotApi(),
-			// which sets displayApiPartOnReveal=true to auto-switch to the API tab.
-			if (descriptor.hasTemplate()) {
-				IFile apiFile = descriptor.getApiFile();
-				if (apiFile != null) {
-					WorkbenchUtilities.open(apiFile, EditorsPlugin.ComponentEditorID);
-				}
-				return null;
+		// A component: its ComponentEditor, on the API tab.
+		if (descriptor.hasTemplate()) {
+			final IEditorPart opened = WorkbenchUtilities.open(descriptor.getHtmlFile(), EditorsPlugin.ComponentEditorID);
+			if (opened instanceof ComponentEditor) {
+				((ComponentEditor) opened).switchToApi();
 			}
-
-			// No template — this is likely a non-component WOElement.
-			// Open the standalone ApiEditor, creating the .api file if needed.
-			IFile apiFile = descriptor.getApiFile();
-
-			if (apiFile == null) {
-				// No .api file found or guessed — derive a path.
-				// Prefer the project's "components" folder (same heuristic as
-				// the New Component wizard); fall back to placing it next to
-				// the Java file if no components folder exists.
-				String baseName = LocatePlugin.getDefault().fileNameWithoutExtension(file);
-				IContainer apiFolder = findComponentsFolder(file.getProject());
-				if (apiFolder == null) {
-					apiFolder = file.getParent();
-				}
-				apiFile = apiFolder.getFile(new Path(baseName + ".api"));
-			}
-
-			if (!apiFile.exists()) {
-				String name = LocatePlugin.getDefault().fileNameWithoutExtension(apiFile);
-				String content = MutableApiModel.blankContent(name);
-				apiFile.create(
-					new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)),
-					true, null);
-			}
-
-			WorkbenchUtilities.open(apiFile, EditorsPlugin.ApiEditorID);
-		} catch (CoreException e) {
-			ComponenteditorPlugin.getDefault().log(e);
+			return null;
 		}
+
+		// An element without a template: its .apiext, beside its .api if it has one, else in the
+		// project's components folder (or next to the Java file).
+		final IFile apiFile = descriptor.getApiFile();
+		final String baseName = LocatePlugin.getDefault().fileNameWithoutExtension(file);
+		IContainer folder = apiFile != null && apiFile.exists() ? apiFile.getParent() : findComponentsFolder(file.getProject());
+		if (folder == null) {
+			folder = file.getParent();
+		}
+		final IFile apiextFile = folder.getFile(new Path(baseName + ".apiext"));
+		if (!apiextFile.exists() && !createApiext(apiextFile, apiFile, HandlerUtil.getActiveShell(event))) {
+			return null;
+		}
+		WorkbenchUtilities.open(apiextFile, EditorsPlugin.ApiextEditorID);
 		return null;
+	}
+
+	/**
+	 * Writes an element's first {@code .apiext}, starting from its hand-written {@code .api} when it
+	 * has one: saving an {@code .apiext} rewrites the {@code .api} beside it, so an empty one would
+	 * erase what was written there. When a rule there has no {@code .apiext} form, nothing is written.
+	 *
+	 * @return whether the file now exists
+	 */
+	private static boolean createApiext(IFile apiextFile, IFile apiFile, org.eclipse.swt.widgets.Shell shell) {
+		try {
+			final MutableApiextModel model = new MutableApiextModel(apiextFile);
+			if (apiFile != null && apiFile.exists() && apiFile.getLocation() != null) {
+				final List<String> untranslatable = ApiToApiext.seed(model, ApiParser.parseFile(apiFile.getLocation().toFile()), List.of());
+				if (!untranslatable.isEmpty()) {
+					MessageDialog.openInformation(shell, "API", apiFile.getName() + " has rules with no .apiext form, which would be lost: \"" + String.join("\", \"", untranslatable)
+							+ "\". Write " + apiextFile.getName() + " by hand, carrying them over as you see fit.");
+					return false;
+				}
+			}
+			model.saveChanges();
+			return apiextFile.exists();
+		}
+		catch (ApiModelException e) {
+			ComponenteditorPlugin.getDefault().log(e);
+			return false;
+		}
 	}
 
 	/**

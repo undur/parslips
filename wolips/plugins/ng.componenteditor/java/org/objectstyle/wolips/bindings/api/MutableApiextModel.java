@@ -26,7 +26,7 @@ import org.objectstyle.wolips.bindings.api.ApiextModel.UnknownAttributes;
 /**
  * File-backed <em>mutable</em> model for editing an {@code .apiext} file — the editing counterpart to
  * the immutable {@link ApiextModel}, and the model the {@code .apiext} form editor holds and saves
- * through. Mirrors {@link MutableApiModel}: plain mutable POJOs (no listeners), a single
+ * through: plain mutable POJOs (no listeners), a single
  * {@code _dirty} flag, load via the existing parser, save via {@link ApiextSerializer}.
  * <p>
  * The editor mutates the {@link MutableBinding}/{@link MutableConstraint} POJOs directly and calls

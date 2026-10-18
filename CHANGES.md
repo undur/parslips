@@ -12,6 +12,20 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### The component editor's API tab edits the `.apiext`; the `.api` editor is gone
+
+The API tab now holds the `.apiext` editor, on the component's `.apiext` (beside its `.api`
+when it has one, else beside the template, or beside its `.lproj` folder). A component without
+one gets a "Generate API" button instead of an empty editor, which writes it from the class and
+the component's `.api`, then shows it. "Switch to API" goes to the same tab; for an element
+without a template, it opens the element's `.apiext`, first writing it from the `.api` when
+there is one, since saving an empty `.apiext` would rewrite the `.api` empty.
+
+The legacy `.api` form editor (`editor.api`: `ApiEditor` and its pages), its model
+`MutableApiModel` and `RenameBindingRefactoring`, used only by it, are removed. An `.api`
+beside an `.apiext` is generated, so editing it was only ever overwritten. The `.api` parser
+(for components that have only an `.api`) and serializer (for the generated one) stay.
+
 ### WebObjects `.api` files follow their `.apiext`; "Generate API" writes `.apiext`
 
 Saving an `.apiext` for a WebObjects element or component now also writes the `.api` beside it:

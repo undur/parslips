@@ -56,6 +56,7 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.part.MultiEditorInput;
+import org.objectstyle.wolips.bindings.api.ComponentApiFiles;
 import org.objectstyle.wolips.components.ComponentsPlugin;
 import org.objectstyle.wolips.editors.EditorsPlugin;
 import org.objectstyle.wolips.locate.LocateException;
@@ -81,6 +82,9 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 	 * from a memento (the locate result isn't available until re-opened).
 	 */
 	private ElementDescriptor _elementDescriptor;
+
+	/** The component's template: its {@code .wo} folder, or its standalone {@code .html}; null if it has neither. */
+	private IResource _template;
 
 	private IEditorInput[] componentEditors;
 
@@ -149,42 +153,25 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 		}
 		
 		String name = localizedComponentsLocateResult.getName();
-		if (localizedComponentsLocateResult.getDotApi() != null) {
-			allIds[inputNum] = EditorsPlugin.ApiEditorID;
-			allInput[inputNum] = new ComponentEditorFileEditorInput(localizedComponentsLocateResult.getDotApi());
-			apiInput = allInput[inputNum];
-		} else {
-			allIds[inputNum] = EditorsPlugin.ApiEditorID;
-			IFile referenceFile = wodFile;
-			if (referenceFile == null) {
-				referenceFile = htmlFile;
-			}
-			if (referenceFile != null) {
-				IFile api = wodFile.getParent().getParent().getFile(new Path(name + ".api"));
-				allInput[inputNum] = new ComponentEditorFileEditorInput(api);
-				apiInput = allInput[inputNum];
-			}
-		}
-		
 		IEditorInput standaloneHtmlInput = null;
+		IResource template = folder.length > 0 ? folder[0] : null;
 		if (allComponentInput.length == 0 && originalFile.getName().toLowerCase().endsWith(".html")) {
 			standaloneHtmlInput = new ComponentEditorFileEditorInput(originalFile);
 			name = originalFile.getName();
+			template = originalFile;
+		}
 
-			// For standalone templates, derive the sibling .api file
-			// (e.g. Main.html → Main.api) so the API tab is available
-			if (apiInput == null) {
-				String baseName = name.substring(0, name.lastIndexOf('.'));
-				IFile apiFile = originalFile.getParent().getFile(new Path(baseName + ".api"));
-				ComponentEditorFileEditorInput standaloneApiInput = new ComponentEditorFileEditorInput(apiFile);
-				allIds[inputNum] = EditorsPlugin.ApiEditorID;
-				allInput[inputNum] = standaloneApiInput;
-				apiInput = standaloneApiInput;
-			}
+		// The API tab edits the component's .apiext, existing or not (the tab offers to generate a
+		// missing one). The .apiext is the format; a WebObjects component's .api is written from it.
+		if (template != null) {
+			allIds[inputNum] = EditorsPlugin.ApiextEditorID;
+			allInput[inputNum] = new ComponentEditorFileEditorInput(ComponentApiFiles.apiextFile(template, localizedComponentsLocateResult.getDotApi()));
+			apiInput = allInput[inputNum];
 		}
 		
 		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, apiInput, standaloneHtmlInput);
 		input.localizedComponentsLocateResult = localizedComponentsLocateResult;
+		input._template = template;
 		try {
 			input._elementDescriptor = ElementDescriptor.fromLocateResult(
 					localizedComponentsLocateResult, originalFile.getProject());
@@ -293,13 +280,13 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 		String name = file.getName();
 		ComponentEditorFileEditorInput standaloneInput = new ComponentEditorFileEditorInput(file);
 
-		// Derive the sibling .api file (e.g. Main.html → Main.api)
+		// The component's .apiext: beside its .api, if it has one, else beside the template.
 		String htmlName = file.getName();
 		String baseName = htmlName.substring(0, htmlName.lastIndexOf('.'));
 		IFile apiFile = file.getParent().getFile(new Path(baseName + ".api"));
-		ComponentEditorFileEditorInput apiInput = new ComponentEditorFileEditorInput(apiFile);
+		ComponentEditorFileEditorInput apiInput = new ComponentEditorFileEditorInput(ComponentApiFiles.apiextFile(file, apiFile));
 
-		String[] allIds = new String[] { EditorsPlugin.HTMLEditorID, EditorsPlugin.ApiEditorID };
+		String[] allIds = new String[] { EditorsPlugin.HTMLEditorID, EditorsPlugin.ApiextEditorID };
 		ComponentEditorFileEditorInput[] allInput = new ComponentEditorFileEditorInput[] { standaloneInput, apiInput };
 		ComponentEditorFileEditorInput[] allComponentInput = new ComponentEditorFileEditorInput[0];
 		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, apiInput, standaloneInput);
@@ -307,6 +294,7 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 		// forFile() may return null if the locate system can't resolve it,
 		// which is OK — the descriptor is a convenience accessor.
 		input._elementDescriptor = ElementDescriptor.forFile(file);
+		input._template = file;
 		standaloneInput.setComponentEditorInput(input);
 		apiInput.setComponentEditorInput(input);
 		return input;
@@ -369,6 +357,11 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 	 */
 	public ElementDescriptor getElementDescriptor() {
 		return _elementDescriptor;
+	}
+
+	/** The component's template: its {@code .wo} folder, or its standalone {@code .html}; null if it has neither. */
+	public IResource getTemplate() {
+		return _template;
 	}
 
 	public String getFactoryId() {

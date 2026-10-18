@@ -61,7 +61,7 @@ public class EditorsPlugin extends AbstractBaseUIActivator {
 	// The shared instance.
 	private static EditorsPlugin plugin;
 
-	public static String ApiEditorID = "ng.componenteditor.ApiEditor";
+	public static String ApiextEditorID = "ng.componenteditor.ApiextEditor";
 
 	public static String HTMLEditorID = "ng.componenteditor.TemplateEditor";
 

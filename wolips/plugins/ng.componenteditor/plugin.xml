@@ -113,17 +113,6 @@
          <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.wod"/>
       </editor>
 
-<!-- API Editor -->
-      <editor
-            class="org.objectstyle.wolips.editor.api.ApiEditor"
-            default="false"
-            extensions="api"
-            icon="icons/parsley16.png"
-            id="ng.componenteditor.ApiEditor"
-            name="Parsley API Editor">
-         <contentTypeBinding contentTypeId="org.objectstyle.wolips.editors.api"/>
-      </editor>
-
 <!-- Apiext Editor -->
       <editor
             class="org.objectstyle.wolips.editor.apiext.ApiextEditor"

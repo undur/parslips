@@ -52,7 +52,6 @@ package org.objectstyle.wolips.wodclipse.action;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IField;
@@ -70,6 +69,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.objectstyle.wolips.bindings.api.ApiCompanion;
 import org.objectstyle.wolips.bindings.api.ApiextGenerator;
+import org.objectstyle.wolips.bindings.api.ComponentApiFiles;
 import org.objectstyle.wolips.bindings.api.ApiextGenerator.FoundBinding;
 import org.objectstyle.wolips.bindings.api.ApiParser;
 import org.objectstyle.wolips.bindings.api.ApiToApiext;
@@ -90,8 +90,7 @@ import org.objectstyle.wolips.wodclipse.core.completion.WodParserCache;
  * ({@link ApiCompanion}).
  *
  * <p>Offered on a bundle template's {@code .wo} folder and on a standalone template's {@code .html};
- * the {@code .apiext} goes beside it (beside its {@code .lproj} folder, for a localized template),
- * named after the component, where the editor looks for it.
+ * where the files go is {@link ComponentApiFiles}'s rule.
  */
 public class GenerateAPIAction implements IObjectActionDelegate {
 	private ISelection _selection;
@@ -118,18 +117,23 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 		MessageDialog.openInformation(_part == null ? null : _part.getSite().getShell(), "Generate API", String.join("\n\n", report));
 	}
 
-	/** Generates one component's API; returns a line for the report. */
-	private static String generate(IResource selected) {
-		// A bundle template's .html stands for its .wo folder, beside which the .apiext goes.
-		final IResource template = selected.getType() == IResource.FILE && "wo".equals(selected.getParent().getFileExtension()) ? selected.getParent() : selected;
-		final String componentName = componentName(template);
+	/**
+	 * Generates one component's API (see the class comment), for this action and the component
+	 * editor's API tab.
+	 *
+	 * @param selected the component's {@code .wo} folder, or a standalone or bundle {@code .html}
+	 * @return a line for the report: what was written, or why nothing was
+	 */
+	public static String generate(IResource selected) {
+		final IResource template = ComponentApiFiles.templateOf(selected);
+		final String componentName = ComponentApiFiles.componentName(template);
 		try {
 			final WodParserCache cache = WodParserCache.parser(template);
 			final IType componentType = cache.getComponentType();
 			if (componentType == null) {
 				return componentName + ": no Java class found, so there is nothing to generate the API from.";
 			}
-			final IFile apiextFile = apiFolder(template).getFile(new org.eclipse.core.runtime.Path(componentName + ".apiext"));
+			final IFile apiextFile = ComponentApiFiles.apiextFile(template, cache.getApiFile());
 			final boolean existed = apiextFile.exists();
 			final MutableApiextModel model = new MutableApiextModel(apiextFile);
 			final List<FoundBinding> found = foundBindings(cache.getJavaProject(), componentType);
@@ -165,23 +169,6 @@ public class GenerateAPIAction implements IObjectActionDelegate {
 			WodclipsePlugin.getDefault().log(e);
 			return componentName + ": failed (" + e.getMessage() + "); see the error log.";
 		}
-	}
-
-	/**
-	 * Where a component's API files go: beside its template, or beside the {@code .lproj} folder
-	 * when the template is localized. API files describe the component, not one localization of it,
-	 * so WebObjects projects keep them in the components folder itself.
-	 */
-	private static IContainer apiFolder(IResource template) {
-		final IContainer parent = template.getParent();
-		return "lproj".equals(parent.getFileExtension()) ? parent.getParent() : parent;
-	}
-
-	/** The component's name: the {@code .wo} folder's or the {@code .html} file's, without extension. */
-	private static String componentName(IResource template) {
-		final String name = template.getName();
-		final int dot = name.lastIndexOf('.');
-		return dot > 0 ? name.substring(0, dot) : name;
 	}
 
 	/** The keys a parent can set into the component, with their types and whether they're pushed back. */
