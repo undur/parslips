@@ -12,6 +12,11 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: wonder-slim 8.1.3
+
+`/createProject` and the New Project wizard generate WebObjects apps on wonder-slim 8.1.3;
+ng-objects apps stay on ng 0.1.6.
+
 ### The component editor's API tab edits the `.apiext`; the `.api` editor is gone
 
 The API tab now holds the `.apiext` editor, on the component's `.apiext` (beside its `.api`
