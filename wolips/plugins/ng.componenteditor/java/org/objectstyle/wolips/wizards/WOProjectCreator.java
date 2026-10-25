@@ -337,11 +337,6 @@ public class WOProjectCreator {
 				\t\t\t<version>8.1.3</version>
 				\t\t</dependency>
 				\t\t<dependency>
-				\t\t\t<groupId>is.rebbi.slim</groupId>
-				\t\t\t<artifactId>Ajax</artifactId>
-				\t\t\t<version>8.1.3</version>
-				\t\t</dependency>
-				\t\t<dependency>
 				\t\t\t<groupId>com.webobjects</groupId>
 				\t\t\t<artifactId>JavaWebObjects</artifactId>
 				\t\t\t<version>5.4.3</version>

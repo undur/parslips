@@ -74,6 +74,17 @@ public class WOProjectCreatorKindsTest {
 	}
 
 	@Test
+	public void woAppDependsOnNoAjaxFramework() throws Exception {
+		// The generated app uses no Ajax elements, so it pulls in neither Ajax nor AjaxSlim.
+		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
+		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, dir).createProject();
+
+		final String pom = Files.readString(dir.resolve("pom.xml"));
+		assertTrue(pom, pom.contains("<artifactId>ERExtensions</artifactId>"));
+		assertFalse(pom, pom.contains("<artifactId>Ajax"));
+	}
+
+	@Test
 	public void woAppMainIsAnErxComponent() throws Exception {
 		// New components copy Main; plain WOComponent lacks the typed pageWithName(Class).
 		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
