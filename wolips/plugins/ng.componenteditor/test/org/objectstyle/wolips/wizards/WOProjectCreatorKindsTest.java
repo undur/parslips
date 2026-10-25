@@ -63,14 +63,47 @@ public class WOProjectCreatorKindsTest {
 	}
 
 	@Test
-	public void woAppDoesNotPickAnAdaptor() throws Exception {
-		// The template stays adaptor-neutral: no adaptor dependency, no WOAdaptor setting. Which
-		// adaptor runs is the machine's or the project's later choice, not the template's.
+	public void woAppRunsOnWoAdaptorJetty() throws Exception {
+		// wo-adaptor-jetty selects itself when it's a dependency, so nothing names an adaptor.
 		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
 		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, dir).createProject();
 
-		assertFalse(Files.readString(dir.resolve("pom.xml")).contains("wo-adaptor-jetty"));
-		assertFalse(Files.readString(dir.resolve("src/main/woresources/Properties")).contains("WOAdaptor"));
+		final String pom = Files.readString(dir.resolve("pom.xml"));
+		assertTrue(pom, pom.contains("<artifactId>wo-adaptor-jetty</artifactId>"));
+		assertEquals("", Files.readString(dir.resolve("src/main/woresources/Properties")));
+	}
+
+	@Test
+	public void woAppIsWonderSlimsNewApp() throws Exception {
+		// The files of wonder-slim's examples/NewApp, with the name and package filled in.
+		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
+		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, dir).createProject();
+
+		final String application = Files.readString(dir.resolve("src/main/java/my/wo/app/Application.java"));
+		assertTrue(application, application.contains("import er.extensions.routing.ERXRouter;"));
+		assertTrue(application, application.contains("routes.map( \"/\", Main.class );"));
+		assertTrue(application, application.contains("ERXApplication.main( args, Application.class );"));
+		assertTrue(Files.readString(dir.resolve("src/main/java/my/wo/app/Session.java")).contains("public class Session extends ERXSession"));
+		// The router is the default request handler, and the .wo needs only its .html.
+		assertFalse(Files.exists(dir.resolve("src/main/java/my/wo/app/DirectAction.java")));
+		assertTrue(Files.readString(dir.resolve("src/main/components/Main.wo/Main.html")).contains("<title>my-wo-app</title>"));
+		assertFalse(Files.exists(dir.resolve("src/main/components/Main.wo/Main.wod")));
+		assertFalse(Files.exists(dir.resolve("src/main/components/Main.wo/Main.woo")));
+		assertTrue(Files.readString(dir.resolve("build.properties")).contains("project.base=wo"));
+	}
+
+	@Test
+	public void woAppPomBuildsAnywhere() throws Exception {
+		// ERExtensions and wo-adaptor-jetty aren't on Maven Central, so the pom names WOCommunity.
+		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
+		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, dir).createProject();
+
+		final String pom = Files.readString(dir.resolve("pom.xml"));
+		assertTrue(pom, pom.contains("<url>https://maven.wocommunity.org/content/groups/public</url>"));
+		assertTrue(pom, pom.contains("<maven.compiler.release>25</maven.compiler.release>"));
+		assertFalse(pom, pom.contains("JavaWebObjects"));
+		assertTrue(pom, pom.contains("<groupId>my.wo.app</groupId>"));
+		assertTrue(pom, pom.contains("<artifactId>my-wo-app</artifactId>"));
 	}
 
 	@Test

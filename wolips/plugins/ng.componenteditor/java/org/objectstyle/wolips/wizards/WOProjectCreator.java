@@ -20,7 +20,7 @@ import java.nio.file.Path;
  * <pre>
  *   pom.xml                              — Maven project descriptor
  *   build.properties                      — Parsley framework detection (project.base=ng or project.base=wo)
- *   src/main/java/{package}/              — Application, Session, DirectAction
+ *   src/main/java/{package}/              — Application, Session (and DirectAction, for ng-objects)
  *   src/main/java/{package}/components/   — Main.java
  *
  *   ng-objects:
@@ -29,10 +29,15 @@ import java.nio.file.Path;
  *   src/main/resources/ng/app/webserver-resources/  — static web assets
  *
  *   WebObjects:
- *   src/main/components/Main.wo/          — Main.html, Main.wod, Main.woo (bundle template)
- *   src/main/woresources/                 — Properties file
- *   src/main/webserver-resources/         — static web assets
+ *   src/main/components/Main.wo/          — Main.html (bundle template; inline bindings work in it)
+ *   src/main/woresources/                 — Properties file (empty)
  * </pre>
+ *
+ * <p>The WebObjects app is wonder-slim's {@code examples/NewApp}, the application wonder-slim
+ * builds as what a new project starts as: its files with the name and package filled in, and a
+ * standalone pom. Its {@code build.properties} is also what switches the running app into
+ * development mode (it must be in the working directory), which the dev endpoints, the dev-server
+ * registration and the instance stopper depend on.
  *
  * <p>File contents use Java text blocks with {@link String#format} — no Velocity templates.
  */
@@ -166,9 +171,7 @@ public class WOProjectCreator {
 		else {
 			// WebObjects: traditional WO folder layout under src/main/
 			Files.createDirectories(_projectDir.resolve("src/main/components/Main.wo"));
-			Files.createDirectories(_projectDir.resolve("src/main/resources"));
 			Files.createDirectories(_projectDir.resolve("src/main/woresources"));
-			Files.createDirectories(_projectDir.resolve("src/main/webserver-resources"));
 		}
 
 		// 2. Write files
@@ -179,7 +182,9 @@ public class WOProjectCreator {
 		String javaBase = "src/main/java/" + packagePath + "/";
 		writeFile(javaBase + "Application.java", generateApplicationJava());
 		writeFile(javaBase + "Session.java", generateSessionJava());
-		writeFile(javaBase + "DirectAction.java", generateDirectActionJava());
+		if (_isNG) {
+			writeFile(javaBase + "DirectAction.java", generateDirectActionJava());
+		}
 		writeFile(javaBase + "components/Main.java", generateMainJava());
 
 		// Component template files
@@ -187,13 +192,6 @@ public class WOProjectCreator {
 				? "src/main/resources/ng/app/components/"
 				: "src/main/components/Main.wo/";
 		writeFile(componentBase + "Main.html", generateMainHtml());
-
-		// Bundle templates (.wo folders) need .wod and .woo files.
-		// Standalone templates (ng-objects) are single .html files — no .wod/.woo.
-		if (!_isNG) {
-			writeFile(componentBase + "Main.wod", "");
-			writeFile(componentBase + "Main.woo", generateMainWoo());
-		}
 
 		// WO-specific files
 		if (!_isNG) {
@@ -311,7 +309,9 @@ public class WOProjectCreator {
 					""", _packageName, _projectName);
 		}
 
-		// WebObjects pom.xml
+		// WebObjects pom.xml: wonder-slim's NewApp (examples/NewApp), standalone. ERExtensions brings
+		// JavaWebObjects; wo-adaptor-jetty selects itself. Neither is on Maven Central, hence the
+		// WOCommunity repository: without it only a settings.xml that already has it can build.
 		return String.format("""
 				<?xml version="1.0" encoding="UTF-8"?>
 				<project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -325,10 +325,19 @@ public class WOProjectCreator {
 				\t<packaging>woapplication</packaging>
 
 				\t<properties>
-				\t\t<maven.compiler.source>25</maven.compiler.source>
-				\t\t<maven.compiler.target>25</maven.compiler.target>
+				\t\t<maven.compiler.release>25</maven.compiler.release>
 				\t\t<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 				\t</properties>
+
+				\t<repositories>
+				\t\t<repository>
+				\t\t\t<id>wocommunity</id>
+				\t\t\t<url>https://maven.wocommunity.org/content/groups/public</url>
+				\t\t\t<snapshots>
+				\t\t\t\t<enabled>false</enabled>
+				\t\t\t</snapshots>
+				\t\t</repository>
+				\t</repositories>
 
 				\t<dependencies>
 				\t\t<dependency>
@@ -337,15 +346,9 @@ public class WOProjectCreator {
 				\t\t\t<version>8.1.3</version>
 				\t\t</dependency>
 				\t\t<dependency>
-				\t\t\t<groupId>com.webobjects</groupId>
-				\t\t\t<artifactId>JavaWebObjects</artifactId>
-				\t\t\t<version>5.4.3</version>
-				\t\t\t<exclusions>
-				\t\t\t\t<exclusion>
-				\t\t\t\t\t<groupId>com.webobjects</groupId>
-				\t\t\t\t\t<artifactId>JavaXML</artifactId>
-				\t\t\t\t</exclusion>
-				\t\t\t</exclusions>
+				\t\t\t<groupId>is.rebbi</groupId>
+				\t\t\t<artifactId>wo-adaptor-jetty</artifactId>
+				\t\t\t<version>0.12.3</version>
 				\t\t</dependency>
 				\t</dependencies>
 
@@ -354,7 +357,7 @@ public class WOProjectCreator {
 				\t\t\t<plugin>
 				\t\t\t\t<groupId>is.rebbi</groupId>
 				\t\t\t\t<artifactId>vermilingua-maven-plugin</artifactId>
-				\t\t\t\t<version>1.1.11</version>
+				\t\t\t\t<version>1.1.12</version>
 				\t\t\t\t<extensions>true</extensions>
 				\t\t\t</plugin>
 				\t\t</plugins>
@@ -397,25 +400,24 @@ public class WOProjectCreator {
 					""", _packageName);
 		}
 
+		// The router is the default request handler: "/" and the .woa URL both answer with Main.
 		return String.format("""
 				package %1$s;
 
 				import er.extensions.appserver.ERXApplication;
-				import er.extensions.routes.RouteTable;
+				import er.extensions.routing.ERXRouter;
 				import %1$s.components.Main;
 
 				public class Application extends ERXApplication {
 
-				\tpublic static void main(String[] args) {
-				\t\tERXApplication.main(args, Application.class);
+				\tpublic static void main( String[] args ) {
+				\t\tERXApplication.main( args, Application.class );
 				\t}
 
 				\tpublic Application() {
-				\t\t// Maps the default route "/" to the Main component
-				\t\tRouteTable.defaultRouteTable().map( "/", Main.class );
-
-				\t\t// ...and the default direct connect URL (something like "/cgi-bin/WebObjects/MyApp.woa")
-				\t\tRouteTable.defaultRouteTable().map( "%%s/%%s.woa".formatted( adaptorPath(), name() ), Main.class );
+				\t\tERXRouter.declare( routes -> {
+				\t\t\troutes.map( "/", Main.class );
+				\t\t} );
 				\t}
 				}
 				""", _packageName);
@@ -445,43 +447,22 @@ public class WOProjectCreator {
 				""", _packageName);
 	}
 
+	/** ng-objects only: a WebObjects app's router is its default request handler, so it needs no DirectAction. */
 	private String generateDirectActionJava() {
-		if (_isNG) {
-			return String.format("""
-					package %1$s;
-
-					import ng.appserver.NGActionResults;
-					import ng.appserver.directactions.NGDirectAction;
-					import ng.appserver.http.NGRequest;
-
-					public class DirectAction extends NGDirectAction {
-
-					\tpublic DirectAction(NGRequest request) {
-					\t\tsuper(request);
-					\t}
-
-					\tpublic NGActionResults defaultAction() {
-					\t\treturn pageWithName(%1$s.components.Main.class);
-					\t}
-					}
-					""", _packageName);
-		}
-
 		return String.format("""
 				package %1$s;
 
-				import com.webobjects.appserver.WOActionResults;
-				import com.webobjects.appserver.WORequest;
+				import ng.appserver.NGActionResults;
+				import ng.appserver.directactions.NGDirectAction;
+				import ng.appserver.http.NGRequest;
 
-				import er.extensions.appserver.ERXDirectAction;
+				public class DirectAction extends NGDirectAction {
 
-				public class DirectAction extends ERXDirectAction {
-
-				\tpublic DirectAction(WORequest request) {
+				\tpublic DirectAction(NGRequest request) {
 				\t\tsuper(request);
 				\t}
 
-				\tpublic WOActionResults defaultAction() {
+				\tpublic NGActionResults defaultAction() {
 				\t\treturn pageWithName(%1$s.components.Main.class);
 				\t}
 				}
@@ -517,35 +498,26 @@ public class WOProjectCreator {
 
 				public class Main extends ERXComponent {
 
-				\tpublic Main(WOContext context) {
-				\t\tsuper(context);
+				\tpublic Main( final WOContext context ) {
+				\t\tsuper( context );
 				\t}
 				}
 				""", _packageName);
 	}
 
 	private String generateMainHtml() {
-		return """
+		return String.format("""
 				<!DOCTYPE html>
 				<html>
 				\t<head>
 				\t\t<meta charset="UTF-8">
-				\t\t<title>Main</title>
+				\t\t<title>%s</title>
 				\t</head>
 				\t<body>
 				\t\t<h1>Hello World!</h1>
 				\t</body>
 				</html>
-				""";
-	}
-
-	private String generateMainWoo() {
-		return """
-				{
-				\t"WebObjects Release" = "WebObjects 5.0";
-				\tencoding = "UTF-8";
-				}
-				""";
+				""", _isNG ? "Main" : _projectName);
 	}
 
 	/**

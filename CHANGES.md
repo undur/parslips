@@ -12,12 +12,23 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
-### New-project templates: wonder-slim 8.1.3
+### New WebObjects projects are wonder-slim's NewApp
 
-`/createProject` and the New Project wizard generate WebObjects apps on wonder-slim 8.1.3;
-ng-objects apps stay on ng 0.1.6, now built with vermilingua 1.1.12. The WebObjects app no
-longer depends on the Ajax framework, which it never used.
+The WebObjects template (`/createProject?template=wonder-slim-app` and the New Project wizard)
+no longer compiled against wonder-slim 8.1: its `Application` used `RouteTable`, which the
+router replaced in 8.1.0. It now generates wonder-slim's own `examples/NewApp`, the application
+wonder-slim builds as what a new project starts as, with the project's name and package filled in:
 
+- `Application` declares its routes with `ERXRouter` (`/` → `Main`); the router is the default
+  request handler, so there's no `DirectAction`, and the `.woa` URL answers with `Main` too.
+- `Session` extends `ERXSession`, `Main` extends `ERXComponent`, and `Main.wo` holds only
+  `Main.html` (no `.wod`/`.woo`; inline bindings work in it).
+- The pom depends on ERExtensions 8.1.3 and wo-adaptor-jetty 0.12.3 only (JavaWebObjects comes
+  through ERExtensions; no Ajax), compiles with `maven.compiler.release` 25, builds with
+  vermilingua 1.1.12, and names the WOCommunity repository, since neither dependency is on Maven
+  Central. A generated project builds with no Maven settings and an empty local repository.
+
+New ng-objects projects stay on ng 0.1.6, now built with vermilingua 1.1.12.
 ### The component editor's API tab edits the `.apiext`; the `.api` editor is gone
 
 The API tab now holds the `.apiext` editor, on the component's `.apiext` (beside its `.api`
