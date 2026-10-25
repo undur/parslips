@@ -12,12 +12,13 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
-### New WebObjects projects are wonder-slim's NewApp
+### New WebObjects projects match wonder-slim 8.1
 
 The WebObjects template (`/createProject?template=wonder-slim-app` and the New Project wizard)
 no longer compiled against wonder-slim 8.1: its `Application` used `RouteTable`, which the
-router replaced in 8.1.0. It now generates wonder-slim's own `examples/NewApp`, the application
-wonder-slim builds as what a new project starts as, with the project's name and package filled in:
+router replaced in 8.1.0. It now generates what a new wonder-slim app is today (worked out with
+wonder-slim's maintainers, verified to build and run in development mode), and the generator is
+the one definition of that, kept current with wonder-slim releases:
 
 - `Application` declares its routes with `ERXRouter` (`/` → `Main`); the router is the default
   request handler, so there's no `DirectAction`, and the `.woa` URL answers with `Main` too.

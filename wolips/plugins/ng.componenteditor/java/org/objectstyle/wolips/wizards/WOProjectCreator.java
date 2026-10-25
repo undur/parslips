@@ -33,9 +33,10 @@ import java.nio.file.Path;
  *   src/main/woresources/                 — Properties file (empty)
  * </pre>
  *
- * <p>The WebObjects app is wonder-slim's {@code examples/NewApp}, the application wonder-slim
- * builds as what a new project starts as: its files with the name and package filled in, and a
- * standalone pom. Its {@code build.properties} is also what switches the running app into
+ * <p>The WebObjects app is the definition of what a new wonder-slim application is, kept current
+ * with wonder-slim releases: routes declared with {@code ERXRouter}, no {@code DirectAction} (the
+ * router is the default request handler), and a pom with only ERExtensions and wo-adaptor-jetty.
+ * Its {@code build.properties} is also what switches the running app into
  * development mode (it must be in the working directory), which the dev endpoints, the dev-server
  * registration and the instance stopper depend on.
  *
@@ -309,9 +310,9 @@ public class WOProjectCreator {
 					""", _packageName, _projectName);
 		}
 
-		// WebObjects pom.xml: wonder-slim's NewApp (examples/NewApp), standalone. ERExtensions brings
-		// JavaWebObjects; wo-adaptor-jetty selects itself. Neither is on Maven Central, hence the
-		// WOCommunity repository: without it only a settings.xml that already has it can build.
+		// WebObjects pom.xml. ERExtensions brings JavaWebObjects; wo-adaptor-jetty selects itself.
+		// Neither is on Maven Central, hence the WOCommunity repository: without it, only a
+		// settings.xml that already has it can build.
 		return String.format("""
 				<?xml version="1.0" encoding="UTF-8"?>
 				<project xmlns="http://maven.apache.org/POM/4.0.0"

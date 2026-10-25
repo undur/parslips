@@ -74,8 +74,8 @@ public class WOProjectCreatorKindsTest {
 	}
 
 	@Test
-	public void woAppIsWonderSlimsNewApp() throws Exception {
-		// The files of wonder-slim's examples/NewApp, with the name and package filled in.
+	public void woAppIsACurrentWonderSlimApp() throws Exception {
+		// What a new wonder-slim app is today: routes through ERXRouter, an ERXSession, no DirectAction.
 		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
 		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, dir).createProject();
 
