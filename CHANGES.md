@@ -26,10 +26,10 @@ the one definition of that, kept current with wonder-slim releases:
   `Main.html` (no `.wod`/`.woo`; inline bindings work in it).
 - The pom depends on ERExtensions 8.1.3 and wo-adaptor-jetty 0.12.3 only (JavaWebObjects comes
   through ERExtensions; no Ajax), compiles with `maven.compiler.release` 25, builds with
-  vermilingua 1.1.12, and names the WOCommunity repository, since neither dependency is on Maven
+  vermilingua 1.2.0, and names the WOCommunity repository, since neither dependency is on Maven
   Central. A generated project builds with no Maven settings and an empty local repository.
 
-New ng-objects projects stay on ng 0.1.6, now built with vermilingua 1.1.12.
+New ng-objects projects stay on ng 0.1.6, now built with vermilingua 1.2.0.
 ### The component editor's API tab edits the `.apiext`; the `.api` editor is gone
 
 The API tab now holds the `.apiext` editor, on the component's `.apiext` (beside its `.api`

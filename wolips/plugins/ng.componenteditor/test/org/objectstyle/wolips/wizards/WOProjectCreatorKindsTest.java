@@ -118,6 +118,25 @@ public class WOProjectCreatorKindsTest {
 	}
 
 	@Test
+	public void ngAndWoAppsBuildWithTheSameVermilingua() throws Exception {
+		// Both kinds use the same packaging plugin; a bump of one is a bump of both.
+		final Path ngDir = Files.createTempDirectory("parslips-ng").resolve("my-app");
+		new WOProjectCreator("my-app", "my.app", WOProjectCreator.Kind.NG_APP, ngDir).createProject();
+		final Path woDir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
+		new WOProjectCreator("my-wo-app", "my.wo.app", WOProjectCreator.Kind.WO_APP, woDir).createProject();
+
+		final String ngVersion = vermilinguaVersion(Files.readString(ngDir.resolve("pom.xml")));
+		assertNotNull(ngVersion);
+		assertEquals(ngVersion, vermilinguaVersion(Files.readString(woDir.resolve("pom.xml"))));
+	}
+
+	/** The version of the vermilingua-maven-plugin a pom builds with, or null. */
+	private static String vermilinguaVersion(String pom) {
+		final java.util.regex.Matcher m = java.util.regex.Pattern.compile("<artifactId>vermilingua-maven-plugin</artifactId>\\s*<version>([^<]+)</version>").matcher(pom);
+		return m.find() ? m.group(1) : null;
+	}
+
+	@Test
 	public void woAppMainIsAnErxComponent() throws Exception {
 		// New components copy Main; plain WOComponent lacks the typed pageWithName(Class).
 		final Path dir = Files.createTempDirectory("parslips-wo").resolve("my-wo-app");
