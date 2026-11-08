@@ -86,7 +86,8 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 	private int htmlPageId;
 	private int wodPageId;
 	private int wooPageId;
-	private int apiPageId;
+	/** -1 until the API tab is created; a component editor can have none. */
+	private int apiPageId = -1;
 	
 	ComponentEditorInput componentEditorInput;
 
@@ -409,6 +410,10 @@ public class ComponentEditorPart extends MultiPageEditorPart implements IEditorT
 	}
 
 	private void switchToPage(int page) {
+		// A page that wasn't created (e.g. no API tab) is ignored rather than failing the editor's creation.
+		if (page < 0 || page >= getPageCount()) {
+			return;
+		}
 		this.setActivePage(page);
 		setFocus();
 	}

@@ -86,6 +86,9 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 	/** The component's template: its {@code .wo} folder, or its standalone {@code .html}; null if it has neither. */
 	private IResource _template;
 
+	/** The component's {@code .api} as located, or null when it has none. */
+	private IFile _api;
+
 	private IEditorInput[] componentEditors;
 
 	private IEditorInput apiEditor;
@@ -161,17 +164,31 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 			template = originalFile;
 		}
 
-		// The API tab edits the component's .apiext, existing or not (the tab offers to generate a
+		// The API tab edits the component's .apiext, existing or not (the tab offers to create a
 		// missing one). The .apiext is the format; a WebObjects component's .api is written from it.
+		// An element without a template (a dynamic element class, opened through its .api) has its
+		// .apiext beside that .api.
+		IFile api = localizedComponentsLocateResult.getDotApi();
+		if (api == null && "api".equals(originalFile.getFileExtension())) {
+			api = originalFile;
+		}
+		IFile apiext = null;
 		if (template != null) {
+			apiext = ComponentApiFiles.apiextFile(template, api);
+		}
+		else if (api != null) {
+			apiext = api.getParent().getFile(new Path(LocatePlugin.getDefault().fileNameWithoutExtension(api) + ".apiext"));
+		}
+		if (apiext != null) {
 			allIds[inputNum] = EditorsPlugin.ApiextEditorID;
-			allInput[inputNum] = new ComponentEditorFileEditorInput(ComponentApiFiles.apiextFile(template, localizedComponentsLocateResult.getDotApi()));
+			allInput[inputNum] = new ComponentEditorFileEditorInput(apiext);
 			apiInput = allInput[inputNum];
 		}
 		
 		ComponentEditorInput input = new ComponentEditorInput(name, allIds, allInput, allComponentInput, apiInput, standaloneHtmlInput);
 		input.localizedComponentsLocateResult = localizedComponentsLocateResult;
 		input._template = template;
+		input._api = api;
 		try {
 			input._elementDescriptor = ElementDescriptor.fromLocateResult(
 					localizedComponentsLocateResult, originalFile.getProject());
@@ -362,6 +379,11 @@ public class ComponentEditorInput extends MultiEditorInput implements IPersistab
 	/** The component's template: its {@code .wo} folder, or its standalone {@code .html}; null if it has neither. */
 	public IResource getTemplate() {
 		return _template;
+	}
+
+	/** The component's {@code .api} as located, or null when it has none. */
+	public IFile getApi() {
+		return _api;
 	}
 
 	public String getFactoryId() {

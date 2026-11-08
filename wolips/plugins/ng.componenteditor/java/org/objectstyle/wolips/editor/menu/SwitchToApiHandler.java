@@ -16,9 +16,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.objectstyle.wolips.baseforuiplugins.utils.WorkbenchUtilities;
 import org.objectstyle.wolips.bindings.api.ApiModelException;
-import org.objectstyle.wolips.bindings.api.ApiParser;
-import org.objectstyle.wolips.bindings.api.ApiToApiext;
-import org.objectstyle.wolips.bindings.api.MutableApiextModel;
+import org.objectstyle.wolips.bindings.api.ElementApiextCreator;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.editor.component.ComponentEditor;
 import org.objectstyle.wolips.editors.EditorsPlugin;
@@ -101,25 +99,14 @@ public class SwitchToApiHandler extends AbstractHandler {
 		return null;
 	}
 
-	/**
-	 * Writes an element's first {@code .apiext}, starting from its hand-written {@code .api} when it
-	 * has one: saving an {@code .apiext} rewrites the {@code .api} beside it, so an empty one would
-	 * erase what was written there. When a rule there has no {@code .apiext} form, nothing is written.
-	 *
-	 * @return whether the file now exists
-	 */
+	/** Writes the element's first .apiext ({@link ElementApiextCreator}); says why when it can't. */
 	private static boolean createApiext(IFile apiextFile, IFile apiFile, org.eclipse.swt.widgets.Shell shell) {
 		try {
-			final MutableApiextModel model = new MutableApiextModel(apiextFile);
-			if (apiFile != null && apiFile.exists() && apiFile.getLocation() != null) {
-				final List<String> untranslatable = ApiToApiext.seed(model, ApiParser.parseFile(apiFile.getLocation().toFile()), List.of());
-				if (!untranslatable.isEmpty()) {
-					MessageDialog.openInformation(shell, "API", apiFile.getName() + " has rules with no .apiext form, which would be lost: \"" + String.join("\", \"", untranslatable)
-							+ "\". Write " + apiextFile.getName() + " by hand, carrying them over as you see fit.");
-					return false;
-				}
+			final List<String> untranslatable = ElementApiextCreator.create(apiextFile, apiFile);
+			if (!untranslatable.isEmpty()) {
+				MessageDialog.openInformation(shell, "API", ElementApiextCreator.refusal(apiextFile, apiFile, untranslatable));
+				return false;
 			}
-			model.saveChanges();
 			return apiextFile.exists();
 		}
 		catch (ApiModelException e) {

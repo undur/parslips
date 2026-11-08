@@ -43,6 +43,8 @@
  */
 package org.objectstyle.wolips.editor.component;
 
+import java.util.List;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -59,6 +61,8 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.PartInitException;
+import org.objectstyle.wolips.bindings.api.ApiModelException;
+import org.objectstyle.wolips.bindings.api.ElementApiextCreator;
 import org.objectstyle.wolips.componenteditor.ComponenteditorPlugin;
 import org.objectstyle.wolips.editor.apiext.ApiextEditor;
 import org.objectstyle.wolips.wodclipse.action.GenerateAPIAction;
@@ -68,7 +72,9 @@ import org.objectstyle.wolips.wodclipse.action.GenerateAPIAction;
  *
  * <p>A component without an {@code .apiext} gets a page offering "Generate API" instead: it
  * writes the {@code .apiext} from the component's class, starting from its hand-written
- * {@code .api} when it has one ({@link GenerateAPIAction}), and the tab then shows it. An empty
+ * {@code .api} when it has one ({@link GenerateAPIAction}), and the tab then shows it. An element
+ * without a template has no class to generate from that way; its page writes the {@code .apiext}
+ * from its {@code .api}. An empty
  * editor isn't offered for that case, since it would invite rewriting by hand what the
  * generator carries over.
  */
@@ -118,38 +124,59 @@ public class ApiTab extends ComponentEditorTab {
 		});
 	}
 
-	/** "This component has no .apiext yet", with a button that generates one and shows it. */
+	/**
+	 * "This component has no .apiext yet", with a button that writes one and shows it: Generate API
+	 * for a component (from its class and its .api), or, for an element without a template, a
+	 * .apiext started from its .api ({@link ElementApiextCreator}).
+	 */
 	private Control createGeneratePage(Composite parent, IFile apiextFile) {
+		final IResource template = getComponentEditorPart().getComponentEditorInput().getTemplate();
+		final IFile api = getComponentEditorPart().getComponentEditorInput().getApi();
+		final boolean fromApi = template == null;
 		final Composite page = new Composite(parent, SWT.NONE);
 		page.setLayout(new GridLayout(1, false));
 		final Label text = new Label(page, SWT.WRAP);
 		text.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		text.setText(apiextFile.getName() + " doesn't exist yet. Generate API writes it from the component's class,"
-				+ " starting from its .api if it has one. For a WebObjects component, the .api is then written from it.");
+		text.setText(fromApi
+				? apiextFile.getName() + " doesn't exist yet. Create it" + (api != null && api.exists() ? " from " + api.getName() : "") + "; for a WebObjects element, the .api is then written from it."
+				: apiextFile.getName() + " doesn't exist yet. Generate API writes it from the component's class,"
+						+ " starting from its .api if it has one. For a WebObjects component, the .api is then written from it.");
 		final Button generate = new Button(page, SWT.PUSH);
-		generate.setText("Generate API");
+		generate.setText(fromApi ? "Create " + apiextFile.getName() : "Generate API");
 		final Label result = new Label(page, SWT.WRAP);
 		result.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		generate.addListener(SWT.Selection, event -> {
-			final IResource template = getComponentEditorPart().getComponentEditorInput().getTemplate();
-			if (template == null) {
-				result.setText("This component has no template to generate the API for.");
-				page.layout(true);
-				return;
+			final String report;
+			if (fromApi) {
+				report = createFromApi(apiextFile, api);
 			}
-			final String report = GenerateAPIAction.generate(template);
+			else {
+				report = GenerateAPIAction.generate(template);
+			}
 			if (!apiextFile.exists()) {
 				result.setText(report);
 				page.layout(true);
 				return;
 			}
-			// Generated: swap the page for the editor on the new file.
+			// Written: swap the page for the editor on the new file.
 			_generatePage.dispose();
 			_generatePage = null;
 			createEditor();
 			getParentSashForm().layout(true, true);
 		});
 		return page;
+	}
+
+	/** Writes an element's first .apiext from its .api; returns why when it can't. */
+	private static String createFromApi(IFile apiextFile, IFile api) {
+		try {
+			final List<String> untranslatable = ElementApiextCreator.create(apiextFile, api);
+			return untranslatable.isEmpty() ? "" : ElementApiextCreator.refusal(apiextFile, api, untranslatable);
+		}
+		catch (ApiModelException e) {
+			ComponenteditorPlugin.getDefault().log(e);
+			return "Couldn't write " + apiextFile.getName() + ": " + e.getMessage();
+		}
 	}
 
 	public void doSave(IProgressMonitor monitor) {

@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### Opening an element's `.api` works again
+
+Opening the `.api` of an element without a template (a dynamic element class) failed with an
+assertion: the component editor was asked to show its API tab, which since the tab moved to the
+`.apiext` only existed for components with a template. Such an element's API tab now edits the
+`.apiext` beside its `.api`, and when there's none yet, offers to create it from the `.api`
+(`ElementApiextCreator`, shared with "Switch to API"). Switching to a tab that wasn't created is
+ignored rather than failing the editor.
+
 ### New WebObjects projects match wonder-slim 8.1
 
 The WebObjects template (`/createProject?template=wonder-slim-app` and the New Project wizard)
