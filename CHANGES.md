@@ -12,6 +12,12 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### New-project templates: ng 0.1.7, wonder-slim 8.1.4, wo-adaptor-jetty 0.12.6
+
+New ng-objects projects use ng 0.1.7; new WebObjects projects use wonder-slim 8.1.4 and
+wo-adaptor-jetty 0.12.6. The other pinned versions are the latest stable releases already:
+vermilingua 1.2.0, slf4j-simple 2.0.20, and JUnit 6.1.3 in the plain Maven library template.
+
 ### Opening an element's `.api` works again
 
 Opening the `.api` of an element without a template (a dynamic element class) failed with an

@@ -282,12 +282,12 @@ public class WOProjectCreator {
 					\t\t<dependency>
 					\t\t\t<groupId>is.rebbi.ng</groupId>
 					\t\t\t<artifactId>ng-appserver</artifactId>
-					\t\t\t<version>0.1.6</version>
+					\t\t\t<version>0.1.7</version>
 					\t\t</dependency>
 					\t\t<dependency>
 					\t\t\t<groupId>is.rebbi.ng</groupId>
 					\t\t\t<artifactId>ng-adaptor-jetty</artifactId>
-					\t\t\t<version>0.1.6</version>
+					\t\t\t<version>0.1.7</version>
 					\t\t</dependency>
 					\t\t<dependency>
 					\t\t\t<groupId>org.slf4j</groupId>
@@ -344,12 +344,12 @@ public class WOProjectCreator {
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi.slim</groupId>
 				\t\t\t<artifactId>ERExtensions</artifactId>
-				\t\t\t<version>8.1.3</version>
+				\t\t\t<version>8.1.4</version>
 				\t\t</dependency>
 				\t\t<dependency>
 				\t\t\t<groupId>is.rebbi</groupId>
 				\t\t\t<artifactId>wo-adaptor-jetty</artifactId>
-				\t\t\t<version>0.12.3</version>
+				\t\t\t<version>0.12.6</version>
 				\t\t</dependency>
 				\t</dependencies>
 
