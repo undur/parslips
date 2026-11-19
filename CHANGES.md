@@ -12,6 +12,15 @@ The initial import was commit `d2c9da47` ("Initial ng import").
 
 ## Changes
 
+### `/refreshGit`: git badges catch up with git run outside Eclipse
+
+After a commit, push, pull or checkout from a terminal or an agent, Eclipse's git badges
+(ahead/behind counts, dirty markers, the branch) kept the old state until EGit's own UI touched
+the repository. `/refreshGit?project=A,B` rescans the repositories those projects are in (all
+open projects' without `project`), and `/refreshProject` does the same after its build, so a
+session that refreshes before handing back leaves the badges current. EGit is an optional
+dependency: without it, `/refreshGit` says so and `/refreshProject` skips the rescan.
+
 ### New-project templates: ng 0.1.7, wonder-slim 8.1.4, wo-adaptor-jetty 0.12.6
 
 New ng-objects projects use ng 0.1.7; new WebObjects projects use wonder-slim 8.1.4 and

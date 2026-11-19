@@ -105,6 +105,11 @@ class RefreshProjectHandler implements DevServerHandler {
 		// time the caller gets "ok" the new classes are genuinely in place.
 		waitForBuildToSettle();
 
+		// Git ran outside Eclipse as often as the editor did (an agent commits after editing), and
+		// EGit's badges only catch up when its UI touches the repository: rescan it too. Best
+		// effort; a refresh never fails over git status.
+		rescanGit(projectName);
+
 		// The build settled — but did it succeed? Answering "ok" when the compile
 		// failed is how an external editor ends up staring at an app that "ignores"
 		// its change. Clean build: plain "ok" (compatible with existing callers).
@@ -222,6 +227,26 @@ class RefreshProjectHandler implements DevServerHandler {
 		}
 		else {
 			project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor());
+		}
+	}
+
+	/** Rescans the git repository of the project (all open projects' when null); never throws. */
+	private static void rescanGit(String projectName) {
+		try {
+			if (!GitStatusRefresher.isAvailable()) {
+				return;
+			}
+			final java.util.List<IProject> projects = new java.util.ArrayList<>();
+			if (projectName == null || projectName.isEmpty()) {
+				projects.addAll(java.util.List.of(ResourcesPlugin.getWorkspace().getRoot().getProjects()));
+			}
+			else {
+				projects.add(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName));
+			}
+			GitStatusRefresher.rescan(projects);
+		}
+		catch (Exception | LinkageError e) {
+			// Git status is a courtesy here; the refresh itself succeeded.
 		}
 	}
 }
